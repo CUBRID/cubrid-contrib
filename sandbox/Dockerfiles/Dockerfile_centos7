@@ -1,0 +1,24 @@
+FROM centos:7
+ARG WHOAMI
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM xterm-256color
+ENV TZ Asia/Seoul
+
+RUN set -x \
+    && yum update -y \
+    && yum install -y centos-release-scl \
+    && yum install -y --setopt=tsflags=nodocs sudo devtoolset-8-gcc \
+    devtoolset-8-gcc-c++ devtoolset-8-make devtoolset-8-elfutils-libelf-devel \
+    devtoolset-8-systemtap-sdt-devel ncurses-devel cmake \
+    java-1.8.0-openjdk-devel ant flex sclo-git212 wget libxslt rpm-build \
+    libtool libtool-ltdl autoconf automake vim git bison \
+    && yum clean all -y
+
+RUN adduser $WHOAMI && \
+    echo "$WHOAMI ALL=(root) NOPASSWD:ALL" >> /etc/sudoers && \
+    chmod 0440 /etc/sudoers
+
+ENV JAVA_HOME /usr/lib/jvm/java
+
+ENTRYPOINT ["scl", "enable", "devtoolset-8", "bash"]

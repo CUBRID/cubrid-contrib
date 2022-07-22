@@ -25,7 +25,8 @@
 
 static const char *catalog_query[] = {
   /* alter catalog to add column */
-  "alter table _db_class add column unique_name varchar (255) after [class_of]",
+  "alter table _db_class rename column class_name to unique_name",
+  "alter table _db_class add column class_name varchar (255) after [unique_name]",
   "delete from _db_attribute where class_of.class_name = '_db_class' and rownum % 2 = 1",
 
   "alter table db_serial add column unique_name varchar first",
@@ -169,11 +170,13 @@ static char *index_query[] = {
   "create unique index u_db_serial_name_owner ON db_serial (name, owner)",
   "alter table db_serial drop constraint pk_db_serial_name",
   "alter table db_serial add constraint pk_db_serial_unique_name primary key (unique_name)",
-
+#if 0
   "create index i__db_class_unique_name on _db_class (unique_name)",
-  "create index i__db_class_class_name_owner on _db_class (class_name, owner)",
-
-  "drop index i__db_class_class_name on _db_class"
+#endif
+  "create index i__db_class_class_name_owner on _db_class (class_name, owner)"
+#if 0
+    "drop index i__db_class_class_name on _db_class"
+#endif
 };
 
 /* only system classes update unique_name. */
@@ -836,13 +839,13 @@ migrate_queries ()
 	  return -1;
 	}
     }
-
+#if 0
   error = migrate_execute_query (update_db_class_not_for_system_classes);
   if (error < 0)
     {
       return -1;
     }
-
+#endif
   error = migrate_generated (serial_query, 1);
   if (error < 0)
     {
@@ -874,12 +877,19 @@ migrate_queries ()
 	  return -1;
 	}
     }
-
+#if 0
   error = migrate_execute_query (update_db_class_for_system_classes);
   if (error < 0)
     {
       return -1;
     }
+
+  error = migrate_execute_query (select_db_class_for_system_update);
+  if (error < 0)
+    {
+      return -1;
+    }
+#endif
 
   return 0;
 }
@@ -1037,12 +1047,11 @@ main (int argc, char *argv[])
   if (error < 0)
     {
       printf ("migrate: error encountered while executing quries\n");
-      error = cub_db_abort_transaction ();
-      if (error < 0)
+      if (cub_db_abort_transaction () < 0)
 	{
 	  printf ("migrate: error encountered while aborting\n");
 	}
-      error = cub_db_shutdown ();
+      cub_db_shutdown ();
       goto end;
     }
 
@@ -1050,16 +1059,15 @@ main (int argc, char *argv[])
   if (error < 0)
     {
       printf ("migrate: error encountered while committing\n");
-      error = cub_db_shutdown ();
+      cub_db_shutdown ();
       goto end;
     }
 
-  error = cub_db_shutdown ();
+  cub_db_shutdown ();
 
 end:
   if (error < 0)
     {
-      printf ("migrate: error encountered while shutdown db\n");
       return -1;
     }
 

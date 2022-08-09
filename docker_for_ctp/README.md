@@ -28,6 +28,7 @@ All user default password is 1234.<br/>
 |  |  | ha_repl_01 | HA_REPL(Master), HA_SHELL(Master), SHELL test, CCI test | CTP |
 | docker_for_ctp_02 | 172.200.1.3 | ctp | Controller & SQL, SQL_BY_CCI, <br/>MEDIUM, JDBC unit test | CTP, cubrid-testcases |
 |  |  | ha_repl_01 | HA_REPL(Slave), HA_SHELL(Slave), SHELL test, CCI test | CTP |
+
 <br/><br/>
 
 
@@ -36,9 +37,9 @@ https://www.cubrid.org/manual/en/11.2/install.html#installing-and-running-cubrid
 
 ### Q&A
 1. If can not work 'ctp.sh'
-  - please execute 'sh ctp_config/ctp_env_export.sh'
+   - please execute 'sh ctp_config/ctp_env_export.sh'
 2. Where do I put the test build?
-  - ctp_config/test_build/
-  - 'ctp_config' dir is shared dir by the parent machine.
+   - ctp_config/test_build/
+   - 'ctp_config' dir is shared dir by the parent machine.
 3. Created core file during the test
-  - You can use the GDB command in the container.
+   - You can use the GDB command in the container.

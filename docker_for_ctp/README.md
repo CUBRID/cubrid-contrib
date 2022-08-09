@@ -10,7 +10,7 @@ ctp.sh [Test scenario] -c [CTP/conf/*.conf]
 If you want to change the 'test scenario path', open the 'CTP/conf/*.conf'.<br/>
 and change the 'scenario' variable.<br/><br/>
 
-The detail is followed to refer to this.<br/>
+The detail is followed URL<br/>
 https://github.com/CUBRID/cubrid-testtools <br/><br/>
 
 ### How to create the container?

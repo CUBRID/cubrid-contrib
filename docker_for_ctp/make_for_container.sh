@@ -1,7 +1,7 @@
 # !/bin/bash
 
 dir=`pwd`
-VERSION=0.8
+VERSION=1.0
 IMAGE_NAME=ctp_container
 CONTAINER_NAME=docker_for_ctp
 

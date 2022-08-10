@@ -24,10 +24,10 @@ And you can connect the container by SSH.<br/><br/>
 All user default password is 1234.<br/>
 | Container name | ip | User | Possible to scenario | Tools |
 | ------------ | ------------ | ------------ | ------------ | ------------ |
-| docker_for_ctp_01 | 172.200.1.2 | ctp | Controller & SQL, SQL_BY_CCI, <br/>MEDIUM, JDBC unit test | CTP, cubrid-testcases |
-|  |  | ha_repl_01 | HA_REPL(Master), HA_SHELL(Master), SHELL test, CCI test | CTP |
-| docker_for_ctp_02 | 172.200.1.3 | ctp | Controller & SQL, SQL_BY_CCI, <br/>MEDIUM, JDBC unit test | CTP, cubrid-testcases |
-|  |  | ha_repl_01 | HA_REPL(Slave), HA_SHELL(Slave), SHELL test, CCI test | CTP |
+| docker_for_ctp_01 | 172.200.1.2 | ctp | HA test Controller & SQL, SQL_BY_CCI, MEDIUM, Isolation | CTP, cubrid-testcases |
+|  |  | ha_repl_01 | HA_REPL(Master), HA_SHELL(Master), SHELL test, CCI test, JDBC unit test | CTP |
+| docker_for_ctp_02 | 172.200.1.3 | ctp | HA test Controller & SQL, SQL_BY_CCI, MEDIUM, Isolation | CTP, cubrid-testcases |
+|  |  | ha_repl_01 | HA_REPL(Slave), HA_SHELL(Slave), SHELL test, CCI test, JDBC unit test | CTP |
 
 <br/><br/>
 

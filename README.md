@@ -6,6 +6,7 @@ This repository contains small scripts or projects that help to develop CUBRID.
 |Name|Description|Contributors|
 |------|---|---|
 |[sandbox](sandbox)|A virtual build platform for CUBRID developers|Leesoo Ahn ([memnoth](https://github.com/memnoth))|
+|[docker_for_ctp]|Provides to test env to CUBRID|Won-ryong Song(swi0110)|
 
 ## Contributing
 

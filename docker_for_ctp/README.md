@@ -43,3 +43,7 @@ https://www.cubrid.org/manual/en/11.2/install.html#installing-and-running-cubrid
    - 'ctp_config' dir is shared dir by the parent machine.
 3. Created core file during the test
    - You can use the GDB command in the container.
+4. Can not CCI driver test
+   - please try to this
+      - cp ${CUBRID}/cci/include/* ${CUBRID}/include/
+      - cp ${CUBRID}/cci/lib/libcascci.so* lib/

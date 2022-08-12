@@ -52,8 +52,9 @@ RUN cp -rf cubrid-testtools/CTP ./
 WORKDIR /home/ctp/ctp_config
 
 # set the ctp env
-RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.41.x86_64" >> ${HOME}/.bash_profile
+RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0" >> ${HOME}/.bash_profile
 RUN echo "export CTP_HOME=${HOME}/CTP" >> ${HOME}/.bash_profile
+RUN echo "export init_path=${HOME}/CTP/shell/init_path" >> ${HOME}/.bash_profile
 RUN sed -i 's@:$HOME/bin@:$HOME/bin:$HOME/CTP/bin:$HOME/CTP/common/script@' ${HOME}/.bash_profile
 
 # copy to ctp config
@@ -71,10 +72,14 @@ RUN cp -rf cubrid-testtools/CTP ./
 WORKDIR /home/ha_repl_01/ctp_config
 
 # set the ctp env
-RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.41.x86_64" >> ${HOME}/.bash_profile
+RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0" >> ${HOME}/.bash_profile
 RUN echo "export CTP_HOME=${HOME}/CTP" >> ${HOME}/.bash_profile
-RUN echo "export init_path=$HOME/CTP/shell/init_path" >> ${HOME}/.bash_profile
+RUN echo "export init_path=${HOME}/CTP/shell/init_path" >> ${HOME}/.bash_profile
 RUN sed -i 's@:$HOME/bin@:$HOME/bin:$HOME/CTP/bin:$HOME/CTP/common/script@' ${HOME}/.bash_profile
+
+# copy to ctp config
+ADD ctp_config/*.conf /home/ha_repl_01/CTP/conf/
+ADD ctp_config/HA.properties /home/ha_repl_01/CTP/shell/init_path
 
  
 USER root

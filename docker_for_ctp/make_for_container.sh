@@ -11,6 +11,8 @@ ip_list=("172.200.1.2" "172.200.1.3")
 # set for shell_HA test
 sed -i "s/MASTER_SERVER_IP=.*/MASTER_SERVER_IP=${ip_list[0]}/" ctp_config/HA.properties
 sed -i "s/SLAVE_SERVER_IP=.*/SLAVE_SERVER_IP=${ip_list[1]}/" ctp_config/HA.properties
+sed -i "s/env.instance1.ssh.host=.*/env.instance1.ssh.host=${ip_list[0]}/" ctp_config/ha_shell.conf
+sed -i "s/env.instance1.ssh.relatedhosts=.*/env.instance1.ssh.relatedhosts=${ip_list[1]}/" ctp_config/ha_shell.conf
 
 # Remove the previous container & image
 IMAGE_ID=`docker images | grep "${IMAGE_NAME}" | awk '{print $3}'`

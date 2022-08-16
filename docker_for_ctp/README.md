@@ -1,4 +1,20 @@
 # **Docker for CTP**
+## Supported Platforms
+- CentOS 7
+
+## Prerequisites
+You need to install Docker Engine on your host system. <br/>
+Please refer to the link, [Install Docker Engine](https://docs.docker.com/engine/install) to install.
+
+## Quick Start
+```shell
+$ git clone https://github.com/CUBRID/cubrid-contrib.git
+$ cd cubrid-contrib/docker_for_ctp
+$ sh make_for_container.sh
+$ ssh ctp@172.200.1.2
+$ ctp.sh [test scenario] -c [ctp config file]
+```
+
 ## What is the CTP?
 CTP(= CUBRID Test Progam)<br/>
 The goal is the test by CUBRID.<br/><br/>

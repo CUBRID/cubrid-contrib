@@ -6,6 +6,9 @@
 You need to install Docker Engine on your host system. <br/>
 Please refer to the link, [Install Docker Engine](https://docs.docker.com/engine/install) to install.
 
+※ If you executed by Windows, please used WSL.
+(Refer to https://github.com/CUBRID/cubrid-contrib/pull/3#issuecomment-1223908324)
+
 ## Quick Start
 ```shell
 $ git clone https://github.com/CUBRID/cubrid-contrib.git
@@ -61,5 +64,5 @@ https://www.cubrid.org/manual/en/11.2/install.html#installing-and-running-cubrid
    - You can use the GDB command in the container.
 4. Can not CCI driver test
    - please try to this
-      - cp ${CUBRID}/cci/include/* ${CUBRID}/include/
-      - cp ${CUBRID}/cci/lib/libcascci.so* lib/
+      - cp $CUBRID/cci/include/* $CUBRID/include/
+      - cp $CUBRID/cci/lib/libcascci.so* lib/

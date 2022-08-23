@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 dir=`pwd`
 VERSION=1.0

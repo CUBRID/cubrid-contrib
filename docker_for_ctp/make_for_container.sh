@@ -15,17 +15,28 @@ sed -i "s/env.instance1.ssh.host=.*/env.instance1.ssh.host=${ip_list[0]}/" ctp_c
 sed -i "s/env.instance1.ssh.relatedhosts=.*/env.instance1.ssh.relatedhosts=${ip_list[1]}/" ctp_config/ha_shell.conf
 
 # Remove the previous container & image
+echo ""
+echo "(1/4) Initialize"
+echo ""
 IMAGE_ID=`docker images | grep "${IMAGE_NAME}" | awk '{print $3}'`
 docker rm -f ${CONTAINER_NAME}_01
 docker rm -f ${CONTAINER_NAME}_02
 sleep 5;
 docker rmi ${IMAGE_ID}
 sleep 5;
+docker network rm br1
+sleep 5;
 
+echo ""
+echo "(2/4) Build docker image"
+echo ""
 docker build -t ${IMAGE_NAME}:${VERSION} .
 
 sleep 10;
 
+echo ""
+echo "(3/4) Create docker network & docker container"
+echo ""
 docker network create --driver bridge br1 --ip-range=${ip_range}/24 --subnet=${ip_range}/24
 
 #centos 7
@@ -33,6 +44,9 @@ docker run --privileged -dit --cap-add=SYS_PTRACE --net br1 --ip ${ip_list[0]} -
 docker run --privileged -dit --cap-add=SYS_PTRACE --net br1 --ip ${ip_list[1]} -v ${dir}/ctp_config:/home/ctp/ctp_config --name ${CONTAINER_NAME}_02 --hostname ${CONTAINER_NAME}_02 ${IMAGE_NAME}:${VERSION} /sbin/init
 sleep 3;
 
+echo ""
+echo "(4/4) Set into container"
+echo ""
 docker exec ${CONTAINER_NAME}_01 systemctl restart sshd
 docker exec ${CONTAINER_NAME}_02 systemctl restart sshd
 
@@ -54,3 +68,6 @@ docker exec ${CONTAINER_NAME}_02 chown -R ctp:ctp /home/ctp/ctp_config
 sleep 3;
 docker exec ${CONTAINER_NAME}_02 chown -R ha_repl_01:ha_repl_01 /home/ha_repl_01/ctp_config
 
+echo ""
+echo "Done"
+echo ""

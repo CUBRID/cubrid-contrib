@@ -15,6 +15,7 @@
  *
  */
 
+#include "extract_schema.hpp"
 #include "migrate.h"
 
 #define VERSION_INFO 		72
@@ -23,23 +24,13 @@
 #define MAX_LINE		4096
 #define ENV_VAR_MAX		255
 
+static const char *view_query = "select class_name \
+	 from _db_class \
+	 where is_system_class = 0 and class_type = 1";
+
 static const char *catalog_query[] = {
-  /* alter catalog to add column */
-  "alter table _db_class rename column class_name to unique_name",
-  "alter table _db_class add column class_name varchar (255) after [unique_name]",
-  "delete from _db_attribute where class_of.class_name = '_db_class' and rownum % 2 = 1",
-
-  "alter table db_serial add column unique_name varchar first",
-  "delete from _db_attribute where class_of.class_name = 'db_serial' and rownum % 2 = 1 and attr_name <> 'unique_name'",
-
-  "alter table db_trigger add column unique_name varchar after owner",
-  "delete from _db_attribute where class_of.class_name = 'db_trigger' and rownum % 2 = 1 and attr_name <> 'unique_name'",
-
-  /* alter catalog to modify _db_index_key */
-  "alter table _db_index_key modify column func varchar(1023)",
-  "delete from _db_attribute where class_of.class_name = '_db_index_key' and rownum % 2 = 1",
-
   /* alter catalog to add tables and views (_db_server, _db_synonym, db_server, db_synonym) */
+  /* _db_server */
   "create table [_db_server] ( \
   	[link_name] character varying(255) not null, \
   	[host] character varying(255), \
@@ -53,91 +44,327 @@ static const char *catalog_query[] = {
   	constraint [pk__db_server_link_name_owner] primary key ([link_name], [owner]) \
   ) dont_reuse_oid",
 
-  "create view [db_server] ( \
+  /* _db_synonym */
+  "CREATE TABLE [_db_synonym] ( \
+  	[unique_name] character varying(255) not null, \
+  	[name] character varying(255) not null, \
+  	[owner] [db_user] not null, \
+  	[is_public] integer default 0 not null, \
+  	[target_unique_name] character varying(255) not null, \
+  	[target_name] character varying(255) not null, \
+  	[target_owner] [db_user] not null, [comment] character varying(2048), \
+  	constraint [pk__db_synonym_unique_name] primary key ([unique_name]), \
+  	index [i__db_synonym_name_owner_is_public] ([name], [owner], [is_public]) \
+  ) DONT_REUSE_OID",
+
+  /* db_class */
+  "CREATE OR REPLACE VIEW [db_class] ( \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[class_type] varchar(6), \
+  	[is_system_class] varchar(3), \
+  	[tde_algorithm] varchar(32), \
+  	[partitioned] varchar(3), \
+  	[is_reuse_oid_class] varchar(3), \
+  	[collation] varchar(32), \
+  	[comment] varchar(2048) \
+   ) as \
+	SELECT [c].[class_name] AS [class_name], CAST ([c].[owner].[name] AS VARCHAR(255)) AS [owner_name], CASE [c].[class_type] WHEN 0 THEN 'CLASS' WHEN 1 THEN 'VCLASS' ELSE 'UNKNOW' END AS [class_type], CASE WHEN MOD([c].[is_system_class], 2) = 1 THEN 'YES' ELSE 'NO' END AS [is_system_class], CASE [c].[tde_algorithm] WHEN 0 THEN 'NONE' WHEN 1 THEN 'AES' WHEN 2 THEN 'ARIA' END AS [tde_algorithm], CASE WHEN [c].[sub_classes] IS NULL THEN 'NO' ELSE NVL ((SELECT 'YES' FROM [_db_partition] AS [p] WHERE [p].[class_of] = [c] AND [p].[pname] IS NULL), 'NO') END AS [partitioned], CASE WHEN MOD ([c].[is_system_class] / 8, 2) = 1 THEN 'YES' ELSE 'NO' END AS [is_reuse_oid_class], [coll].[coll_name] AS [collation], [c].[comment] AS [comment] FROM [_db_class] AS [c], [_db_collation] AS [coll] WHERE [c].[collation_id] = [coll].[coll_id] AND (CURRENT_USER = 'DBA' OR {[c].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[c]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_direct_super_class */
+  "CREATE OR REPLACE VIEW [db_direct_super_class] ( \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[super_class_name] varchar(255), \
+  	[super_owner_name] varchar(255) \
+   ) as \
+SELECT [c].[class_name] AS [class_name], CAST ([c].[owner].[name] AS VARCHAR(255)) AS [owner_name], [s].[class_name] AS [super_class_name], CAST ([s].[owner].[name] AS VARCHAR(255)) AS [super_owner_name] FROM [_db_class] AS [c], TABLE ([c].[super_classes]) AS [t] ([s]) WHERE CURRENT_USER = 'DBA' OR {[c].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[c]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
+
+  /* db_vclass */
+  "CREATE OR REPLACE VIEW [db_vclass] ( \
+  	[vclass_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[vclass_def] varchar(1073741823), \
+  	[comment] varchar(2048) \
+	) as \
+SELECT [q].[class_of].[class_name] AS [vclass_name], CAST ([q].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], [q].[spec] AS [vclass_def], [c].[comment] AS [comment] FROM [_db_query_spec] AS [q], [_db_class] AS [c] WHERE [q].[class_of] = [c] AND (CURRENT_USER = 'DBA' OR {[q].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[q].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_attribute */
+  "CREATE OR REPLACE VIEW [db_attribute] ( \
+  	[attr_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[attr_type] varchar(8), \
+  	[def_order] integer, \
+  	[from_class_name] varchar(255), \
+  	[from_owner_name] varchar(255), \
+  	[from_attr_name] varchar(255), \
+  	[data_type] varchar(9), \
+  	[prec] integer, \
+  	[scale] integer, \
+  	[charset] varchar(32), \
+  	[collation] varchar(32), \
+  	[domain_class_name] varchar(255), \
+  	[domain_owner_name] varchar(255), \
+  	[default_value] varchar(255), \
+  	[is_nullable] varchar(3), \
+  	[comment] varchar(1024) \
+   ) as \
+SELECT [a].[attr_name] AS [attr_name], [c].[class_name] AS [class_name], CAST ([c].[owner].[name] AS VARCHAR(255)) AS [owner_name], CASE [a].[attr_type] WHEN 0 THEN 'INSTANCE' WHEN 1 THEN 'CLASS' ELSE 'SHARED' END AS [attr_type], [a].[def_order] AS [def_order], [a].[from_class_of].[class_name] AS [from_class_name], CAST ([a].[from_class_of].[owner].[name] AS VARCHAR(255)) AS [from_owner_name], [a].[from_attr_name] AS [from_attr_name], [t].[type_name] AS [data_type], [d].[prec] AS [prec], [d].[scale] AS [scale], IF ([a].[data_type] IN (4, 25, 26, 27, 35), (SELECT [ch].[charset_name] FROM [_db_charset] AS [ch] WHERE [d].[code_set] = [ch].[charset_id]), 'Not applicable') AS [charset], IF ([a].[data_type] IN (4, 25, 26, 27, 35), (SELECT [coll].[coll_name] FROM [_db_collation] AS [coll] WHERE [d].[collation_id] = [coll].[coll_id]), 'Not applicable') AS [collation], [d].[class_of].[class_name] AS [domain_class_name], CAST ([d].[class_of].[owner].[name] AS VARCHAR(255)) AS [domain_owner_name], [a].[default_value] AS [default_value], CASE WHEN [a].[is_nullable] = 1 THEN 'YES' ELSE 'NO' END AS [is_nullable], [a].[comment] AS [comment] FROM [_db_class] AS [c], [_db_attribute] AS [a], [_db_domain] AS [d], [_db_data_type] AS [t] WHERE [a].[class_of] = [c] AND [d].[object_of] = [a] AND [d].[data_type] = [t].[type_id] AND (CURRENT_USER = 'DBA' OR {[c].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[c]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_attr_setdomain_elm */
+  "CREATE OR REPLACE VIEW [db_attr_setdomain_elm] ( \
+  	[attr_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[attr_type] varchar(8), \
+  	[data_type] varchar(9), \
+  	[prec] integer, \
+  	[scale] integer, \
+  	[code_set] integer, \
+  	[domain_class_name] varchar(255), \
+  	[domain_owner_name] varchar(255) \
+    ) as \
+SELECT [a].[attr_name] AS [attr_name], [c].[class_name] AS [class_name], CAST ([c].[owner].[name] AS VARCHAR(255)) AS [owner_name], CASE [a].[attr_type] WHEN 0 THEN 'INSTANCE' WHEN 1 THEN 'CLASS' ELSE 'SHARED' END AS [attr_type], [et].[type_name] AS [data_type], [e].[prec] AS [prec], [e].[scale] AS [scale], [e].[code_set] AS [code_set], [e].[class_of].[class_name] AS [domain_class_name], CAST ([e].[class_of].[owner].[name] AS VARCHAR(255)) AS [domain_owner_name] FROM [_db_class] AS [c], [_db_attribute] AS [a], [_db_domain] AS [d], TABLE ([d].[set_domains]) AS [t] ([e]), [_db_data_type] AS [et] WHERE [a].[class_of] = [c] AND [d].[object_of] = [a] AND [e].[data_type] = [et].[type_id] AND (CURRENT_USER = 'DBA' OR {[c].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[c]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_method */
+  "CREATE OR REPLACE VIEW [db_method] ( \
+  	[meth_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[meth_type] varchar(8), \
+  	[from_class_name] varchar(255), \
+  	[from_owner_name] varchar(255), \
+  	[from_meth_name] varchar(255), \
+  	[func_name] varchar(255) \
+   ) AS \
+SELECT [m].[meth_name] AS [meth_name], [m].[class_of].[class_name] AS [class_name], CAST ([m].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], CASE [m].[meth_type] WHEN 0 THEN 'INSTANCE' ELSE 'CLASS' END AS [meth_type], [m].[from_class_of].[class_name] AS [from_class_name], CAST ([m].[from_class_of].[owner].[name] AS VARCHAR(255)) AS [from_owner_name], [m].[from_meth_name] AS [from_meth_name], [s].[func_name] AS [func_name] FROM [_db_method] AS [m], [_db_meth_sig] AS [s] WHERE [s].[meth_of] = [m] AND (CURRENT_USER = 'DBA' OR {[m].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[m].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_meth_arg */
+  "CREATE OR REPLACE VIEW [db_meth_arg] ( \
+  	[meth_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[meth_type] varchar(8), \
+  	[index_of] integer, \
+  	[data_type] varchar(9), \
+  	[prec] integer, \
+  	[scale] integer, \
+  	[code_set] integer, \
+  	[domain_class_name] varchar(255), \
+  	[domain_owner_name] varchar(255) \
+    ) AS \
+SELECT [s].[meth_of].[meth_name] AS [meth_name], [s].[meth_of].[class_of].[class_name] AS [class_name], CAST ([s].[meth_of].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], CASE [s].[meth_of].[meth_type] WHEN 0 THEN 'INSTANCE' ELSE 'CLASS' END AS [meth_type], [a].[index_of] AS [index_of], [t].[type_name] AS [data_type], [d].[prec] AS [prec], [d].[scale] AS [scale], [d].[code_set] AS [code_set], [d].[class_of].[class_name] AS [domain_class_name], CAST ([d].[class_of].[owner].[name] AS VARCHAR(255)) AS [domain_owner_name] FROM [_db_meth_sig] AS [s], [_db_meth_arg] AS [a], [_db_domain] AS [d], [_db_data_type] AS [t] WHERE [a].[meth_sig_of] = [s] AND [d].[object_of] = [a] AND [d].[data_type] = [t].[type_id] AND (CURRENT_USER = 'DBA' OR {[s].[meth_of].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[s].[meth_of].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_meth_arg_setdomain_elm */
+  "CREATE OR REPLACE VIEW [db_meth_arg_setdomain_elm] ( \
+  	[meth_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[meth_type] varchar(8), \
+  	[index_of] integer, \
+  	[data_type] varchar(9), \
+  	[prec] integer, \
+  	[scale] integer, \
+  	[code_set] integer, \
+  	[domain_class_name] varchar(255), \
+  	[domain_owner_name] varchar(255) \
+   ) AS \
+SELECT [s].[meth_of].[meth_name] AS [meth_name], [s].[meth_of].[class_of].[class_name] AS [class_name], CAST ([s].[meth_of].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], CASE [s].[meth_of].[meth_type] WHEN 0 THEN 'INSTANCE' ELSE 'CLASS' END AS [meth_type], [a].[index_of] AS [index_of], [et].[type_name] AS [data_type], [e].[prec] AS [prec], [e].[scale] AS [scale], [e].[code_set] AS [code_set], [e].[class_of].[class_name] AS [domain_class_name], CAST ([e].[class_of].[owner].[name] AS VARCHAR(255)) AS [domain_owner_name] FROM [_db_meth_sig] AS [s], [_db_meth_arg] AS [a], [_db_domain] AS [d], TABLE ([d].[set_domains]) AS [t] ([e]), [_db_data_type] AS [et] WHERE [a].[meth_sig_of] = [s] AND [d].[object_of] = [a] AND [e].[data_type] = [et].[type_id] AND (CURRENT_USER = 'DBA' OR {[s].[meth_of].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[s].[meth_of].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_meth_file */
+  "CREATE OR REPLACE VIEW [db_meth_file] ( \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[path_name] varchar(255), \
+  	[from_class_name] varchar(255), \
+  	[from_owner_name] varchar(255) \
+   ) AS \
+SELECT [f].[class_of].[class_name] AS [class_name], CAST ([f].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], [f].[path_name] AS [path_name], [f].[from_class_of].[class_name] AS [from_class_name], CAST ([f].[from_class_of].[owner].[name] AS VARCHAR(255)) AS [from_owner_name] FROM [_db_meth_file] AS [f] WHERE CURRENT_USER = 'DBA' OR {[f].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[f].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
+
+  /* db_index */
+  "CREATE OR REPLACE VIEW [db_index] ( \
+  	[index_name] varchar(255), \
+  	[is_unique] varchar(3), \
+  	[is_reverse] varchar(3), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[key_count] integer, \
+  	[is_primary_key] varchar(3), \
+  	[is_foreign_key] varchar(3), \
+  	[filter_expression] varchar(255), \
+  	[have_function] varchar(3), \
+  	[comment] varchar(1024), \
+  	[status] varchar(255) \
+   ) AS \
+SELECT [i].[index_name] AS [index_name], CASE [i].[is_unique] WHEN 0 THEN 'NO' ELSE 'YES' END AS [is_unique], CASE [i].[is_reverse] WHEN 0 THEN 'NO' ELSE 'YES' END AS [is_reverse], [i].[class_of].[class_name] AS [class_name], CAST ([i].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], [i].[key_count] AS [key_count], CASE [i].[is_primary_key] WHEN 0 THEN 'NO' ELSE 'YES' END AS [is_primary_key], CASE [i].[is_foreign_key] WHEN 0 THEN 'NO' ELSE 'YES' END AS [is_foreign_key], [i].[filter_expression] AS [filter_expression], CASE [i].[have_function] WHEN 0 THEN 'NO' ELSE 'YES' END AS [have_function], [i].[comment] AS [comment], CASE [i].[status] WHEN 0 THEN 'NO_INDEX' WHEN 1 THEN 'NORMAL INDEX' WHEN 2 THEN 'INVISIBLE INDEX' WHEN 3 THEN 'INDEX IS IN ONLINE BUILDING' ELSE 'NULL' END AS [status] FROM [_db_index] AS [i] WHERE CURRENT_USER = 'DBA' OR {[i].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[i].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
+
+  /* db_index_key */
+  "CREATE OR REPLACE VIEW [db_index_key] ( \
+  	[index_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[key_attr_name] varchar(255), \
+  	[key_order] integer, \
+  	[asc_desc] varchar(4), \
+  	[key_prefix_length] integer, \
+  	[func] varchar(1023) \
+   ) as \
+SELECT [k].[index_of].[index_name] AS [index_name], [k].[index_of].[class_of].[class_name] AS [class_name], CAST ([k].[index_of].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], [k].[key_attr_name] AS [key_attr_name], [k].[key_order] AS [key_order], CASE [k].[asc_desc] WHEN 0 THEN 'ASC' WHEN 1 THEN 'DESC' ELSE 'UNKN' END AS [asc_desc], [k].[key_prefix_length] AS [key_prefix_length], [k].[func] AS [func] FROM [_db_index_key] AS [k] WHERE CURRENT_USER = 'DBA' OR {[k].[index_of].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[k].[index_of].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
+
+  /* db_auth */
+  "CREATE OR REPLACE VIEW [db_auth] ( \
+  	[grantor_name] varchar(255), \
+  	[grantee_name] varchar(255), \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[auth_type] varchar(7), \
+  	[is_grantable] varchar(3) \
+   ) as \
+SELECT CAST ([a].[grantor].[name] AS VARCHAR(255)) AS [grantor_name], CAST ([a].[grantee].[name] AS VARCHAR(255)) AS [grantee_name], [a].[class_of].[class_name] AS [class_name], CAST ([a].[class_of].[owner].[name] AS VARCHAR(255)) AS [owner_name], [a].[auth_type] AS [auth_type], CASE [a].[is_grantable] WHEN 0 THEN 'NO' ELSE 'YES' END AS [is_grantable] FROM [_db_auth] AS [a] WHERE CURRENT_USER = 'DBA' OR {[a].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[a].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
+
+  /* db_trig */
+  "CREATE OR REPLACE VIEW [db_trig] ( \
+  	[trigger_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[target_class_name] varchar(255), \
+  	[target_owner_name] varchar(255), \
+  	[target_attr_name] varchar(255), \
+  	[target_attr_type] varchar(255), \
+  	[action_type] integer, \
+  	[action_time] integer, \
+  	[comment] varchar(1024) \
+   ) as \
+SELECT CAST ([t].[name] AS VARCHAR (255)) AS [trigger_name], CAST ([t].[owner].[name] AS VARCHAR(255)) AS [owner_name], [c].[class_name] AS [target_class_name], CAST ([c].[owner].[name] AS VARCHAR(255)) AS [target_owner_name], CAST ([t].[target_attribute] AS VARCHAR (255)) AS [target_attr_name], CASE [t].[target_class_attribute] WHEN 0 THEN 'INSTANCE' ELSE 'CLASS' END AS [target_attr_type], [t].[action_type] AS [action_type], [t].[action_time] AS [action_time], [t].[comment] AS [comment] FROM [db_trigger] AS [t] LEFT OUTER JOIN [_db_class] AS [c] ON [t].[target_class] = [c].[class_of] WHERE CURRENT_USER = 'DBA' OR {[t].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[c]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
+
+  /* db_partition */
+  "CREATE OR REPLACE VIEW [db_partition] ( \
+  	[class_name] varchar(255), \
+  	[owner_name] varchar(255), \
+  	[partition_name] varchar(255), \
+  	[partition_class_name] varchar(255), \
+  	[partition_type] varchar(32), \
+  	[partition_expr] varchar(2048), \
+  	[partition_values] sequence of, \
+  	[comment] varchar(1024) \
+   ) as \
+SELECT [s].[class_name] AS [class_name], CAST ([s].[owner].[name] AS VARCHAR(255)) AS [owner_name], [p].[pname] AS [partition_name], CONCAT ([s].[class_name], '__p__', [p].[pname]) AS [partition_class_name], CASE [p].[ptype] WHEN 0 THEN 'HASH' WHEN 1 THEN 'RANGE' ELSE 'LIST' END AS [partition_type], TRIM (SUBSTRING ([pp].[pexpr] FROM 8 FOR (POSITION (' FROM ' IN [pp].[pexpr]) - 8))) AS [partition_expr], [p].[pvalues] AS [partition_values], [p].[comment] AS [comment] FROM [_db_partition] AS [p], [_db_class] AS [c], TABLE ([c].[super_classes]) AS [t] ([s]), [_db_class] AS [cc], TABLE ([cc].[partition]) AS [tt] ([pp]) WHERE [p].[class_of] = [c] AND [s] = [cc] AND (CURRENT_USER = 'DBA' OR {[p].[class_of].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[p].[class_of]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT'))",
+
+  /* db_stored_procedure */
+  "CREATE OR REPLACE VIEW [db_stored_procedure] ( \
+  	[sp_name] varchar(255), \
+  	[sp_type] varchar(16), \
+  	[return_type] varchar(16), \
+  	[arg_count] integer, \
+  	[lang] varchar(16), \
+  	[target] varchar(4096), \
+  	[owner] varchar(256), \
+  	[comment] varchar(1024) \
+   ) as \
+SELECT [sp].[sp_name] AS [sp_name], CASE [sp].[sp_type] WHEN 1 THEN 'PROCEDURE' ELSE 'FUNCTION' END AS [sp_type], CASE [sp].[return_type] WHEN 0 THEN 'void' WHEN 28 THEN 'CURSOR' ELSE (SELECT [t].[type_name] FROM [_db_data_type] AS [t] WHERE [sp].[return_type] = [t].[type_id]) END AS [return_type], [sp].[arg_count] AS [arg_count], CASE [sp].[lang] WHEN 1 THEN 'JAVA' ELSE '' END AS [lang], [sp].[target] AS [target], CAST ([sp].[owner].[name] AS VARCHAR(255)) AS [owner], [sp].[comment] AS [comment] FROM [_db_stored_procedure] AS [sp]",
+
+  /* db_stored_procedure_args */
+  "create or replace view [db_stored_procedure_args] ( \
+  	[sp_name] varchar(255), \
+  	[index_of] integer, \
+  	[arg_name] varchar(255), \
+  	[data_type] varchar(16), \
+  	[mode] varchar(6), \
+  	[comment] varchar(1024) \
+   ) as \
+SELECT [sp].[sp_name] AS [sp_name], [sp].[index_of] AS [index_of], [sp].[arg_name] AS [arg_name], CASE [sp].[data_type] WHEN 28 THEN 'CURSOR' ELSE (SELECT [t].[type_name] FROM [_db_data_type] AS [t] WHERE [sp].[data_type] = [t].[type_id]) END AS [data_type], CASE [sp].[mode] WHEN 1 THEN 'IN' WHEN 2 THEN 'OUT' ELSE 'INOUT' END AS [mode], [sp].[comment] AS [comment] FROM [_db_stored_procedure_args] AS [sp] ORDER BY [sp].[sp_name], [sp].[index_of]",
+
+  /* db_collation */
+  "CREATE OR REPLACE VIEW [db_collation] ( \
+  	[coll_id] integer, \
+  	[coll_name] varchar(32), \
+  	[charset_name] varchar(32), \
+  	[is_builtin] varchar(3), \
+  	[has_expansions] varchar(3), \
+  	[contractions] integer, \
+  	[uca_strength] varchar(255) \
+   ) as \
+SELECT [coll].[coll_id] AS [coll_id], [coll].[coll_name] AS [coll_name], [ch].[charset_name] AS [charset_name], CASE [coll].[built_in] WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'ERROR' END AS [is_builtin], CASE [coll].[expansions] WHEN 0 THEN 'No' WHEN 1 THEN 'Yes' ELSE 'ERROR' END AS [has_expansions], [coll].[contractions] AS [contractions], CASE [coll].[uca_strength] WHEN 0 THEN 'Not applicable' WHEN 1 THEN 'Primary' WHEN 2 THEN 'Secondary' WHEN 3 THEN 'Tertiary' WHEN 4 THEN 'Quaternary' WHEN 5 THEN 'Identity' ELSE 'Unknown' END AS [uca_strength] FROM [_db_collation] AS [coll] INNER JOIN [_db_charset] AS [ch] ON [coll].[charset_id] = [ch].[charset_id] ORDER BY [coll].[coll_id]",
+
+  /* db_charset */
+  "CREATE OR REPLACE VIEW [db_charset] ( \
+  	[charset_id] integer, \
+  	[charset_name] varchar(32), \
+  	[default_collation] varchar(32), \
+  	[char_size] integer \
+   ) as \
+SELECT [ch].[charset_id] AS [charset_id], [ch].[charset_name] AS [charset_name], [coll].[coll_name] AS [default_collation], [ch].[char_size] AS [char_size] FROM [_db_charset] AS [ch], [_db_collation] AS [coll] WHERE [ch].[default_collation] = [coll].[coll_id] ORDER BY [ch].[charset_id]",
+
+  /* db_server */
+  "CREATE OR REPLACE VIEW [db_server] ( \
   	[link_name] character varying(255), \
   	[host] character varying(255), \
   	[port] integer, \
   	[db_name] character varying(255), \
   	[user_name] character varying(255), \
   	[properties] character varying(2048), \
-  	[owner] character varying(256), \
+  	[owner] character varying(255), \
   	[comment] character varying(1024) \
   ) as \
-	select \
-  	[ds].[link_name], \
-  	[ds].[host], \
-  	[ds].[port], \
-  	[ds].[db_name], \
-  	[ds].[user_name], \
-  	[ds].[properties], \
-  	[ds].[owner].[name], \
-  	[ds].[comment] \
-  from \
-  	[_db_server] [ds] \
-  where \
-  	current_user = 'DBA' \
-    or { [ds].[owner].[name] } subseteq ( \
-      select set {current_user} + coalesce (sum (set {[t].[g].[name]}), set { }) \
-      from [db_user] [u], table([groups]) as [t]([g]) \
-      where [u].[name] = current_user \
-    ) \
-    or { [ds] } subseteq ( \
-      select sum (set {[au].[class_of]}) \
-      from [_db_auth] [au] \
-      where {[au].[grantee].[name]} subseteq ( \
-                select set {current_user} + coalesce (sum (set {[t].[g].[name]}), set { }) \
-                from [db_user] [u], table([groups]) as [t]([g]) \
-                where [u].[name] = current_user \
-              ) \
-            and [au].[auth_type] = 'SELECT' \
-    )",
+SELECT [ds].[link_name] AS [link_name], [ds].[host] AS [host], [ds].[port] AS [port], [ds].[db_name] AS [db_name], [ds].[user_name] AS [user_name], [ds].[properties] AS [properties], CAST ([ds].[owner].[name] AS VARCHAR(255)) AS [owner], [ds].[comment] AS [comment] FROM [_db_server] AS [ds] WHERE CURRENT_USER = 'DBA' OR {[ds].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) OR {[ds]} SUBSETEQ (SELECT SUM (SET {[au].[class_of]}) FROM [_db_auth] AS [au] WHERE {[au].[grantee].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER) AND [au].[auth_type] = 'SELECT')",
 
-  "CREATE TABLE [_db_synonym] ( \
-  	[unique_name] CHARACTER VARYING(255) NOT NULL, \
-  	[name] CHARACTER VARYING(255) NOT NULL, \
-  	[owner] [db_user] NOT NULL, \
-  	[is_public] INTEGER DEFAULT 0 NOT NULL, \
-  	[target_unique_name] CHARACTER VARYING(255) NOT NULL, \
-  	[target_name] CHARACTER VARYING(255) NOT NULL, \
-  	[target_owner] [db_user] NOT NULL, [comment] CHARACTER VARYING(2048), \
-  	CONSTRAINT [pk__db_synonym_unique_name] PRIMARY KEY ([unique_name]), \
-  	INDEX [i__db_synonym_name_owner_is_public] ([name], [owner], [is_public]) \
-  ) DONT_REUSE_OID",
-
-  "create view [db_synonym] ( \
-  	[synonym_name] CHARACTER VARYING(255), \
-  	[synonym_owner_name] CHARACTER VARYING(255), \
-  	[is_public_synonym] CHARACTER VARYING(3), \
-  	[target_name] CHARACTER VARYING(255), \
-  	[target_owner_name] CHARACTER VARYING(255), \
-  	[comment] CHARACTER VARYING(2048) \
-  ) as \
-  SELECT \
-  	[s].[name] AS [synonym_name], \
-  	CAST ([s].[owner].[name] AS VARCHAR(255)) AS [synonym_owner_name], \
-  	CASE WHEN [s].[is_public] = 1 THEN 'YES' ELSE 'NO' END AS [is_public_synonym], \
-  	[s].[target_name] AS [target_name], \
-  	CAST ([s].[target_owner].[name] AS VARCHAR(255)) AS [target_owner_name], \
-  	[s].[comment] AS [comment] \
-	FROM \
-  [_db_synonym] [s] \
-  WHERE \
-    CURRENT_USER = 'DBA' \
-    OR [s].[is_public] = 1 \
-    OR ( \
-      [s].[is_public] = 0 \
-      AND { [s].[owner].[name] } SUBSETEQ ( \
-              SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET { }) \
-              FROM [db_user] [u], TABLE([groups]) AS [t]([g]) \
-              WHERE [u].[name] = CURRENT_USER \
-             ) \
-    )",
+  /* db_synonym */
+  "CREATE OR REPLACE VIEW [db_synonym] ( \
+  	[synonym_name] character varying(255), \
+  	[synonym_owner_name] character varying(255), \
+  	[is_public_synonym] character varying(3), \
+  	[target_name] character varying(255), \
+  	[target_owner_name] character varying(255), \
+  	[comment] character varying(2048) \
+   ) AS \
+SELECT [s].[name] AS [synonym_name], CAST ([s].[owner].[name] AS VARCHAR(255)) AS [synonym_owner_name], CASE [s].[is_public] WHEN 1 THEN 'YES' ELSE 'NO' END AS [is_public_synonym], [s].[target_name] AS [target_name], CAST ([s].[target_owner].[name] AS VARCHAR(255)) AS [target_owner_name], [s].[comment] AS [comment] FROM [_db_synonym] AS [s] WHERE CURRENT_USER = 'DBA' OR [s].[is_public] = 1 OR ([s].[is_public] = 0 AND {[s].[owner].[name]} SUBSETEQ (SELECT SET {CURRENT_USER} + COALESCE (SUM (SET {[t].[g].[name]}), SET {}) FROM [db_user] AS [u], TABLE ([u].[groups]) AS [t] ([g]) WHERE [u].[name] = CURRENT_USER))",
 
   /* set system class for newly added tables and views */
-  "update _db_class set is_system_class = 1 where class_name in ('_db_server', 'db_server', '_db_synonym', 'db_synonym')"
+  "UPDATE [_db_class] \
+   SET is_system_class = 1 \
+   WHERE \
+  	class_name in ( \
+      		'_db_server', \
+      		'_db_synonym', \
+      		'db_class', \
+      		'db_direct_super_class', \
+      		'db_vclass', \
+      		'db_attribute', \
+      		'db_attr_setdomain_elm', \
+      		'db_method', \
+      		'db_meth_arg', \
+      		'db_meth_arg_setdomain_elm', \
+      		'db_meth_file', \
+      		'db_index', \
+      		'db_index_key', \
+      		'db_auth', \
+      		'db_trig', \
+      		'db_partition', \
+      		'db_stored_procedure', \
+      		'db_stored_procedure_args', \
+      		'db_collation', \
+      		'db_charset', \
+      		'db_server', \
+      		'db_synonym' \
+    ) \
+   AND is_system_class = 0",
+
+  /* alter catalog to add column */
+  "alter table _db_class add column unique_name varchar (255) after [class_of]",
+  "delete from _db_attribute where class_of.class_name = '_db_class' and rownum % 2 = 1",
+
+  "alter table db_serial add column unique_name varchar first",
+  "delete from _db_attribute where class_of.class_name = 'db_serial' and rownum % 2 = 1 and attr_name <> 'unique_name'",
+
+  "alter table db_trigger add column unique_name varchar after owner",
+  "delete from _db_attribute where class_of.class_name = 'db_trigger' and rownum % 2 = 1 and attr_name <> 'unique_name'",
+
+  /* alter catalog to modify _db_index_key */
+  "alter table _db_index_key modify column func varchar(1023)",
+  "delete from _db_attribute where class_of.class_name = '_db_index_key' and rownum % 2 = 1"
 };
 
-static char *rename_query = "select \
+static const char *rename_query = "select \
      case \
        when class_type = 0 then \
       'rename table [' || class_name || '] to [' || lower (owner.name) || '.' || class_name || '] ' \
@@ -150,37 +377,33 @@ static char *rename_query = "select \
      is_system_class % 8 = 0";
 
 /* update class_name and unique_name except for system classes. */
-static char *update_db_class_not_for_system_classes =
+static const char *update_db_class_not_for_system_classes =
   "update _db_class set class_name = substring_index (class_name, '.', -1), unique_name = class_name where is_system_class % 8 = 0";
 
-static char *serial_query = "select \
+static const char *serial_query = "select \
        'call change_serial_owner (''' || name || ''', ''' || substring_index (class_name, '.', 1) || ''') \
           on class db_serial' as q \
   from db_serial \
   where class_name is not null";
 
-static char *update_serial[] = {
+static const char *update_serial[] = {
   "update db_serial set name = substring_index (name, '.', -1)",
   "update db_serial set unique_name = lower (owner.name) || '.' || name"
 };
 
-static char *update_trigger = "update db_trigger set unique_name = lower (owner.name) || '.' || name";
+static const char *update_trigger = "update db_trigger set unique_name = lower (owner.name) || '.' || name";
 
-static char *index_query[] = {
+static const char *index_query[] = {
   "create unique index u_db_serial_name_owner ON db_serial (name, owner)",
   "alter table db_serial drop constraint pk_db_serial_name",
   "alter table db_serial add constraint pk_db_serial_unique_name primary key (unique_name)",
-#if 0
+  "drop index i__db_class_class_name on _db_class",
   "create index i__db_class_unique_name on _db_class (unique_name)",
-#endif
-  "create index i__db_class_class_name_owner on _db_class (class_name, owner)"
-#if 0
-    "drop index i__db_class_class_name on _db_class"
-#endif
+  "create index i__db_class_class_name_owner on _db_class (class_name, owner)",
 };
 
 /* only system classes update unique_name. */
-static char *update_db_class_for_system_classes =
+static const char *update_db_class_for_system_classes =
   "update _db_class set unique_name = class_name where is_system_class % 8 != 0";
 
 static char db_path[PATH_MAX];
@@ -369,6 +592,60 @@ get_db_path (char *dbname, char **pathname)
 }
 
 static int
+migrate_extract_views (int view_cnt, char **class_name, const char *schema_file)
+{
+  int i, j, error, is_partition = 0;
+  DB_OBJECT *class_ = NULL;
+  MOP *sub_partitions = NULL;
+  extract_context unload_context;
+  LIST_MOPS *class_table;
+  DB_OBJECT **req_class_table;
+
+  *cub_required_class_only = true;
+  *cub_do_schema = true;
+  *cub_include_references = false;
+  *cub_input_filename = (char *) schema_file;
+
+  class_table = cub_locator_get_all_mops (*cub_sm_Root_class_mop, DB_FETCH_READ, NULL);
+  *cub_class_table = class_table;
+
+  req_class_table = (DB_OBJECT **) malloc (DB_SIZEOF (void *) * class_table->num);
+  *cub_req_class_table = req_class_table;
+
+  for (i = 0; i < class_table->num; ++i)
+    {
+      req_class_table[i] = NULL;
+    }
+
+  i = 0;
+  while (i < view_cnt)
+    {
+      class_ = cub_locator_find_class (class_name[i]);
+      if (class_ != NULL)
+	{
+	  req_class_table[i] = class_;
+	  i++;
+	}
+    }
+
+  for (i = 0; req_class_table[i]; i++)
+    {
+      cub_au_fetch_class (req_class_table[i], NULL, 0, 1);
+    }
+
+  unload_context.do_auth = 1;
+  unload_context.storage_order = FOLLOW_STORAGE_ORDER;
+  unload_context.exec_name = "migrate";
+
+  if ((error = cub_extract_classes_to_file (unload_context, schema_file)) != 0)
+    {
+      return error;
+    }
+
+  return NO_ERROR;
+}
+
+static int
 migrate_get_db_path (char *dbname)
 {
   char *path;
@@ -382,6 +659,8 @@ migrate_get_db_path (char *dbname)
     }
 
   sprintf (db_path, "%s/%s_lgat", path, dbname);
+
+  return NO_ERROR;
 }
 
 static int
@@ -601,17 +880,17 @@ migrate_initialize (char *dbname)
       error = -1;
     }
 
-  cub_db_get_database_version = dlsym (dl_handle, "db_get_database_version");
+  cub_db_get_database_version = (DB_GET_DATABASE_VERSION) dlsym (dl_handle, "db_get_database_version");
   if (cub_db_get_database_version == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_au_disable_passwords = dlsym (dl_handle, "au_disable_passwords");
+  cub_au_disable_passwords = (AU_DISABLE_PASSWORDS) dlsym (dl_handle, "au_disable_passwords");
   if (cub_au_disable_passwords == NULL)
     {
-      cub_au_disable_passwords = dlsym (dl_handle, "_Z20au_disable_passwordsv");
+      cub_au_disable_passwords = (AU_DISABLE_PASSWORDS) dlsym (dl_handle, "_Z20au_disable_passwordsv");
       if (cub_au_disable_passwords == NULL)
 	{
 	  PRINT_LOG ("%s", dlerror ());
@@ -619,39 +898,40 @@ migrate_initialize (char *dbname)
 	}
     }
 
-  cub_db_restart_ex = dlsym (dl_handle, "db_restart_ex");
+  cub_db_restart_ex = (DB_RESTART_EX) dlsym (dl_handle, "db_restart_ex");
   if (cub_db_restart_ex == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_er_errid = dlsym (dl_handle, "er_errid");
+  cub_er_errid = (ER_ERRID) dlsym (dl_handle, "er_errid");
   if (cub_er_errid == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_open_buffer = dlsym (dl_handle, "db_open_buffer");
+  cub_db_open_buffer = (DB_OPEN_BUFFER) dlsym (dl_handle, "db_open_buffer");
   if (cub_db_open_buffer == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_compile_statement = dlsym (dl_handle, "db_compile_statement");
+  cub_db_compile_statement = (DB_COMPILE_STATEMENT) dlsym (dl_handle, "db_compile_statement");
   if (cub_db_compile_statement == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_execute_statement_local = dlsym (dl_handle, "db_execute_statement_local");
+  cub_db_execute_statement_local = (DB_EXECUTE_STATEMENT_LOCAL) dlsym (dl_handle, "db_execute_statement_local");
   if (cub_db_execute_statement_local == NULL)
     {
       cub_db_execute_statement_local =
-	dlsym (dl_handle, "_Z26db_execute_statement_localP10db_sessioniPP15db_query_result");
+	(DB_EXECUTE_STATEMENT_LOCAL) dlsym (dl_handle,
+					    "_Z26db_execute_statement_localP10db_sessioniPP15db_query_result");
       if (cub_db_execute_statement_local == NULL)
 	{
 	  PRINT_LOG ("%s", dlerror ());
@@ -659,71 +939,159 @@ migrate_initialize (char *dbname)
 	}
     }
 
-  cub_db_query_get_tuple_value = dlsym (dl_handle, "db_query_get_tuple_value");
+  cub_db_query_get_tuple_value = (DB_QUERY_GET_TUPLE_VALUE) dlsym (dl_handle, "db_query_get_tuple_value");
   if (cub_db_query_get_tuple_value == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_query_first_tuple = dlsym (dl_handle, "db_query_first_tuple");
+  cub_db_query_first_tuple = (DB_QUERY_TUPLE) dlsym (dl_handle, "db_query_first_tuple");
   if (cub_db_query_first_tuple == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_query_next_tuple = dlsym (dl_handle, "db_query_next_tuple");
+  cub_db_query_next_tuple = (DB_QUERY_TUPLE) dlsym (dl_handle, "db_query_next_tuple");
   if (cub_db_query_next_tuple == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_close_session = dlsym (dl_handle, "db_close_session");
+  cub_db_query_tuple_count = (DB_QUERY_TUPLE) dlsym (dl_handle, "db_query_tuple_count");
+  if (cub_db_query_tuple_count == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_db_close_session = (DB_CLOSE_SESSION) dlsym (dl_handle, "db_close_session");
   if (cub_db_close_session == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_query_end = dlsym (dl_handle, "db_query_end");
+  cub_db_query_end = (DB_QUERY_END) dlsym (dl_handle, "db_query_end");
   if (cub_db_query_end == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_commit_transaction = dlsym (dl_handle, "db_commit_transaction");
+  cub_db_commit_transaction = (DB_COMMIT_TRANSACTION) dlsym (dl_handle, "db_commit_transaction");
   if (cub_db_commit_transaction == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_abort_transaction = dlsym (dl_handle, "db_abort_transaction");
+  cub_db_abort_transaction = (DB_ABORT_TRANSACTION) dlsym (dl_handle, "db_abort_transaction");
   if (cub_db_abort_transaction == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_shutdown = dlsym (dl_handle, "db_shutdown");
+  cub_db_shutdown = (DB_SHUTDOWN) dlsym (dl_handle, "db_shutdown");
   if (cub_db_shutdown == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_db_error_string = dlsym (dl_handle, "db_error_string");
+  cub_db_error_string = (DB_ERROR_STRING) dlsym (dl_handle, "db_error_string");
   if (cub_db_error_string == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
     }
 
-  cub_Au_disable = dlsym (dl_handle, "Au_disable");
+  cub_Au_disable = (int *) dlsym (dl_handle, "Au_disable");
   if (cub_Au_disable == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_req_class_table = (DB_OBJECT ***) dlsym (dl_handle, "req_class_table");
+  if (cub_req_class_table == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_required_class_only = (bool *) dlsym (dl_handle, "required_class_only");
+  if (cub_required_class_only == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_include_references = (bool *) dlsym (dl_handle, "include_references");
+  if (cub_include_references == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_input_filename = (char **) dlsym (dl_handle, "input_filename");
+  if (cub_input_filename == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_do_schema = (bool *) dlsym (dl_handle, "do_schema");
+  if (cub_do_schema == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_class_table = (LIST_MOPS **) dlsym (dl_handle, "class_table");
+  if (cub_class_table == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_sm_Root_class_mop = (MOP *) dlsym (dl_handle, "sm_Root_class_mop");
+  if (cub_sm_Root_class_mop == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_locator_get_all_mops =
+    (LOCATOR_GET_ALL_MOPS) dlsym (dl_handle,
+				  "_Z20locator_get_all_mopsP9db_object13DB_FETCH_MODEP21LC_FETCH_VERSION_TYPE");
+  if (cub_locator_get_all_mops == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_locator_find_class = (LOCATOR_FIND_CLASS) dlsym (dl_handle, "_Z18locator_find_classPKc");
+  if (cub_locator_find_class == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_au_fetch_class =
+    (AU_FETCH_CLASS) dlsym (dl_handle, "_Z14au_fetch_classP9db_objectPP8sm_class12au_fetchmode7DB_AUTH");
+  if (cub_au_fetch_class == NULL)
+    {
+      PRINT_LOG ("%s", dlerror ());
+      error = -1;
+    }
+
+  cub_extract_classes_to_file =
+    (EXTRACT_CLASSES_TO_FILE) dlsym (dl_handle, "_Z23extract_classes_to_fileR15extract_contextPKc");
+  if (cub_locator_find_class == NULL)
     {
       PRINT_LOG ("%s", dlerror ());
       error = -1;
@@ -751,6 +1119,67 @@ migrate_execute_query (const char *query)
       return -1;
     }
   cub_db_query_end (result);
+
+  return NO_ERROR;
+}
+
+static int
+migrate_get_view_list (char ***view_list)
+{
+  DB_QUERY_RESULT *result;
+  int cnt = 0, error;
+  char **list;
+
+  error = cub_db_execute_query (view_query, &result);
+  if (error < 0)
+    {
+      fprintf (out, "view query: execute query failed\n \"%s\"\n", view_query);
+      return -1;
+    }
+
+  cnt = cub_db_query_tuple_count (result);
+
+  if (cnt == 0)
+    {
+      *view_list = NULL;
+      return 0;
+    }
+
+  list = (char **) malloc (cnt * sizeof (char *));
+  *view_list = list;
+
+  cnt = 0;
+  if ((error = cub_db_query_first_tuple (result)) == DB_CURSOR_SUCCESS)
+    {
+      do
+	{
+	  DB_VALUE value;
+
+	  /* from query */
+	  error = cub_db_query_get_tuple_value (result, 0, &value);
+	  if (error < 0)
+	    {
+	      fprintf (out, "view_list: can not get a tuple for \"%s\"\n", view_query);
+	      return -1;
+	    }
+
+	  list[cnt++] = strdup (value.data.ch.medium.buf);
+
+	  error = cub_db_query_next_tuple (result);
+	}
+      while (error != DB_CURSOR_END && error != DB_CURSOR_ERROR);
+    }
+
+end:
+  cub_db_query_end (result);
+
+  if (error < 0)
+    {
+      fprintf (out, "generated: can not get a next tuple for \"%s\"\n", view_query);
+      return -1;
+    }
+
+  return cnt;
 }
 
 static int
@@ -839,13 +1268,13 @@ migrate_queries ()
 	  return -1;
 	}
     }
-#if 0
+
   error = migrate_execute_query (update_db_class_not_for_system_classes);
   if (error < 0)
     {
       return -1;
     }
-#endif
+
   error = migrate_generated (serial_query, 1);
   if (error < 0)
     {
@@ -877,19 +1306,12 @@ migrate_queries ()
 	  return -1;
 	}
     }
-#if 0
+
   error = migrate_execute_query (update_db_class_for_system_classes);
   if (error < 0)
     {
       return -1;
     }
-
-  error = migrate_execute_query (select_db_class_for_system_update);
-  if (error < 0)
-    {
-      return -1;
-    }
-#endif
 
   return 0;
 }
@@ -983,6 +1405,8 @@ main (int argc, char *argv[])
 {
   int status, error;
   char *dbname;
+  char **view_list;
+  int view_cnt;
 
   if (argc < 2)
     {
@@ -1029,9 +1453,6 @@ main (int argc, char *argv[])
       return -1;
     }
 
-  printf ("\n");
-  printf ("Phase 4: Executing the mirgate queries\n");
-
   cub_au_disable_passwords ();
 
   error = cub_db_restart_ex ("migrate", dbname, "DBA", NULL, NULL, DB_CLIENT_TYPE_ADMIN_UTILITY);
@@ -1042,6 +1463,69 @@ main (int argc, char *argv[])
     }
 
   *cub_Au_disable = 1;
+
+  printf ("Phase 4: Extracting Viewws\n");
+
+  view_cnt = migrate_get_view_list (&view_list);
+  if (view_cnt < 0)
+    {
+      printf ("migrate: encountered error while get view list\n");
+      return -1;
+    }
+
+  if (view_list)
+    {
+      int i;
+      FILE *f_query, *f_view;
+      char sql[4096];
+      char view_list_file[256];
+      char view_query_file[256];
+
+      /* make view list file as like unload */
+      sprintf (view_list_file, "%s_schema", dbname);
+      if (migrate_extract_views (view_cnt, view_list, view_list_file) < 0)
+	{
+	  printf ("migrate: encountered error while extracting the views\n");
+	  return -1;
+	}
+
+      /* make view query file for drop view queries */
+      sprintf (view_query_file, "%s.view", dbname);
+      f_query = fopen (view_query_file, "w");
+      if (f_query == NULL)
+	{
+	  printf ("migrate: encountered error while opening view query file\n");
+	  return -1;
+	}
+
+      /* readey to make queries to drop views */
+      for (i = 0; i < view_cnt; i++)
+	{
+	  fprintf (f_query, "DROP VIEW [%s];\n", view_list[i]);
+	}
+      fprintf (f_query, "\n");
+
+      /* concatenate view list file and view query file */
+      f_view = fopen (view_list_file, "r");
+      if (f_view == NULL)
+	{
+	  printf ("migrate: encountered error while opening view list file\n");
+	  return -1;
+	}
+
+      while (fgets (sql, 4096, f_view))
+	{
+	  fprintf (f_query, "%s", sql);
+	}
+
+      fclose (f_query);
+      fclose (f_view);
+
+      free (view_list);
+    }
+
+  printf ("\n");
+  printf ("Phase 5: Executing the mirgate queries\n");
 
   error = migrate_queries ();
   if (error < 0)
@@ -1072,10 +1556,11 @@ end:
     }
 
   printf ("\n");
-  printf ("Phase 5: Updating version info for log volume\n");
+  printf ("Phase 6: Updating version info for log volume\n");
 
+#if 0
   /* finalizing: update volume info. to 11.2 */
   migrate_update_log_volume (dbname);
-
+#endif
   return 0;
 }

@@ -1,4 +1,4 @@
-CC = gcc
+CC = g++
 
 INCDIR=$(CUBRID)/include
 BIN = migrate

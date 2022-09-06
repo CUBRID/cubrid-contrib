@@ -1558,9 +1558,8 @@ end:
   printf ("\n");
   printf ("Phase 6: Updating version info for log volume\n");
 
-#if 0
   /* finalizing: update volume info. to 11.2 */
   migrate_update_log_volume (dbname);
-#endif
+
   return 0;
 }

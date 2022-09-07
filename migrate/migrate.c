@@ -1464,8 +1464,10 @@ main (int argc, char *argv[])
 
   *cub_Au_disable = 1;
 
+  printf ("\n");
   printf ("Phase 4: Extracting Viewws\n");
 
+  /* get view list from database by query related to view */
   view_cnt = migrate_get_view_list (&view_list);
   if (view_cnt < 0)
     {
@@ -1481,7 +1483,7 @@ main (int argc, char *argv[])
       char view_list_file[256];
       char view_query_file[256];
 
-      /* make view list file as like unload */
+      /* make view list file as like unload schema */
       sprintf (view_list_file, "%s_schema", dbname);
       if (migrate_extract_views (view_cnt, view_list, view_list_file) < 0)
 	{
@@ -1513,6 +1515,7 @@ main (int argc, char *argv[])
 	  return -1;
 	}
 
+      /* copy and concat from view schema */
       while (fgets (sql, 4096, f_view))
 	{
 	  fprintf (f_query, "%s", sql);

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="EUC-KR" standalone="no"?>
+<project basedir="." default="build" name="rmsUserSyncNeis">
+	<property environment="env"/>
+	<property name="ECLIPSE_HOME" value="../../tools/eclipse"/>
+	<property name="debuglevel" value="source,lines,vars"/>
+	<property name="target" value="1.4"/>
+	<property name="source" value="1.4"/>
+
+	<property name="company.name" value="neighbor system (neighbor21.co.kr)"/>
+
+	<property name="target-dir" value="export"/>
+
+	<property name="patch-target-dir" value="patch"/>
+
+	<tstamp>
+		<format property="today" pattern="yyyy-MM-dd" locale="ko">
+		</format>
+	</tstamp>
+
+	<path id="rmsUserSyncNeis.classpath">
+		<pathelement location="bin"/>
+		<pathelement location="lib/activation.jar"/>
+		<pathelement location="lib/ant.jar"/>
+		<pathelement location="lib/commons-codec-1.3.jar" />
+		<pathelement location="lib/commons-collections-3.1.jar" />
+		<pathelement location="lib/commons-logging-1.1.1.jar"/>
+		<pathelement location="lib/eCrossClient.jar"/>
+		<pathelement location="lib/ibatis-common-2.jar"/>
+		<pathelement location="lib/ibatis-sqlmap-2.jar"/>
+		<pathelement location="lib/log4j-1.2.16.jar"/>
+		<pathelement location="lib/log4jdbc3-1.1.jar"/>
+		<pathelement location="lib/mail.jar"/>
+		<pathelement location="lib/neis-esb-opr.jar"/>
+		<pathelement location="lib/ojdbc14.jar"/>
+		<pathelement location="lib/quartz-all-1.6.1.jar"/>
+		<pathelement location="lib/slf4j-api-1.5.3.jar"/>
+		<pathelement location="lib/slf4j-log4j12-1.5.3.jar"/>
+		<pathelement location="lib/soap.jar"/>
+		<pathelement location="lib/jsse.jar"/>
+	</path>
+	
+	<target name="init">
+		<mkdir dir="${target-dir}/rmsUserSyncNeis/bin"/>
+		<mkdir dir="${target-dir}/rmsUserSyncNeis/conf"/>
+		<mkdir dir="${target-dir}/rmsUserSyncNeis/lib"/>
+		<mkdir dir="${target-dir}/rmsUserSyncNeis/logs"/>
+
+		<copy includeemptydirs="false" overwrite="true" todir="${target-dir}/rmsUserSyncNeis/lib">
+			<fileset dir="lib">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+
+		<copy includeemptydirs="false" overwrite="true" todir="${target-dir}/rmsUserSyncNeis/conf">
+			<fileset dir="conf">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+
+		<copy includeemptydirs="false" overwrite="true" todir="${target-dir}/rmsUserSyncNeis">
+			<fileset dir="shell">
+				<include name="**/st*.sh"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="clean">
+		<mkdir dir="${target-dir}"/>
+		<mkdir dir="${patch-target-dir}"/>
+		
+		<delete includeemptydirs="true">
+			<fileset dir="${target-dir}" includes="**/*"/>
+			<fileset dir="${patch-target-dir}" includes="**/*"/>
+		</delete>
+	</target>
+
+	<target depends="build-project" name="build"/>
+
+	<target depends="init" name="build-project">
+		<echo message="${ant.project.name}: ${ant.file}"/>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="${target-dir}\rmsUserSyncNeis\bin" includeantruntime="false" source="${source}" target="${target}">
+			<src path="src"/>
+			<classpath refid="rmsUserSyncNeis.classpath"/>
+		</javac>
+	</target>
+
+	<target name="make-patch">
+		<echo message="${today}">
+		</echo>
+		<jar destfile="patch/rmsUserSyncNeis.jar">
+			<manifest>
+				<attribute name="Built-By" value="${company.name}"/>
+				<attribute name="Built-Day" value="${today}"/>
+				<attribute name="Main-Class" value="SyncMain"/>
+
+			</manifest>
+			<fileset dir="${target-dir}">
+			</fileset>
+		</jar>
+	</target>
+
+</project>

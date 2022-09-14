@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.rcTakovr">
+
+	<!-- 기관간인계 기록물인계 인계계획수립 목록을 조회한다. -->
+	<resultMap id="findRcTakovrSetPlanPagedList-result" class="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		<result property="recordCenterId" 			column="RECORD_CENTER_ID"/>
+		<result property="takovrMngNo" 				column="TAKOVR_MNG_NO"/>
+		<result property="takovrRepCd"	 			column="TAKOVR_REP_CD"/>
+		<result property="takovrYyyy"	 			column="TAKOVR_YYYY"/>
+		<result property="takovrSno" 				column="TAKOVR_SNO"/>
+		<result property="takovrProgStateCd"		column="TAKOVR_PROG_STATE_CD"/>
+		<result property="takovrProgStateNm"		column="TAKOVR_PROG_STATE_NM"/>
+		<result property="takovrRepNm"	 			column="TAKOVR_REP_NM"/>
+		<result property="takeRepCd"	 			column="TAKE_REP_CD"/>
+		<result property="takeRepNm"	 			column="TAKE_REP_NM"/>
+		<result property="takovrRsn"	 			column="TAKOVR_RSN"/>
+		<result property="regDtime"	 				column="REG_DTIME"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기관간인계 기록물인계 인계계획수립 목록을 조회한다.
+	 -->
+	<select id="findRcTakovrSetPlanPagedList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultMap="findRcTakovrSetPlanPagedList-result">
+		SELECT D.record_center_id
+	        ,D.takovr_rep_cd||'-'||D.takovr_yyyy||'-'||lpad(to_char(D.takovr_sno), 6, '0') takovr_mng_no
+	        ,D.takovr_rep_cd
+	        ,D.takovr_yyyy
+	        ,D.takovr_sno
+	        ,D.takovr_prog_state_cd
+	        ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'DF06' and Z.com_cd = D.takovr_prog_state_cd) takovr_prog_state_nm
+	        ,D.takovr_rep_nm
+	        ,D.take_rep_cd
+	        ,D.take_rep_nm
+	        ,D.takovr_rsn
+	        ,D.reg_dtime
+	    FROM (
+	    	SELECT C.*
+	    	FROM (
+	    		SELECT ROWNUM AS rnum
+	    			, B.*
+	    		FROM (
+					SELECT A.record_center_id
+				        ,A.takovr_rep_cd
+				        ,A.takovr_yyyy
+				        ,A.takovr_sno
+				        ,A.takovr_prog_state_cd
+				        ,A.takovr_rep_nm
+				        ,A.take_rep_cd
+				        ,A.take_rep_nm
+				        ,A.takovr_rsn
+				        ,A.reg_dtime
+					FROM TB_DFTAKOVRPLAN A
+					<dynamic prepend="WHERE">
+						<isNotEmpty prepend="AND" property="takeRepCd">
+							A.take_rep_cd = #takeRepCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty	prepend="AND" property="takovrYyyy">
+							A.takovr_yyyy = #takovrYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="takovrProgStateCd">
+							A.takovr_prog_state_cd = #takovrProgStateCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="takeRepNm">
+							A.take_rep_nm like #takeRepNm:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					AND A.record_center_id = #recordCenterId:VARCHAR#
+					AND A.takovr_prog_state_cd != '05'
+					ORDER BY A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno DESC
+				) B
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) C
+			WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+	</select>
+	<!-- 
+		COUNT - 기관간인계 기록물인계 인계계획수립 목록을 조회한다.
+	 -->
+	<select id="countRcTakovrSetPlanPagedList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_DFTAKOVRPLAN A
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="takeRepCd">
+				A.take_rep_cd = #takeRepCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty	prepend="AND" property="takovrYyyy">
+				A.takovr_yyyy = #takovrYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="takovrProgStateCd">
+				A.takovr_prog_state_cd = #takovrProgStateCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="takeRepNm">
+				A.take_rep_nm like #takeRepNm:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		AND A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.takovr_prog_state_cd != '05'
+	</select>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 기관간인계 계획을 등록한다.
+	 -->
+	<insert id="createRcTakovrSetPlan" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		INSERT INTO TB_DFTAKOVRPLAN 
+            (takovr_rep_cd, takovr_yyyy, takovr_sno, record_center_id, takovr_rep_nm
+            ,take_rep_cd, take_rep_nm, takovr_rsn, takovr_prog_state_cd, takovr_file_state_cd, reg_user_id, reg_dtime
+        )
+        VALUES(
+             #takovrRepCd:VARCHAR#, #takovrYyyy:VARCHAR#, (SELECT NVL(MAX(Z.takovr_sno),0)+1 takovrSno 
+                                                            FROM   TB_DFTAKOVRPLAN Z 
+                                                            WHERE  Z.takovr_rep_cd    = #takovrRepCd:VARCHAR# 
+                                                            AND    Z.takovr_yyyy      = #takovrYyyy:VARCHAR#), #recordCenterId:VARCHAR#, #takovrRepNm:VARCHAR#
+            ,#takeRepCd:VARCHAR#, #takeRepNm:VARCHAR#, #takovrRsn:VARCHAR#, '01', '01', #regUserId:VARCHAR#
+	<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+	, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+        )
+	</insert>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 기관간인계계획을 수정한다.
+	 -->
+	<update id="updateRcTakovrSetPlan" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		UPDATE TB_DFTAKOVRPLAN
+		   SET take_rep_cd 	= #takeRepCd:VARCHAR#
+		      ,take_rep_nm 	= #takeRepNm:VARCHAR#
+		      ,takovr_rsn 	= #takovrRsn:VARCHAR#
+		 WHERE takovr_rep_cd = #takovrRepCd:VARCHAR#
+		   AND takovr_yyyy 	 = #takovrYyyy:VARCHAR#
+		   AND takovr_sno 	 = #takovrSno:NUMBER#
+		   AND record_center_id = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인계 인계계획등록
+		: 인계대상으로 선정된 기록물건 목록을 삭제한다.
+	 -->
+	<delete id="deleteRcTakovrRecordList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		DELETE FROM TB_DFTAKOVRRECORDLIST
+		WHERE takovr_rep_cd = #takovrRepCd:VARCHAR#
+		AND takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND takovr_sno = #takovrSno:NUMBER#
+		AND record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물인계 인계계획등록
+		: 인계대상으로 선정된 기록물철 목록을 삭제한다.
+	 -->
+	<delete id="deleteRcTakovrFolderList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		DELETE FROM TB_DFTAKOVRFOLDERLIST
+		WHERE takovr_rep_cd = #takovrRepCd:VARCHAR#
+		AND takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND takovr_sno = #takovrSno:NUMBER# 
+		AND record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 기관간인계 인계계획을 삭제한다.
+	 -->
+	<delete id="deleteRcTakovrSetPlan" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		DELETE FROM TB_DFTAKOVRPLAN 
+		 WHERE takovr_rep_cd 	= #takovrRepCd:VARCHAR#
+		   AND takovr_yyyy 		= #takovrYyyy:VARCHAR#
+		   AND takovr_sno 		= #takovrSno:NUMBER#
+		   AND record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+</sqlMap>

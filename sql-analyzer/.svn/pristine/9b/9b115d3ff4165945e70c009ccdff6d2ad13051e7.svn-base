@@ -1,0 +1,39 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : select
+-- Query Id : SelectUserSyncList
+
+		SELECT A.LINK_USER_ID, A.LOGIN_USER_ID, A.DEPT_CD, A.USER_DIV, A.USER_NM			, A.USER_PWD, A.POS, A.RANK, A.TEL_NO, A.BIRTH_NO			, A.ADDR, A.WORK_FLAG, A.USE_FLAG, A.PKI_UID, A.PKI_REG_DTIME			, A.PKI_LEFT_DTIME, A.PKI_TYPE, A.REG_COMP_YN, A.UPD_DTIME, A.LINK_DTIME			, A.UPD_COLUMN			, (SELECT Z.RECORD_CENTER_ID FROM TB_STORG Z WHERE Z.ORG_CD = A.DEPT_CD AND NVL(Z.TAKE_ORG_FLAG,'0') = '0' AND ROWNUM = 1) AS RECORD_CENTER_ID        FROM (            SELECT *            FROM TB_STUSER_SYNC            ORDER BY UPD_DTIME        ) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : select
+-- Query Id : CountUserSync
+
+		SELECT COUNT(1)		FROM  TB_STUSER		WHERE SSO_KEY = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : insert
+-- Query Id : InsertUserSync
+
+		INSERT INTO TB_STUSER		(			USER_ID, RECORD_CENTER_ID, DEPT_CD, USER_DIV, USER_NM			, LOGIN_USER_ID, USER_PWD, POS, RANK, WORK_FLAG			, TEL_NO, ADDR, RESID_NO, USE_FLAG, REG_DTIME			, SSO_FLAG, LOGIN_ERROR_CNT, ONNARA_USERID, MENU_GRANT_GRP_CD, PKI_NAME_CHECK			, SSO_KEY		)		VALUES		(			(SELECT LPAD(TO_CHAR(NVL((SELECT TO_NUMBER(MAX(USER_ID)) FROM TB_STUSER),0)+1),10,'0') FROM DUAL)			, '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '2', 0, '', (SELECT MENU_GRANT_GRP_CD FROM TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID = '1' AND DEFAULT_GRANT_DIV = '1'), 'Y'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : update
+-- Query Id : UpdateUserSync
+
+		UPDATE TB_STUSER A		SET   A.LOGIN_USER_ID     = '1'			, A.REG_DTIME         = '1'			 			, A.RECORD_CENTER_ID  = '1'			, A.DEPT_CD           = '1'			, A.MENU_GRANT_GRP_CD = (SELECT B.MENU_GRANT_GRP_CD FROM TB_STMENUGRANTGRP B WHERE B.RECORD_CENTER_ID = '1' AND B.DEFAULT_GRANT_DIV = A.USER_DIV)			  			, A.USER_NM           = '1'			  			, A.POS               = '1'			  			, A.RANK              = '1'			  			, A.WORK_FLAG         = '1'			  			, A.TEL_NO            = '1'			  			, A.ADDR              = '1'			  			, A.REGID_NO          = '1'			  			, A.USE_FLAG          = '1'			 		WHERE A.SSO_KEY = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : delete
+-- Query Id : DeleteUserSync
+
+		DELETE TB_STUSER_SYNC		WHERE LOGIN_USER_ID = '1'		AND   UPD_DTIME     = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml

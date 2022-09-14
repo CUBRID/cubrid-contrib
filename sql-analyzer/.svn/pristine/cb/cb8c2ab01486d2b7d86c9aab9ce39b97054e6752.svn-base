@@ -1,0 +1,109 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : select
+-- Query Id : SelectRecordNeo_StMedium
+
+		SELECT MEDIUM_ID		FROM (		    SELECT A.MEDIUM_ID		    FROM  TB_STMEDIUM A		    WHERE EXISTS (		    	SELECT RECORD_CENTER_ID, DEST_STORAGE_TYPE, DEST_STORAGE_VENDOR FROM TB_STREQTRANS WHERE JOB_ID = '1'		    )		    AND   A.VOLM_ID IN (SELECT VOLM_ID FROM TB_STVOLM WHERE RECORD_CENTER_ID = '1' AND DEL_FLAG = '0' AND VOLM_DIV_CD = '3')		    AND   A.DEL_FLAG = '0'		    AND   (A.TOT_SIZE - A.USE_SIZE) > NVL((SELECT NVL(DEST_FILE_SIZE,0) FROM TB_STREQRESULT WHERE JOB_ID = '1' AND REQUEST_STATUS = 'C'),0)                    AND   A.MEDIUM_CD = MEDIUM_CD                    AND   A.MEDIUM_DETAIL_CD = MEDIUM_DETAIL_CD		    ORDER BY A.RECORD_CENTER_ID, A.MEDIUM_ID		)		WHERE ROWNUM = 1	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : select
+-- Query Id : SelectRecordNeo_RdRecord_OrignId
+
+		SELECT A.ORIGN_ID		FROM  TB_RDRECORD A		WHERE A.RECORD_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_RdRecord_OrignId
+
+		UPDATE TB_RDRECORD A		SET   A.ORIGN_ID = '1'		WHERE A.RECORD_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : insert
+-- Query Id : InsertRecordNeo_RdRecordOrign
+
+		INSERT INTO TB_STRECORDORIGN		(		    RECORD_CENTER_ID, ORIGN_ID, RECORD_ID, ERECORD_FLAG, PDF_A1_TRANS_STATE, NEO_TRANS_STATE, DEL_FLAG, REG_DTIME		)		(		    SELECT A.RECORD_CENTER_ID, A.ORIGN_ID, A.RECORD_ID, A.ERECORD_FLAG, A.PDF_A1_TRANS_STATE, '4' AS NEO_TRANS_STATE, '0', TO_CHAR (sys_datetime, 'YYYYMMDDHH24MISS')		    FROM  TB_RDRECORD A		    WHERE A.RECORD_ID = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : insert
+-- Query Id : InsertRecordNeo_StOrignNeoFile
+
+		INSERT INTO TB_STORIGNNEOFILE		(		    ORIGN_NEO_FILE_ID, RECORD_CENTER_ID, ORIGN_ID, CHNG_SNO, FILE_NM		    , NEO_FILE_TYPE_CD, FILE_SIZE, STORE_FILE_ID, MEDIUM_ID, DEL_FLAG		    , VIRUS_FLAG, REG_DTIME		)		(		    SELECT '1', C.RECORD_CENTER_ID, C.ORIGN_ID, A.NEOCHASU		        , CASE WHEN ((SELECT MEDIUM_CD FROM TB_STMEDIUM WHERE RECORD_CENTER_ID = '1' AND MEDIUM_ID='1' AND ROWNUM=1) = '01') THEN		        	'DET'||C.CREAT_SYS_CD||C.ORG_CD||C.CREAT_YYYY||C.CREAT_REG_NO||C.DTCH_REG_NO||'.neo'		        ELSE		        	C.CREAT_SYS_CD||'-'||C.ORG_CD||'-'||C.CREAT_YYYY||'-'||C.CREAT_REG_NO||		        	(CASE WHEN C.DTCH_REG_NO != '00' THEN ' ('||C.DTCH_REG_NO||')'		             WHEN (SELECT COUNT(1) FROM TB_RDRECORD D WHERE D.RECORD_CENTER_ID=C.RECORD_CENTER_ID AND D.CREAT_SYS_CD=C.CREAT_SYS_CD AND D.ORG_CD=C.ORG_CD AND D.CREAT_YYYY=C.CREAT_YYYY AND D.CREAT_REG_NO=C.CREAT_REG_NO) > 1 THEN ' ('||C.DTCH_REG_NO||')'		             ELSE '' END)		        END AS FILE_NM		        		        , (CASE WHEN A.ERECORD_FLAG='1' THEN '3' ELSE '2' END) AS NEO_FILE_TYPE_CD, B.DEST_FILE_SIZE, B.DEST_FILE_ID, '1' AS MEDIUM_ID, 0 AS DEL_FLAG		        , '0' AS VIRUS_FLAG, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		    FROM  TB_STREQTRANS A		        , TB_STREQRESULT B		        , TB_RDRECORD C		    WHERE A.RECORD_CENTER_ID = '1' 		    AND   A.JOB_ID = '1'		    AND   B.JOB_ID = A.JOB_ID		    AND   C.RECORD_ID = A.RECORD_ID		    AND   C.RECORD_CENTER_ID = A.RECORD_CENTER_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : insert
+-- Query Id : InsertRecordNeo_StWorkHist
+
+		INSERT INTO TB_STWORKHIST		(		    RECORD_CENTER_ID, WORK_HIST_ID, WORK_DIV, WORK_START_DTIME, WORK_CLOSE_DTIME		    , SVC_CD, SVC_NM, FOLDER_ID, RECORD_ID, STORE_FILE_NM		    , ERROR_FLAG, ERROR_CD, ERROR_CONT, WORK_CONT, ERROR_SOL_CONT		    , ORIGN_FILE_ID, FOLLOWUP_DIV_CD, FORMAT_DIV_CD		)		(			SELECT A.RECORD_CENTER_ID, '1', '4', TO_CHAR(A.REQUEST_START_TIME,'YYYYMMDDHH24MISS'), TO_CHAR(A.REQUEST_END_TIME,'YYYYMMDDHH24MISS')				, '306', 'PresvFormat ResultService', A.FOLDER_ID, A.RECORD_ID, B.DEST_FILE_NM				, '1', NVL(B.ERROR_CODE, A.ERROR_CODE), NVL(B.ERROR_CONTENTS, A.ERROR_CONTENTS), '', ''				, SUBSTR(B.SRC_FILE_ID,1,19), '0', '1'			FROM  TB_STREQTRANS A			    , TB_STREQRESULT B			WHERE A.JOB_ID = '1'			AND   A.REQUEST_STATUS = 'D'			AND   A.JOB_ID = B.JOB_ID(+)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_RdRecord_1
+
+		UPDATE TB_RDRECORD A		SET   A.NEO_TRANS_STATE = '1'		WHERE A.RECORD_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_RdFolder_1
+
+		UPDATE (		    SELECT A.RECORD_NEO_TRANS_STATE		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID) AS RECORD_CNT_TOT		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE = '0') AS RECORD_CNT_0		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE IN ('1','2','3')) AS RECORD_CNT_1		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE IN ('4','6')) AS RECORD_CNT_4		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE = '5') AS RECORD_CNT_5		    FROM  TB_RDFOLDER A		    WHERE A.FOLDER_ID = '1'		) C		SET C.RECORD_NEO_TRANS_STATE = (CASE WHEN C.RECORD_CNT_0=C.RECORD_CNT_TOT THEN '0' WHEN C.RECORD_CNT_4=C.RECORD_CNT_TOT THEN '4' WHEN C.RECORD_CNT_5=C.RECORD_CNT_TOT THEN '5' ELSE '1' END)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_RdRecord_2
+
+		UPDATE TB_RDRECORD A		SET   A.NEO_TRANS_STATE_2 = '1'		WHERE A.RECORD_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_RdFolder_2
+
+		UPDATE (		    SELECT A.RECORD_NEO_TRANS_STATE_2		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID) AS RECORD_CNT_TOT		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 = '0') AS RECORD_CNT_0		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 IN ('1','2','3')) AS RECORD_CNT_1		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 IN ('4','6')) AS RECORD_CNT_4		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 = '5') AS RECORD_CNT_5		    FROM  TB_RDFOLDER A		    WHERE A.FOLDER_ID = '1'		) C		SET C.RECORD_NEO_TRANS_STATE_2 = (CASE WHEN C.RECORD_CNT_0=C.RECORD_CNT_TOT THEN '0' WHEN C.RECORD_CNT_4=C.RECORD_CNT_TOT THEN '4' WHEN C.RECORD_CNT_5=C.RECORD_CNT_TOT THEN '5' ELSE '1' END)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_DfRecvTransfList_2
+
+		UPDATE TB_DFRECVTRANSFLIST A		SET   A.RECORD_NEO_TRANS_STATE = (SELECT C.RECORD_NEO_TRANS_STATE_2 FROM TB_RDFOLDER C WHERE C.FOLDER_ID = A.FOLDER_ID)		WHERE A.RECORD_CENTER_ID = '1'		AND   A.FOLDER_ID = '1'		AND   A.CONFM_TRANSF_DIV_CD IN ('1','2','3')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_StMedium
+
+		UPDATE TB_STMEDIUM		SET   USE_SIZE = USE_SIZE + NVL((SELECT NVL(SUM(DEST_FILE_SIZE),0) FROM TB_STREQRESULT WHERE JOB_ID = '1' AND REQUEST_STATUS = 'C'),0)		WHERE RECORD_CENTER_ID = '1'		AND   MEDIUM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : select
+-- Query Id : SelectRecordNeo_RecordNeoNotCnt
+
+		SELECT COUNT(1) - SUM(CASE WHEN NEO_TRANS_STATE = '4' THEN 1 ELSE 0 END) AS CNT		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : select
+-- Query Id : SelectRecordNeo_RecordNeoNotCnt_2
+
+		SELECT COUNT(1) - SUM(CASE WHEN NEO_TRANS_STATE_2 = '4' THEN 1 ELSE 0 END) AS CNT		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml
+-- Query    : update
+-- Query Id : UpdateRecordNeo_DoFolderNeoFile
+
+		UPDATE TB_STREQTRANS		   SET ERROR_CODE = ''		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1'		   AND REQUEST_STATUS = '-'		   AND ERROR_CODE = 'W0001';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultRecordNeo.xml

@@ -1,0 +1,137 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findUserDetl
+
+		SELECT A.user_id		     , A.login_user_id		     , A.dept_cd		     , A.record_center_id		     , A.user_div		     , C.com_cd_nm user_div_nm		     , A.user_nm		     , A.user_pwd		     , A.pos		     , A.rank		     , A.work_flag		     , DECODE(A.work_flag,'0','전체','1','근무','2','퇴사') work_flag_nm		     , A.tel_no		     , A.addr		     , SUBSTR(A.resid_no, 0, 6) resid_no		     , A.dept_cd		     , B.dept_nm		     , A.use_flag		     , A.menu_grant_grp_cd		     , DECODE(A.use_flag,'0','미사용','1','사용') use_flag_nm		     , A.sso_flag		     , (select menu_grant_grp_nm from tb_stmenugrantgrp		        where a.record_center_id = record_center_id		        and a.menu_grant_grp_cd = menu_grant_grp_cd ) as menu_grant_grp_nm		 FROM TB_STUSER A		     , TB_STDEPT B		     , TB_ZZCOMCD C		 WHERE A.user_id = '1'		 AND A.dept_cd = B.dept_cd(+)		 AND A.user_div = C.com_cd(+)		 AND C.com_type_cd = 'ST01'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : update
+-- Query Id : updateUserPwd
+
+		UPDATE TB_STUSER		SET user_pwd = '1'			, reg_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE user_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findUserPagedList
+
+		SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, A.*			FROM (				SELECT user_id				    , login_user_id				    , dept_cd				    , record_center_id				    , user_div				    , user_nm				    , user_pwd				    , pos				    , rank				    , work_flag				    , tel_no				    , addr				    , resid_no				FROM TB_STUSER				WHERE use_flag = '1'				ORDER BY user_nm			) A			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : countUserPagedList
+
+		SELECT COUNT(1)		FROM TB_STUSER		WHERE use_flag = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findMaxUserDetl
+
+		SELECT LPAD(NVL(MAX(user_id),0)+ 1, 10, '0') user_id FROM TB_STUSER	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : countUserMngDetl
+
+		SELECT COUNT(1) FROM TB_STUSER WHERE USER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : insert
+-- Query Id : createUserMngDetl
+
+		INSERT INTO TB_STUSER (			record_center_id, user_id, dept_cd, user_div, user_nm, login_user_id, user_pwd, pos, rank, work_flag, tel_no, addr, resid_no, use_flag, reg_dtime, pki_name_check, sso_flag, menu_grant_grp_cd		) VALUES (			(SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, 'Y'			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : update
+-- Query Id : updateUserMngDetl
+
+		UPDATE TB_STUSER		SET   user_div = '1'		     ,user_nm = '1'		     ,dept_cd = '1'		     ,work_flag = '1'		     ,resid_no = '1'		     ,tel_no = '1'		     ,addr = '1'		     ,pos = '1'		     ,rank = '1'		     ,record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = '1' )		     ,sso_flag = '1'		     ,menu_grant_grp_cd = '1'		WHERE user_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : update
+-- Query Id : deleteUserMngDetl
+
+		UPDATE TB_STUSER SET use_flag = '0' WHERE user_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findUserIdCount
+
+		SELECT count(*) FROM TB_STUSER WHERE login_user_id = '1' AND sso_flag in ('2','3')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findUserInfo
+
+		SELECT user_id, dept_cd FROM TB_STUSER WHERE login_user_id = '1' AND sso_flag in ('2','3')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findRecordCenterId
+
+		SELECT RECORD_CENTER_ID	  	FROM TB_STRECORDCENTER	 	WHERE RECORD_CENTER_CD = (SELECT HUPPER_ORG_CD FROM TB_STORG WHERE ORG_CD = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : insert
+-- Query Id : createUserBatchReg
+
+		INSERT INTO TB_STUSER (				  user_id, record_center_id, dept_cd, user_div, user_nm				, login_user_id, user_pwd, pos, rank, work_flag				, use_flag, sso_flag, reg_dtime, menu_grant_grp_cd		) VALUES (			  '1'			, (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd='1')			, '1', '1', '1'			, '1', '1', '1', '1', '1'						, '1', '3', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, (SELECT menu_grant_grp_cd FROM TB_STMENUGRANTGRP WHERE record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd='1') AND default_grant_div = '1')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : update
+-- Query Id : updateUserBatchReg
+
+		UPDATE TB_STUSER	   	SET    record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = '1')		     , dept_cd = '1'		     , user_div = '1'		     , user_nm = '1'		     , user_pwd = '1'		     , pos = '1'		     , rank = '1'		 WHERE user_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findDeptUserIdCount
+
+		SELECT count(*) FROM TB_STUSER WHERE login_user_id = '1' AND DEPT_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : update
+-- Query Id : updateUserGrantBatchReg
+
+		UPDATE TB_STUSER	    SET  USER_DIV = '1'	     	,MENU_GRANT_GRP_CD = '1'		WHERE USER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : findSysUserPageList
+
+		SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, A.*			FROM (				SELECT LOGIN_USER_ID					, USER_NM				    , REG_DTIME				    , USER_ID				FROM TB_STUSER				WHERE LOGIN_ERROR_CNT >= '1'				 					AND 0 = 1				 			) A			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : select
+-- Query Id : countFindSysUserPageList
+
+		SELECT COUNT(*)		FROM TB_STUSER		WHERE LOGIN_ERROR_CNT >= '1'		 		    AND 0 = 1		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : update
+-- Query Id : updateLoginErrorReset
+
+		UPDATE TB_STUSER SET LOGIN_ERROR_CNT = 0 WHERE USER_ID = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml

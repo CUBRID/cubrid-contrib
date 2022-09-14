@@ -1,0 +1,172 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanTrgtList
+
+	 	SELECT COUNT(1)	    FROM (	        SELECT A.*	        FROM (	            SELECT ORG_CD, ORG_NM, SUM(acnt) AS erecCnt, SUM(ccnt) AS scanCnt1, SUM(dcnt) AS scanCnt2	            FROM (SELECT A.ORG_CD, B.ORG_NM                                             	                                , DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG) ,0) acnt  	                                , DECODE(A.SCAN_REQ_TYPE_CD, '1', COUNT(A.SCAN_REQ_TYPE_CD), 0) ccnt  	                                , DECODE(A.SCAN_REQ_TYPE_CD, '2', COUNT(A.SCAN_REQ_TYPE_CD), 0) dcnt                  	                       FROM TB_RDFOLDER A, TB_STORG B	                       WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')	                       AND A.BOOKSF_ARNG_FLAG IN ('1', '2')	                       AND A.ORG_CD = B.ORG_CD	                       AND A.RECORD_CENTER_ID = '1'	                       AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID	                       GROUP BY A.ORG_CD, B.ORG_NM, A.BOOKSF_ARNG_FLAG, A.SCAN_REQ_TYPE_CD	            )	            GROUP BY ORG_CD, ORG_NM 	            ORDER BY ORG_CD	        ) A	    ) B	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanTrgtList
+
+	 	SELECT C.org_cd		        ,C.org_nm		        ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id ANd Z.org_cd = C.org_cd) AS org_abbr_nm		        ,C.erecCnt		        ,C.scanCnt1		        ,C.scanCnt2		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                , A.*		        FROM (		            SELECT RECORD_CENTER_ID, ORG_CD, ORG_NM, SUM(acnt) AS erecCnt, SUM(ccnt) AS scanCnt1, SUM(dcnt) AS scanCnt2		            FROM (SELECT A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM                                             	                            ,DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG) ,0) acnt  	                            ,DECODE(A.SCAN_REQ_TYPE_CD, '1', COUNT(A.SCAN_REQ_TYPE_CD), 0) ccnt  	                            ,DECODE(A.SCAN_REQ_TYPE_CD, '2', COUNT(A.SCAN_REQ_TYPE_CD), 0) dcnt                  	                      FROM TB_RDFOLDER A, TB_STORG B	                      WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')	                      AND A.BOOKSF_ARNG_FLAG IN ('1', '2')	                      AND A.ORG_CD = B.ORG_CD	                      AND A.RECORD_CENTER_ID = '1'	                      AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID	                      GROUP BY A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM, A.BOOKSF_ARNG_FLAG, A.SCAN_REQ_TYPE_CD		            )		            GROUP BY RECORD_CENTER_ID, ORG_CD, ORG_NM 		            ORDER BY ORG_CD		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanTrgtAllPagedList
+
+	 	 SELECT COUNT(1)         FROM (             SELECT A.FOLDER_ID                   ,A.ORG_CD                   ,B.ORG_NM                               ,A.CLSS_NM                   ,A.TITLE                   ,A.CREAT_YYYY                   ,C.COM_CD_NM PRESV_TERM_NM                   ,(SELECT SUM(D.RECORD_PAGE_CNT)  FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL                   ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM             FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C             WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')             AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','5')             AND NVL(A.OUT_FLAG,'0') = '0'             AND A.BOOKSF_ARNG_FLAG IN ('1', '2')             AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')             AND A.ORG_CD = B.ORG_CD             AND A.RECORD_CENTER_ID = '1'                AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND                       A.ORG_CD = '1'                   AND                      A.ORG_CD = '1'                   AND                      (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')                   AND                      (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')                   AND                      A.SCAN_REQ_TYPE_CD = '1'                                     UNION             SELECT A.FOLDER_ID                   ,A.ORG_CD                   ,B.ORG_NM                               ,A.CLSS_NM                   ,A.TITLE                   ,A.CREAT_YYYY                   ,C.COM_CD_NM PRESV_TERM_NM                   ,(SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL                   ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM             FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C             WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')             AND A.SCAN_PROG_STATE_CD = '2'             AND A.BOOKSF_ARNG_FLAG IN ('1', '2')             AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')             AND A.ORG_CD = B.ORG_CD             AND A.RECORD_CENTER_ID = '1'               AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND                       A.ORG_CD = '1'  AND                      A.ORG_CD = '1'  AND                      (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')                   AND                      (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')                   AND                      A.SCAN_REQ_TYPE_CD = '1'                                 ) 	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanTrgtAllPagedList
+
+	 	SELECT F.folder_id		      ,F.org_cd		      ,F.org_abbr_nm		      ,F.org_nm		      ,F.clss_nm		      ,F.title		      ,F.creat_yyyy		      ,F.presv_term_nm		      ,F.page_total		      ,F.scan_prog_state_nm		FROM (		    SELECT E.*		    FROM (		        SELECT ROWNUM AS rnum		              ,D.*		        FROM (		            SELECT A.FOLDER_ID		                  ,A.ORG_CD		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) AS org_abbr_nm		                  ,B.ORG_NM            		                  ,A.CLSS_NM		                  ,A.TITLE		                  ,A.CREAT_YYYY		                  ,C.COM_CD_NM PRESV_TERM_NM		                  ,(SELECT SUM(D.RECORD_PAGE_CNT)  FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL		                  ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM		            FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C		            WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','5')		            AND NVL(A.OUT_FLAG,'0') = '0'		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')		            AND A.ORG_CD = B.ORG_CD		            AND A.RECORD_CENTER_ID = '1'   		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    A.SCAN_REQ_TYPE_CD = '1'     		                  		            UNION		            SELECT A.FOLDER_ID		                  ,A.ORG_CD		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) AS org_abbr_nm		                  ,B.ORG_NM            		                  ,A.CLSS_NM		                  ,A.TITLE		                  ,A.CREAT_YYYY		                  ,C.COM_CD_NM PRESV_TERM_NM		                  ,(SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL		                  ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM		            FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C		            WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND A.SCAN_PROG_STATE_CD = '2'		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')		            AND A.ORG_CD = B.ORG_CD		            AND A.RECORD_CENTER_ID = '1'  		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    A.SCAN_REQ_TYPE_CD = '1'     		                  		        ) D		        WHERE ROWNUM <= '1'		    ) E		    WHERE E.rnum >= '1'		) F		ORDER BY F.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanTrgtPagedList
+
+	 	SELECT COUNT(1)        FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C        WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')        AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','2','5')        AND A.BOOKSF_ARNG_FLAG IN ('1', '2')        AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')        AND A.ORG_CD = B.ORG_CD        AND A.RECORD_CENTER_ID = '1'        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID             AND                  A.ORG_CD = '1'              AND                 A.ORG_CD = '1'              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 NVL(A.SCAN_PROG_STATE_CD, '1') = '1'              AND                 A.SCAN_REQ_TYPE_CD = '1'                   AND                 A.OUT_FLAG = '0'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanTrgtPagedList
+
+	 	SELECT F.folder_id		      ,F.org_cd		      ,F.org_abbr_nm		      ,F.org_nm		      ,F.clss_nm		      ,F.title		      ,F.creat_yyyy		      ,F.presv_term_nm		      ,F.page_total		      ,F.scan_prog_state_nm		FROM (		    SELECT E.*		    FROM (		        SELECT ROWNUM AS rnum		                ,D.*		        FROM (		            SELECT A.FOLDER_ID		                  ,A.ORG_CD		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) AS org_abbr_nm		                  ,B.ORG_NM            		                  ,A.CLSS_NM		                  ,A.TITLE		                  ,A.CREAT_YYYY		                  ,C.COM_CD_NM PRESV_TERM_NM		                  ,(SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL		                  ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM		            FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C		            WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','2','5')		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')		            AND A.ORG_CD = B.ORG_CD		            AND A.RECORD_CENTER_ID = '1'		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID    		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    NVL(A.SCAN_PROG_STATE_CD, '1') = '1'		                  AND 		                    A.SCAN_REQ_TYPE_CD = '1'     		                  AND  		                    A.OUT_FLAG = '0'  		        ) D		        WHERE ROWNUM <= '1'		    ) E		    WHERE E.rnum >= '1'		) F		ORDER BY F.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanFolderPagedList
+
+	 	SELECT COUNT(1)         FROM TB_RDFOLDER A        WHERE A.RECORD_CENTER_ID = '1'         AND                  A.SCAN_PROG_STATE_CD IN ('2','3','4')              AND                 A.SCAN_PROG_STATE_CD IN ('2','3','4')              AND                 A.ORG_CD = '1'              AND                 (A.CREAT_YYYY BETWEEN '1' AND '1')              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 A.SCAN_PROG_STATE_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanFolderPagedList
+
+	 	SELECT D.folder_id		      ,D.org_cd		      ,(SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_nm		      ,(SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_abbr_nm		      ,D.clss_nm		      ,D.title		      ,D.creat_yyyy		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD07' AND C.COM_CD=DECODE(D.presv_term_cd, '20', '25', D.presv_term_cd)) AS presv_term_nm		      ,(SELECT SUM(Z.record_page_cnt) FROM TB_RDRECORD Z WHERE Z.folder_id = D.folder_id) AS page_total		      ,D.scan_prog_state_cd		      ,DECODE(D.scan_prog_state_cd, '2','미스캔', '3','스캔', '4','반려','') AS scan_prog_state_nm		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		                ,B.*		        FROM (		            SELECT A.* 		            FROM TB_RDFOLDER A		            WHERE A.RECORD_CENTER_ID = '1' AND  		                    A.SCAN_PROG_STATE_CD IN ('2','3','4')		                  AND 		                    A.SCAN_PROG_STATE_CD IN ('2','3','4')		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    A.SCAN_PROG_STATE_CD = '1'		                  		            ORDER BY A.RECORD_CENTER_ID, A.TITLE		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanRecordPagedList
+
+	 	SELECT COUNT(1)        FROM TB_RDRECORD B           WHERE B.RECORD_CENTER_ID = '1'        AND B.FOLDER_ID = '1'        AND B.ERECORD_FLAG = '2'  AND                  (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')              AND                 (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')              AND                 (B.CREAT_YYYY BETWEEN '1' AND '1')              AND                 B.RECORD_DETL_TYPE_CD = '1'              AND                 B.RECORD_CLSS_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanRecordPagedList
+
+	 	SELECT E.record_id		      ,E.title		      ,SUBSTR(E.CREAT_REG_DTIME,0,12)||'00' CREAT_REG_DTIME		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD03' AND C.com_cd=E.record_detl_type_cd) AS record_detl_type_nm		      ,(SELECT NVL(SUM(A.page_cnt), '0') FROM TB_STORIGNFILE A WHERE A.record_center_id=E.record_center_id AND A.orign_id=E.orign_id AND A.doc_type_cd='10') AS record_page_cnt		      ,E.record_start_page		      ,E.record_end_page		      ,E.scan_fin_flag		      ,DECODE(E.scan_fin_flag, '0','미스캔', '1','스캔', '') AS scan_fin_flag_nm 		      ,E.scan_test_div_cd		      ,DECODE(E.scan_test_div_cd,'1','정상','2','오류','') AS scan_test_div_nm		      ,DECODE(E.scan_check_fin_flag,'1',DECODE(E.record_clss_cd,'','N','Y'),'N') AS scan_hist_flag		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT *		            FROM TB_RDRECORD B   		            WHERE B.RECORD_CENTER_ID = '1'		            AND B.FOLDER_ID = '1'		            AND B.ERECORD_FLAG = '2'  AND  		                    (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')		                  AND 		                    (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')		                  AND 		                    (B.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    B.RECORD_DETL_TYPE_CD = '1'		                  AND 		                    B.RECORD_CLSS_CD = '1'		                  		            ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanCheckFolderPagedList
+
+	 	SELECT COUNT(1)        FROM TB_RDFOLDER A        WHERE A.RECORD_CENTER_ID = '1'         AND                  A.SCAN_PROG_STATE_CD IN ('2','3','4')              AND                 A.SCAN_PROG_STATE_CD IN ('2','3','4')              AND                 A.ORG_CD = '1'              AND                 (A.CREAT_YYYY BETWEEN '1' AND '1')              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 A.SCAN_PROG_STATE_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanCheckFolderPagedList
+
+	 	SELECT D.folder_id		      ,D.org_cd		      ,(SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_nm		      ,(SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_abbr_nm		      ,D.clss_nm		      ,D.title		      ,D.creat_yyyy		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD07' AND C.com_cd=DECODE(D.presv_term_cd, '20', '25', D.presv_term_cd)) AS presv_term_nm		      ,(SELECT SUM(C.record_page_cnt) FROM TB_RDRECORD C WHERE C.folder_id = D.folder_id) AS page_total		      ,DECODE(D.scan_prog_state_cd, '2','미스캔', '3','스캔', '4','반려','') AS scan_prog_state_nm		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT *		            FROM TB_RDFOLDER A		            WHERE A.RECORD_CENTER_ID = '1'		             AND  		                    A.SCAN_PROG_STATE_CD IN ('2','3','4')		                  AND 		                    A.SCAN_PROG_STATE_CD IN ('2','3','4')		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    A.SCAN_PROG_STATE_CD = '1'		                  		             ORDER BY A.RECORD_CENTER_ID, A.TITLE		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : countScanCheckRecordPagedList
+
+	 	SELECT COUNT(1)        FROM TB_RDRECORD B        WHERE B.RECORD_CENTER_ID = '1'        AND B.FOLDER_ID = '1'        AND B.ERECORD_FLAG = '2'  AND                  (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')              AND                 (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')              AND                 (B.CREAT_YYYY BETWEEN '1' AND '1')              AND                 B.RECORD_DETL_TYPE_CD = '1'              AND                 B.RECORD_CLSS_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findScanCheckRecordPagedList
+
+	 	SELECT E.record_id		      ,E.title		      ,SUBSTR(E.creat_reg_dtime,0,12)||'00' AS creat_reg_dtime		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD03' AND C.com_cd=E.record_detl_type_cd) AS record_detl_type_nm		      ,E.record_page_cnt		      ,E.record_start_page		      ,E.record_end_page		      ,E.scan_fin_flag		      ,DECODE(E.scan_fin_flag, '0','미스캔', '1','스캔', '') AS scan_fin_flag_nm 		      ,E.scan_test_div_cd		      ,DECODE(E.scan_test_div_cd,'1','정상','2','오류','') AS scan_test_div_nm		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT *		            FROM TB_RDRECORD B		            WHERE B.RECORD_CENTER_ID = '1'		            AND B.FOLDER_ID = '1'		            AND B.ERECORD_FLAG = '2'  AND  		                    (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')		                  AND 		                    (B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')		                  AND 		                    (B.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    B.RECORD_DETL_TYPE_CD = '1'		                  AND 		                    B.RECORD_CLSS_CD = '1'		                  		            ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findRecordClssCd
+
+	 	SELECT com_type_cd,com_cd,com_cd_nm		FROM TB_ZZCOMCD 		WHERE com_type_cd  = (SELECT sub_com_type_cd                              FROM TB_ZZCOMCD                               WHERE com_type_cd = '1'                              AND com_cd = '1')        AND use_flag = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : update
+-- Query Id : updateScanTrgt
+
+		UPDATE TB_RDFOLDER		   SET SCAN_PROG_STATE_CD = '1'		     , SCAN_REQ_TYPE_CD   = DECODE((SELECT SCAN_REQ_TYPE_CD FROM TB_RDFOLDER			                                 WHERE FOLDER_ID = '1'			                                   AND RECORD_CENTER_ID = '1'), '1','1','1') 		 WHERE FOLDER_ID = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findOrignFileId
+
+		SELECT ORIGN_FILE_ID,		       FILE_NM		FROM TB_RDRECORD A, TB_STORIGNFILE B		WHERE A.RECORD_CENTER_ID = '1' 		  AND A.RECORD_ID = '1'		  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		  AND A.ORIGN_ID = B.ORIGN_ID		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findRecordOrignId
+
+		SELECT ORIGN_ID		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND RECORD_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : select
+-- Query Id : findFrontRecord
+
+		SELECT NVL(SUM(RECORD_PAGE_CNT), '0') RECORD_END_PAGE		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1'		   AND RECORD_ID  <  '1'		   AND SCAN_FIN_FLAG = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : update
+-- Query Id : updateScanRecord
+
+		UPDATE TB_RDRECORD		   SET SCAN_FIN_FLAG = '1'					     , ORIGN_ID 	 = '1'						     , RECORD_START_PAGE = '1'			     , RECORD_END_PAGE   = '1'				     , RECORD_PAGE_CNT   = '1'				 WHERE RECORD_CENTER_ID = '1'		   AND RECORD_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : update
+-- Query Id : updateScanRecordPage
+
+		UPDATE TB_RDRECORD Z		SET (Z.RECORD_START_PAGE, Z.RECORD_END_PAGE) = (			(				SELECT (TO_NUMBER(E.END_PAGE)-TO_NUMBER(E.RECORD_PAGE_CNT)+1) START_PAGE, E.END_PAGE				FROM (					SELECT RNUM A					, A.RECORD_CENTER_ID					, A.FOLDER_ID					, A.RECORD_ID					, A.TITLE					, A.RECORD_PAGE_CNT					, A.RECORD_START_PAGE					, A.RECORD_END_PAGE					, ( SELECT SUM(B.RECORD_PAGE_CNT)						FROM (							SELECT ROWNUM RNUM, C.RECORD_PAGE_CNT							FROM (								SELECT RECORD_PAGE_CNT								FROM  TB_RDRECORD								WHERE RECORD_CENTER_ID = '1'								AND   FOLDER_ID = '1'								AND   ERECORD_FLAG = '2'								ORDER BY record_center_id, creat_reg_dtime, creat_reg_no							) C						) B						WHERE B.RNUM  <=  A.RNUM ) END_PAGE					FROM (						SELECT ROWNUM RNUM, D.*						FROM (							SELECT *							FROM  TB_RDRECORD							WHERE RECORD_CENTER_ID = '1'							AND   FOLDER_ID = '1'							AND   ERECORD_FLAG = '2'							ORDER BY record_center_id, creat_reg_dtime, creat_reg_no						) D					) A				) E				WHERE E.RECORD_CENTER_ID=Z.RECORD_CENTER_ID				AND   E.RECORD_ID=Z.RECORD_ID			)		)		WHERE Z.RECORD_CENTER_ID = '1'		AND   Z.FOLDER_ID = '1'		AND   Z.SCAN_FIN_FLAG = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : update
+-- Query Id : updateScanFolder
+
+		UPDATE TB_RDFOLDER		   SET SCAN_PROG_STATE_CD = '1'         WHERE RECORD_CENTER_ID = '1'           AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : update
+-- Query Id : updateScanFinCheckRecord
+
+		UPDATE TB_RDRECORD			 SET 				SCAN_CHECK_FIN_FLAG = '0'				 			 WHERE RECORD_CENTER_ID     = '1'		   AND FOLDER_ID            = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml
+-- Query    : update
+-- Query Id : updateScanCheckRecord
+
+		UPDATE TB_RDRECORD		   SET SCAN_TEST_DIV_CD  = '1'				     , SCAN_ERROR_DIV_CD = '1'				     , SCAN_ERROR_CONT   = '1'				 WHERE RECORD_CENTER_ID = '1'		   AND RECORD_ID = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\scan\Scan.xml

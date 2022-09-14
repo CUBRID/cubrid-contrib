@@ -1,0 +1,1117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="take.prod">
+
+	<!--SELECT 생산접수_기록물철/건 등록시 중복되는 기록물철이 있는지 체크-->
+	<resultMap id="findProdDub-result" class="rms.take.prod.domain.GrProdCheck" >
+		<result property="crReportOrgCd"                 column="CR_REPORT_ORG_CD"/>
+		<result property="crReportYyyy"                    column="CR_REPORT_YYYY"/>
+	</resultMap>
+
+
+	<!--SELECT 생산접수_기록물철목록의 건수와 실제 건수 비교 체크-->
+	<resultMap id="findProdCntCheck-result" class="rms.take.prod.domain.GrProdCheck" >
+		<result property="recordCenterId"                column="RECORD_CENTER_ID"/>
+		<result property="folderRecvSeq"                 column="FOLDER_RECV_SEQ"/>
+		<result property="orgCd"                 				column="ORG_CD"/>
+		<result property="clssId"                 				column="CLSS_ID"/>
+		<result property="creatYyyy"                 		column="CREAT_YYYY"/>
+		<result property="folderRegSeq"                 	column="FOLDER_REG_SEQ"/>
+		<result property="hoNo"                 				column="HO_NO"/>
+		<result property="title"                 					column="TITLE"/>
+		<result property="folderListCnt"                    	column="FOLDER_LIST_CNT"/>
+		<result property="recordRealCnt"                 column="RECORD_REAL_CNT"/>
+	</resultMap>
+
+
+	<!--SELECT 생산접수_등록시 기록물철에 전자기록물여부 select-->
+	<resultMap id="findProdEfileInfo-result" class="rms.take.prod.domain.CrFolder">
+		<result property="recordCenterId"            column="record_center_id"/>
+		<result property="folderRecvSeq"             column="folder_recv_seq"/>
+		<result property="efile"                  			column="efile"/>
+		<result property="notEfile"              			column="not_efile"/>
+	</resultMap>
+
+
+	<!--SELECT 생산접수_등록시 기록물건에 (등록건수_파일수,쪽수,용량) select-->
+	<resultMap id="findProdDocInfo-result" class="rms.take.prod.domain.CrRecord">
+		<result property="recordCenterId"            column="record_center_id"/>
+		<result property="folderRecvSeq"             column="folder_recv_seq"/>
+		<result property="recordRecvSeq"           column="record_recv_seq"/>
+		<result property="attachCnt"                  	column="attach_cnt"/>
+		<result property="recordPageCnt"            column="record_page_cnt"/>
+		<result property="recordSize"              		column="record_size"/>
+	</resultMap>
+
+
+	<!--SELECT 처리과별 반려통보처리(반려통보-반려파일생성정보) select-->
+	<resultMap id="prodInfrmInfo-result" class="rms.take.prod.domain.ProdInfrmInfo">
+		<result property="recvIp"            	column="recv_ip"/>
+		<result property="recvPort"           column="recv_port"/>
+		<result property="className"           column="class_name"/>
+		<result property="grLanguage"           column="gr_language"/>
+	</resultMap>
+
+
+	<!--SELECT 처리과별 반려통보처리(반려통보-기록물반려파일 대상 조회) select-->
+	<resultMap id="prodInfrmReturnInfo-result" class="rms.take.prod.domain.CrFolder">
+		<result property="folderRecvSeq" 	column="folder_recv_seq"/>
+		<result property="orgCd"            		column="org_cd"/>
+		<result property="creatYyyy"            	column="creat_yyyy"/>
+		<result property="clssId"            		column="clss_id"/>
+		<result property="folderRegSeq"    	column="folder_reg_seq"/>
+		<result property="hoNo"            		column="ho_no"/>
+		<result property="rjctCont"         		column="rjct_cont"/>
+	</resultMap>
+	
+
+
+	<!--SELECT-->
+	<!--SELECT 생산현황보고 등록시 인수 처리과에 대한  접수상태(접수중인지 여부) 찾기-->
+	<select id="findOrgCdByStatusFlag" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT	COUNT(cr_report_org_cd)
+		FROM  	TB_CRREPORT
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND		state_div_cd = '03'
+		AND     recv_fin_state_cd != '2'
+	</select>
+	
+	
+	<!--SELECT 생산현황보고 반려철갯수 count-->
+ 	<select id="findOrgCdByReturnFlag" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT	COUNT(cr_report_org_cd)
+		FROM  	TB_CRREPORT
+		WHERE 	record_center_id = #recordCenterId:VARCHAR# 
+		AND 	cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND		state_div_cd = '07'
+	</select>
+
+
+	<!--SELECT 생산현황보고 등록시 반려에 대한  순번 가져오기-->
+	<select id="findSelectCrReportSno" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT  cr_report_sno
+		FROM    TB_CRREPORT
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND		state_div_cd = '07'
+	</select>
+	
+	
+	<!--SELECT 생산현황보고 등록시 생산현황보고 처리과에 대한  Max순번 찾기-->
+	<select id="findMaxCrReportSno" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT  TO_NUMBER(NVL(MAX(cr_report_sno), 0))+1 cr_report_sno
+		FROM    TB_CRREPORT
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+	</select>
+	
+
+	<!--CREATE 생산현황보고접수 테이블에 접수내역 update-->
+ 	<update id="updateOrgProdPlan" parameterClass="rms.take.prod.domain.CrReport">
+ 		UPDATE	TB_CRREPORT
+ 		SET     state_div_cd = #stateDivCd:VARCHAR#,
+ 				bef_state_div_cd = state_div_cd,
+ 				recv_log_file_nm = #recvLogFileNm:VARCHAR#
+ 		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    cr_report_yyyy = #crReportYyyy:VARCHAR#
+ 		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     cr_report_sno = #crReportSno:NUMBER#
+	</update>
+	
+	
+	<!--CREATE 생산현황보고 테이블에 접수내역 insert-->
+ 	<insert id="insertOrgProdPlan" parameterClass="rms.take.prod.domain.CrReport">
+		INSERT INTO TB_CRREPORT
+		(
+			record_center_id, 	cr_report_yyyy, 	cr_report_org_cd, 		creat_sys_cd, 		state_div_cd,  
+			cr_report_sno,		recv_ymd, 			reg_dtime, 				recv_div_cd, 		recv_log_file_nm,
+			recv_fin_state_cd
+		) VALUES (
+			#recordCenterId:VARCHAR#, 	#crReportYyyy:VARCHAR#,		 	#crReportOrgCd:VARCHAR#, 				#creatSysCd:VARCHAR#, 	#stateDivCd:VARCHAR#, 
+			<!--cubrid #crReportSno:NUMBER#,				TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),	#recvDivCd:VARCHAR#, 	#recvLogFileNm:VARCHAR#,-->
+			#crReportSno:NUMBER#,				TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),	#recvDivCd:VARCHAR#, 	#recvLogFileNm:VARCHAR#,
+			#recvFinStateCd:VARCHAR#
+		)
+	</insert>
+
+
+
+
+	<!--CREATE 생산현황보고접수 테이블에 접수내역 이전접수상태로 되돌리기 update-->
+ 	<update id="updateOrgProdPlanBef" parameterClass="rms.take.prod.domain.CrReport">
+ 		UPDATE	TB_CRREPORT
+ 		SET     state_div_cd = NVL(bef_state_div_cd,'03'),
+ 				bef_state_div_cd = '',
+ 				recv_fin_state_cd = '2'
+ 		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    cr_report_yyyy = #crReportYyyy:VARCHAR#
+ 		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     cr_report_sno = #crReportSno:NUMBER#
+	</update>
+
+
+
+
+	<!--CREATE 기록물인수보고접수 테이블에 접수내역 삭제-->
+	<delete id="deleteOrgProdPlan" parameterClass="rms.take.prod.domain.CrReport">
+		DELETE  FROM TB_CRREPORT
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+ 		AND	   	cr_report_yyyy = #crReportYyyy:VARCHAR#
+ 		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     recv_fin_state_cd = '2'
+	</delete>
+
+
+	<!--CREATE 생산현황보고접수 테이블에 접수내역 update-->
+ 	<update id="updateOrgProdPlanEnd" parameterClass="rms.take.prod.domain.CrReport">
+ 		UPDATE	TB_CRREPORT
+ 		SET     state_div_cd = #stateDivCd:VARCHAR#,
+ 				rjct_rsn = '', 
+ 				rjct_ymd = '', 
+ 				infrm_file_nm = '',
+ 				recv_fin_state_cd = #recvFinStateCd:VARCHAR#
+ 		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    cr_report_yyyy = #crReportYyyy:VARCHAR#
+ 		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     cr_report_sno = #crReportSno:NUMBER#
+	</update>
+
+	<!--
+	 	공통
+	 -->
+	<!--보고기관(처리과코드)로 기록관코드리턴 SELECT -->
+	<select id="findProdRecordCenterId" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="string">
+		SELECT record_center_id
+		FROM   TB_STORG
+		WHERE  org_cd = #crReportOrgCd:VARCHAR#
+		AND take_org_flag is null
+	</select>
+	
+	
+	<!--SELECT 생산접수 처리과코드 존재유무 체크-->
+	<select id="findProdOrgCdCheck" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_STORG
+		WHERE   record_center_id = #recordCenterId:VARCHAR# 
+		AND     org_cd = #orgCd:VARCHAR# 
+	</select>
+	
+	
+	<!--SELECT 생산접수 기록물철분류번호가 존재하는지 체크-->
+	<select id="findProdFolderCheck" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_CRFOLDER
+		WHERE   creat_sys_cd = '02'
+		AND	    org_cd         = #orgCd:VARCHAR#
+		AND		clss_id        = #clssId:VARCHAR#
+		AND	    creat_yyyy     = #creatYyyy:VARCHAR#
+		AND	    folder_reg_seq = #folderRegSeq:VARCHAR#
+		AND	    ho_no          = #hoNo:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 생산접수 기록물건등록번호가 존재하는지 체크-->
+	<select id="findProdRecordCheck" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_CRRECORD
+		WHERE   creat_sys_cd = '02'
+		AND	    creat_yyyy = #creatYyyy:VARCHAR#
+		AND     creat_reg_no = #creatRegNo:VARCHAR#
+		AND     dtch_reg_no = #dtchRegNo:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 생산접수 기록물건등록번호가 존재하는지 체크 - 기관코드 포함 -->
+	<select id="findProdRecordCheckAll" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_CRRECORD
+		WHERE   creat_sys_cd = '02'
+		AND	    org_cd = #orgCd:VARCHAR#
+		AND     creat_yyyy = #creatYyyy:VARCHAR#
+		AND     creat_reg_no = #creatRegNo:VARCHAR#
+		AND     dtch_reg_no = #dtchRegNo:VARCHAR#
+	</select>
+	
+	
+	<!--
+	 	기록물철 등록
+	 -->
+	<!--SELECT 생산접수_기록물철접수시 기록물형태 유효성체크 대상조회 -->
+	<select id="findProdFolderTypeDivCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD01'
+	</select>
+
+
+	<!--SELECT 생산접수_기록물철접수시 보존기간 유효성체크 대상조회 -->
+	<select id="findProdPresvTermCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD57'
+	</select>
+
+
+	<!--SELECT 생산접수_기록물철접수시 보존방법 유효성체크 대상조회 -->
+	<select id="findProdPresvMethodCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD09'
+	</select>
+	
+	
+	<!--SELECT 생산접수_기록물철접수시 보존장소 유효성체크 대상조회 -->
+	<select id="findProdPresvAreaCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD10'
+	</select>
+
+
+	<!--SELECT 생산접수_기록물철 등록시 단위업무명select-->
+	<select id="findProdClssNm" parameterClass="rms.take.prod.domain.CrFolder" resultClass="string">
+		SELECT	unit_nm
+		FROM 	TB_ZZUNIT
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	unit_cd = #clssId:VARCHAR#
+	</select>
+
+
+	<!--SELECT 생산접수_기록물철 등록시 중복되는 기록물철이 있는지 체크-->
+	<select id="findProdGfileDubFolderCheck" parameterClass="rms.take.prod.domain.CrFolder" resultMap="findProdDub-result">
+		SELECT  cr_report_org_cd, cr_report_yyyy
+		FROM    TB_CRFOLDER
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND     org_cd = #orgCd:VARCHAR#
+		AND     clss_id = #clssId:VARCHAR#
+		AND     creat_yyyy = #creatYyyy:VARCHAR#
+		AND     folder_reg_seq = #folderRegSeq:VARCHAR#
+		AND		ho_no = #hoNo:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 생산접수_기록물철 등록시 기록물철접수일련번호 max-->
+	<select id="findMaxFolderRecvSeq" parameterClass="rms.take.prod.domain.GrProdCheck" resultClass="string">
+		SELECT  #crReportYyyy:VARCHAR#||LPAD((tb_crfolder_sq01.nextval), 15, '0') 
+		FROM     dual
+	</select>
+	
+	
+	<!--
+		기록물건 등록
+	-->
+	<!--SELECT 생산접수_기록물건 등록시 중복되는 기록물건이 있는지 체크-->
+	<select id="findProdDocDubRecordCheck" parameterClass="rms.take.prod.domain.CrRecord" resultMap="findProdDub-result">
+		SELECT  a.cr_report_org_cd, a.cr_report_yyyy
+		FROM    TB_CRFOLDER a, TB_CRRECORD b
+		WHERE   a.record_center_id = b.record_center_id
+		AND     a.folder_recv_seq = b.folder_recv_seq
+		AND		b.creat_sys_cd = '02'
+		AND     b.org_cd = #orgCd:VARCHAR#
+		AND     b.creat_yyyy = #creatYyyy:VARCHAR#
+		AND     b.creat_reg_no = #creatRegNo:VARCHAR#
+		AND     b.dtch_reg_no = #dtchRegNo:VARCHAR#
+	</select>	
+	
+	<!--SELECT 생산접수_기록물건 등록 최대값-->
+	<select id="findMaxRecordRecvSeq" parameterClass="rms.take.prod.domain.CrRecord" resultClass="string">
+		SELECT  #creatYyyy:VARCHAR#||LPAD((tb_crrecord_sq01.nextval), 15, '0') 
+		FROM     dual
+	</select>
+
+
+	<!--
+		첨부파일목록 등록
+	-->
+	<!--SELECT 생산접수_첨부파일 기록물건 인수 일련번호-->
+	<select id="findAttachRecordRecvSeq" parameterClass="rms.take.prod.domain.CrAttachFile" resultClass="string">
+		SELECT  record_recv_seq 
+		FROM    TB_CRRECORD
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND     creat_yyyy = #creatYyyy:VARCHAR#
+		AND     creat_reg_no = #creatRegNo:VARCHAR#
+		AND     dtch_reg_no = '00'
+	</select>
+	
+	
+	<!--SELECT 생산접수_첨부파일 등록 최대값-->
+	<select id="findMaxAttachRegSeq" parameterClass="rms.take.prod.domain.CrAttachFile" resultClass="int">
+		SELECT  TO_NUMBER(NVL(MAX(reg_seq), 0)+1) 
+		FROM    TB_CRATTACHFILE
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND	    record_recv_seq = #recordRecvSeq:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 생산접수_기록물건 변경이력 등록시 기록물건인수일련번호 구하기-->
+	<select id="findRecordChngHistRecvSeq" parameterClass="rms.take.prod.domain.CrRecordChngHist" resultClass="string">
+		SELECT record_recv_seq
+		FROM   TB_CRRECORD
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND	   creat_sys_cd = '02'
+		AND    org_cd = #orgCd:VARCHAR#
+		AND    creat_reg_no = #creatRegNo:VARCHAR#
+		AND    creat_yyyy = #creatYyyy:VARCHAR#
+		AND    dtch_reg_no = #dtchRegNo:VARCHAR#
+	</select>	
+		
+	
+	<!--SELECT 생산접수_기록물건 변경이력 등록시 변경이력번호 최대값-->
+	<select id="findMaxRecordChngHistSeq" parameterClass="rms.take.prod.domain.CrRecordChngHist" resultClass="int">
+		SELECT TO_NUMBER(NVL(MAX(chng_hist_no), 0)+1) chngHistNo 
+		FROM   TB_CRRECORDCHNGHIST
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_recv_seq = #recordRecvSeq:VARCHAR#
+	</select>
+	
+	
+	<!-- 
+		배부대장
+	 -->
+	<!--SELECT 생산접수_배부대장 등록시 중복되는 배부대장이 있는지 체크-->
+	<select id="findProdDistDubCheck" parameterClass="rms.take.prod.domain.CrDistr" resultMap="findProdDub-result">
+		SELECT cr_report_org_cd, cr_report_yyyy
+		FROM   TB_CRDISTR
+		WHERE  recv_org_cd = #recvOrgCd:VARCHAR#
+		AND    recv_yyyy = #recvYyyy:VARCHAR#
+		AND    distr_seq = #distrSeq:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 생산접수_기록물철목록의 건수와 실제 건수 비교 select-->
+	<select id="findProdCntCheck" parameterClass="rms.take.prod.domain.GrProdCheck" resultMap="findProdCntCheck-result">	
+		SELECT	record_center_id, folder_recv_seq,
+				org_cd, clss_id, creat_yyyy,
+	   			folder_reg_seq, ho_no, title,
+			   	TO_NUMBER(folder_list_cnt) AS folder_list_cnt, 
+			   	record_real_cnt
+		FROM 
+				(
+				SELECT	a.record_center_id, a.folder_recv_seq, 
+						MAX(a.org_cd) AS org_cd, MAX(a.clss_id) AS clss_id, 
+	  		 			MAX(a.creat_yyyy) AS creat_yyyy, MAX(a.folder_reg_seq) AS folder_reg_seq, 
+	  					MAX(a.ho_no) AS ho_no, MAX(a.title) AS title,
+			   			MAX(a.record_reg_cnt) AS folder_list_cnt,
+			   			COUNT(b.record_recv_seq) AS record_real_cnt 
+				FROM 	TB_CRFOLDER a, TB_CRRECORD b
+				WHERE  	a.record_center_id = #recordCenterId:VARCHAR#
+				AND 	a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+				AND 	a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+				AND		a.creat_sys_cd = '02'
+				AND 	a.cr_report_sno = #crReportSno:NUMBER#
+				AND		a.record_center_id = b.record_center_id(+)
+				AND		a.folder_recv_seq = b.folder_recv_seq(+)
+				GROUP BY a.record_center_id, a.folder_recv_seq
+				ORDER BY a.record_center_id, a.folder_recv_seq
+				)
+	</select>
+	
+
+	<!--SELECT 생산현황보고_접수시 철별로 전자기록물여부 select-->
+	<select id="findProdEfileInfo" parameterClass="rms.take.prod.domain.GrProdCheck" resultMap="findProdEfileInfo-result">
+		SELECT	a.record_center_id,
+						a.folder_recv_seq,
+						NVL(SUM(DECODE(b.erecord_flag,'1',1,0)),0) AS efile,
+						NVL(SUM(DECODE(b.erecord_flag,'2',1,0)),0) AS not_efile
+		FROM 	TB_CRFOLDER a, TB_CRRECORD b
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND   	a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   	a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   	a.creat_sys_cd = '02' 
+		AND   	a.cr_report_sno = #crReportSno:NUMBER#
+		AND   	a.record_center_id = b.record_center_id
+		AND   	a.folder_recv_seq = b.folder_recv_seq
+		GROUP BY a.record_center_id, a.folder_recv_seq
+		ORDER BY a.record_center_id, a.folder_recv_seq
+	</select>	
+	
+	
+	<!--CREATE 생산현황보고_접수시 철별로 전자기록물여부 update-->
+ 	<update id="updateProdEfileInfo" parameterClass="rms.take.prod.domain.CrFolder">
+	 	UPDATE	TB_CRFOLDER
+		SET 	erecord_Flag = #erecordFlag:VARCHAR#
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		folder_recv_seq = #folderRecvSeq:VARCHAR#
+	</update>
+	
+	
+	<!--SELECT 생산현황보고_접수시 기록물건의(등록건수_파일수,쪽수,용량) select-->
+	<select id="findProdDocInfo" parameterClass="rms.take.prod.domain.GrProdCheck" resultMap="findProdDocInfo-result">
+		SELECT	a.record_center_id,
+				a.folder_recv_seq,
+				b.record_recv_seq,
+				NVL(COUNT(c.record_recv_seq),0) AS attach_cnt,
+				NVL(SUM(c.attach_file_page_cnt),'0') AS record_page_cnt,
+				NVL(SUM(c.file_size),0) AS record_size
+		FROM 	TB_CRFOLDER a, TB_CRRECORD b, TB_CRATTACHFILE c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND   	a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   	a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   	a.creat_sys_cd = '02' 
+		AND   	a.cr_report_sno = #crReportSno:NUMBER#
+		AND   	a.record_center_id = b.record_center_id
+		AND   	a.folder_recv_seq = b.folder_recv_seq
+		AND   	b.record_center_id = c.record_center_id
+		AND   	b.record_recv_seq = c.record_recv_seq
+		GROUP BY a.record_center_id, a.folder_recv_seq, b.record_recv_seq
+		ORDER BY a.record_center_id, a.folder_recv_seq, b.record_recv_seq
+	</select>
+		
+		
+	<!--UPDATE 생산접수 접수시 건별로 등록건수_파일수,쪽수,용량 update-->
+ 	<update id="updateProdDocInfo" parameterClass="rms.take.prod.domain.CrRecord">
+	 	UPDATE	TB_CRRECORD
+		SET 	attach_cnt = NVL(#attachCnt#,0),
+				record_page_cnt = LPAD(#recordPageCnt#,6,'0'),
+				record_size = #recordSize#
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_recv_seq = #recordRecvSeq:VARCHAR#
+	</update>
+		
+	
+	<!--CREATE 생산접수_기록물철-->
+	<insert id="insertProdGFile" parameterClass="rms.take.prod.domain.CrFolder">
+		INSERT INTO TB_CRFOLDER
+		(
+			record_center_id,    	 				folder_recv_seq,   				org_cd,						cr_report_yyyy,			cr_report_org_cd,
+			creat_sys_cd,   						cr_report_sno, 					clss_div_cd,                 clss_id,           				creat_yyyy,
+			folder_reg_seq,            			ho_no,  								clss_nm,						title,                      		folder_type_div_cd,
+			folder_detl_type_cd,					record_tot_page_cnt,   		record_reg_cnt,           efile_cnt,                    	new_div_cd,
+			chng_flag, 								old_folder_creat_org_nm,  	old_folder_clss_no,      folder_start_dtime,       folder_close_dtime,
+			funsh_end_dtime,         			funsh_rsn,           					presv_term_cd,			presv_method_cd,   		presv_area_cd,
+			read_range,  							creat_user_nm,  					creat_dtime,   				creat_sys_folder_id,		error_flag,   								
+			reg_dtime, 								exam_cont,							folder_size,					exam_rslt_cd,				rjct_flag,
+			take_fin_flag,								group_presv_term_cd
+		) VALUES (
+			#recordCenterId:VARCHAR#,         			#folderRecvSeq:VARCHAR#,        		 					#orgCd:VARCHAR#,   								#crReportYyyy:VARCHAR#,     							#crReportOrgCd:VARCHAR#,
+			#creatSysCd:VARCHAR#, 						#crReportSno:NUMBER#, 													#clssDivCd:VARCHAR#,                          	#clssId:VARCHAR#,                   						#creatYyyy:VARCHAR#,
+ 			#folderRegSeq:VARCHAR#,                  	#hoNo:VARCHAR#, 												#clssNm:VARCHAR#,          					 	#title:VARCHAR#,      										#folderTypeDivCd:VARCHAR#,
+ 			#folderDetlTypeCd:VARCHAR#,					LPAD(#recordTotPageCnt:VARCHAR#,6,'0'),  		LPAD(#recordRegCnt:VARCHAR#,6,'0'),  	LPAD(#efileCnt:VARCHAR#,6,'0'),            			#newDivCd:VARCHAR#,
+			#chngFlag:VARCHAR#,  							#oldFolderCreatOrgNm:VARCHAR#,                   	#oldFolderClssNo:VARCHAR#,            		#folderStartDtime:VARCHAR#,                 			#folderCloseDtime:VARCHAR#,
+			#funshEndDtime:VARCHAR#,                  	#funshRsn:VARCHAR#,                 	 					#presvTermCd:VARCHAR#,     	 				#presvMethodCd:VARCHAR#, 							#presvAreaCd:VARCHAR#,
+			#readRange:VARCHAR#, 							#creatUserNm:VARCHAR#,  									#creatDtime:VARCHAR#,  #creatSysFolderId:VARCHAR#,				#errorFlag:VARCHAR#, 							
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),		#examCont:VARCHAR#, 							#folderSize#,											#examRsltCd:VARCHAR#,									#rjctFlag:VARCHAR#,-->
+			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),		#examCont:VARCHAR#, 							#folderSize#,											#examRsltCd:VARCHAR#,									#rjctFlag:VARCHAR#,
+			#takeFinFlag:VARCHAR#,							#groupPresvTermCd:VARCHAR#
+		)
+	</insert>
+
+    
+
+	<!--CREATE 생산접수_기록물철인수인계내역에 insert-->
+	<insert id="insertProdGfileTakovr" parameterClass="rms.take.prod.domain.CrFolderTakeTakovr">
+		INSERT INTO TB_CRFOLDERTAKETAKOVR 
+		(
+			record_center_id,	 	folder_recv_seq, 			sno, 								take_takovr_div_cd, 					take_takovr_org_cd, 
+			reg_dtime, 				take_takovr_clss_id, 	take_takovr_creat_yyyy, 	take_takovr_folder_reg_seq, 	take_takovr_ho_no,
+			take_takovr_creat_dtime
+		) VALUES (
+			#recordCenterId:VARCHAR#, 								#folderRecvSeq:VARCHAR#, 		#sno#, 											#takeTakovrDivCd:VARCHAR#, 					#takeTakovrOrgCd:VARCHAR#, 
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),		#takeTakovrClssId:VARCHAR#, 	#takeTakovrCreatYyyy:VARCHAR#, 	#takeTakovrFolderRegSeq:VARCHAR#, 	#takeTakovrHoNo:VARCHAR#,
+			TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+                        TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),		#takeTakovrClssId:VARCHAR#, 	#takeTakovrCreatYyyy:VARCHAR#, 	#takeTakovrFolderRegSeq:VARCHAR#, 	#takeTakovrHoNo:VARCHAR#,
+			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+
+	
+	<!--CREATE 생산접수_기록물건-->
+	<insert id="insertProdDoc" parameterClass="rms.take.prod.domain.CrRecord">
+		INSERT INTO TB_CRRECORD
+		(
+			record_center_id,					record_recv_seq,     	folder_recv_seq,          creat_sys_cd,         					org_cd,                            
+			creat_yyyy, 							creat_reg_dtime,			creat_reg_no, 				dtch_reg_no,							title,
+			record_reg_div_cd,  			audvis_record_type,		audvis_record_sumry, aprov_pos_rank_nm,				duty_chrgr_nm,
+			enforc_ymd,							creat_org_reg_no, 		erecord_flag, 				old_record_creat_org_nm, 		old_record_docno, 
+			old_record_presv_term,		read_range,					open_div_cd,  				open_grade,							record_page_cnt,	
+			open_limit_part,					recver,                     	sender,						doc_distr_no,							folder_clss_no,		
+			spcl_record_type,				new_div_cd,					chng_flag, 					rjct_flag,									doc_no, 	
+			creat_sys_record_id,			reg_dtime,					record_size,					orign_copy_flag,                      error_flag,
+			take_fin_flag,                        exam_rslt_cd,				record_detl_type_cd,   attach_Cnt,								oper_read_range_cd                               
+		) VALUES (
+			#recordCenterId:VARCHAR#, 			#recordRecvSeq:VARCHAR#,       	
+			(SELECT folder_recv_seq FROM TB_CRFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND creat_sys_folder_id=#folderClssNo:VARCHAR#),
+			#creatSysCd:VARCHAR#,          		#orgCd:VARCHAR#,                        
+			#creatYyyy:VARCHAR#, 				#creatRegDtime:VARCHAR#,		#creatRegNo:VARCHAR#, 			#dtchRegNo:VARCHAR#,	 			#title:VARCHAR#, 	
+			#recordRegDivCd:VARCHAR#,  			#audvisRecordType:VARCHAR#,		#audvisRecordSumry:VARCHAR#,	#aprovPosRankNm:VARCHAR#,			#dutyChrgrNm:VARCHAR#,			
+			#enforcYmd:VARCHAR#, 				#creatOrgRegNo:VARCHAR#,		#erecordFlag:VARCHAR#,  		#oldRecordCreatOrgNm:VARCHAR#,  	#oldRecordDocno:VARCHAR#, 
+			#oldRecordPresvTerm:VARCHAR#,		#readRange:VARCHAR#,		 	#openDivCd:VARCHAR#, 			#openGrade:VARCHAR#, 				LPAD(#recordPageCnt:VARCHAR#,6,'0'),	
+			#openLimitPart:VARCHAR#, 			#recver:VARCHAR#,      			#sender:VARCHAR#,  				#docDistrNo:VARCHAR#,  				#folderClssNo:VARCHAR#,	
+			#spclRecordType:VARCHAR#,			#newDivCd:VARCHAR#, 			#chngFlag:VARCHAR#,  			#rjctFlag:VARCHAR#,					#docNo:VARCHAR#, 	 
+			<!--cubrid #creatSysRecordId:VARCHAR#,			TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),		#recordSize#,		#orignCopyFlag:VARCHAR#,			#errorFlag:VARCHAR#,-->
+			#creatSysRecordId:VARCHAR#,			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),		#recordSize#,		#orignCopyFlag:VARCHAR#,			#errorFlag:VARCHAR#,
+			#takeFinFlag:VARCHAR#,				#examRsltCd:VARCHAR#,			#recordDetlTypeCd:VARCHAR#,		#attachCnt:VARCHAR#,				#operReadRangeCd:VARCHAR#
+		)
+	</insert>
+
+
+	<!--CREATE 생산접수_특수목록-->
+	<insert id="insertProdSprecord" parameterClass="rms.take.prod.domain.CrSpclList">
+		INSERT INTO TB_CRSPCLLIST
+		(
+			record_center_id,		spcl_list_reg_no,	folder_recv_seq, 	record_recv_seq,  	spcl_list_loc,  
+			folder_clss_no, 		record_reg_no,    	seq,                spcl_list1,         spcl_list2,     
+			spcl_list3, 			reg_dtime           
+		)
+		(
+			SELECT 
+				#recordCenterId:VARCHAR#, LPAD((TB_CRSPCLLIST_SQ01.NEXTVAL), 15, '0'),
+				DECODE(#spclListLoc:VARCHAR#, '1' 
+					,(SELECT folder_recv_seq 
+					  FROM TB_CRFOLDER 
+					  WHERE record_center_id = #recordCenterId:VARCHAR# 
+					  AND   creat_sys_cd = '02'
+					  AND   creat_sys_folder_id = #folderClssNo:VARCHAR#), NULL),
+				DECODE(#spclListLoc:VARCHAR#, '2' 
+					,(SELECT record_recv_seq 
+					  FROM TB_CRRECORD 
+					  WHERE record_center_id = #recordCenterId:VARCHAR#
+					  AND   creat_sys_cd = '02'
+					  AND   creat_yyyy = SUBSTR(#recordRegNo:VARCHAR#,1,4)
+					  AND   creat_reg_no = SUBSTR(#recordRegNo:VARCHAR#,5,13)
+					  AND   dtch_reg_no = SUBSTR(#recordRegNo:VARCHAR#,18,2)), NULL),
+				#spclListLoc:VARCHAR#,
+				#folderClssNo:VARCHAR#, #recordRegNo:VARCHAR#, #seq:VARCHAR#, #spclList1:VARCHAR#, #spclList2:VARCHAR#,
+				<!--cubrid #spclList3:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+                                #spclList3:VARCHAR#, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			FROM DUAL
+		)
+	</insert>
+
+
+	<!--CREATE 생산접수_첨부파일-->
+	<insert id="insertProdRecordPage" parameterClass="rms.take.prod.domain.CrAttachFile">
+		INSERT INTO TB_CRATTACHFILE
+		(
+			record_center_id, 	record_recv_seq,		reg_seq,              	org_cd,   		creat_yyyy,                       
+			creat_reg_no, 		attach_file_seq,     	attach_file_page_cnt,  	reg_dtime,		doc_type_cd,
+			file_size
+		) VALUES (
+			#recordCenterId:VARCHAR#, 	
+			#recordRecvSeq:VARCHAR#,	
+			(SELECT TO_NUMBER(NVL(MAX(reg_seq), 0)+1)
+			 FROM TB_CRATTACHFILE
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 AND record_recv_seq = #recordRecvSeq:VARCHAR#),
+			#orgCd:VARCHAR#,
+			#creatYyyy:VARCHAR#,
+			#creatRegNo:VARCHAR#,
+			#attachFileSeq:VARCHAR#,
+			#attachFilePageCnt:VARCHAR#,
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+			#docTypeCd:VARCHAR#,
+			#fileSize:VARCHAR#
+		)
+	</insert>
+
+
+	<!--CREATE 생산접수_첨부파일-->
+	<insert id="insertProdPage" parameterClass="rms.take.prod.domain.CrAttachFile">
+		INSERT INTO TB_CRATTACHFILE
+		(
+			record_center_id, 	record_recv_seq,		reg_seq,              	org_cd,   		creat_yyyy,                       
+			creat_reg_no, 		attach_file_seq,     	attach_file_page_cnt,  	reg_dtime,		doc_type_cd,
+			file_size
+		) VALUES (
+			#recordCenterId:VARCHAR#, 	
+			(SELECT record_recv_seq
+			 FROM TB_CRRECORD
+			 WHERE record_center_id=#recordCenterId:VARCHAR#
+			 AND   creat_sys_cd = '02'
+			 AND   org_cd = #orgCd:VARCHAR#
+			 AND   creat_yyyy = #creatYyyy:VARCHAR#
+			 AND   creat_reg_no = #creatRegNo:VARCHAR#
+			 AND   dtch_reg_no = '00'),
+			(SELECT TO_NUMBER(NVL(MAX(reg_seq), 0)+1)
+			 FROM TB_CRATTACHFILE
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 AND record_recv_seq = ( SELECT record_recv_seq
+									 FROM TB_CRRECORD
+									 WHERE record_center_id=#recordCenterId:VARCHAR#
+									 AND   creat_sys_cd = '02'
+									 AND   org_cd = #orgCd:VARCHAR#
+									 AND   creat_yyyy = #creatYyyy:VARCHAR#
+									 AND   creat_reg_no = #creatRegNo:VARCHAR#
+									 AND   dtch_reg_no = '00') ),
+			#orgCd:VARCHAR#,
+			#creatYyyy:VARCHAR#,
+			#creatRegNo:VARCHAR#,
+			#attachFileSeq:VARCHAR#,
+			#attachFilePageCnt:VARCHAR#,
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+			#docTypeCd:VARCHAR#,
+			#fileSize:VARCHAR#
+		)
+	</insert>
+	
+	
+	<!--CREATE 생산접수_기록물철 변경이력-->
+	<insert id="insertProdGfileHist" parameterClass="rms.take.prod.domain.CrFolderChngHist">
+		INSERT INTO TB_CRFOLDERCHNGHIST
+		(
+			record_center_id,			folder_recv_seq,            chng_hist_no,       org_cd,       	clss_id,      
+			creat_yyyy,  				folder_reg_seq,             ho_no,          	title_bef,     	title_aft,                  
+			folder_type_div_cd_bef,  	folder_type_div_cd_aft,		chng_ymd,  			chng_rsn,  		chng_user_nm, 
+			reg_dtime
+		) VALUES (
+			#recordCenterId:VARCHAR#,
+			(SELECT folder_recv_seq
+			 FROM  TB_CRFOLDER
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 AND   creat_sys_cd = '02'
+			 AND   org_cd = #orgCd:VARCHAR#
+			 AND   clss_id = #clssId:VARCHAR#
+			 AND   creat_yyyy = #creatYyyy:VARCHAR#
+			 AND   folder_reg_seq = #folderRegSeq:VARCHAR#
+			 AND   ho_no = #hoNo:VARCHAR# ),
+			(SELECT TO_NUMBER(NVL(MAX(chng_hist_no), 0)+1) chngHistNo 
+			 FROM  TB_CRFOLDERCHNGHIST
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 AND folder_recv_seq = ( SELECT folder_recv_seq
+									 FROM  TB_CRFOLDER
+									 WHERE record_center_id = #recordCenterId:VARCHAR#
+									 AND   creat_sys_cd = '02'
+									 AND   org_cd = #orgCd:VARCHAR#
+									 AND   clss_id = #clssId:VARCHAR#
+									 AND   creat_yyyy = #creatYyyy:VARCHAR#
+									 AND   folder_reg_seq = #folderRegSeq:VARCHAR#
+									 AND   ho_no = #hoNo:VARCHAR# ) ),
+			#orgCd:VARCHAR#,
+			#clssId:VARCHAR#,      
+			#creatYyyy:VARCHAR#,
+			#folderRegSeq:VARCHAR#,
+			#hoNo:VARCHAR#,
+			#titleBef:VARCHAR#,
+			#titleAft:VARCHAR#,  
+			#folderTypeDivCdBef:VARCHAR#,
+			#folderTypeDivCdAft:VARCHAR#,
+			#chngYmd:VARCHAR#,
+			#chngRsn:VARCHAR#,
+			#chngUserNm:VARCHAR#, 
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	
+	<!--CREATE 생산접수_기록물건 변경이력-->
+	<insert id="insertProdDocHist" parameterClass="rms.take.prod.domain.CrRecordChngHist">
+		INSERT INTO TB_CRRECORDCHNGHIST
+		(
+			record_center_id,		record_recv_seq,    	chng_hist_no,    		org_cd,             	creat_yyyy,               
+			creat_reg_no,     		dtch_reg_no,    		creat_reg_ymd_bef,  	creat_reg_ymd_aft,	 	title_bef,
+			title_aft,              page_cnt_bef,   		page_cnt_aft,           aprov_pos_rank_bef,		aprov_pos_rank_aft,
+			duty_chrgr_bef,  		duty_chrgr_aft,  		enforc_ymd_bef,       	enforc_ymd_aft,			recver_bef,
+			recver_aft, 			chng_ymd,   			chng_rsn,         		chng_user_nm,			reg_dtime                   
+		) VALUES (
+			#recordCenterId:VARCHAR#,
+			(SELECT record_recv_seq
+			 FROM  TB_CRRECORD
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 AND   creat_sys_cd = '02'
+			 AND   org_cd = #orgCd:VARCHAR#
+			 AND   creat_reg_no = #creatRegNo:VARCHAR#
+			 AND   creat_yyyy = #creatYyyy:VARCHAR#
+			 AND   dtch_reg_no = #dtchRegNo:VARCHAR# ),
+			(SELECT TO_NUMBER(NVL(MAX(chng_hist_no), 0)+1) chngHistNo 
+			 FROM  TB_CRRECORDCHNGHIST
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 AND record_recv_seq = ( SELECT record_recv_seq
+									 FROM  TB_CRRECORD
+									 WHERE record_center_id = #recordCenterId:VARCHAR#
+									 AND   creat_sys_cd = '02'
+									 AND   org_cd = #orgCd:VARCHAR#
+									 AND   creat_reg_no = #creatRegNo:VARCHAR#
+									 AND   creat_yyyy = #creatYyyy:VARCHAR#
+									 AND   dtch_reg_no = #dtchRegNo:VARCHAR# ) ),
+			#orgCd:VARCHAR#,          	#creatYyyy:VARCHAR#,             
+			#creatRegNo:VARCHAR#,  		#dtchRegNo:VARCHAR#,  		#creatRegYmdBef:VARCHAR#, 	#creatRegYmdAft:VARCHAR#,	  	#titleBef:VARCHAR#,
+			#titleAft:VARCHAR#,         #pageCntBef:VARCHAR#,  		#pageCntAft:VARCHAR#,       #aprovPosRankBef:VARCHAR#,		#aprovPosRankAft:VARCHAR#,
+			#dutyChrgrBef:VARCHAR#, 	#dutyChrgrAft:VARCHAR#, 	#enforcYmdBef:VARCHAR#,     #enforcYmdAft:VARCHAR#,  		#recverBef:VARCHAR#, 
+			#recverAft:VARCHAR#,		#chngYmd:VARCHAR#,			#chngRsn:VARCHAR#,      	#chngUserNm:VARCHAR#
+			<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')                                               
+		)
+	</insert>	
+	
+	
+	<!--CREATE 생산접수_배부파일-->
+	<insert id="insertProdDist" parameterClass="rms.take.prod.domain.CrDistr">
+		INSERT INTO TB_CRDISTR
+		(
+			 record_center_id,		distr_id,   			recv_yyyy, 			recv_org_cd,  		distr_seq,
+			 recv_ymd,  			creat_org_reg_no,		distr_title,		take_org_cd,  		take_org_nm,
+			 distr_ymd, 			take_user_nm,       	cr_report_yyyy,	 	reg_dtime,			cr_report_org_cd,
+			 creat_sys_cd,			cr_report_sno
+		)
+		(
+			SELECT 
+				#recordCenterId:VARCHAR#,	LPAD((TB_CRDISTR_SQ01.NEXTVAL), 15, '0'),    			#recvYyyy:VARCHAR#,			#recvOrgCd:VARCHAR#,        #distrSeq:VARCHAR#,
+				#recvYmd:VARCHAR#, 			#creatOrgRegNo:VARCHAR#,  	#distrTitle:VARCHAR#,   	#takeOrgCd:VARCHAR#,        #takeOrgNm:VARCHAR#,
+				#distrYmd:VARCHAR#,         #takeUserNm:VARCHAR#,     	#crReportYyyy:VARCHAR#
+				<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),	#crReportOrgCd:VARCHAR#,-->
+				,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),	#crReportOrgCd:VARCHAR#,
+				#creatSysCd:VARCHAR#,       #crReportSno:NUMBER#
+			FROM DUAL
+		)
+	</insert>
+
+
+	<!--delete 생산현황보고_배부대장TB삭제-->
+	<delete id="deleteProdDistGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRDISTR
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   creat_sys_cd = '02' 
+		AND   cr_report_sno = #crReportSno:NUMBER#
+	</delete>	
+
+	
+	<!--delete 생산현황보고_기록물건변경이력정보TB삭제-->
+	<delete id="deleteProdDocHistGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRRECORDCHNGHIST aaa
+		WHERE 
+		<!--cubrid
+		(record_center_id, record_recv_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_recv_seq
+		-->
+		  exists (select 1	
+			FROM 		TB_CRFOLDER a, TB_CRRECORD b, TB_CRRECORDCHNGHIST c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_recv_seq = c.record_recv_seq
+			AND       AAA.record_center_id = C.record_center_id
+			AND       AAA.record_recv_seq = C.record_recv_seq
+			)
+	</delete>	
+	
+
+	<!--delete 생산현황보고_첨부파일정보TB삭제-->
+	<delete id="deleteProdPageGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRATTACHFILE AAA
+		WHERE 
+		<!--CUBRID
+		(record_center_id, record_recv_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_recv_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_CRFOLDER a, TB_CRRECORD b, TB_CRATTACHFILE c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_recv_seq = c.record_recv_seq
+			AND       AAA.record_center_id = C.record_center_id
+			AND       AAA.record_recv_seq = C.record_recv_seq
+			)
+	</delete>
+	
+	
+	<!--delete 생산현황보고_특수목록TB 건내역삭제-->
+	<delete id="deleteProdDocSpecGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRSPCLLIST AAA
+		WHERE 
+		<!--CUBRID
+		(record_center_id, record_recv_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_recv_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_CRFOLDER a, TB_CRRECORD b, TB_CRSPCLLIST c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02'
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		c.spcl_list_loc = '2'
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_recv_seq = c.record_recv_seq
+			AND       AAA.record_center_id = C.record_center_id
+			AND       AAA.record_recv_seq = C.record_recv_seq
+			)
+	</delete>
+
+
+	<!--delete 생산현황보고_기록물건TB 건내역삭제-->
+	<delete id="deleteProdDocGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRRECORD AAA
+		WHERE 
+		<!--cubrid
+		(record_center_id, folder_recv_seq) 
+		IN
+			(SELECT	b.record_center_id, b.folder_recv_seq
+			-->
+			EXISTS (SELECT 1
+			FROM 		TB_CRFOLDER a, TB_CRRECORD b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_recv_seq = B.folder_recv_seq
+			)
+	</delete>
+	
+	
+	<!--delete 생산현황보고_기록물철변경이력정보TB삭제-->
+	<delete id="deleteProdGfileHistGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRFOLDERCHNGHIST AAA
+		WHERE 
+		<!--CUBRID
+		(record_center_id, folder_recv_seq)
+		IN
+			(SELECT	b.record_center_id, b.folder_recv_seq
+			-->
+			EXISTS (SELECT 1
+			FROM 		TB_CRFOLDER a, TB_CRFOLDERCHNGHIST b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_recv_seq = B.folder_recv_seq
+			)
+	</delete>
+
+
+	<!--delete 생산현황보고_기록물철인수인계정보TB삭제-->
+	<delete id="deleteProdGfileTakovrGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRFOLDERTAKETAKOVR AAA
+		WHERE 
+		<!--CUBRID
+		(record_center_id, folder_recv_seq)
+		IN 
+			(SELECT	b.record_center_id, b.folder_recv_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_CRFOLDER a, TB_CRFOLDERTAKETAKOVR b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND       AAA.record_center_id = b.record_center_id
+			AND       AAA.folder_recv_seq = B.folder_recv_seq
+			)
+	</delete>
+
+	<!--delete 생산현황보고_특수목록TB 철내역삭제-->
+	<delete id="deleteProdGfileSpecGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRSPCLLIST AAA
+		WHERE 
+		<!--CUBRID
+		(record_center_id, folder_recv_seq)
+		IN 
+			(SELECT	b.record_center_id, b.folder_recv_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_CRFOLDER a, TB_CRSPCLLIST b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			AND   		a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.cr_report_sno = #crReportSno:NUMBER#
+			AND   		b.spcl_list_loc = '1'
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_recv_seq = b.folder_recv_seq
+			AND       AAA.record_center_id = B.record_center_id
+			AND       AAA.folder_recv_seq = B.folder_recv_seq
+			
+			)
+	</delete>
+
+
+	<!--delete 생산현황보고_기록물철TB삭제-->
+	<delete id="deleteProdGfileGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRFOLDER
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND   	cr_report_yyyy = #crReportYyyy:VARCHAR#		
+		AND   	cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   	creat_sys_cd = '02' 
+		AND   	cr_report_sno = #crReportSno:NUMBER#
+	</delete>
+
+
+	<!--delete 생산현황보고_처리과별인수계획TB삭제-->
+	<delete id="deleteProdOrgPlanGr" parameterClass="rms.take.prod.domain.GrProdCheck">
+		DELETE FROM TB_CRREPORT
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND 		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 		creat_sys_cd = '02'
+		AND 		cr_report_sno = #crReportSno:NUMBER#
+	</delete>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 반려통보처리 파일생성 (UPDATE)
+	 -->	
+	 <update id="updateProdRecvRjctInfrm" parameterClass="rms.take.prod.domain.ProdRecvRjctInfrm">
+		UPDATE	TB_CRREPORT
+		SET   		rjct_rsn = #rjctRsn:VARCHAR#,
+						infrm_file_nm = 	#rjctInfrmXml:VARCHAR#
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND			cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 			cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			cr_report_sno = #crReportSno:NUMBER#
+	</update>
+	
+
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 반려통보전송처리 (UPDATE)
+	 -->	
+	 <update id="updateProdRecvRjctInfrmSend" parameterClass="rms.take.prod.domain.ProdRecvRjctInfrm">
+		UPDATE	TB_CRREPORT
+		SET   		rjct_ymd = TO_CHAR(SYSDATE,'YYYYMMDD'),
+						state_div_cd = '07'
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND			cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 			cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			cr_report_sno = #crReportSno:NUMBER#
+	</update>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 반려통보처리(반려통보-반려파일생성정보) (SELECT)
+	 -->
+	<select id="findProdRecvInfrmInfo" parameterClass="rms.take.prod.domain.ProdRecvRjctInfrm" resultMap="prodInfrmInfo-result">
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,
+						b.link_class AS class_name, link_lang AS gr_language
+		FROM  		TB_STORG A, 
+						(SELECT 	* 
+		       			FROM 		TB_STLINKTRGT 
+		       			WHERE 	creat_sys_cd = '02') B 
+		WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+		AND   		A.org_cd = #crReportOrgCd:VARCHAR#
+		AND   		A.link_trgt_id = B.link_trgt_id(+)
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 인수통보처리(인수통보-인수파일생성정보) (SELECT)
+	 -->
+	<select id="findProdRecvTakeInfrmInfo" parameterClass="rms.take.prod.domain.ProdRecvTakeInfrm" resultMap="prodInfrmInfo-result">
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,
+						b.link_class AS class_name, link_lang AS gr_language
+		FROM  		TB_STORG A, 
+						(SELECT 	* 
+		       			FROM 		TB_STLINKTRGT 
+		       			WHERE 	creat_sys_cd = '02') B 
+		WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+		AND   		A.org_cd = #crReportOrgCd:VARCHAR#
+		AND   		A.link_trgt_id = B.link_trgt_id(+)
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 반려통보처리(반려통보-반려파일생성정보) (SELECT)
+	 -->
+	<select id="findProdRecvRjctInfrmInfoList" parameterClass="rms.take.prod.domain.ProdRecvRjctInfrm" resultMap="prodInfrmReturnInfo-result">
+		SELECT	folder_recv_seq, org_cd, creat_yyyy, clss_id, 
+						folder_reg_seq, ho_no, rjct_cont
+		FROM  		TB_CRFOLDER
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   		creat_sys_cd = '02'
+		AND   		cr_report_sno = #crReportSno:NUMBER#
+		AND   		rjct_flag = '1'
+	</select>
+	
+	
+	<!--SELECT 전자문서시스템생산현황보고 처리과별 반려통보처리시 반려통보파일 정보 select-->
+	<select id="findProdRjctSendInfo" parameterClass="rms.take.prod.domain.ProdRecvRjctInfrm" resultClass="string">
+		SELECT  infrm_file_nm
+		FROM     TB_CRREPORT
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   		creat_sys_cd = '02'
+		AND   		cr_report_sno = #crReportSno:NUMBER#
+	</select>
+	
+	
+	<!--SELECT 전자문서시스템생산현황보고 처리과별 인수통보처리시 인수통보파일 정보 select-->
+	<select id="findProdTakeSendInfo" parameterClass="rms.take.prod.domain.ProdRecvTakeInfrm" resultClass="string">
+		SELECT  infrm_file_nm
+		FROM     TB_CRREPORT
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   		creat_sys_cd = '02'
+		AND   		cr_report_sno = #crReportSno:NUMBER#
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 인수통보처리 (UPDATE)
+	 -->	
+	 <update id="updateProdRecvTakeInfrm" parameterClass="rms.take.prod.domain.ProdRecvTakeInfrm">
+		UPDATE	TB_CRREPORT
+		SET   		take_user_nm = #takeUserNm:VARCHAR#,
+						takovr_user_nm = #takovrUserNm:VARCHAR#,
+						infrm_file_nm = 	#takeInfrmXml:VARCHAR#
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND			cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 			cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			cr_report_sno = #crReportSno:NUMBER#
+	</update>
+	 
+	 
+	<!-- 
+		기록물인수>연계인수>생산현황>처리과별 인수통보전송처리 (UPDATE)
+	 -->	
+	 <update id="updateProdRecvTakeInfrmSend" parameterClass="rms.take.prod.domain.ProdRecvTakeInfrm">
+		UPDATE	TB_CRREPORT
+		SET   		take_ymd = TO_CHAR(SYSDATE,'YYYYMMDD'),
+						state_div_cd = '08'
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND			cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 			cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			cr_report_sno = #crReportSno:NUMBER#
+	</update>
+</sqlMap>	

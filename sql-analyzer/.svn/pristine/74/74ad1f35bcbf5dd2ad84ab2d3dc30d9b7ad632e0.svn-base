@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.sys">
+
+	<resultMap id="download-ip-mng-result" class="rms.sys.sys.domain.DownloadIp" >
+		<result property="userIp" 			column="USER_IP"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="deptNm" 			column="DEPT_NM"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="useGb" 			column="USE_GB"/>
+		<result property="useNm" 			column="USE_NM"/>		
+	</resultMap>
+	<!-- 
+		시스템관리 다운로드룡PC관리 목록을 조회한다.
+	 -->
+	<select id="findDownloadIpMngPagedList" parameterClass="rms.sys.sys.domain.DownloadIp" resultMap="download-ip-mng-result">
+		SELECT C.user_ip
+			, C.dept_cd
+			, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = C.dept_cd AND record_center_id = #recordCenterId:VARCHAR#) AS dept_nm
+			, C.user_nm
+			, C.use_gb
+			, decode(C.use_gb,1,'이관용',2,'광디스크수록용','') AS use_nm
+		FROM (
+			SELECT B.*
+			FROM (
+				SELECT ROWNUM AS rnum,
+					A.*
+				FROM (
+					SELECT user_ip
+					 	 , dept_cd
+					 	 , user_nm
+					 	 , use_gb
+					FROM  TB_STDOWNIPMNG
+					WHERE record_center_id = #recordCenterId:VARCHAR#
+					<dynamic>
+						<isNotEmpty prepend="AND" property="userIp">
+							user_ip = #userIp#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="userNm">
+							user_nm LIKE #userNm:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="useGb">
+							use_gb = #useGb:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY user_ip
+				) A
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) B
+			WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+	</select>
+	<!--
+		COUNT - 시스템관리 다운로드룡PC관리 목록을 조회한다.
+	-->
+	<select id="countDownloadIpMngPagedList" parameterClass="rms.sys.sys.domain.DownloadIp" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_STDOWNIPMNG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+  		<dynamic>
+			<isNotEmpty prepend="AND" property="userIp">
+				user_ip = #userIp#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="userNm">
+				user_nm LIKE #userNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="useGb">
+				use_gb = #useGb:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		시스템관리_다운로드용PC관리
+		: 다운로드용PC 정보를 등록하기전 이미 등록된 정보가 있는지 조회한다.
+	 -->
+	<select id="countDownloadIp" parameterClass="rms.sys.sys.domain.DownloadIp" resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM TB_STDOWNIPMNG WHERE record_center_id = #recordCenterId:VARCHAR# AND user_ip = #userIp:VARCHAR#
+	</select>
+	
+	<!-- 
+		시스템관리_다운로드용PC관리
+		: 다운로드용PC 정보를 등록한다.	
+	 -->
+	<insert id="createDownloadIp" parameterClass="rms.sys.sys.domain.DownloadIp">
+		INSERT INTO TB_STDOWNIPMNG(
+			record_center_id, user_ip, dept_cd, user_nm, use_gb
+		) VALUES (
+			#recordCenterId:VARCHAR#, #userIp:VARCHAR#, #deptCd:VARCHAR#, #userNm:VARCHAR#, #useGb:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리_다운로드용PC관리
+		: 다운로드용PC 정보를 수정한다.
+	 -->
+	<update id="updateDownloadIp" parameterClass="rms.sys.sys.domain.DownloadIp">
+		UPDATE TB_STDOWNIPMNG
+		SET  dept_cd = #deptCd:VARCHAR#
+			,user_nm = #userNm:VARCHAR#
+			,use_gb  = #useGb:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND USER_IP = #userIp:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리_다운로드용PC관리
+		: 다운로드용PC 정보를 삭제한다.
+	 -->
+	<delete id="deleteDownloadIp" parameterClass="rms.sys.sys.domain.DownloadIp">
+		DELETE FROM TB_STDOWNIPMNG WHERE record_center_id = #recordCenterId:VARCHAR# AND user_ip = #userIp:VARCHAR#
+	</delete>
+</sqlMap>

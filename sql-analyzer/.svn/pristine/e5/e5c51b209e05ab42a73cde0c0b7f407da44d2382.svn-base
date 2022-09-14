@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="mainQna">
+
+	<resultMap id="qnaDocMain-result" class="rms.common.main.domain.QnaDoc" >
+		<result property="boardSno" 				column="BOARD_SNO"/>	
+		<result property="boardTitle"	 			column="BOARD_TITLE"/>
+		<result property="regDTime"					column="REG_DTIME"/>
+		<result property="levl" 					column="LEVL"/>
+		<result property="delFlag" 					column="DEL_FLAG"/>
+	</resultMap>
+	<!--
+		메인화면 묻고답하기 목록 조회
+	-->
+	<select id="findQnaDocListMain" parameterClass="rms.common.main.domain.QnaDoc" resultMap="qnaDocMain-result">
+		SELECT /*+ index_desc (TB_STQNA TB_STQNA_PK) */
+			board_sno, board_title, SUBSTR(reg_dtime, 0, 8) REG_DTIME, LEVL, del_flag
+		FROM   TB_STQNA
+		<![CDATA[
+		WHERE  ROWNUM <= 3
+		]]>
+		AND	   	record_center_id = #recordCenterId:VARCHAR#
+		AND 	del_flag = '0'
+		START WITH LEVL = 1
+		CONNECT BY PRIOR board_sno = ref_board_sno
+  		ORDER SIBLINGS BY LEVL, board_sort_sno DESC
+	</select>
+	
+	<!-- 
+		묻고답하기 목록을 조회한다.
+	 -->
+	<resultMap id="findQnaDocPagedList-result" class="rms.common.main.domain.QnaDoc">
+		<result property="boardSno" 				column="BOARD_SNO"/>	
+		<result property="boardTitle" 				column="BOARD_TITLE"/>
+		<result property="boardCont" 				column="BOARD_CONT"/>
+		<result property="levl" 					column="LEVL"/>
+		<result property="boardSortSno" 			column="BOARD_SORT_SNO"/>
+		<result property="userNm" 					column="USER_NM"/>
+		<result property="delFlag" 					column="DEL_FLAG"/>
+		<result property="findCnt" 					column="FIND_CNT"/>
+		<result property="regDTime"					column="REG_DTIME"/>
+	</resultMap>
+	<select id="countQnaDocPagedList" parameterClass="rms.common.main.domain.QnaDoc" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT *
+            FROM   TB_STQNA A
+            WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            AND DEL_FLAG='0'
+            <dynamic prepend="AND">
+            	<isEmpty prepend="AND" property="searchCond">
+            		<isNotEmpty property="searchText">
+            			(A.BOARD_TITLE LIKE #searchText:VARCHAR# OR A.BOARD_CONT LIKE #searchText:VARCHAR# OR A.USER_NM LIKE #searchText:VARCHAR#)
+            		</isNotEmpty>
+            	</isEmpty>	
+                <isNotEmpty prepend="AND" property="searchCond">
+                	<isNotEmpty property="searchText">
+                		<isEqual property="searchCond" compareValue="title">
+                        	A.BOARD_TITLE LIKE #searchText:VARCHAR# 
+                     	</isEqual>
+                     	<isEqual property="searchCond" compareValue="cont">
+                         	A.BOARD_CONT LIKE #searchText:VARCHAR# 
+                     	</isEqual>
+                     	<isEqual property="searchCond" compareValue="user">
+                         	A.USER_NM LIKE #searchText:VARCHAR# 
+                     	</isEqual>
+                     	<isEqual property="searchCond" compareValue="titleCont">
+                         	(A.BOARD_TITLE LIKE #searchText:VARCHAR# OR A.BOARD_CONT LIKE #searchText:VARCHAR#)
+                     	</isEqual>
+                	</isNotEmpty>
+                </isNotEmpty>
+            </dynamic>
+            START WITH LEVL = 1
+            CONNECT BY PRIOR BOARD_SNO = REF_BOARD_SNO
+            ORDER SIBLINGS BY LEVL, BOARD_SORT_SNO DESC
+        ) 
+	</select>
+	<select id="findQnaDocPagedList" parameterClass="rms.common.main.domain.QnaDoc" resultMap="findQnaDocPagedList-result">
+		SELECT D.board_sno
+		      ,D.ref_board_sno
+		      ,D.board_title
+		      ,D.board_cont
+		      ,D.levl
+		      ,D.board_sort_sno
+		      ,D.user_nm
+		      ,D.del_flag
+		      ,D.find_cnt
+		      ,SUBSTR(D.reg_dtime, 0, 8) AS reg_dtime
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,B.*
+		        FROM (
+		            SELECT *
+		            FROM   TB_STQNA A
+		            WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND DEL_FLAG='0'
+	                <dynamic prepend="AND">
+	                	<isEmpty prepend="AND" property="searchCond">
+	                		<isNotEmpty property="searchText">
+	                			(A.BOARD_TITLE LIKE #searchText:VARCHAR# OR A.BOARD_CONT LIKE #searchText:VARCHAR# OR A.USER_NM LIKE #searchText:VARCHAR#)
+	                		</isNotEmpty>
+	                	</isEmpty>	
+	                    <isNotEmpty prepend="AND" property="searchCond">
+	                    	<isNotEmpty property="searchText">
+	                    		<isEqual property="searchCond" compareValue="title">
+		                            A.BOARD_TITLE LIKE #searchText:VARCHAR# 
+		                        </isEqual>
+		                        <isEqual property="searchCond" compareValue="cont">
+		                            A.BOARD_CONT LIKE #searchText:VARCHAR# 
+		                        </isEqual>
+		                        <isEqual property="searchCond" compareValue="user">
+		                            A.USER_NM LIKE #searchText:VARCHAR# 
+		                        </isEqual>
+		                        <isEqual property="searchCond" compareValue="titleCont">
+		                            (A.BOARD_TITLE LIKE #searchText:VARCHAR# OR A.BOARD_CONT LIKE #searchText:VARCHAR#)
+		                        </isEqual>
+	                    	</isNotEmpty>
+	                    </isNotEmpty>
+	                </dynamic>
+		            START WITH LEVL = 1
+		            CONNECT BY PRIOR BOARD_SNO = REF_BOARD_SNO
+		            ORDER SIBLINGS BY LEVL, BOARD_SORT_SNO DESC
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+	
+	<!-- 
+		묻고답하기 게시순번을 조회한다.
+	 -->
+	<select id="findQnaMaxSno" parameterClass="rms.common.main.domain.QnaDoc" resultClass="java.lang.Integer">
+		SELECT TB_STQNA_SQ01.NEXTVAL MAX_SNO FROM DUAL
+	</select>
+	 
+	<!-- 
+		묻고답하기 게시순번을 조회한다.
+	 -->
+	<select id="findQnaBoardSortSno" parameterClass="rms.common.main.domain.QnaDoc" resultClass="java.lang.Integer">
+	 	SELECT NVL(MAX(BOARD_SORT_SNO), 0) + 1 MAX_BOARD_SORT_SNO
+		FROM   TB_STQNA
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	   REF_BOARD_SNO IS NULL
+	</select>
+		
+	<!-- 
+		묻고답하기를 등록한다.
+	 -->
+	<insert id="createQnaDoc" parameterClass="rms.common.main.domain.QnaDoc">
+		INSERT INTO TB_STQNA (BOARD_SNO, RECORD_CENTER_ID, BOARD_TITLE, BOARD_CONT,LEVL, BOARD_SORT_SNO, USER_ID, USER_NM, DEL_FLAG,FIND_CNT, REG_DTIME)
+		VALUES (
+			<!--cubrid #boardSno#, #recordCenterId#, #boardTitle#, #boardCont#,#levl#, #boardSortSno#, #userId#, #userNm#, #delFlag#,0, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			#boardSno#, #recordCenterId#, #boardTitle#, #boardCont#,#levl#, #boardSortSno#, #userId#, #userNm#, #delFlag#,0, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		묻고답하기 첨부파일을 등록한다.
+	 -->
+	<insert id="createQnaUploadDoc" parameterClass="rms.common.main.domain.QnaDoc">
+		INSERT INTO tb_stattachfile
+		(BOARD_SNO,ATTACH_FILE_SNO,BOARD_DIV,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,RECORD_CENTER_ID,REG_USER_ID,REG_DTIME) 
+		<!--cubrid VALUES(#boardSno#,#attachFileSno#,#boardDiv#,#attachFileNm#,#fileSize#,#storePath#,#storeFileNm#,#recordCenterId#,#userId#,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'))-->
+		VALUES(#boardSno#,#attachFileSno#,#boardDiv#,#attachFileNm#,#fileSize#,#storePath#,#storeFileNm#,#recordCenterId#,#userId#,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))
+	</insert>
+	
+	<!-- 
+		묻고답하기 조회 횟수를 갱신한다. 
+	 -->
+	<update id="updateQnaDocFindCnt" parameterClass="rms.common.main.domain.QnaDoc">
+		UPDATE TB_STQNA SET FIND_CNT = FIND_CNT + 1 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND BOARD_SNO = #boardSno:NUMERIC#
+	</update>
+	 
+	<!-- 
+		묻고답하기 상세를 조회한다.
+	 -->
+	<resultMap id="findQnaDocDetail-result" class="rms.common.main.domain.QnaDoc">
+		<result property="boardSno" 				column="BOARD_SNO"/>	
+		<result property="boardTitle" 				column="BOARD_TITLE"/>
+		<result property="boardCont" 				column="BOARD_CONT"/>
+		<result property="levl" 					column="LEVL"/>
+		<result property="boardSortSno" 			column="BOARD_SORT_SNO"/>
+		<result property="userId" 					column="USER_ID"/>
+		<result property="userNm" 					column="USER_NM"/>
+		<result property="delFlag" 					column="DEL_FLAG"/>
+		<result property="findCnt" 					column="FIND_CNT"/>
+		<result property="regDTime"					column="REG_DTIME"/>
+	</resultMap>
+	<select id="findQnaDocDetail" parameterClass="rms.common.main.domain.QnaDoc" resultMap="findQnaDocDetail-result">
+		SELECT BOARD_SNO, REF_BOARD_SNO, BOARD_TITLE, BOARD_CONT, LEVL, BOARD_SORT_SNO,
+			   USER_ID, USER_NM, DEL_FLAG, FIND_CNT, REG_DTIME
+		FROM   TB_STQNA 
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	   BOARD_SNO = #boardSno:NUMERIC#
+	</select>
+	
+	<!-- 
+		묻고답하기 첨부파일을 조회한다.
+	 -->
+	<resultMap id="findQnaDocFile-result" class="rms.common.main.domain.QnaDoc" >
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="userId" 			column="REG_USER_ID"/>
+		<result property="boardDiv" 		column="BOARD_DIV"/>
+		<result property="attachFileSno" 	column="ATTACH_FILE_SNO"/>
+		<result property="attachFileNm" 	column="ATTACH_FILE_NM"/>
+		<result property="fileSize" 		column="FILE_SIZE"/>
+		<result property="storePath" 		column="STORE_PATH"/>
+		<result property="storeFileNm" 		column="STORE_FILE_NM"/>
+		<result property="regDTime" 		column="REG_DTIME"/>
+	</resultMap>
+	<select id="findQnaDocFile" parameterClass="rms.common.main.domain.QnaDoc" resultMap="findQnaDocFile-result">
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME
+		FROM TB_STATTACHFILE
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND BOARD_SNO = #boardSno:NUMBER#
+		<isNotEmpty prepend="AND" property="attachFileSno">
+			<isNotEqual property="attachFileSno" compareValue="0">
+				ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+			</isNotEqual>
+		</isNotEmpty>
+		AND BOARD_DIV ='2'
+	</select>
+	
+	
+	<!-- 
+		묻고답하기 답변 게시순번을 조회한다.
+	 -->
+	<select id="findQnaReplyBoardSortSno" parameterClass="rms.common.main.domain.QnaDoc" resultClass="java.lang.Integer">
+		SELECT NVL(MAX(BOARD_SORT_SNO), 0) + 1 MAX_BOARD_SORT_SNO
+		FROM   TB_STQNA
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	   REF_BOARD_SNO = #refBoardSno:NUMERIC#
+	</select>
+	
+	<!-- 
+		묻고답하기 답변을 등록한다.
+	 -->
+	<insert id="createQnaDocReply" parameterClass="rms.common.main.domain.QnaDoc">
+		INSERT INTO TB_STQNA (BOARD_SNO, RECORD_CENTER_ID, REF_BOARD_SNO, BOARD_TITLE, BOARD_CONT,LEVL, BOARD_SORT_SNO, USER_ID, USER_NM, DEL_FLAG,FIND_CNT, REG_DTIME)
+		VALUES (
+			<!--cubrid #boardSno#, #recordCenterId#, #refBoardSno#, #boardTitle#, #boardCont#,#levl#, #boardSortSno#, #userId#, #userNm#, #delFlag#,0, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			#boardSno#, #recordCenterId#, #refBoardSno#, #boardTitle#, #boardCont#,#levl#, #boardSortSno#, #userId#, #userNm#, #delFlag#,0, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		묻고답하기를 수정한다.
+	 -->
+	<update id="updateQnaDoc" parameterClass="rms.common.main.domain.QnaDoc">
+		 UPDATE TB_STQNA 
+		 SET	BOARD_TITLE = #boardTitle:VARCHAR#,
+		 	    BOARD_CONT = #boardCont:VARCHAR#
+		 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		 AND    BOARD_SNO = #boardSno:NUMERIC#
+	</update>
+	
+	<!-- 
+		묻고답하기 첨부파일의 최종 순번을 조회한다.
+	 -->
+	<select id="findAttachFileMaxSno" parameterClass="rms.common.main.domain.QnaDoc" resultClass="java.lang.Integer">
+		SELECT NVL(MAX(attach_file_sno), 0) FROM TB_STATTACHFILE WHERE BOARD_SNO = #boardSno:NUMBER# AND BOARD_DIV ='2'
+	</select>
+	
+	<!-- 
+		공지사항 첨부파일을 삭제한다.
+	 -->	
+	<delete id="deleteQnaDocFile" parameterClass="rms.common.main.domain.QnaDoc">
+		DELETE FROM TB_STATTACHFILE 
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		<isNotEmpty prepend="AND" property="attachFileSno">
+			<isNotEqual property="attachFileSno" compareValue="0">
+				ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+			</isNotEqual>
+		</isNotEmpty> 
+		AND BOARD_DIV = '2'
+	</delete>
+	
+	<!-- 
+		묻고답하기를 삭제한다.
+	 -->
+	<delete id="deleteQnaDoc" parameterClass="rms.common.main.domain.QnaDoc">
+		UPDATE TB_STQNA 
+		SET	   DEL_FLAG = '1' 
+		WHERE  BOARD_SNO IN (SELECT BOARD_SNO 
+							 FROM   TB_STQNA A
+							 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+							 START WITH BOARD_SNO = #boardSno:NUMERIC#
+							 CONNECT BY PRIOR BOARD_SNO = REF_BOARD_SNO)
+	</delete>
+	
+	<!-- 
+		묻고답하기 첨부파일을 조회한다.
+	 -->	
+	<select id="findQnaDocDownloadFile" parameterClass="rms.common.main.domain.QnaDoc" resultMap="findQnaDocFile-result">
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME
+		FROM TB_STATTACHFILE
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		AND BOARD_DIV = #boardDiv:NUMBER#
+		AND ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+	</select>		
+</sqlMap>

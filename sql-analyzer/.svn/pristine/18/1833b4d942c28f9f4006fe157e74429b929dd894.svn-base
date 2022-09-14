@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : select
+-- Query Id : SelectPdf_StMedium
+
+		SELECT MEDIUM_ID		FROM (		    SELECT MEDIUM_ID		    FROM  TB_STMEDIUM A		    WHERE EXISTS (		    	SELECT RECORD_CENTER_ID, DEST_STORAGE_TYPE, DEST_STORAGE_VENDOR FROM TB_STREQTRANS WHERE JOB_ID = '1'		    	AND RECORD_CENTER_ID = A.RECORD_CENTER_ID		    	AND DEST_STORAGE_TYPE = A.MEDIUM_CD		    	AND DEST_STORAGE_VENDOR = A.MEDIUM_DETAIL_CD		    )		    AND   A.VOLM_ID IN (SELECT VOLM_ID FROM TB_STVOLM WHERE RECORD_CENTER_ID = '1' AND DEL_FLAG = '0' AND VOLM_DIV_CD = '2')		    AND   A.DEL_FLAG = '0'		    AND   (A.TOT_SIZE - A.USE_SIZE) > NVL((SELECT NVL(SUM(DEST_FILE_SIZE),0) FROM TB_STREQRESULT WHERE JOB_ID = '1' AND REQUEST_STATUS = 'C'),0)		    ORDER BY A.RECORD_CENTER_ID, A.MEDIUM_ID		)		WHERE ROWNUM = 1	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : select
+-- Query Id : SelectPdf_DestFileIdList
+
+		SELECT A.RECORD_CENTER_ID, A.DEST_FILE_ID, A.REQUEST_STATUS, A.DEST_STORAGE_TYPE		FROM (		    SELECT RECORD_CENTER_ID, DEST_FILE_ID, REQUEST_STATUS, DEST_STORAGE_TYPE		    FROM  TB_STREQRESULT		    WHERE JOB_ID = '1'		    ORDER BY JOB_ID		) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : select
+-- Query Id : SelectPdfA1_StOrignPdfA1File
+
+		SELECT RECORD_CENTER_ID, ORIGN_ID, DOC_TYPE_CD, DOC_TYPE_SNO		FROM TB_STORIGNPDFA1FILE Z		WHERE  		      EXISTS		      ( SELECT B.RECORD_CENTER_ID, B.ORIGN_ID, B.DOC_TYPE_CD, B.DOC_TYPE_SNO			    FROM  TB_STREQRESULT A			        , TB_STORIGNFILE B			    WHERE A.RECORD_CENTER_ID = '1' 			    AND   A.JOB_ID = '1'			    AND   A.DEST_FILE_ID = '1'			    AND   A.SRC_FILE_ID = B.ORIGN_FILE_ID                            AND   B.RECORD_CENTER_ID = Z.RECORD_CENTER_ID                            AND   B.ORIGN_ID = Z.ORIGN_ID                            AND   B.DOC_TYPE_CD = Z.DOC_TYPE_CD                            AND   B.DOC_TYPE_SNO = Z.DOC_TYPE_SNO		      );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : delete
+-- Query Id : DeletePdfA1_StOrignPdfA1File
+
+		DELETE FROM TB_STORIGNPDFA1FILE		WHERE RECORD_CENTER_ID 	= '1'		  AND ORIGN_ID			= '1'		  AND DOC_TYPE_CD		= '1'		  AND DOC_TYPE_SNO		= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : insert
+-- Query Id : InsertPdf_StOrignPdfA1File
+
+		INSERT INTO TB_STORIGNPDFA1FILE		(		    PDF_A1_FILE_ID, RECORD_CENTER_ID, ORIGN_ID, DOC_TYPE_CD, DOC_TYPE_SNO		    , FILE_NM, DATA_FORMAT_CD, FILE_SIZE, STORE_FILE_ID, MEDIUM_ID		    , DEL_FLAG, VIRUS_FLAG, REG_DTIME, FILE_PATH_RULE		)		(		    SELECT '1', B.RECORD_CENTER_ID, B.ORIGN_ID, B.DOC_TYPE_CD, B.DOC_TYPE_SNO		        , A.DEST_FILE_NM, '05', A.DEST_FILE_SIZE, A.DEST_FILE_ID, '1' AS MEDIUM_ID		        , '0' AS DEL_FLAG, '0' AS VIRUS_FLAG, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), '1' AS FILE_PATH_RULE		    FROM  TB_STREQRESULT A		        , TB_STORIGNFILE B		    WHERE A.RECORD_CENTER_ID = '1'		    AND   A.JOB_ID = '1'		    AND   A.DEST_FILE_ID = '1'		    AND   A.SRC_FILE_ID = B.ORIGN_FILE_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : insert
+-- Query Id : InsertPdf_StWorkHist
+
+		INSERT INTO TB_STWORKHIST		(		    RECORD_CENTER_ID, WORK_HIST_ID, WORK_DIV, WORK_START_DTIME, WORK_CLOSE_DTIME		    , SVC_CD, SVC_NM, FOLDER_ID, RECORD_ID, STORE_FILE_NM		    , ERROR_FLAG, ERROR_CD, ERROR_CONT, WORK_CONT, ERROR_SOL_CONT		    , ORIGN_FILE_ID, FOLLOWUP_DIV_CD, FORMAT_DIV_CD		)		(			SELECT A.RECORD_CENTER_ID, '1', '4', TO_CHAR(B.REQUEST_START_TIME,'YYYYMMDDHH24MISS'), TO_CHAR(B.REQUEST_END_TIME,'YYYYMMDDHH24MISS')				, '301', 'PresvFormat ResultService', B.FOLDER_ID, B.RECORD_ID, A.DEST_FILE_NM				, '1', A.ERROR_CODE, A.ERROR_CONTENTS, '', ''				, A.SRC_FILE_ID, '0', '0'			FROM  TB_STREQRESULT A			    , TB_STREQTRANS B			WHERE A.RECORD_CENTER_ID=B.RECORD_CENTER_ID			AND A.JOB_ID=B.JOB_ID 			AND A.JOB_ID = '1'			AND   A.DEST_FILE_ID = '1'			AND   A.REQUEST_STATUS = 'D'			AND   B.JOB_ID = A.JOB_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_StOrignFile
+
+		UPDATE UpdatePdf_StOrignFile_view C		SET C.PDF_A1_TRANS_STATE = (CASE WHEN C.REQUEST_STATUS = 'C' THEN '4' WHEN C.REQUEST_STATUS = 'D' THEN '5' ELSE C.PDF_A1_TRANS_STATE END)		WHERE C.ORIGN_FILE_ID		    IN (		        SELECT SRC_FILE_ID		        FROM  TB_STREQRESULT		        WHERE RECORD_CENTER_ID = '1'		          AND JOB_ID = '1'		    )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_RdRecord
+
+    UPDATE UpdatePdf_RdRecord_view inner join TB_RDRECORD F ON F.RECORD_CENTER_ID = '1' AND F.RECORD_ID = '1'    SET F.PDF_A1_TRANS_STATE = E.NEW_STATE    WHEERE E.RECORD_ID = '1'    AND E.JOB_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_StRecordOrign
+
+		UPDATE TB_STRECORDORIGN A		SET   A.PDF_A1_TRANS_STATE = (SELECT B.PDF_A1_TRANS_STATE FROM TB_RDRECORD B WHERE B.RECORD_ID = A.RECORD_ID)		WHERE 		A.RECORD_CENTER_ID = '1'		AND A.RECORD_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_RdFolder
+
+	  UPDATE	  	  /*+ RECOMPILE */	  	  UpdatePdf_RdFolder_view C INNER JOIN TB_RDFOLDER Z ON Z.RECORD_CENTER_ID = '1' AND Z.FOLDER_ID = '1'    SET Z.PDF_A1_TRANS_STATE = C.NEW_STATE		WHERE C.RECORD_CENTER_ID = '1'	  AND C.FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_StMedium
+
+		UPDATE TB_STMEDIUM		SET   USE_SIZE = USE_SIZE + NVL((SELECT NVL(SUM(DEST_FILE_SIZE),0) FROM TB_STREQRESULT WHERE JOB_ID = '1' AND REQUEST_STATUS = 'C'),0)		WHERE RECORD_CENTER_ID = '1'		AND   MEDIUM_ID = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml

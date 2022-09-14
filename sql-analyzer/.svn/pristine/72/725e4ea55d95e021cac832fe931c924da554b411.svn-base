@@ -1,0 +1,67 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : countClssDivFolderPagedList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A         WHERE A.RECORD_CENTER_ID = '1'        AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')        AND A.ERECORD_FLAG IN ('2','3')          AND                  A.ORG_CD = '1'              AND                 A.ORG_CD = '1'              AND              		(A.CREAT_YYYY BETWEEN '1' AND '1')            	   AND                 A.PRESV_TERM_CD = '1'              AND                 A.TITLE LIKE '1'              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 A.CREAT_SYS_CD = '1'              AND                 A.FOLDER_TYPE_DIV_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : findClssDivFolderPagedList
+
+		SELECT D.folder_id		      ,D.org_cd		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_Cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_Cd) AS org_abbr_nm		      ,D.clss_nm		      ,D.title		      ,D.creat_yyyy		      ,D.presv_term_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = D.presv_term_cd) AS presv_term_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm		      ,D.folder_type_div_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD01' AND Z.com_cd = D.folder_type_div_cd) AS folder_type_div_nm		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT *		            FROM TB_RDFOLDER A 		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND A.ERECORD_FLAG IN ('2','3') 		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND  			            		(A.CREAT_YYYY BETWEEN '1' AND '1')			            	   AND 		                    A.PRESV_TERM_CD = '1'		                  AND 		                    A.TITLE LIKE '1'		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    A.CREAT_SYS_CD = '1'		                  AND 		                    A.FOLDER_TYPE_DIV_CD = '1'		                  		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : countClssDivRecordPagedList
+
+		SELECT COUNT(1)        FROM TB_RDRECORD A        WHERE A.RECORD_CENTER_ID = '1'        AND A.FOLDER_ID = '1'        AND A.ERECORD_FLAG = '2'        AND (SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' AND Z.com_cd = A.record_reg_div_cd) IS NOT NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : findClssDivRecordPagedList
+
+		SELECT D.folder_id		      ,D.record_id		      ,D.org_cd		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_abbr_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_nm		      ,D.title		      ,DECODE(D.record_reg_div_cd,'1','일반문서','2','일반문서','3','도면류','4','도면류','5','사진·필름류','6','녹음·동영상류','7','카드류','8','카드류') AS record_reg_div_nm		      ,D.creat_yyyy		      ,DECODE(D.record_clss_cd,'','',(SELECT Z.com_cd_nm 		                                      FROM TB_ZZCOMCD Z 		                                      WHERE Z.com_type_cd = (SELECT Y.sub_com_type_cd 		                                                             FROM TB_ZZCOMCD Y 		                                                             WHERE Y.com_type_cd = 'RD02' 		                                                             AND Y.com_cd = D.record_reg_div_cd) 		                                      AND Z.com_cd = D.record_clss_cd)) AS record_clss_nm			  ,D.record_clss_cd			  ,(SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' AND Z.com_cd = D.record_reg_div_cd) AS sub_com_type_cd		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT *		            FROM TB_RDRECORD A		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.FOLDER_ID = '1'		            AND A.ERECORD_FLAG = '2'		            AND (SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' AND Z.com_cd = A.record_reg_div_cd) IS NOT NULL		            ORDER BY A.RECORD_CENTER_ID, A.CREAT_REG_DTIME, A.CREAT_REG_NO   		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : update
+-- Query Id : updateClssDivRecord
+
+		UPDATE TB_RDRECORD		   SET RECORD_CLSS_CD = '1'      		 WHERE RECORD_CENTER_ID = '1'		   AND RECORD_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : findClssDivListBatch
+
+        SELECT SUB_COM_TYPE_CD, COUNT(*) AS CNT          FROM (                SELECT C.sub_com_type_cd                  FROM TB_RDRECORD A, (SELECT COM_CD,SUB_COM_TYPE_CD FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD02')C                  WHERE A.RECORD_CENTER_ID = '1'                   AND A.folder_id = '1'                   AND A.erecord_flag = '2'	               AND A.record_reg_div_cd = C.com_cd                   AND C.SUB_COM_TYPE_CD IS NOT NULL		         AND 		            A.TITLE LIKE '1'		          AND 		            A.CREAT_SYS_CD = '1'		          AND 		            A.RECORD_REG_DIV_CD = '1'		          AND 		            (A.CREAT_YYYY BETWEEN '1'		             AND 		                '1')		               AND 		             A.ORG_CD = '1'		          AND 		             A.RECORD_CLSS_CD IS NULL		                       )S          GROUP BY S.SUB_COM_TYPE_CD;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : update
+-- Query Id : updateClssDivRecordBatch
+
+		UPDATE TB_RDRECORD		   SET RECORD_CLSS_CD = '1'     		 WHERE RECORD_ID IN (		   SELECT RECORD_ID FROM TB_RDRECORD A, (SELECT COM_CD,SUB_COM_TYPE_CD FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD02')C		   WHERE A.RECORD_CENTER_ID = '1'		   AND A.folder_id = '1'		   AND A.erecord_flag = '2'		   AND A.record_reg_div_cd = C.com_cd           AND C.SUB_COM_TYPE_CD IS NOT NULL         AND             A.TITLE LIKE '1'          AND             A.CREAT_SYS_CD = '1'          AND             A.RECORD_REG_DIV_CD = '1'          AND             (A.CREAT_YYYY BETWEEN '1' AND                 '1')               AND              A.ORG_CD = '1'          AND              A.RECORD_CLSS_CD IS NULL                 )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : countClssDivRegStateRecordPagedList
+
+		SELECT COUNT(1)        FROM TB_RDRECORD A        WHERE A.RECORD_CENTER_ID = '1'        AND A.ERECORD_FLAG = '2'        AND (SELECT Y.sub_com_type_cd FROM TB_ZZCOMCD Y WHERE Y.com_type_cd = 'RD02' AND Y.com_cd = A.record_reg_div_cd) IS NOT NULL         AND             A.TITLE LIKE '1'          AND             A.CREAT_SYS_CD = '1'          AND             A.RECORD_REG_DIV_CD = '1'          AND                  (A.CREAT_YYYY BETWEEN '1' AND '1')               AND             A.ORG_CD = '1'          AND             A.RECORD_CLSS_CD = '1'          AND             A.RECORD_CLSS_CD IS NULL         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml
+-- Query    : select
+-- Query Id : findClssDivRegStateRecordPagedList
+
+		SELECT D.record_id		      ,D.title		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm		      ,D.org_cd		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_abbr_nm		      ,DECODE(D.record_reg_div_cd,'1','일반문서','2','일반문서','3','도면류','4','도면류','5','사진·필름류','6','녹음·동영상류','7','카드류','8','카드류') AS record_reg_div_nm		      ,D.creat_yyyy		      ,D.record_clss_cd		      ,DECODE(D.record_clss_cd,'','',(SELECT Z.com_cd_nm 		      								  FROM TB_ZZCOMCD Z 		      								  WHERE Z.com_type_cd = (SELECT Y.sub_com_type_cd 		      								  						 FROM TB_ZZCOMCD Y 		      								  						 WHERE Y.com_type_cd = 'RD02' 		      								  						 AND Y.com_cd = D.record_reg_div_cd) 		      								  AND Z.com_cd = D.record_clss_cd)) AS record_clss_nm		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT *		            FROM TB_RDRECORD A		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.ERECORD_FLAG = '2'		            AND (SELECT Y.sub_com_type_cd FROM TB_ZZCOMCD Y WHERE Y.com_type_cd = 'RD02' AND Y.com_cd = A.record_reg_div_cd) IS NOT NULL		             AND 		                A.TITLE LIKE '1'		              AND 		                A.CREAT_SYS_CD = '1'		              AND 		                A.RECORD_REG_DIV_CD = '1'		              AND  		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                   AND 		                A.ORG_CD = '1'		              AND 		                A.RECORD_CLSS_CD = '1'		              AND 		                A.RECORD_CLSS_CD IS NULL		              		            ORDER BY A.RECORD_CENTER_ID, A.CREAT_REG_DTIME, A.CREAT_REG_NO		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\ClssDiv.xml

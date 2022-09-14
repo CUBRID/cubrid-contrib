@@ -1,0 +1,39 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml
+-- Query    : select
+-- Query Id : countRecordTitleModPagedList
+
+		SELECT COUNT(1)        FROM TB_RDRECORD A, TB_RDFOLDER B        WHERE A.RECORD_CENTER_ID = '1'        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID        AND A.FOLDER_ID = B.FOLDER_ID        AND A.ERECORD_FLAG = '2'        AND A.RECORD_CLSS_CD IS NOT NULL             AND             A.TITLE LIKE '1'          AND             A.CREAT_SYS_CD = '1'          AND             A.RECORD_REG_DIV_CD = '1'          AND                  (A.CREAT_YYYY BETWEEN '1' AND '1')               AND             A.RECORD_CLSS_CD = '1'          AND             A.ORG_CD = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml
+-- Query    : select
+-- Query Id : findRecordTitleModPagedList
+
+		SELECT E.record_id		      ,E.folder_id		      ,E.org_cd		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id  AND Z.org_cd = E.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id  AND Z.org_cd = E.org_cd) AS org_abbr_nm		      ,E.title		      ,E.folder_title		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' ANd Z.com_cd = E.record_reg_div_cd) AS record_reg_div_nm		      ,E.creat_yyyy		      ,DECODE(E.record_clss_cd,'','',(SELECT Z.com_cd_nm 		      								  FROM TB_ZZCOMCD Z 		      								  WHERE Z.com_type_cd = (SELECT Y.sub_com_type_cd 		      								  						 FROM TB_ZZCOMCD Y 		      								  						 WHERE Y.com_type_cd = 'RD02' 		      								  						 AND Y.com_cd = E.record_reg_div_cd) 		      								  AND Z.com_cd = E.record_clss_cd)) AS record_clss_nm		      ,E.take_mng_no		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.RECORD_ID, A.FOLDER_ID, A.ORG_CD, A.TITLE		                  ,B.TITLE AS FOLDER_TITLE, A.CREAT_YYYY, A.TAKE_MNG_NO, A.RECORD_CLSS_CD, A.RECORD_REG_DIV_CD		            FROM TB_RDRECORD A, TB_RDFOLDER B		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND A.FOLDER_ID = B.FOLDER_ID		            AND A.ERECORD_FLAG = '2'		            AND A.RECORD_CLSS_CD IS NOT NULL    		             AND 		                A.TITLE LIKE '1'		              AND 		                A.CREAT_SYS_CD = '1'		              AND 		                A.RECORD_REG_DIV_CD = '1'		              AND  		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                   AND 		                A.RECORD_CLSS_CD = '1'		              AND 		                A.ORG_CD = '1'		                     		            ORDER BY A.RECORD_CENTER_ID, A.CREAT_REG_DTIME, A.CREAT_REG_NO		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml
+-- Query    : update
+-- Query Id : updateRecordTitle
+
+		UPDATE TB_RDRECORD		   SET TITLE = '1'      		 WHERE RECORD_CENTER_ID = '1'		   AND RECORD_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml
+-- Query    : select
+-- Query Id : findChngHistNo
+
+		SELECT NVL(MAX(CHNG_HIST_NO)+1,1) AS CHNG_HIST_NO		  FROM TB_RDRECORDTITLEHIST		 WHERE RECORD_ID = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml
+-- Query    : insert
+-- Query Id : createRecordTitleHist
+
+		INSERT INTO TB_RDRECORDTITLEHIST(				RECORD_CENTER_ID				,RECORD_ID				,CHNG_HIST_NO				,TITLE_BEF				,CHNG_YMD				,CHNG_RSN				,CHNG_USER_ID     				,CHNG_USER_NM         				,REG_DTIME				,TAKE_MNG_NO 			)			VALUES(				 '1'				,'1'				,'1'				,'1'				,TO_CHAR(SYSDATE,'YYYYMMDD')				,'1'				,'1'				,'1'								,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')					,'1'			) 	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\clssdiv\RecordTitleMod.xml

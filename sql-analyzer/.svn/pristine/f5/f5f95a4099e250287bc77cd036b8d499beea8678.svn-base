@@ -1,0 +1,1550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.unitMng">
+
+	<!-- 단위업무신청처리>신청처리목록조회(COUNT) -->
+	<select id="countUnitMngAprovReqList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultClass="long">
+        SELECT  COUNT(1)
+        FROM    
+		        (
+		    			/* 신청을 위한 신설, 변경신청 (미처리건 대상)*/
+		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd
+		                           , a. req_dtime, a.creat_sys_cd, a.take_mng_no
+		                  FROM TB_ZZUNITREQ a
+		                 WHERE  a.record_center_id = #recordCenterId:VARCHAR#
+		                   AND A.UNIT_REQ_TYPE_CD IN ('1','2')
+		                   AND NVL(A.RECV_RSLT_CD,'1') = '1' 
+		                    AND NOT EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST
+		                                                WHERE take_mng_no = a.take_mng_no)
+		                    <dynamic>   
+						        <isNotEmpty prepend="AND" property="reqYyyy">
+						                a.req_yyyy = #reqYyyy:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="reqOrgCd">
+						                a.req_org_cd = #reqOrgCd:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+						                a.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+						        </isNotEmpty>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="0">
+								        a.aprov_state_cd IN ('0','1')
+								</isEqual>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="1">
+								    	a.aprov_state_cd = '2'
+								</isEqual>						        
+					        </dynamic>		                    
+		                UNION ALL
+		                /* 통보를 위한 폐지,처리과변경,소관부서변경 (처리완료된것 중 배포되지않은건 대상)*/
+		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd
+		                         , a. req_dtime, a.creat_sys_cd, a.take_mng_no
+		                  FROM TB_ZZUNITREQ a
+		                WHERE  a.record_center_id = #recordCenterId:VARCHAR#
+		                    AND A.UNIT_REQ_TYPE_CD IN ('3','4','5')
+		                    AND NVL(A.RECV_RSLT_CD,'1') = '1' 
+		                    AND EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST
+		                                                WHERE take_mng_no = a.take_mng_no
+		                                                GROUP BY take_mng_no
+		                                                HAVING MAX(unit_send_flag) = '0')
+					        <dynamic>
+						        <isNotEmpty prepend="AND" property="reqYyyy">
+						                a.req_yyyy = #reqYyyy:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="reqOrgCd">
+						                a.req_org_cd = #reqOrgCd:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+						                a.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+						        </isNotEmpty>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="0">
+								        a.aprov_state_cd IN ('0','1')
+								</isEqual>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="1">
+								    	a.aprov_state_cd = '2'
+								</isEqual>								        
+					        </dynamic>		                    		                                                
+		             ) ta,
+		              TB_STORG tb
+		   WHERE  ta.record_center_id = tb.record_center_id
+		         AND ta.req_org_cd = tb.org_cd
+
+	</select>
+
+	<!-- 단위업무신청처리>신청처리목록조회 resultMap -->
+	<resultMap id="findUnitMngAprovReq-result" class="rms.stnd.unitMng.domain.UnitReq" >
+		<result property="recordCenterId" 		column="record_center_id"/>
+		<result property="unitReqTypeCd" 		column="unit_req_type_cd"/>
+		<result property="reqOrgCd" 			column="req_org_cd"/>
+		<result property="reqOrgNm" 			column="req_org_nm"/>
+		<result property="reqOrgAbbrNm" 		column="req_org_abbr_nm"/>
+		<result property="reqSnoId" 			column="req_sno_id"/>
+		<result property="unitReqTypeCdNm" 		column="unit_req_type_cd_nm"/>
+		<result property="reqDtime"				column="req_dtime"/>
+		<result property="creatSysCd"			column="creat_sys_cd"/>
+		<result property="takeMngNo"			column="take_mng_no"/>
+		<result property="aprovReqFileNm"		column="aprov_req_file_nm"/>
+		<result property="aprovReqFileFullNm"	column="aprov_req_file_full_nm"/>
+		<result property="aprovStateCdNm"		column="aprov_state_cd_nm"/>	
+	</resultMap>
+
+	<!-- 단위업무신청처리>신청처리목록조회(SELECT) -->
+	<select id="findUnitMngAprovReqList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngAprovReq-result">
+			SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		 SELECT ta.record_center_id, ta.unit_req_type_cd, ta.req_org_cd, tb.org_nm AS req_org_nm, 
+                tb.org_abbr_nm AS req_org_abbr_nm, ta.req_sno_id,
+		        tc.com_cd_nm AS unit_req_type_cd_nm,
+		        SUBSTR(ta.req_dtime,0,8) AS req_dtime, ta.creat_sys_cd, ta.take_mng_no,
+		        ta.aprov_req_file_nm AS aprov_req_file_full_nm, 
+		        SUBSTR(ta.aprov_req_file_nm,INSTR(ta.aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,
+		        NVL(td.com_cd_nm,'미신청') AS aprov_state_cd_nm
+		    FROM (   	
+		    			/* 신청을 위한 신설, 변경신청 (미처리건 대상)*/
+		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd
+		                           , a. req_dtime, a.creat_sys_cd, a.take_mng_no
+		                  FROM TB_ZZUNITREQ a
+		                 WHERE  a.record_center_id = #recordCenterId:VARCHAR#
+		                   AND A.UNIT_REQ_TYPE_CD IN ('1','2')
+		                   AND NVL(A.RECV_RSLT_CD,'1') = '1' 
+		                    AND NOT EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST
+		                                                WHERE take_mng_no = a.take_mng_no)   
+		                    <dynamic>   
+						        <isNotEmpty prepend="AND" property="reqYyyy">
+						                a.req_yyyy = #reqYyyy:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="reqOrgCd">
+						                a.req_org_cd = #reqOrgCd:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+						                a.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+						        </isNotEmpty>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="0">
+								        a.aprov_state_cd IN ('0','1')
+								</isEqual>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="1">
+								    	a.aprov_state_cd = '2'
+								</isEqual>	
+					        </dynamic>		                    
+		                UNION ALL
+		                /* 통보를 위한 폐지,처리과변경,소관부서변경 (처리완료된것 중 배포되지않은건 대상)*/
+		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd
+		                         , a. req_dtime, a.creat_sys_cd, a.take_mng_no
+		                  FROM TB_ZZUNITREQ a
+		                WHERE  a.record_center_id = #recordCenterId:VARCHAR#
+		                    AND A.UNIT_REQ_TYPE_CD IN ('3','4','5')
+		                    AND NVL(A.RECV_RSLT_CD,'1') = '1' 
+		                    AND EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST
+		                                                WHERE take_mng_no = a.take_mng_no
+		                                                GROUP BY take_mng_no
+		                                                HAVING MAX(unit_send_flag) = '0')
+					        <dynamic>
+						        <isNotEmpty prepend="AND" property="reqYyyy">
+						                a.req_yyyy = #reqYyyy:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="reqOrgCd">
+						                a.req_org_cd = #reqOrgCd:VARCHAR#
+						        </isNotEmpty>
+						        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+						                a.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+						        </isNotEmpty>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="0">
+								        a.aprov_state_cd IN ('0','1')
+								</isEqual>
+								<isEqual prepend="AND" property="aprovStateCd" compareValue="1">
+								    	a.aprov_state_cd = '2'
+								</isEqual>								        
+					        </dynamic>		                    		                                                
+		             ) ta,
+		              TB_STORG tb,
+		              (SELECT com_cd, com_cd_nm  FROM tb_zzcomcd WHERE com_type_cd = 'ZZ22') tc,
+		              (SELECT com_cd, com_cd_nm  FROM tb_zzcomcd WHERE com_type_cd = 'ZZ33') td
+		   WHERE  ta.record_center_id = tb.record_center_id
+		         AND ta.req_org_cd = tb.org_cd
+		         AND tc.com_Cd = ta.unit_req_type_cd
+		         AND td.com_cd(+) = ta.aprov_state_cd
+		ORDER BY ta.req_dtime DESC
+		) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+
+	<!-- 단위업무신청처리>파일생성POPUP> 신청선택목록조회 resultMap -->
+	<resultMap id="findUnitMngAprovReqFile-result" class="rms.stnd.unitMng.domain.UnitReq" >
+		<result property="unitReqTypeCd" 		column="unit_req_type_cd"/>
+		<result property="unitReqTypeCdNm" 		column="unit_req_type_cd_nm"/>
+		<result property="aprovReqFileNm"		column="aprov_req_file_nm"/>
+		<result property="aprovReqFileFullNm"	column="aprov_req_file_full_nm"/>
+		<result property="aprovStateCd"			column="aprov_state_cd"/>	
+		<result property="aprovStateCdNm"		column="aprov_state_cd_nm"/>	
+		<result property="reqSnoId" 			column="req_sno_id"/>		
+	</resultMap>
+
+	<!-- 단위업무신청처리>파일생성POPUP> 신청선택목록조회 --> 
+	<!--  <select id="findUnitMngAprovReqFileList" parameterClass="rms.framework.persistence.dao.sqlmap.ParamsWrapper" resultMap="findUnitMngAprovReqFile-result">-->
+	<select id="findUnitMngAprovReqFileList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngAprovReqFile-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT unit_req_type_cd,
+	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22' AND com_Cd = b.unit_req_type_cd) AS unit_req_type_cd_nm, 
+	            aprov_req_file_nm AS aprov_req_file_full_nm, 
+		        SUBSTR(aprov_req_file_nm,INSTR(aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,
+	            aprov_state_cd,
+	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ33' AND com_Cd = b.aprov_state_cd) AS aprov_state_cd_nm,
+	            SUBSTR(req_sno_id,3)||'''' AS req_sno_id
+		 FROM (
+		             SELECT unit_req_type_cd, MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,
+		                    COUNT(1) AS type_cnt, COUNT(distinct req_org_cd) AS ORG_CNT, 
+		                    MAX(aprov_state_cd) AS aprov_state_cd, aprov_req_file_nm
+		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd,req_org_cd
+		                                  ,(ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM 
+		                     FROM TB_ZZUNITREQ
+		                    WHERE record_center_id = #recordCenterId:VARCHAR#
+							<dynamic>
+						        <isNotEmpty prepend="AND" property="reqSnoId">
+						                req_sno_id IN ($reqSnoId$)
+						        </isNotEmpty>							
+							</dynamic>
+		                     <!-- 
+		                    WHERE record_center_id = #params[0].recordCenterId:VARCHAR#
+							<dynamic>
+								<iterate prepend=" AND REQ_SNO_ID IN" property="params" open="(" close=")" conjunction=",">
+										#params[].reqSnoId:VARCHAR#
+								</iterate>
+							</dynamic>
+							 -->		                         
+		                   )
+		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR unit_req_type_cd = unit_req_type_cd
+		             GROUP BY    unit_req_type_cd, aprov_req_file_nm
+		       )  b
+		ORDER BY  unit_req_type_cd  
+		) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<select id="countUnitMngAprovReqFileList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultClass="long">
+	SELECT COUNT(1) FROM
+	(
+		SELECT unit_req_type_cd,
+	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22' AND com_Cd = b.unit_req_type_cd) AS unit_req_type_cd_nm, 
+	            aprov_req_file_nm AS aprov_req_file_full_nm, 
+		        SUBSTR(aprov_req_file_nm,INSTR(aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,
+	            aprov_state_cd,
+	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ33' AND com_Cd = b.aprov_state_cd) AS aprov_state_cd_nm,
+	            SUBSTR(req_sno_id,3)||'''' AS req_sno_id
+		 FROM (
+		             SELECT unit_req_type_cd, MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,
+		                    COUNT(1) AS type_cnt, COUNT(distinct req_org_cd) AS ORG_CNT, 
+		                    MAX(aprov_state_cd) AS aprov_state_cd, aprov_req_file_nm
+		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd,req_org_cd
+		                                  ,(ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM 
+		                     FROM TB_ZZUNITREQ
+		                    WHERE record_center_id = #recordCenterId:VARCHAR#
+							<dynamic>
+						        <isNotEmpty prepend="AND" property="reqSnoId">
+						                req_sno_id IN ($reqSnoId$)
+						        </isNotEmpty>							
+							</dynamic>
+		                     <!-- 
+		                    WHERE record_center_id = #params[0].recordCenterId:VARCHAR#
+							<dynamic>
+								<iterate prepend=" AND REQ_SNO_ID IN" property="params" open="(" close=")" conjunction=",">
+										#params[].reqSnoId:VARCHAR#
+								</iterate>
+							</dynamic>
+							 -->		                         
+		                   )
+		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR unit_req_type_cd = unit_req_type_cd
+		             GROUP BY    unit_req_type_cd, aprov_req_file_nm
+		       )  b
+	)
+	</select>
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(신설신청) resultMap--> 
+	<resultMap id="findUnitMngNewReqInfoList-result" class="rms.stnd.unitMng.domain.TbUnitNewReq" >
+		<result property="orgCd"						column="org_cd"/>
+		<result property="tempUnitCd"					column="temp_unit_cd"/>
+		<result property="applyStndYmd"					column="apply_stnd_ymd"/>
+		<result property="clssCd"						column="clss_cd"/>
+		<result property="tempUnitNm"					column="temp_unit_nm"/>
+		<result property="taskDescr"					column="task_descr"/>
+		<result property="admDutyRefTermCd" 			column="adm_duty_ref_term_cd"/>
+		<result property="eviDataValidityTermCd" 		column="evi_data_validity_term_cd"/>
+		<result property="relLawDutyTermCd" 			column="rel_law_duty_term"/>
+		<result property="histdataPresvTermCd" 			column="histdata_presv_term_cd"/>
+		<result property="presvTermCd" 					column="presv_term_cd"/>
+		<result property="presvTermFixRsn" 				column="presv_term_fix_rsn"/>
+		<result property="presvMethodCd" 				column="presv_method_cd"/>
+		<result property="presvAreaCd" 					column="presv_area_cd"/>
+		<result property="funshRecordFlag" 				column="funsh_record_flag"/>
+		<result property="funshRecordTransfYmd" 		column="funsh_record_transf_ymd"/>
+		<result property="mainReadUsg" 					column="main_read_usg"/>
+		<result property="transfReadExptCnt" 			column="transf_read_expt_cnt"/>
+		<result property="spclListLoc"					column="spcl_list_loc"/>
+		<result property="spclList1"					column="spcl_list1"/>
+		<result property="spclList2"					column="spcl_list2"/>
+		<result property="spclList3"					column="spcl_list3"/>
+		<result property="unitAlias"					column="temp_unit_alias"/><!-- 매칭컬럼과 이름이 다름 -->
+	</resultMap>	
+	
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(신설신청) --> 
+	<select id="findUnitMngNewReqInfoList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngNewReqInfoList-result">
+		SELECT  org_cd, temp_unit_cd, unit_cd, 
+		           clss_cd, apply_stnd_ymd, temp_unit_nm, 
+		           task_descr, adm_duty_ref_term_cd, evi_data_validity_term_cd, 
+		           histdata_presv_term_cd, presv_term_cd, presv_term_fix_rsn, 
+		           presv_method_cd, presv_area_cd, funsh_record_flag, 
+		           funsh_record_transf_ymd, main_read_usg, transf_read_expt_cnt, 
+		           spcl_list_loc, spcl_list1, spcl_list2, 
+		           spcl_list3, rel_law_duty_term, record_center_presv_term_cd, 
+		          temp_unit_alias, unit_alias, 
+		           unit_req_state_cd, take_mng_no
+		  FROM TB_ZZUNITNEWREQ
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		    AND req_sno_id IN ($reqSnoId$)
+		    AND unit_req_type_cd = '1'
+		    AND unit_req_state_cd = '0'	
+	</select>	
+	
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(변경신청)resultMap --> 
+	<resultMap id="findUnitMngModReqInfoList-result" class="rms.stnd.unitMng.domain.TbUnitChngReq" >
+		<result property="orgCd"						column="org_cd"/>
+		<result property="unitCd"						column="unit_cd"/>
+		<result property="applyStndYmd"					column="apply_stnd_ymd"/>
+		<result property="chngBefUnitNm"				column="chng_bef_unit_nm"/>
+		<result property="chngAftUnitNm"				column="chng_aft_unit_nm"/>
+		<result property="unitNmChngRsn"				column="unit_nm_chng_rsn"/>
+		<result property="chngBefUnitAlias"				column="chng_bef_unit_alias"/>
+		<result property="chngAftUnitAlias"				column="chng_aft_unit_alias"/>
+		<result property="unitAliasChngRsn"				column="unit_alias_chng_rsn"/>
+		<result property="chngBefUnitDescr"				column="chng_bef_unit_descr"/>
+		<result property="chngAftUnitDescr"				column="chng_aft_unit_descr"/>
+		<result property="unitDescrChngRsn"				column="unit_descr_chng_rsn"/>
+		<result property="chngBefPresvTermCd"			column="chng_bef_presv_term_cd"/>
+		<result property="chngAftPresvTermCd"			column="chng_aft_presv_term_cd"/>
+		<result property="presvTermCdChngRsn"			column="presv_term_cd_chng_rsn"/>
+		<result property="chngBefPresvMethodCd"			column="chng_bef_presv_method_cd"/>
+		<result property="chngAftPresvMethodCd"			column="chng_aft_presv_method_cd"/>
+		<result property="presvMethodCdChngRsn"			column="presv_method_cd_chng_rsn"/>
+		<result property="chngBefPresvAreaCd"			column="chng_bef_presv_area_cd"/>
+		<result property="chngAftPresvAreaCd"			column="chng_aft_presv_area_cd"/>
+		<result property="presvAreaCdChngRsn"			column="presv_area_cd_chng_rsn"/>
+		<result property="chngBefFunshRecordFlag"		column="chng_bef_funsh_record_flag"/>
+		<result property="chngAftFunshRecordFlag"		column="chng_aft_funsh_record_flag"/>
+		<result property="funshRecordFalgChngRsn"		column="funsh_record_falg_chng_rsn"/>
+		<result property="befFunshRecordTransfYmd"		column="bef_funsh_record_transf_ymd"/>
+		<result property="aftFunshRecordTransfYmd"		column="aft_funsh_record_transf_ymd"/>
+		<result property="funshRecordTransfYmdRsn"		column="funsh_record_transf_ymd_rsn"/>
+		<result property="chngBefSpclListLoc"			column="chng_bef_spcl_list_loc"/>
+		<result property="chngAftSpclListLoc"			column="chng_aft_spcl_list_loc"/>
+		<result property="spclListLocChngRsn"			column="spcl_list_loc_chng_rsn"/>
+		<result property="chngBefSpclList1"				column="chng_bef_spcl_list1"/>
+		<result property="chngAftSpclList1"				column="chng_aft_spcl_list1"/>
+		<result property="spclList1ChngRsn"				column="spcl_list1_chng_rsn"/>
+		<result property="chngBefSpclList2"				column="chng_bef_spcl_list2"/>
+		<result property="chngAftSpclList2"				column="chng_aft_spcl_list2"/>
+		<result property="spclList2ChngRsn"				column="spcl_list2_chng_rsn"/>
+		<result property="chngBefSpclList3"				column="chng_bef_spcl_list3"/>
+		<result property="chngAftSpclList3"				column="chng_aft_spcl_list3"/>
+		<result property="spclList3ChngRsn"				column="spcl_list3_chng_rsn"/>
+	</resultMap>	
+	
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(변경신청) --> 
+	<select id="findUnitMngModReqInfoList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngModReqInfoList-result">
+		SELECT 
+		           org_cd, 
+		           unit_cd, unit_req_type_cd, apply_stnd_ymd, 
+		           chng_bef_unit_nm, chng_aft_unit_nm, unit_nm_chng_rsn, 
+		           chng_bef_unit_alias, chng_aft_unit_alias, unit_alias_chng_rsn, 
+		           chng_bef_unit_descr, chng_aft_unit_descr, unit_descr_chng_rsn, 
+		           chng_bef_presv_term_cd, chng_aft_presv_term_cd, presv_term_cd_chng_rsn, 
+		           chng_bef_presv_method_cd, chng_aft_presv_method_cd, presv_method_cd_chng_rsn, 
+		           chng_bef_presv_area_cd, chng_aft_presv_area_cd, presv_area_cd_chng_rsn, 
+		           chng_bef_funsh_record_flag, chng_aft_funsh_record_flag, funsh_record_falg_chng_rsn, 
+		           bef_funsh_record_transf_ymd, aft_funsh_record_transf_ymd, funsh_record_transf_ymd_rsn, 
+		           chng_bef_spcl_list_loc, chng_aft_spcl_list_loc, spcl_list_loc_chng_rsn, 
+		           chng_bef_spcl_list1, chng_aft_spcl_list1, spcl_list1_chng_rsn, 
+		           chng_bef_spcl_list2, chng_aft_spcl_list2, spcl_list2_chng_rsn, 
+		           chng_bef_spcl_list3, chng_aft_spcl_list3, spcl_list3_chng_rsn, 
+		           unit_req_state_cd, take_mng_no
+		  FROM TB_ZZUNITCHNGREQ	
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND req_sno_id IN ($reqSnoId$)
+		   AND unit_req_type_cd = '2'
+		   AND unit_req_state_cd = '0'			  
+	</select>	
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(폐지신청) resultMap --> 
+	<resultMap id="findUnitMngDelReqInfoList-result" class="rms.stnd.unitMng.domain.ZzUnitDelReq" >
+		<result property="applyStndYmd" 			column="apply_stnd_ymd"/>
+		<result property="chngBefOrgCd" 			column="chng_bef_org_cd"/>
+		<result property="chngBefUnitCd" 			column="chng_bef_unit_cd"/>
+		<result property="chngRsn" 					column="chng_rsn"/>
+	</resultMap>	
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(폐지신청) --> 
+	<select id="findUnitMngDelReqInfoList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngDelReqInfoList-result">
+		SELECT apply_stnd_ymd, chng_bef_org_cd, 
+		       chng_bef_unit_cd, chng_rsn
+		  FROM TB_ZZUNITDELREQ
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND req_sno_id IN ($reqSnoId$)
+		   AND unit_req_type_cd = '3'
+		   AND unit_req_state_cd = '1'  
+	</select>	
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(처리과변경신청) resultMap --> 
+	<resultMap id="findUnitMngSetReqInfoList-result" class="rms.stnd.unitMng.domain.ZzUnitSetReq" >
+		<result property="applyStndYmd"					column="apply_stnd_ymd"/>
+		<result property="chngBefOrgCd"					column="chng_bef_org_cd"/>
+		<result property="chngAftOrgCd"					column="chng_aft_org_cd"/>
+		<result property="chngRsn"						column="chng_rsn"/>
+	</resultMap>
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(처리과변경신청) --> 
+	<select id="findUnitMngSetReqInfoList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngSetReqInfoList-result">
+		SELECT apply_stnd_ymd,
+		            chng_bef_org_cd,
+		            chng_aft_org_cd,
+		            chng_rsn
+		  FROM  TB_ZZUNITSETREQ
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND req_sno_id IN ($reqSnoId$)
+		   AND unit_req_type_cd = '4'
+		   AND unit_req_state_cd = '1'  		  
+	</select>	
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(소관부서변경신청) resultMap --> 
+	<resultMap id="findUnitMngMovReqInfoList-result" class="rms.stnd.unitMng.domain.ZzUnitMoveReq" >
+		<result property="applyStndYmd" 			column="apply_stnd_ymd"/>
+		<result property="chngBefOrgCd" 			column="chng_bef_org_cd"/>
+		<result property="chngAftOrgCd" 			column="chng_aft_org_cd"/>
+		<result property="chngBefUnitCd" 			column="chng_bef_unit_cd"/>
+		<result property="chngRsn" 					column="chng_rsn"/>
+	</resultMap>
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(소관부서변경신청) --> 
+	<select id="findUnitMngMovReqInfoList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngMovReqInfoList-result">
+		 SELECT apply_stnd_ymd, chng_bef_org_cd,  chng_aft_org_cd,
+		        chng_bef_unit_cd, chng_rsn 
+		   FROM TB_ZZUNITMOVEREQ	
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND req_sno_id IN ($reqSnoId$)
+		   AND unit_req_type_cd = '5'
+		   AND unit_req_state_cd = '1'  
+	</select>	
+	
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성정보 OR 상태 update --> 
+	<update id="updateUnitMngAproveReqFile" parameterClass="rms.stnd.unitMng.domain.UnitReq">
+		 UPDATE TB_ZZUNITREQ
+		    <!--cubrid SET APROV_REQ_DTIME		= TO_CHAR(sysdate,'YYYYMMDDHH24MISS')-->
+		    SET APROV_REQ_DTIME		= TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+              , APROV_STATE_CD		= #aprovStateCd:VARCHAR#
+          	<dynamic>
+		        <isNotEmpty prepend="," property="aprovReqFileNm">
+		                APROV_REQ_FILE_NM 	= #aprovReqFileNm:VARCHAR#
+		        </isNotEmpty>							
+			</dynamic>     
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND req_sno_id IN ($reqSnoId$)
+		   AND unit_req_type_cd =  #unitReqTypeCd:VARCHAR# 
+	</update>	
+
+	<!-- 단위업무신청처리>파일관리POPUP> 파일목록갯수 --> 
+	<select id="countUnitMngAprovReqFileMng" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultClass="long">
+        SELECT  COUNT(1)
+        FROM    (
+ 					SELECT unit_req_type_cd, aprov_req_file_nm 
+                      FROM TB_ZZUNITREQ
+                     WHERE record_center_id = #recordCenterId:VARCHAR#
+				       AND aprov_req_file_nm IS NOT NULL
+				       AND aprov_state_Cd IN ('1','2')
+		          	<dynamic>
+				        <isNotEmpty prepend="AND" property="reqYyyy">
+				                req_yyyy 		= #reqYyyy:VARCHAR#
+				        </isNotEmpty>							
+				        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+				                unit_req_type_Cd= #unitReqTypeCd:VARCHAR#
+				        </isNotEmpty>							
+				        <isNotEmpty prepend="AND" property="aprovStateCd">
+				                aprov_state_Cd 	= #aprovStateCd:VARCHAR#
+				        </isNotEmpty>													
+					</dynamic>     
+		             GROUP BY    unit_req_type_cd, aprov_req_file_nm
+		          )
+	</select>	
+
+	<!-- 단위업무신청처리>파일관리POPUP> 파일목록조회 resultMap -->
+	<resultMap id="findUnitMngAprovReqFileMng-result" class="rms.stnd.unitMng.domain.UnitReq" >
+		<result property="unitReqTypeCd" 		column="unit_req_type_cd"/>
+		<result property="unitReqTypeCdNm" 		column="unit_req_type_cd_nm"/>
+		<result property="aprovReqFileNm"		column="aprov_req_file_nm"/>
+		<result property="aprovReqFileFullNm"	column="aprov_req_file_full_nm"/>
+		<result property="aprovStateCd"			column="aprov_state_cd"/>	
+		<result property="aprovStateCdNm"		column="aprov_state_cd_nm"/>	
+		<result property="reqSnoId" 			column="req_sno_id"/>	
+		<result property="aprovReqDtime" 		column="aprov_req_dtime"/>	
+	</resultMap>
+	
+	<!-- 단위업무신청처리>파일관리POPUP> 파일목록조회 -->
+	<!-- 
+		2011.12.09
+		HAVING SUM(aprov_cnt) = 0	/* 파일내용중 승인건이 하나라도 있으면 조회되지 않도록한다 */
+		이 구문 삭제.
+		처리과코드변경, 소관부서변경, 폐지의 경우는 승인을 한 뒤 승인결과를 통보하도록 되어 있는데, 위의 구문이 있는 경우 목록에 조회되지 않음
+		
+		2011.12.09
+		처리과코드변경, 소관부서변경, 폐지의 경우는 승인건이 있더라도, 단위업무 신설, 수정의 경우는 승인 건이 없는 경우만 조회되도록 수정
+	 --> 
+	<select id="findUnitMngAprovReqFileMng" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngAprovReqFileMng-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT unit_req_type_cd,
+	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22' AND com_Cd = b.unit_req_type_cd) AS unit_req_type_cd_nm, 
+	            aprov_req_file_nm AS aprov_req_file_full_nm, 
+		        SUBSTR(aprov_req_file_nm,INSTR(aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,
+	            aprov_state_cd,
+	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ33' AND com_Cd = b.aprov_state_cd) AS aprov_state_cd_nm,
+	            SUBSTR( req_sno_id,3)||'''' AS req_sno_id,
+	            aprov_req_dtime
+		 FROM (
+		             SELECT unit_req_type_cd, 
+		             		MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,
+		                    MAX(SUBSTR(aprov_req_dtime,0,8)) as aprov_req_dtime, 
+		                    MAX(aprov_state_cd) AS aprov_state_cd, 
+		                    aprov_req_file_nm,
+		                    SUM(aprov_cnt) AS aprov_cnt
+		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd, aprov_Req_Dtime,
+		                          (ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd,aprov_req_file_nm  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM,
+		                           (SELECT count(1) FROM TB_ZZORGUNITWORKHIST WHERE RECORD_CENTER_ID = a.RECORD_CENTER_ID AND TAKE_MNG_NO = a.TAKE_MNG_NO ) as aprov_cnt
+		                     FROM TB_ZZUNITREQ a
+		                    WHERE record_center_id = #recordCenterId:VARCHAR#
+						    AND aprov_req_file_nm IS NOT NULL
+						    AND aprov_state_Cd IN ('1','2')
+						    AND unit_req_type_cd IN ('1','2')
+				          	<dynamic>
+						        <isNotEmpty prepend="AND" property="reqYyyy">
+						                req_yyyy 		= #reqYyyy:VARCHAR#
+						        </isNotEmpty>							
+						        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+						                unit_req_type_Cd= #unitReqTypeCd:VARCHAR#
+						        </isNotEmpty>							
+						        <isNotEmpty prepend="AND" property="aprovStateCd">
+						                aprov_state_Cd 	= #aprovStateCd:VARCHAR#
+						        </isNotEmpty>													
+							</dynamic>     
+		                   )
+		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR aprov_req_file_nm = aprov_req_file_nm
+		             GROUP BY    unit_req_type_cd, aprov_req_file_nm
+		             HAVING SUM(aprov_cnt) = 0
+		             UNION ALL
+		             SELECT unit_req_type_cd, 
+		             		MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,
+		                    MAX(SUBSTR(aprov_req_dtime,0,8)) as aprov_req_dtime, 
+		                    MAX(aprov_state_cd) AS aprov_state_cd, 
+		                    aprov_req_file_nm,
+		                    SUM(aprov_cnt) AS aprov_cnt
+		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd, aprov_Req_Dtime,
+		                          (ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd,aprov_req_file_nm  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM,
+		                           (SELECT count(1) FROM TB_ZZORGUNITWORKHIST WHERE RECORD_CENTER_ID = a.RECORD_CENTER_ID AND TAKE_MNG_NO = a.TAKE_MNG_NO ) as aprov_cnt
+		                     FROM TB_ZZUNITREQ a
+		                    WHERE record_center_id = #recordCenterId:VARCHAR#
+						    AND aprov_req_file_nm IS NOT NULL
+						    AND aprov_state_Cd IN ('1','2')
+						    AND unit_req_type_cd IN ('3','4','5')
+				          	<dynamic>
+						        <isNotEmpty prepend="AND" property="reqYyyy">
+						                req_yyyy 		= #reqYyyy:VARCHAR#
+						        </isNotEmpty>							
+						        <isNotEmpty prepend="AND" property="unitReqTypeCd">
+						                unit_req_type_Cd= #unitReqTypeCd:VARCHAR#
+						        </isNotEmpty>							
+						        <isNotEmpty prepend="AND" property="aprovStateCd">
+						                aprov_state_Cd 	= #aprovStateCd:VARCHAR#
+						        </isNotEmpty>													
+							</dynamic>     
+		                   )
+		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR aprov_req_file_nm = aprov_req_file_nm
+		             GROUP BY    unit_req_type_cd, aprov_req_file_nm
+		             
+		       )  b
+		ORDER BY  aprov_req_dtime desc, unit_req_type_cd  
+		) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+		
+	<!--  단위업무신청처리 > 파일관리POPUP> 기존파일정보 초기화 update --> 
+	<update id="updateUnitMngAproveReqFileBefInfo" parameterClass="rms.stnd.unitMng.domain.UnitReq">
+		 UPDATE TB_ZZUNITREQ
+		    SET APROV_REQ_FILE_NM 	= NULL
+		      , APROV_REQ_DTIME		= NULL
+              , APROV_STATE_CD		= '0'	
+		 WHERE record_center_id 	= #recordCenterId:VARCHAR#
+		   AND unit_req_type_cd		= #unitReqTypeCd:VARCHAR# 
+		   AND REQ_SNO_ID 	= #reqSnoId:VARCHAR#
+	</update>
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성정보 OR 상태 update --> 
+	<update id="updateUnitMngAproveReqFileList" parameterClass="rms.stnd.unitMng.domain.UnitReq">
+		 UPDATE TB_ZZUNITREQ
+		    <!--cubrid SET APROV_REQ_DTIME		= TO_CHAR(sysdate,'YYYYMMDDHH24MISS')-->
+		    SET APROV_REQ_DTIME		= TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+              , APROV_STATE_CD		= #aprovStateCd:VARCHAR#
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND unit_req_type_cd =  #unitReqTypeCd:VARCHAR#
+		   AND REQ_SNO_ID 	= #reqSnoId:VARCHAR# 
+	</update>
+	
+	<!--  단위업무 결과접수처리 > 조회(COUNT) -->
+	<select id="countUnitMngAprovReqRsltList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultClass="long">
+        SELECT  COUNT(1)
+	    FROM (	 SELECT 1
+		              FROM TB_ZZUNITREQ A, TB_ZZUNITNEWREQ B, TB_ZZUNIT C
+		            WHERE A.record_center_id = b.record_center_id
+		                AND A.req_sno_id = B.req_sno_id
+		                AND A.unit_req_type_cd = B.unit_req_type_cd
+		                AND B.temp_unit_cd = c.temp_unit_cd(+)
+		                AND b.unit_cd = c.unit_cd (+)
+		                AND A.aprov_state_cd <![CDATA[>]]>  '1'
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="reqYyyy">
+		                 	A.REQ_YYYY = #reqYyyy:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                 	b.org_cd = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="unitReqTypeCd">
+		                 	A.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="unitCdReq">
+		                	<isEqual property="tempUnitCd" compareValue="1">
+		                		b.temp_unit_Cd = #unitCdReq:VARCHAR#
+		                	</isEqual>
+		                	<isNotEqual  property="tempUnitCd" compareValue="1">
+		                		b.unit_Cd = #unitCdReq:VARCHAR#
+		                	</isNotEqual>
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="unitReqStateCd">
+		                 	b.unit_req_state_cd = #unitReqStateCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		(a.req_dtime BETWEEN #regDtime1:VARCHAR#||'000000' AND #regDtime2:VARCHAR#||'240000')
+		                	</isNotEmpty>
+		                	<isEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[>=]]> #regDtime1:VARCHAR#||'000000'
+		                	</isEmpty>
+		                </isNotEmpty>
+		                <isEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[<=]]> #regDtime2:VARCHAR#||'240000'
+		                	</isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="reqUserNm">
+							a.req_user_nm = #reqUserNm:VARCHAR#		                
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="rsltMngNo">
+							b.rslt_mng_no = #rsltMngNo:VARCHAR#		                
+		                </isNotEmpty>
+		             </dynamic>   
+		             UNION ALL
+		            SELECT 1
+		              FROM TB_ZZUNITREQ A, TB_ZZUNITCHNGREQ B, TB_ZZUNIT C
+		            WHERE A.record_center_id = b.record_center_id
+		                AND A.req_sno_id = B.req_sno_id
+		                AND A.unit_req_type_cd = B.unit_req_type_cd
+		                AND b.unit_cd = c.unit_cd 
+		                AND A.aprov_state_cd <![CDATA[>]]>  '1'
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="reqYyyy">
+		                 	A.REQ_YYYY = #reqYyyy:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                 	b.org_cd = #orgCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="unitReqTypeCd">
+		                 	A.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="unitCdReq">
+		                	<isEqual property="tempUnitCd" compareValue="1">
+		                		c.temp_unit_Cd = #unitCdReq:VARCHAR#
+		                	</isEqual>
+		                	<isNotEqual  property="tempUnitCd" compareValue="1">
+		                		b.unit_Cd = #unitCdReq:VARCHAR#
+		                	</isNotEqual>
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="unitReqStateCd">
+		                 	b.unit_req_state_cd = #unitReqStateCd:VARCHAR#
+		                </isNotEmpty>		 
+		                <isNotEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		(a.req_dtime BETWEEN #regDtime1:VARCHAR#||'000000' AND #regDtime2:VARCHAR#||'240000')
+		                	</isNotEmpty>
+		                	<isEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[>=]]> #regDtime1:VARCHAR#||'000000'
+		                	</isEmpty>
+		                </isNotEmpty>
+		                <isEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[<=]]> #regDtime2:VARCHAR#||'240000'
+		                	</isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="reqUserNm">
+							a.req_user_nm = #reqUserNm:VARCHAR#		                
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="rsltMngNo">
+							b.rslt_mng_no = #rsltMngNo:VARCHAR#		                
+		                </isNotEmpty>				                
+		           </dynamic>	
+		       )	
+	</select>
+		
+	<!-- 단위업무 결과접수처리 > 조회  -->
+	<resultMap id="findUnitMngAprovReqRsltList-result" class="rms.stnd.unitMng.domain.UnitReq" >
+		<result property="reqDtime" 		column="req_dtime"/>
+		<result property="unitCd" 			column="unit_cd"/>
+		<result property="tempUnitCd"		column="temp_unit_cd"/>
+		<result property="unitNm"			column="unit_nm"/>
+		<result property="presvTermCd"		column="presv_term_cd"/>	
+		<result property="unitReqTypeCd"	column="unit_req_type_cd"/>	
+		<result property="unitReqStateCd" 	column="unit_req_state_cd"/>	
+		<result property="aprovStateCd" 	column="aprov_state_Cd"/>	
+		<result property="applyStndYmd" 	column="apply_stnd_ymd"/>	
+		<!-- <result property="narsHandlDtime" 	column="nars_handl_dtime"/> -->	
+		<result property="unitReqType" 		column="unit_req_type"/>	
+		<result property="unitReqState" 	column="unit_req_state"/>	
+		<result property="orgCd" 			column="org_cd"/>	
+		<result property="reqOrgNm" 		column="org_nm"/>	
+		<result property="reqOrgAbbrNm" 	column="org_abbr_nm"/>	
+		<result property="recordCenterId" 	column="record_center_id"/>			
+		<result property="reqSnoId" 		column="req_sno_id"/>	
+		<result property="unitSendFlag" 		column="unit_send_flag"/>			
+	</resultMap>
+		
+	<select id="findUnitMngAprovReqRsltList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngAprovReqRsltList-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT t.req_dtime
+		          , t.unit_cd
+		          , t.temp_unit_cd
+		          , t.unit_nm
+		          /*, t.presv_term_cd */
+		          , t.unit_req_type_cd
+		          , t.unit_req_state_cd
+		          , t.aprov_state_Cd
+		          , t.creat_stnd_ymd	AS apply_stnd_ymd
+		          , t.nars_handl_dtime
+		          , t1.com_cd_nm AS unit_req_state
+		          , t2.com_cd_nm AS unit_req_type
+		          , t3.com_cd_nm AS presv_term_cd
+		          , t.org_cd 
+      			  , t4.org_abbr_nm
+      			  , t4.org_nm	
+      			  , t.record_center_id	
+      			  , t.req_sno_id  
+      			  , t.take_mng_no
+       			  ,(SELECT com_cd_nm from tb_zzcomcd where com_type_cd ='ZZ31' and com_cd = NVL(t5.unit_send_flag,0)) as unit_send_flag 
+		FROM(  
+		            SELECT SUBSTR(a.req_dtime,0,8) AS req_dtime
+		                     , NVL(c.unit_cd, b.unit_cd) AS unit_Cd
+		                     , NVL(c.temp_unit_Cd, b.temp_unit_cd) AS temp_unit_cd
+		                     , NVL(c.unit_nm, b.temp_unit_nm) AS unit_nm
+		                     , DECODE(NVL(c.presv_term_cd, b.presv_term_cd),'20','25',NVL(c.presv_term_cd, b.presv_term_cd)) AS presv_term_cd
+		                     , b.unit_req_type_cd
+		                     , b.unit_req_state_cd
+		                     , a.aprov_state_cd
+		                     , NVL(c.creat_stnd_ymd, b.apply_stnd_ymd) AS creat_stnd_ymd
+		                     , SUBSTR(NVL(c.nars_handl_dtime, a.aprov_req_dtime),0,8) AS nars_handl_dtime
+		                     , b.org_cd
+		                     , a.record_center_id
+		                     , a.req_sno_id
+		                     , b.take_mng_no
+		              FROM TB_ZZUNITREQ A, TB_ZZUNITNEWREQ B, TB_ZZUNIT C
+		            WHERE A.record_center_id = b.record_center_id
+		                AND A.req_sno_id = B.req_sno_id
+		                AND A.unit_req_type_cd = B.unit_req_type_cd
+		                AND B.temp_unit_cd = c.temp_unit_cd(+)
+		                AND b.unit_cd = c.unit_cd (+)
+		                AND A.aprov_state_cd <![CDATA[>]]>  '1'
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="reqYyyy">
+		                 	A.REQ_YYYY = #reqYyyy:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                 	b.org_cd = #orgCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="unitReqTypeCd">
+		                 	A.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="unitCdReq">
+		                	<isEqual property="tempUnitCd" compareValue="1">
+		                		b.temp_unit_Cd = #unitCdReq:VARCHAR#
+		                	</isEqual>
+		                	<isNotEqual  property="tempUnitCd" compareValue="1">
+		                		b.unit_Cd = #unitCdReq:VARCHAR#
+		                	</isNotEqual>
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="unitReqStateCd">
+		                 	b.unit_req_state_cd = #unitReqStateCd:VARCHAR#
+		                </isNotEmpty>	
+		                <isNotEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		(a.req_dtime BETWEEN #regDtime1:VARCHAR#||'000000' AND #regDtime2:VARCHAR#||'240000')
+		                	</isNotEmpty>
+		                	<isEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[>=]]> #regDtime1:VARCHAR#||'000000'
+		                	</isEmpty>
+		                </isNotEmpty>
+		                <isEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[<=]]> #regDtime2:VARCHAR#||'240000'
+		                	</isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="reqUserNm">
+							a.req_user_nm = #reqUserNm:VARCHAR#		                
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="rsltMngNo">
+							b.rslt_mng_no = #rsltMngNo:VARCHAR#		                
+		                </isNotEmpty>				
+		           </dynamic>	                         
+		             UNION ALL
+		            SELECT SUBSTR(a.req_dtime,0,8) AS req_dtime
+		                     , c.unit_cd AS unit_Cd
+		                     , '' AS temp_unit_cd
+		                     , c.unit_nm AS unit_nm
+		                     , DECODE(c.presv_term_cd,'20','25',c.presv_term_cd) AS presv_term_cd
+		                     , b.unit_req_type_cd
+		                     , b.unit_req_state_cd
+		                     , a.aprov_state_cd
+		                     , b.apply_stnd_ymd AS creat_stnd_ymd
+		                     , SUBSTR( a.aprov_req_dtime,0,8) AS nars_handl_dtime
+		                     , b.org_Cd
+		                     , a.record_center_id
+		                     , a.req_sno_id
+		                     , b.take_mng_no
+		              FROM TB_ZZUNITREQ A, TB_ZZUNITCHNGREQ B, TB_ZZUNIT C
+		            WHERE A.record_center_id = b.record_center_id
+		                AND A.req_sno_id = B.req_sno_id
+		                AND A.unit_req_type_cd = B.unit_req_type_cd
+		                AND b.unit_cd = c.unit_cd 
+		                AND A.aprov_state_cd <![CDATA[>]]>  '1'
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="reqYyyy">
+		                 	A.REQ_YYYY = #reqYyyy:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                 	b.org_cd = #orgCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="unitReqTypeCd">
+		                 	A.unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="unitCdReq">
+		                	<isEqual property="tempUnitCd" compareValue="1">
+		                		c.temp_unit_Cd = #unitCdReq:VARCHAR#
+		                	</isEqual>
+		                	<isNotEqual  property="tempUnitCd" compareValue="1">
+		                		b.unit_Cd = #unitCdReq:VARCHAR#
+		                	</isNotEqual>
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="unitReqStateCd">
+		                 	b.unit_req_state_cd = #unitReqStateCd:VARCHAR#
+		                </isNotEmpty>		                
+		                <isNotEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		(a.req_dtime BETWEEN #regDtime1:VARCHAR#||'000000' AND #regDtime2:VARCHAR#||'240000')
+		                	</isNotEmpty>
+		                	<isEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[>=]]> #regDtime1:VARCHAR#||'000000'
+		                	</isEmpty>
+		                </isNotEmpty>
+		                <isEmpty prepend="AND" property="regDtime1">
+		                	<isNotEmpty property="regDtime2">
+		                		a.reg_dtime <![CDATA[<=]]> #regDtime2:VARCHAR#||'240000'
+		                	</isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="reqUserNm">
+							a.req_user_nm = #reqUserNm:VARCHAR#		                
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="rsltMngNo">
+							b.rslt_mng_no = #rsltMngNo:VARCHAR#		                
+		                </isNotEmpty>				                
+		           </dynamic>			                                
+		) t,
+		(SELECT com_Cd, com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ23') t1,
+		(SELECT com_Cd, com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22') t2,
+		(SELECT com_Cd, com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='RD07') t3,
+		 TB_STORG t4,
+		 TB_ZZORGUNITWORKHIST t5
+		WHERE t.unit_req_state_cd = t1.COM_CD(+) 
+		  AND t.unit_req_type_cd = t2.COM_CD(+) 
+		  AND t.presv_term_cd = t3.COM_CD(+)
+		  AND t.org_Cd = t4.org_Cd
+       	  AND t.record_center_id = t5.record_center_id(+)
+          AND t.org_Cd = t5.org_Cd(+)
+          AND t.unit_cd = t5.unit_cd(+)
+          AND t.take_mng_no = t5.take_mng_no(+) 
+          /* AND t.work_type_Cd =  t5.work_type_Cd(+) */
+          <dynamic>
+          	<isEqual prepend="AND" property="unitSendFlag" compareValue="1">
+          		t5.unit_send_flag = '1'
+          	</isEqual>
+          	<isEqual prepend="AND" property="unitSendFlag" compareValue="0">
+          		NOT EXISTS (SELECT 1 
+          		 			  FROM TB_ZZORGUNITWORKHIST 
+          		 			 WHERE record_center_id = t.record_center_id 
+          		 			   AND org_Cd = t.org_Cd 
+          		 			   AND unit_cd=t.unit_cd 
+          		 			   AND take_mng_no = t.take_mng_no 
+          		 			   AND unit_send_flag ='1')
+          	</isEqual>
+       	  </dynamic>
+       	  ) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+ 	</select>
+	
+
+	<!-- 단위업무 결과접수처리 > 결과파일관리 > 조회 resultMap -->
+	<resultMap id="findUnitMngAprovReqRsltFileList-result" class="rms.stnd.unitMng.domain.UnitRslt" >
+		<result property="rsltMngNo" 		column="rslt_mng_no"/>
+		<result property="rsltCd" 			column="rslt_cd"/>
+		<result property="unitCnt"			column="unit_cnt"/>
+		<result property="regDtime"			column="reg_dtime"/>
+		<result property="regUserId"		column="reg_user_id"/>	
+		<result property="rsltFileFullNm"	column="rslt_file_full_nm"/>	
+		<result property="rsltFileNm" 		column="rslt_file_nm"/>	
+	</resultMap>
+
+	<!--  단위업무 결과접수처리 > 결과파일관리 > 조회(COUNT) -->
+	<select id="countUnitMngAprovReqRsltFileList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultClass="long">
+        SELECT  COUNT(1)
+	    FROM TB_ZZUNITRSLT
+	   WHERE record_center_id =#recordCenterId:VARCHAR#
+	   <dynamic>
+	        <isNotEmpty prepend="AND" property="recvRsltCd">
+	                RSLT_CD 		= #recvRsltCd:VARCHAR#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="reqYyyy">
+	                RSLT_MNG_NO 	LIKE '%' || #reqYyyy:VARCHAR# || '%'
+	        </isNotEmpty>
+	   </dynamic>	
+	</select>
+	
+	<!-- 단위업무 결과접수처리 > 결과파일관리 > 조회  -->
+	<select id="findUnitMngAprovReqRsltFileList" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultMap="findUnitMngAprovReqRsltFileList-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT /*+ INDEX_DESC(A TB_ZZUNITRSLT_PK) */
+		        RSLT_MNG_NO, RSLT_CD, UNIT_CNT, REG_DTIME, /*SUBSTR(REG_DTIME,0,8) AS reg_dtime,*/ REG_USER_ID,
+	            RSLT_FILE_NM AS RSLT_FILE_FULL_NM,
+	            SUBSTR(RSLT_FILE_NM,INSTR(RSLT_FILE_NM,'CLASS_NOTICE')) AS RSLT_FILE_NM
+	    FROM TB_ZZUNITRSLT A
+	   WHERE record_center_id =#recordCenterId:VARCHAR#
+	   <dynamic>
+	        <isNotEmpty prepend="AND" property="recvRsltCd">
+	                RSLT_CD 		= #recvRsltCd:VARCHAR#
+	        </isNotEmpty>
+	        <isNotEmpty prepend="AND" property="reqYyyy">
+	                RSLT_MNG_NO 	LIKE '%' || #reqYyyy:VARCHAR# || '%'
+	        </isNotEmpty>
+	   </dynamic>		   
+	   ) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+ 	</select>
+ 	
+ 	<!-- 단위업무 결과관리 일련번호 가져오기 -->	
+	<select id="findUnitRsltMngNo" resultClass="string">
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_ZZUNITRSLT_SQ01.nextval), 6, '0') FROM DUAL
+	</select>	
+
+ 	<!-- 단위업무코드 기존 존재 여부확인-->	
+	<select id="findUnitCdExists" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+		SELECT COUNT(1)
+		  FROM TB_ZZUNIT
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND unit_cd = #unitCd:VARCHAR#
+	</select>		
+ 	
+ 	<!-- 단위업무 결과접수처리 > 결과저장  -->
+ 	<insert id="createUnitRslt" parameterClass="rms.stnd.unitMng.domain.UnitRslt"> 	
+	 	INSERT INTO TB_ZZUNITRSLT 
+	 	(
+	   		RECORD_CENTER_ID, 
+	   		RSLT_MNG_NO, 
+	   		RSLT_FILE_NM, 
+	   		RSLT_CD, 
+	   		UNIT_CNT, 
+	   		REG_DTIME, 
+	   		REG_USER_ID
+	   	) 
+	   	VALUES (
+		   	#recordCenterId:VARCHAR#,
+		   	#rsltMngNo:VARCHAR#,
+		   	#rsltFileFullNm:VARCHAR#,
+		   	#rsltCd:VARCHAR#,
+		   	#unitCnt#,
+		   	<!--cubrid to_char(sysdate,'yyyymmddhh24miss'),-->
+		   	to_char(sys_datetime,'yyyymmddhh24miss'),
+		   	#regUserId:VARCHAR#
+	   	)
+   	</insert>
+   	
+
+	<resultMap id="findNewReqInfo-result" class="rms.stnd.unitMng.domain.TbUnit" >
+		<result property="reqSnoId" 			column="req_sno_id"/>
+		<result property="takeMngNo"			column="take_mng_no"/>
+		<result property="unitAlias"		    column="unit_alias"/>
+	</resultMap>
+
+	<!-- 단위업무 결과접수처리 > 승인 :신설 (takeMngNo를 위해 신청정보 확인)-->
+	<select id="findNewReqInfo" parameterClass="rms.stnd.unitMng.domain.TbUnit" resultMap="findNewReqInfo-result">
+          SELECT   req_sno_id, take_mng_no, temp_unit_alias AS unit_alias 	
+			FROM  	TB_ZZUNITNEWREQ a
+			WHERE 	record_center_id = #recordCenterId:VARCHAR#
+			AND   	unit_req_type_cd = #stateCd:VARCHAR#
+			AND   	org_cd = #orgCd:VARCHAR#	
+			AND   	temp_unit_cd = #tempUnitCd:VARCHAR#	
+			AND 	unit_req_state_cd = '0'
+	</select>	
+	   	
+   	
+	<!-- 단위업무 결과접수처리 > 승인 :신설 (단위업무)-->
+	<insert id="createZzUnitCom" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+		INSERT INTO TB_ZZUNIT (  
+				record_center_id,
+				unit_cd,
+				unit_nm,
+				unit_descr,
+				nars_handl_dtime,
+				creat_stnd_ymd,
+				temp_unit_cd,
+				lrg_cd,
+				lrg_nm,
+				mid_cd,
+				mid_nm,
+				sml_cd,
+				sml_nm,
+				presv_term_cd,
+				presv_term_fix_rsn,
+				presv_method_cd,
+				presv_area_cd,
+				funsh_record_flag,
+				funsh_record_transf_ymd,
+				main_read_usg,
+				transf_read_expt_cnt,
+				spcl_list_loc,
+				spcl_list1,
+				spcl_list2,
+				spcl_list3,
+				state_cd,
+				take_flag,
+				reg_user_id,
+				reg_dtime,
+				presvterm_state_cd,
+				com_unit_flag,
+				take_takovr_mng_no,
+				presvterm_chng_rsn_cd,
+				take_mng_no,
+				unit_alias
+		) 
+		VALUES (		
+			/*SELECT */                                        
+					#recordCenterId:VARCHAR#,
+					#unitCd:VARCHAR#,
+					#unitNm:VARCHAR#,
+					#unitDescr:VARCHAR#,
+					#narsHandlDtime:VARCHAR#,
+					#creatStndYmd:VARCHAR#,
+					#tempUnitCd:VARCHAR#,
+					#lrgCd:VARCHAR#,
+					#lrgNm:VARCHAR#,
+					#midCd:VARCHAR#,
+					#midNm:VARCHAR#,
+					#smlCd:VARCHAR#,
+					#smlNm:VARCHAR#,
+					#presvTermCd:VARCHAR#,
+					#presvTermFixRsn:VARCHAR#,
+					#presvMethodCd:VARCHAR#,
+					#presvAreaCd:VARCHAR#,
+					#funshRecordFlag:VARCHAR#,
+					#funshRecordTransfYmd:VARCHAR#,
+					#mainReadUsg:VARCHAR#,
+					#transfReadExptCnt:VARCHAR#,
+					#spclListLoc:VARCHAR#,
+					#spclList1:VARCHAR#,
+					#spclList2:VARCHAR#,
+					#spclList3:VARCHAR#,
+					'1', <!-- #stateCd:VARCHAR#, -->
+					'0', <!--#takeFlag:VARCHAR#,-->
+					#regUserId:VARCHAR#,
+					<!--cubrid to_char(sysdate,'yyyymmddhh24miss'),--><!--#regDtime:VARCHAR#,-->
+					to_char(sys_datetime,'yyyymmddhh24miss'),<!--#regDtime:VARCHAR#,-->
+					'0',<!--#presvtermStateCd:VARCHAR#,-->
+					#comUnitFlag:VARCHAR#,
+					'',
+					'0',
+					#takeMngNo:VARCHAR#,
+					#unitAlias:VARCHAR# 
+					<!-- take_mng_no,
+					temp_unit_alias 
+			FROM  	TB_ZZUNITNEWREQ a
+			WHERE 	record_center_id = #recordCenterId:VARCHAR#
+			AND   	unit_req_type_cd = #stateCd:VARCHAR#
+			AND   	org_cd = #orgCd:VARCHAR#	
+			AND   	temp_unit_cd = #tempUnitCd:VARCHAR#	
+			AND 	unit_req_state_cd = '0'
+			 -->
+		)		
+	</insert>   	
+	
+	<!-- 단위업무 결과접수처리 > 승인 :신설 (처리과별단위업무 - 분류체계공통)-->
+	<insert id="createZzOrgUnitCom" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+	INSERT INTO TB_ZZORGUNIT
+		(
+			record_center_id,
+			org_cd,
+			unit_cd,
+			use_flag,
+			take_flag,
+			reg_dtime,
+			com_unit_flag,
+			take_takovr_mng_no,
+			take_mng_no,
+			state_cd
+		)
+		(
+			SELECT	record_center_id,
+					org_cd,
+					#unitCd:VARCHAR#,
+					'1',
+					'0',
+					<!--cubrid to_char(sysdate,'yyyymmddhh24miss'),-->
+					to_char(sys_datetime,'yyyymmddhh24miss'),
+					#comUnitFlag:VARCHAR#, /*'0',*/
+					'',
+					#takeMngNo:VARCHAR#,
+					#stateCd:VARCHAR# /*'1'*/
+			FROM  	TB_STORG
+			WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		)		
+	</insert>	
+	
+	<!-- 단위업무 결과접수처리 > 승인 :신설(workTypeCd:0),변경(workTypeCd:2)  (처리과별 단위업무 작업이력 - 분류체계공통)-->
+	<insert id="createZzOrgUnitHistCom" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+	INSERT INTO TB_ZZORGUNITWORKHIST
+		(
+			record_center_id,
+			org_cd,
+			unit_cd,
+			work_type_cd,
+			work_dtime,
+			apply_stnd_ymd,
+			unit_send_flag,
+			take_mng_no
+		)
+		(
+			SELECT	record_center_id,
+					org_cd,
+					#unitCd:VARCHAR#,
+					#workTypeCd:VARCHAR#,	/*0:신설,1:폐지,2:변경,3:부서변경신설, 4:부서변경폐지*/
+					<!--cubrid to_char(sysdate,'yyyymmddhh24miss'),-->
+					to_char(sys_datetime,'yyyymmddhh24miss'),
+					#creatStndYmd:VARCHAR#,
+					'0',
+					#takeMngNo:VARCHAR#			                                 
+			FROM  	TB_STORG
+			WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		)		
+	</insert>	
+	
+	<!-- 단위업무 결과접수처리 > 승인 :신설  (처리과별단위업무 - 분류체계 비공통)-->
+	<insert id="createZzOrgUnitData" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+	INSERT INTO TB_ZZORGUNIT
+		(
+			record_center_id,
+			org_cd,
+			unit_cd,
+			use_flag,
+			take_flag,
+			reg_dtime,
+			com_unit_flag,
+			take_takovr_mng_no,
+			take_mng_no,
+			state_cd	
+		) VALUES (
+			#recordCenterId:VARCHAR#,
+			#orgCd:VARCHAR#,
+			#unitCd:VARCHAR#,
+			'1',
+			'0',
+			<!--cubrid to_char(sysdate,'yyyymmddhh24miss'),-->
+			to_char(sys_datetime,'yyyymmddhh24miss'),
+			#comUnitFlag:VARCHAR#, /*'0',*/
+			'',
+		    #takeMngNo:VARCHAR#,
+			#stateCd:VARCHAR# /*'1'*/
+		)
+	</insert>
+
+	<!-- 단위업무 결과접수처리 > 승인 :신설신설(workTypeCd:0),변경(workTypeCd:2)  (처리과별 단위업무 작업이력 - 분류체계 비공통)
+		 PK가 중복 가능성이 있어 work_dtime 까지 PK로 변경함. 2011.12.05
+	-->
+	<insert id="createZzOrgUnitHistData" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+	INSERT INTO TB_ZZORGUNITWORKHIST
+		(
+			record_center_id,
+			org_cd,
+			unit_cd,
+			work_type_cd,
+			work_dtime,
+			apply_stnd_ymd,
+			unit_send_flag,
+			take_mng_no
+		)
+		VALUES (
+			#recordCenterId:VARCHAR#,
+			#orgCd:VARCHAR#,
+			#unitCd:VARCHAR#,
+			#workTypeCd:VARCHAR#,	/*0:신설,1:폐지,2:변경,3:부서변경신설, 4:부서변경폐지*/
+			<!--cubrid to_char(sysdate,'yyyymmddhh24miss'), -->
+			to_char(sys_datetime,'yyyymmddhh24miss'),
+			#creatStndYmd:VARCHAR#,
+			'0',
+			#takeMngNo:VARCHAR#		
+		)
+	</insert>
+
+
+	<!-- 단위업무 결과접수처리 > 승인 :신설  (단위업무보존기간책정이력)-->
+	<insert id="createZzUnitPresvTermHistData" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+		INSERT INTO TB_ZZUNITPRESVTERMHIST
+		(
+			record_center_id,
+			unit_cd,
+			org_presv_term_cd,
+			org_opin,
+			org_fix_ymd,
+			record_center_presv_term_cd,
+			record_center_opin,
+			record_center_check_ymd,
+			take_mng_no
+		) (
+          SELECT record_center_id,
+                 #unitCd:VARCHAR#,
+                 presv_term_cd,
+                 presv_term_fix_rsn,
+                 apply_stnd_ymd,
+                 #presvTermCd:VARCHAR#,
+                 #presvTermFixRsn:VARCHAR#,
+                 SUBSTR(#narsHandlDtime:VARCHAR#,0,8),
+                 take_mng_no  
+            FROM TB_ZZUNITNEWREQ
+            WHERE     record_center_id = #recordCenterId:VARCHAR#
+            <!-- AND       req_sno_id = #reqsId:VARCHAR# -->
+            AND       unit_req_type_cd = #stateCd:VARCHAR#
+            AND       org_cd = #orgCd:VARCHAR#    
+            AND       temp_unit_cd = #tempUnitCd:VARCHAR#
+            AND       unit_req_state_cd = '0'	    		
+		   <!-- 
+			#recordCenterId:VARCHAR#,
+			#prefixUnit:VARCHAR#,
+			#presvTermCd:VARCHAR#,
+			#presvTermFixRsn:VARCHAR#,
+			#applyStndYmd:VARCHAR#,
+			#presvTerm:VARCHAR#,
+			#presvTermFix:VARCHAR#,
+			TO_CHAR(SYSDATE, 'yyyymmdd'),
+			#takeMngNo:VARCHAR#
+			-->
+		)
+	</insert>	
+	
+	<!-- 단위업무 결과접수처리 > 승인 :신설(단위업무신청)-->
+	<update id="updateZzUnitNewReq" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+		UPDATE	TB_ZZUNITNEWREQ
+		SET		record_center_presv_term_cd = #presvTermCd:VARCHAR#,
+				record_center_opin = #presvTermFixRsn:VARCHAR#,  
+		    	rslt_mng_no = #rsltMngNo:VARCHAR#,
+		    	unit_cd = #unitCd:VARCHAR#,
+		    	unit_req_state_cd = '1'   				
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+	    AND   	req_sno_id = #reqSnoId:VARCHAR#
+		AND   	unit_req_type_cd = #stateCd:VARCHAR#
+		AND   	org_cd = #orgCd:VARCHAR#	
+		AND   	temp_unit_cd = #tempUnitCd:VARCHAR#	
+		AND     unit_req_state_cd = '0'		
+	</update>	
+
+	<resultMap id="findChngReqInfo-result" class="rms.stnd.unitMng.domain.TbUnit" >
+		<result property="reqSnoId" 			column="req_sno_id"/>
+		<result property="takeMngNo"			column="take_mng_no"/>
+	</resultMap>
+
+
+	<!-- 단위업무 결과접수처리 > 승인 :변경 (takeMngNo를 위해 신청정보 확인)-->
+	<select id="findChngReqInfo" parameterClass="rms.stnd.unitMng.domain.TbUnit" resultMap="findChngReqInfo-result">
+          SELECT   req_sno_id, take_mng_no 	
+			FROM  	TB_ZZUNITCHNGREQ a
+			WHERE 	record_center_id = #recordCenterId:VARCHAR#
+			AND   	unit_req_type_cd = '2'
+			AND   	org_cd = #orgCd:VARCHAR#	
+			AND   	unit_cd = #unitCd:VARCHAR#	
+			AND 	unit_req_state_cd = '0'
+	</select>	
+
+	<!-- 단위업무 결과접수처리 > 승인 :변경(단위업무 변경이력)-->
+	<!-- CAMS 연계 데이터는 항상 신청 내용보다는  파일내용을 기준으로 변경한다. 
+	     DATA 적인 관점에서 변경신청테이블의 DATA와 다를수 있다. -->
+	<insert id="createZzUnitChngHist" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+	    INSERT INTO TB_ZZUNITCHNGHIST
+        (
+            record_center_id,
+            unit_cd,
+            chng_seq,
+            chng_ymd,
+            chng_item_cd,
+            chng_bef_val,
+            chng_aft_val,
+            chng_rsn,
+            take_mng_no
+        )
+        SELECT a.record_center_id, 
+               a.unit_cd, 
+               (SELECT NVL(MAX(to_number(chng_seq)), 0) FROM tb_zzunitchnghist) + rownum AS chng_seq,
+               #creatStndYmd:VARCHAR# AS chng_ymd, /* to_char(sysdate,'YYYYMMDD') AS chng_ymd, */ 
+               a.item_cd, 
+               a.chng_bef_val, 
+               a.chng_aft_Val 
+               <dynamic>
+               	<isEmpty prepend=", "  property="reqSnoId">
+               		'변경신청 없이 승인처리된경우' AS chng_rsn,
+               		null AS take_mng_no
+               	</isEmpty>
+		        <isNotEmpty prepend=", "  property="reqSnoId">
+	           		CASE item_cd WHEN '01' THEN b.unit_nm_chng_rsn
+	        			 WHEN '02' THEN b.unit_alias_fhng_rsn
+	                     WHEN '03' THEN b.unit_descr_chng_rsn 
+	                     WHEN '04' THEN b.presv_term_cd_chng_rsn
+	                     WHEN '05' THEN b.presv_method_cd_chng_rsn
+	                     WHEN '06' THEN b.presv_area_cd_chng_rsn
+	                     WHEN '07' THEN b.funsh_record_falg_chng_rsn
+	                     WHEN '08' THEN b.funsh_record_transf_ymd_rsn
+	                     WHEN '09' THEN b.spcl_list_loc_chng_rsn
+	                     WHEN '10' THEN b.spcl_list1_chng_rsn
+	                     WHEN '11' THEN b.spcl_list2_chng_rsn
+	                     WHEN '12' THEN b.spcl_list3_chng_rsn
+	                     ELSE ''
+		            END AS chng_rsn,
+		            b.take_mng_no
+		        </isNotEmpty>
+               </dynamic>
+		FROM(   /* 01 :단위업무명 */ 
+		        SELECT record_center_id, unit_cd, '01' as item_cd, 
+		         	   unit_nm  as chng_bef_val, #unitNm:VARCHAR# as chng_aft_val
+		          FROM TB_ZZUNIT
+		         WHERE record_center_id = #recordCenterId:VARCHAR#  
+		           AND unit_cd = #unitCd:VARCHAR#
+		           AND unit_nm != #unitNm:VARCHAR#
+		        UNION ALL /* 02 :단위업무가명 */
+		        SELECT record_center_id, unit_cd,'02' as item_cd, 
+		               unit_alias as chng_bef_val, #unitAlias:VARCHAR# as chng_aft_val
+		          FROM TB_ZZUNIT
+		         WHERE record_center_id = #recordCenterId:VARCHAR# 
+		           AND unit_cd = #unitCd:VARCHAR#
+		           AND unit_alias != #unitAlias:VARCHAR#
+		        UNION ALL /* 03 :단위업무설명 */
+		        SELECT record_center_id, unit_cd,'03' as item_cd, 
+		               UNIT_DESCR as chng_bef_val, #unitDescr:VARCHAR# as chng_aft_val
+		          FROM TB_ZZUNIT
+		         WHERE record_center_id = #recordCenterId:VARCHAR# 
+		           AND unit_cd = #unitCd:VARCHAR#
+		           AND UNIT_DESCR != #unitDescr:VARCHAR#
+		        UNION ALL /* 04 :보존기간코드 */
+		        SELECT record_center_id, unit_cd,'04' as item_cd, 
+		               PRESV_TERM_CD as chng_bef_val, DECODE(#presvTermCd:VARCHAR#,'20','25',#presvTermCd:VARCHAR#) as chng_aft_val
+		          FROM TB_ZZUNIT
+		         WHERE record_center_id = #recordCenterId:VARCHAR#
+		           AND unit_cd = #unitCd:VARCHAR#
+		           AND PRESV_TERM_CD != DECODE(#presvTermCd:VARCHAR#,'20','25',#presvTermCd:VARCHAR#)
+                UNION ALL /* 05 :보존방법 */
+                SELECT record_center_id, unit_cd,'05' as item_cd, 
+                       presv_method_cd as chng_bef_val, #presvMethodCd:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND presv_method_cd != #presvMethodCd:VARCHAR#
+                UNION ALL /* 06 :보존장소 */
+                SELECT record_center_id, unit_cd,'06' as item_cd, 
+                       presv_area_cd as chng_bef_val, #presvAreaCd:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND presv_area_cd != #presvAreaCd:VARCHAR#
+                UNION ALL /* 07 :비치기록물여부 */
+                SELECT record_center_id, unit_cd,'07' as item_cd, 
+                       funsh_record_flag as chng_bef_val, #funshRecordFlag:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND funsh_record_flag != #funshRecordFlag:VARCHAR#
+                UNION ALL /* 08 :비치기록물이관시기 */
+                SELECT record_center_id, unit_cd,'08' as item_cd, 
+                       funsh_record_transf_ymd as chng_bef_val, #funshRecordTransfYmd:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND funsh_record_transf_ymd != #funshRecordTransfYmd:VARCHAR#
+                UNION ALL /* 09 :특수목록위치 */
+                SELECT record_center_id, unit_cd,'09' as item_cd, 
+                       spcl_list_loc as chng_bef_val, #spclListLoc:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND spcl_list_loc != #spclListLoc:VARCHAR#
+                UNION ALL /* 10 :제 1 특수목록 */
+                SELECT record_center_id, unit_cd,'10' as item_cd, 
+                       spcl_list1 as chng_bef_val, #spclList1:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND spcl_list1 != #spclList1:VARCHAR#
+                UNION ALL /* 11 :제 2 특수목록 */
+                SELECT record_center_id, unit_cd,'10' as item_cd, 
+                       spcl_list1 as chng_bef_val, #spclList1:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND spcl_list1 != #spclList1:VARCHAR#
+                UNION ALL /* 12 :제 3 특수목록 */
+                SELECT record_center_id, unit_cd,'10' as item_cd, 
+                       spcl_list3 as chng_bef_val, #spclList3:VARCHAR# as chng_aft_val
+                  FROM TB_ZZUNIT
+                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                   AND unit_cd = #unitCd:VARCHAR#
+                   AND spcl_list3 != #spclList3:VARCHAR#
+		        ) a
+		        <dynamic>
+		          <isNotEmpty prepend=", " property="reqSnoId">
+					       TB_ZZUNITCHNGREQ b
+					WHERE b.record_center_id = a.record_center_id 
+					    AND b.unit_cd = a.unit_cd 
+					    AND b.req_sno_id  = #reqSnoId:VARCHAR#
+					    AND b.org_Cd = #orgCd:VARCHAR#
+					    AND b.unit_req_type_cd ='2'
+					    AND b.unit_req_state_Cd = '0'
+				  </isNotEmpty>
+		        </dynamic>
+	</insert>
+
+	<!-- 단위업무 결과접수처리 > 승인 :변경(단위업무)-->
+	<update id="updateChngZzUnit" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+        UPDATE  TB_ZZUNIT
+        SET     unit_nm = #unitNm:VARCHAR#,
+                unit_descr = #unitDescr:VARCHAR#,
+                unit_alias = #unitAlias:VARCHAR#,
+                nars_handl_dtime = #narsHandlDtime:VARCHAR#, /*to_char(sysdate,'yyyymmddhh24miss'),*/
+                presv_term_cd = #presvTermCd:VARCHAR#,
+                presv_term_fix_rsn = #presvTermFixRsn:VARCHAR#,
+                presv_method_cd = #presvMethodCd:VARCHAR#, 
+                presv_area_cd = #presvAreaCd:VARCHAR#, 
+                funsh_record_flag = #funshRecordFlag:VARCHAR#, 
+                funsh_record_transf_ymd = #funshRecordTransfYmd:VARCHAR#,
+                spcl_list_loc = #spclListLoc:VARCHAR#,
+                spcl_list1 = #spclList1:VARCHAR#,
+                spcl_list2 = #spclList2:VARCHAR#, 
+                spcl_list3 = #spclList3:VARCHAR#,
+                take_mng_no = #takeMngNo:VARCHAR#,
+                state_cd = #stateCd:VARCHAR#
+        WHERE   record_center_id = #recordCenterId:VARCHAR#
+        and     unit_cd = #unitCd:VARCHAR#
+	</update>	
+	
+	<!-- 단위업무 결과접수처리 > 승인 :변경(처리과별단위업무)-->
+	<update id="updateChngZzOrgUnit" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+        UPDATE    TB_ZZORGUNIT
+        SET       state_cd = #stateCd:VARCHAR#,
+                  take_mng_no = #takeMngNo:VARCHAR#        	                    
+        WHERE     record_center_id = #recordCenterId:VARCHAR#
+        AND       org_cd = #orgCd:VARCHAR#
+        and       unit_cd = #unitCd:VARCHAR#  	
+	</update>	
+
+	<!-- 단위업무 결과접수처리 > 승인 :변경(단위업무수정신청)-->
+	<update id="updateZzUnitChngReq" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+        UPDATE  TB_ZZUNITCHNGREQ
+        SET     UNIT_REQ_STATE_CD = '1',
+        		RSLT_MNG_NO = #rsltMngNo:VARCHAR#
+        WHERE   record_center_id = #recordCenterId:VARCHAR#    
+        AND     req_sno_id = #reqSnoId:VARCHAR#
+        AND     org_cd = #orgCd:VARCHAR#
+        AND     unit_cd = #unitCd:VARCHAR#
+        AND     unit_req_type_cd = '2'
+        AND		UNIT_REQ_STATE_CD = '0'
+	</update>	
+
+
+	<!-- 단위업무 결과접수처리 > 폐지승인 (처리과별 단위업무 미사용으로 업데이트)-->
+	<update id="updateZzUnitCloseUpdate" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+		UPDATE    TB_ZZORGUNIT
+        SET       use_flag = '0'
+        		, state_cd = '2'
+        WHERE     record_center_id = #recordCenterId:VARCHAR#
+        AND       org_cd = #orgCd:VARCHAR#
+        and       unit_cd = #unitCd:VARCHAR#
+	</update>
+
+	<!-- 단위업무 결과접수처리 > 폐지승인 (처리과별 단위업무 작업이력 생성)-->
+	<insert id="createZzOrgUnitCloseHist" parameterClass="rms.stnd.unitMng.domain.TbUnit">
+		INSERT INTO TB_ZZORGUNITWORKHIST
+			(
+				record_center_id	,
+				org_cd	            ,
+				unit_cd	            ,
+				work_type_cd	    ,
+				work_dtime	        ,
+				apply_stnd_ymd	    ,
+				unit_send_flag
+			) VALUES (
+				#recordCenterId:VARCHAR# ,
+				#orgCd:VARCHAR#	,
+				#unitCd:VARCHAR# ,
+				'2'									,
+				<!--cubrid to_char(sysdate,'yyyymmddhh24miss')	, -->
+				to_char(sys_datetime,'yyyymmddhh24miss')	, 
+				#creatStndYmd:VARCHAR#				,
+				'0'
+			)
+	</insert>
+
+	<!--  단위업무신청처리 > 단위업무 승인신청 파일생성 팝업 > 파일생성대상조회(처리과변경신청) --> 
+	<select id="findUnitMngReqOrgCd" parameterClass="rms.stnd.unitMng.domain.UnitReq" resultClass="string">
+		SELECT req_org_cd
+		  FROM  TB_ZZUNITREQ
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND req_sno_id = #reqSnoId:VARCHAR#
+	</select>	
+</sqlMap>

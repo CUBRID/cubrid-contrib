@@ -1,0 +1,102 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : findRevalRsltRegPagedList
+
+        SELECT H.*        FROM (        	SELECT ROWNUM AS rnum        		, G.*        	FROM (		          						SELECT A.folder_id							, A.clss_id							, A.clss_nm							, A.title							, A.creat_yyyy							, A.presv_term_cd							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm							, (CASE A.CLSS_DIV_CD WHEN '1' THEN (SELECT D.COM_CD_NM 							                      	 			 FROM TB_ZZBISCLSS C,TB_ZZCOMCD D							                      				 WHERE D.COM_TYPE_CD = 'RD07'							                        			 AND D.COM_CD = C.PRESV_TERM_CD							                        			 AND C.BIS_CLSS_ID = A.CLSS_ID)							      				  WHEN '2' THEN (SELECT D.COM_CD_NM							                       				 FROM TB_ZZUNIT E,TB_ZZCOMCD D							                      				 WHERE D.COM_TYPE_CD ='RD57'							                        			 AND E.RECORD_CENTER_ID= '1'							                        			 AND D.COM_CD = E.PRESV_TERM_CD							                        			 AND E.UNIT_CD = A.CLSS_ID							                        			 AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID)							  END) BIS_TERM_NM							, B.refix_aft_presv_term refix_aft_presv_term_cd							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=B.refix_aft_presv_term) refix_aft_presv_term							, B.reval_seq							, decode(B.refix_aft_presv_term,'','미등록','등록') reval_state_nm						    , B.org_cd						    , (SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id = '1' AND C.org_cd = B.org_cd) org_nm						    , (SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id = '1' AND C.org_cd = B.org_cd) org_abbr_nm									FROM TB_RDFOLDER A						    , TB_DFREVALHIST B						WHERE A.record_center_id = B.record_center_id						AND A.FOLDER_KEEP_STATE_CD IN ('01','04')						AND A.folder_id = B.folder_id						AND A.record_center_id = '1'						AND nvl(A.disuse_eval_prog_flag,'0') = '0'						AND nvl(A.reval_prog_flag,'1') = '1'						AND (B.reval_prog_state_cd = '7' and B.eval_discu_no is null) AND 							(A.clss_div_cd = '1' AND A.clss_id = '1')						  AND 							(A.title LIKE '1' OR A.sub_title LIKE '1' OR A.corct_title LIKE '1')						  AND 							A.creat_yyyy BETWEEN '1' AND '1'						  AND 							A.presv_term_cd = '1'						  AND 							A.org_cd = '1'						   				ORDER BY folder_id			) G			WHERE ROWNUM <= '1'		) H		WHERE H.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : countRevalRsltRegPagedList
+
+  				SELECT COUNT(1) CNT					FROM TB_RDFOLDER A, TB_DFREVALHIST B				WHERE A.record_center_id = '1'				AND A.record_center_id = B.record_center_id				AND A.folder_id = B.folder_id				AND A.FOLDER_KEEP_STATE_CD IN ('01','04')  				AND nvl(A.disuse_eval_prog_flag,'0') = '0' 				AND nvl(A.reval_prog_flag,'1') = '1'				AND (B.reval_prog_state_cd = '7' and B.eval_discu_no is null) AND 					(A.clss_div_cd = '1' AND A.clss_id = '1')				  AND 					(A.title LIKE '1' OR A.sub_title LIKE '1' OR A.corct_title LIKE '1')				  AND 					A.creat_yyyy BETWEEN '1' AND '1'				  AND 					A.presv_term_cd = '1'				  AND 					A.org_cd = '1'				   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : findDiscuUserList
+
+		SELECT B.user_id discu_user_id, B.user_nm discu_user_nm		    , '' discu_user_eval_presv_term_cd		    , '' discu_user_eval_presv_term		    , '' discu_user_eval_rsn  		FROM TB_STUSERGRP A, TB_STUSER B 		WHERE A.user_id = B.user_id		AND A.record_center_id = '1'		AND A.grant_grp_cd = '002';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : findRevalRsltBatchApplyList
+
+		SELECT B.record_center_id		    , B.folder_id			, B.reval_seq			, B.cncl_eval_presv_term_cd			, B.refix_bef_presv_term refix_bef_presv_term_cd				, B.refix_aft_presv_term refix_aft_presv_term_cd			, B.refix_aft_rsn			, A.creat_yyyy			, B.expt_disuse_yyyy_bef			, B.eval_discu_no		FROM TB_RDFOLDER A		    , TB_DFREVALHIST B		WHERE B.record_center_id = '1'		AND B.reval_prog_state_cd = '7'        AND B.eval_discu_no is NULL				AND B.folder_id = A.folder_id		AND A.record_center_id = '1'		AND A.folder_keep_state_cd != '03'		AND A.reval_prog_flag ='1' 													 AND  				(A.clss_div_cd = '1' AND A.clss_id = '1')			  AND 				(A.clss_div_cd = '1' AND A.clss_id = '1')			  AND 				(A.title LIKE '1' OR A.sub_title LIKE '1' OR A.corct_title LIKE '1')			  AND 				A.creat_yyyy BETWEEN '1' AND '1'			  AND 				A.presv_term_cd = '1'			  AND 				(B.cncl_eval_presv_term_cd = '1'				 OR 					B.cncl_eval_presv_term_cd IS NULL				 				)			  		ORDER BY A.folder_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : insert
+-- Query Id : createRevalRsltListHist
+
+		INSERT INTO TB_DFREVALHIST (record_center_id			, folder_id			, reval_seq			, eval_discu_no			, org_cd			, handl_org_cd			, reval_prog_state_cd			, handl_org_eval_presv_term_cd			, handl_org_eval_rsn			, handl_org_eval_ymd			, record_center_eval_presv_term_			, record_center_eval_rsn			, record_center_eval_ymd			, cncl_eval_presv_term_cd			, cncl_eval_rsn, cncl_eval_ymd			, last_reval_presv_term_cd			, presv_term_refix_ymd			, expt_disuse_yyyy_bef			, refix_bef_presv_term			, refix_aft_presv_term			, refix_bef_rsn, refix_aft_rsn		) SELECT record_center_id		     , A.folder_id			 , (SELECT LPAD(NVL(MAX(reval_seq),0)+1, 19, '0') FROM TB_DFREVALHIST)			 , ''			 , A.org_cd		     , '1'		     , '7'		     , '1'		     , '1'		     , TO_CHAR(SYSDATE,'YYYYMMDD') 	         , '1' 	         , '1'	         , TO_CHAR(SYSDATE,'YYYYMMDD')		     , '1'		     , '1'		     , TO_CHAR(SYSDATE,'YYYYMMDD')		     , '1'			 , TO_CHAR(SYSDATE,'YYYYMMDD')		     , expt_disuse_yyyy		     , presv_term_cd			 , '1'		     , presv_term_fix_rsn			 , '1'		FROM TB_RDFOLDER A		WHERE record_center_id = '1'		AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : update
+-- Query Id : updateRevalRsltReg
+
+		UPDATE TB_RDFOLDER		SET reval_state_cd = '7', reval_prog_flag = '1'		WHERE record_center_id = '1'		AND folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : findRevalSeq
+
+		SELECT folder_id			, max(reval_seq) reval_seq 		FROM TB_DFREVALHIST 		WHERE record_center_id = '1'		 AND				folder_id =  ('1'OR'1'OR'1')  		GROUP BY folder_id, reval_seq		ORDER BY folder_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : update
+-- Query Id : updateRevalRsltListHist
+
+		UPDATE TB_DFREVALHIST		SET   reval_prog_state_cd = '7'			, handl_org_cd = '1'				, handl_org_eval_presv_term_cd = '1'			, handl_org_eval_rsn = '1'			, handl_org_eval_ymd = TO_CHAR(SYSDATE,'YYYYMMDD') 	        , record_center_eval_presv_term_ = '1' 	        , record_center_eval_rsn = '1'	        , record_center_eval_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		    , cncl_eval_presv_term_cd = '1'		    , cncl_eval_rsn = '1'		    , cncl_eval_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		    , last_reval_presv_term_cd = '1'			, refix_aft_presv_term = '1'			, refix_aft_rsn = '1'			, presv_term_refix_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		WHERE record_center_id = '1'		AND folder_id = '1'		AND reval_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : insert
+-- Query Id : createRevalDiscu
+
+		INSERT INTO TB_DFREVALDISCU (record_center_id			, eval_discu_no			, eval_yyyy			, sno			, discu_trgt_record_cnt			, reg_user_id, reg_dtime		) VALUES('1'			, (SELECT '1'||LPAD(NVL(SUBSTR(MAX(eval_discu_no),5),0)+1, 6, '0') FROM TB_DFREVALDISCU WHERE record_center_id = '1' AND eval_yyyy = '1')			, '1'			, (SELECT (NVL(MAX(sno),0)+1) FROM TB_DFREVALDISCU WHERE record_center_id = '1' AND eval_yyyy = '1')			, 0			, '1'			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : findDiscuNo
+
+		SELECT MAX(eval_discu_no) eval_discu_no		FROM TB_DFREVALDISCU		WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : update
+-- Query Id : updateRevalHistDiscuNo
+
+		UPDATE TB_DFREVALHIST		SET eval_discu_no = '1'		WHERE record_center_id = '1'		AND folder_id = '1'		AND reval_prog_state_cd = '7'		AND eval_discu_no is null;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : update
+-- Query Id : updateDiscuNoCnt
+
+		UPDATE TB_DFREVALDISCU		SET discu_trgt_record_cnt = (			SELECT COUNT(1) 		    FROM TB_DFREVALHIST		    WHERE eval_discu_no = '1'		)		WHERE record_center_id = '1'		AND eval_discu_no = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : update
+-- Query Id : updatePresvTermRevalSetList
+
+		UPDATE TB_RDFOLDER		SET  reval_state_cd = '0'		    , reval_prog_flag = '0'		    , presv_term_cd = (		    	SELECT refix_aft_presv_term                FROM TB_DFREVALHIST                WHERE folder_id = '1'                AND reval_seq = '1'            )		    , presv_term_fix_rsn = (		    	SELECT refix_aft_rsn                FROM TB_DFREVALHIST                WHERE folder_id = '1'                AND reval_seq = '1'            )		     		    	, expt_disuse_yyyy = ''		    	, expt_transf_yyyy = (TO_NUMBER(DECODE(creat_sys_cd,'01',creat_yyyy,'04',creat_yyyy,SUBSTR(FOLDER_CLOSE_DTIME,0,4)))+10)		     	, PRESV_AREA_CD='2'			 		WHERE record_center_id = '1'		AND folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : update
+-- Query Id : updateOpenList
+
+		UPDATE TB_STOPENLIST		SET PRESV_TERM_CD= (			SELECT refix_aft_presv_term            FROM TB_DFREVALHIST            WHERE folder_id = '1'            AND reval_seq = '1'            )                        , REVAL_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')            , CHNG_TYPE='02'            , CHNG_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')            , OPENLIST_OFFER_FLAG='0'		WHERE record_center_id = '1'		AND folder_id = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml

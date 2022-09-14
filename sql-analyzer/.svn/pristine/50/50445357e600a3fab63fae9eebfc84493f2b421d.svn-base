@@ -1,0 +1,599 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtExamPagedList
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.record_center_id				    , A.transf_yyyy				    , A.transf_list_id				    , A.folder_id				    , A.org_cd				    , C.org_nm				    , C.org_abbr_nm				    , A.clss_id				    , (SELECT Z.bis_clss_nm FROM TB_ZZBISCLSS Z WHERE Z.BIS_CLSS_ID = A.CLSS_ID UNION SELECT Z.UNIT_NM FROM TB_ZZUNIT Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.UNIT_CD = A.CLSS_ID)  clss_nm				    , A.title				    , A.creat_yyyy				    , NVL(A.record_cnt,0) record_cnt				    , A.qulty_test_rslt_flag				    , DECODE(A.qulty_test_rslt_flag,'1','O','2','X','3','검사중','미검사') qulty_test_rslt_flag_nm				    , NVL(A.exam_rslt_cd,0) exam_rslt_cd				    , NVL(E.com_cd_nm,'미검수') exam_rslt_nm		            , A.PRESV_TERM_CD		            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) AS PRESV_TERM_NM		            , (CASE WHEN A.NEO_TRANS_STATE = '4' AND A.RECORD_NEO_TRANS_STATE = '4' THEN '완료' ELSE '미완료' END) AS NEO_TRANS_STATE_NM		            , NVL((SELECT NEO_TRANS_STATE FROM TB_RDFOLDER WHERE  RECORD_CENTER_ID = A.RECORD_CENTER_ID AND FOLDER_ID = A.FOLDER_ID ), '4') AS NEO_TRANS_STATE_CHECK		            , NVL((SELECT RECORD_NEO_TRANS_STATE FROM TB_RDFOLDER WHERE  RECORD_CENTER_ID = A.RECORD_CENTER_ID AND FOLDER_ID = A.FOLDER_ID ), '4') AS RECORD_NEO_TRANS_STATE_CHECK				FROM  TB_DFRECVTRANSFLIST A, TB_STORG C, (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'TK03') E				WHERE A.record_center_id = C.record_center_id(+)				AND   A.org_cd = C.org_cd(+)				AND   A.exam_rslt_cd = E.com_cd(+)				AND	  A.record_center_id = '1'				AND   A.transf_yyyy = '1'				AND	  A.transf_grp_sno = '1'				AND   A.confm_transf_div_cd IN ('1','2','3') AND 					A.org_cd = '1'				  AND 					(A.clss_div_cd = '1' AND A.clss_id = '1')				  AND 					A.title LIKE '1'				  AND  						(A.qulty_test_rslt_flag IS NULL OR A.qulty_test_rslt_flag = '' OR A.qulty_test_rslt_flag = '0')					   AND  						(A.exam_rslt_cd IS NULL OR A.exam_rslt_cd = '' OR A.exam_rslt_cd = '0')					  				ORDER BY A.title, A.folder_id			) B			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfTrgtExamPagedList
+
+		SELECT COUNT(1)		FROM  TB_DFRECVTRANSFLIST A		    , TB_STORG C		    , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'TK03') E		WHERE A.record_center_id = C.record_center_id(+)		AND   A.org_cd = C.org_cd(+)		AND   A.exam_rslt_cd = E.com_cd(+)		AND	  A.record_center_id = '1'		AND   A.transf_yyyy = '1'		AND	  A.transf_grp_sno = '1'		AND   A.confm_transf_div_cd IN ('1','2','3') AND 			A.org_cd = '1'		  AND 			(A.clss_div_cd = '1' AND A.clss_id = '1')		  AND 			A.title LIKE '1'		  AND  				(A.qulty_test_rslt_flag IS NULL OR A.qulty_test_rslt_flag = '' OR A.qulty_test_rslt_flag = '0')			   AND  				(A.exam_rslt_cd IS NULL OR A.exam_rslt_cd = '' OR A.exam_rslt_cd = '0')			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlCurStatePresvPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT CREAT_YYYY					, NVL(SUM(PRESV_TERM_CNT1), 0) PRESV_TERM_CNT1					, NVL(SUM(PRESV_TERM_CNT2), 0) PRESV_TERM_CNT2					, NVL(SUM(PRESV_TERM_CNT3), 0) PRESV_TERM_CNT3					, NVL(SUM(PRESV_TERM_CNT4), 0) + NVL(SUM(PRESV_TERM_CNT5), 0) + NVL(SUM(PRESV_TERM_CNT6), 0) + NVL(SUM(PRESV_TERM_CNT7), 0) PRESV_TERM_CNT4				FROM (					SELECT B.CREAT_YYYY						, B.PRESV_TERM_CD						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM						, DECODE(B.PRESV_TERM_CD, '40', 1, 0) PRESV_TERM_CNT1						, DECODE(B.PRESV_TERM_CD, '30', 1, 0) PRESV_TERM_CNT2						, DECODE(B.PRESV_TERM_CD, '25', 1, '20', 1, 0) PRESV_TERM_CNT3						, DECODE(B.PRESV_TERM_CD, '10', 1, 0) PRESV_TERM_CNT4						, DECODE(B.PRESV_TERM_CD, '05', 1, 0) PRESV_TERM_CNT5						, DECODE(B.PRESV_TERM_CD, '03', 1, 0) PRESV_TERM_CNT6						, DECODE(B.PRESV_TERM_CD, '01', 1, 0) PRESV_TERM_CNT7					FROM TB_DFRECVTRANSFLIST A, TB_RDFOLDER B					WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)					AND A.FOLDER_ID = B.FOLDER_ID(+)					AND A.RECORD_CENTER_ID = '1'					AND A.TRANSF_YYYY = '1'					AND A.TRANSF_GRP_SNO = '1'					AND A.confm_transf_div_cd IN ('1','2','3')					AND A.exam_rslt_cd = '1'					 AND  							A.ERROR_FLAG = '2'						  										)				GROUP BY CREAT_YYYY				ORDER BY CREAT_YYYY			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfHandlCurStatePresvPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT CREAT_YYYY				, NVL(SUM(PRESV_TERM_CNT1), 0) PRESV_TERM_CNT1				, NVL(SUM(PRESV_TERM_CNT2), 0) PRESV_TERM_CNT2				, NVL(SUM(PRESV_TERM_CNT3), 0) PRESV_TERM_CNT3				, NVL(SUM(PRESV_TERM_CNT4), 0) + NVL(SUM(PRESV_TERM_CNT5), 0) + NVL(SUM(PRESV_TERM_CNT6), 0) + NVL(SUM(PRESV_TERM_CNT7), 0) PRESV_TERM_CNT4			FROM (				SELECT B.CREAT_YYYY					, B.PRESV_TERM_CD					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM					, DECODE(B.PRESV_TERM_CD, '40', 1, 0) PRESV_TERM_CNT1					, DECODE(B.PRESV_TERM_CD, '30', 1, 0) PRESV_TERM_CNT2					, DECODE(B.PRESV_TERM_CD, '25', 1, '20', 1, 0) PRESV_TERM_CNT3					, DECODE(B.PRESV_TERM_CD, '10', 1, 0) PRESV_TERM_CNT4					, DECODE(B.PRESV_TERM_CD, '05', 1, 0) PRESV_TERM_CNT5					, DECODE(B.PRESV_TERM_CD, '03', 1, 0) PRESV_TERM_CNT6					, DECODE(B.PRESV_TERM_CD, '01', 1, 0) PRESV_TERM_CNT7				FROM TB_DFRECVTRANSFLIST A, TB_RDFOLDER B				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				AND A.FOLDER_ID = B.FOLDER_ID(+)				AND A.RECORD_CENTER_ID = '1'				AND A.TRANSF_YYYY = '1'				AND A.TRANSF_GRP_SNO = '1'				AND A.confm_transf_div_cd IN ('1','2','3')				AND A.exam_rslt_cd = '1' AND  						A.ERROR_FLAG = '2'					  									)			GROUP BY CREAT_YYYY			ORDER BY CREAT_YYYY		)				 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlCurStateTotal
+
+		SELECT '' ERECORD_FLAG,			   '계' ERECORD_FLAG_NM,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN 1 ELSE 0 END),0) AS FOLDER_CNT,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN RECORD_REG_CNT END),0) AS RECORD_REG_CNT,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN EFILE_CNT END),0) AS EFILE_CNT,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN FOLDER_SIZE ELSE 0 END),0) AS FOLDER_SIZE,               COUNT(*) AS TRANSF_TRGT_CNT		FROM (				SELECT /*+ ORDERED */				       B.ERECORD_FLAG,				       (SELECT C.COM_CD_NM				          FROM TB_ZZCOMCD C				         WHERE C.COM_TYPE_CD = 'RD23'				           AND C.COM_CD = B.ERECORD_FLAG) ERECORD_FLAG_NM,				       B.FOLDER_ID,				       B.RECORD_REG_CNT,				       B.EFILE_CNT,   				       FN.FILE_SIZE + SUM(RN.FILE_SIZE) AS FOLDER_SIZE,   				       A.EXAM_RSLT_CD				  FROM TB_DFRECVTRANSFLIST A,				       TB_RDFOLDER         B,				       TB_STFOLDERNEOFILE  FN,					   TB_RDRECORD         C,				       TB_STORIGNNEOFILE   RN		WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		AND	   A.FOLDER_ID = B.FOLDER_ID(+)				   AND FN.RECORD_CENTER_ID = B.RECORD_CENTER_ID				   AND FN.FOLDER_ID = B.FOLDER_ID				   AND FN.CHNG_SNO = (SELECT MAX(T.CHNG_SNO)				                        FROM TB_STFOLDERNEOFILE T				                       WHERE T.RECORD_CENTER_ID = B.RECORD_CENTER_ID				                         AND T.FOLDER_ID = B.FOLDER_ID)				   AND C.RECORD_CENTER_ID = B.RECORD_CENTER_ID				   AND C.FOLDER_ID = B.FOLDER_ID				   AND RN.RECORD_CENTER_ID = C.RECORD_CENTER_ID				   AND RN.ORIGN_ID = C.ORIGN_ID				   AND RN.CHNG_SNO = (SELECT MAX(T.CHNG_SNO)				                        FROM TB_STORIGNNEOFILE T				                       WHERE T.RECORD_CENTER_ID = C.RECORD_CENTER_ID				                         AND T.ORIGN_ID = C.ORIGN_ID)						AND	   A.RECORD_CENTER_ID = '1'		AND	   A.TRANSF_YYYY = '1'		AND	   A.TRANSF_GRP_SNO = '1'		AND    A.confm_transf_div_cd IN ('1','2','3') AND  				A.ERROR_FLAG = '2'			  				 GROUP BY B.ERECORD_FLAG,                       B.FOLDER_ID,                       B.RECORD_REG_CNT,                       B.EFILE_CNT,                       FN.FILE_SIZE,                       A.EXAM_RSLT_CD		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlCurStateErecordList
+
+		SELECT ERECORD_FLAG,			   ERECORD_FLAG_NM,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN 1 ELSE 0 END),0) AS FOLDER_CNT,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN RECORD_REG_CNT END),0) AS RECORD_REG_CNT,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN EFILE_CNT END),0) AS EFILE_CNT,               NVL(SUM(CASE WHEN exam_rslt_cd = '1' THEN FOLDER_SIZE ELSE 0 END),0) AS FOLDER_SIZE,               COUNT(*) AS TRANSF_TRGT_CNT			   			FROM (		    SELECT /*+ ORDERED */			       B.ERECORD_FLAG,			       (SELECT C.COM_CD_NM			          FROM TB_ZZCOMCD C			         WHERE C.COM_TYPE_CD = 'RD23'			           AND C.COM_CD = B.ERECORD_FLAG) ERECORD_FLAG_NM,			       B.FOLDER_ID,			       B.RECORD_REG_CNT,			       B.EFILE_CNT,			       FN.FILE_SIZE + SUM(RN.FILE_SIZE) AS FOLDER_SIZE,			       A.EXAM_RSLT_CD			  FROM TB_DFRECVTRANSFLIST A,			       TB_RDFOLDER         B,			       TB_STFOLDERNEOFILE  FN,				   TB_RDRECORD         C,			       TB_STORIGNNEOFILE   RN				WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				AND	   A.FOLDER_ID = B.FOLDER_ID(+)			   AND FN.RECORD_CENTER_ID = B.RECORD_CENTER_ID			   AND FN.FOLDER_ID = B.FOLDER_ID			   AND FN.CHNG_SNO = (SELECT MAX(T.CHNG_SNO)			                        FROM TB_STFOLDERNEOFILE T			                       WHERE T.RECORD_CENTER_ID = B.RECORD_CENTER_ID			                         AND T.FOLDER_ID = B.FOLDER_ID)			   AND C.RECORD_CENTER_ID = B.RECORD_CENTER_ID			   AND C.FOLDER_ID = B.FOLDER_ID			   AND RN.RECORD_CENTER_ID = C.RECORD_CENTER_ID			   AND RN.ORIGN_ID = C.ORIGN_ID			   AND RN.CHNG_SNO = (SELECT MAX(T.CHNG_SNO)			                        FROM TB_STORIGNNEOFILE T			                       WHERE T.RECORD_CENTER_ID = C.RECORD_CENTER_ID			                         AND T.ORIGN_ID = C.ORIGN_ID)				AND	   A.RECORD_CENTER_ID = '1'				AND	   A.TRANSF_YYYY = '1'				AND	   A.TRANSF_GRP_SNO = '1'				AND    A.confm_transf_div_cd IN ('1','2','3') AND  						A.ERROR_FLAG = '2'					  				 		 	GROUP BY B.ERECORD_FLAG,		          B.FOLDER_ID,		          B.RECORD_REG_CNT,		          B.EFILE_CNT,		          FN.FILE_SIZE,		          A.EXAM_RSLT_CD						) GROUP BY ERECORD_FLAG, ERECORD_FLAG_NM		ORDER BY ERECORD_FLAG	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.TRANSF_LIST_ID					,A.TRANSF_GRP_SNO					,(SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = '1' AND C.ORG_CD = A.ORG_CD) ORG_NM					,DECODE(A.CLSS_DIV_CD,'1', (SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID), '2', (SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID 	AND C.UNIT_CD = A.CLSS_ID), '') CLSS_NM 					,A.TITLE, A.CREAT_YYYY					,A.RECORD_CNT 					,(SELECT C.COM_CD_NM FROM TB_ZZCOMCD C 	WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) PRESV_TERM_NM					,(SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD) AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM					,A.FOLDER_ID 					,A.CONFM_TRANSF_DIV_CD					,(A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key					,ERROR_FLAG					,RJCT_FLAG			        ,DECODE (NVL (ERROR_FLAG, '0'), '0', '미접수', '1', '정상', '2', '오류', 0) AS ERROR_NM			        ,DECODE (NVL (RJCT_FLAG, '0'), '0', '미접수', '1', '인수', '2', '반려', 0) AS RJCT_NM			        ,RJCT_CONT				FROM  TB_DFRECVTRANSFLIST A				WHERE A.RECORD_CENTER_ID = '1'				AND	  A.TRANSF_YYYY = '1'				AND	  A.TRANSF_GRP_SNO = '1'			    AND    A.confm_transf_div_cd IN ('1','2','3')				AND    A.exam_rslt_cd = '1' AND  						A.ERROR_FLAG = '2'					  				ORDER BY A.title, A.folder_id			) B			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfHandlPagedList
+
+		SELECT COUNT(1)		FROM  TB_DFRECVTRANSFLIST A		WHERE A.RECORD_CENTER_ID = '1'		AND	  A.TRANSF_YYYY = '1'		AND	  A.TRANSF_GRP_SNO = '1'	    AND   A.confm_transf_div_cd IN ('1','2','3')		AND   A.exam_rslt_cd = '1'		 AND  				A.ERROR_FLAG = '2'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlFolderfList
+
+		SELECT A.TRANSF_LIST_ID			, A.TRANSF_GRP_SNO			, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = '1' AND C.ORG_CD = A.ORG_CD) ORG_NM			, DECODE(A.CLSS_DIV_CD,'1', (SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID), '2', (SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID 	AND C.UNIT_CD = A.CLSS_ID), '') CLSS_NM 			, A.TITLE, A.CREAT_YYYY			, A.RECORD_CNT 			, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C 	WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM			, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM			, A.FOLDER_ID 			, A.CONFM_TRANSF_DIV_CD			, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key			, ERROR_FLAG			, RJCT_FLAG	        , DECODE (NVL (ERROR_FLAG, '0'), '0', '미접수', '1', '정상', '2', '오류', 0) AS ERROR_NM	        , DECODE (NVL (RJCT_FLAG, '0'), '0', '미접수', '1', '인수', '2', '반려', 0) AS RJCT_NM	        , RJCT_CONT		FROM TB_DFRECVTRANSFLIST A		WHERE A.RECORD_CENTER_ID = '1'		AND	A.TRANSF_YYYY = '1'		AND	A.TRANSF_GRP_SNO = '1'	    AND A.confm_transf_div_cd IN ('1','2','3')		AND A.exam_rslt_cd = '1' AND  				A.ERROR_FLAG = '2'			  		ORDER BY A.title, A.folder_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlCurStateType
+
+		SELECT NVL(SUM(FOLDER_TYPE_CNT1), 0) FOLDER_TYPE_CNT1			, NVL(SUM(FOLDER_TYPE_CNT2), 0) FOLDER_TYPE_CNT2			, NVL(SUM(FOLDER_TYPE_CNT3), 0) FOLDER_TYPE_CNT3			, NVL(SUM(FOLDER_TYPE_CNT4), 0) FOLDER_TYPE_CNT4			, NVL(SUM(FOLDER_TYPE_CNT5), 0) FOLDER_TYPE_CNT5		FROM (			SELECT B.FOLDER_TYPE_DIV_CD				, DECODE(B.FOLDER_TYPE_DIV_CD, '1', 1, 0) FOLDER_TYPE_CNT1				, DECODE(B.FOLDER_TYPE_DIV_CD, '2', 1, 0) FOLDER_TYPE_CNT2				, DECODE(B.FOLDER_TYPE_DIV_CD, '3', 1, 0) FOLDER_TYPE_CNT3				, DECODE(B.FOLDER_TYPE_DIV_CD, '4', 1, 0) FOLDER_TYPE_CNT4				, DECODE(B.FOLDER_TYPE_DIV_CD, '5', 1, 0) FOLDER_TYPE_CNT5			FROM   TB_DFRECVTRANSFLIST A, TB_RDFOLDER B			WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)			AND	   A.FOLDER_ID = B.FOLDER_ID(+)			AND	   A.RECORD_CENTER_ID = '1'			AND	   A.TRANSF_YYYY = '1'			AND	   A.TRANSF_GRP_SNO = '1'			AND    A.confm_transf_div_cd IN ('1','2','3')			AND    A.exam_rslt_cd = '1' AND  					A.ERROR_FLAG = '2'				  		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlCurStateError
+
+        SELECT NVL (SUM (folder_error_cnt1), 0)   folder_error_cnt1        	, NVL (SUM (folder_error_cnt2), 0) folder_error_cnt2        	, NVL (SUM (folder_error_cnt3), 0) folder_error_cnt3	     		FROM (			SELECT DECODE(NVL(ERROR_FLAG,'0'), '0', 1, 0) folder_error_cnt1				, DECODE(NVL(ERROR_FLAG,'0'), '1', 1, 0) folder_error_cnt2				, DECODE(NVL(ERROR_FLAG,'0'), '2', 1, 0) folder_error_cnt3			FROM  TB_DFRECVTRANSFLIST			WHERE RECORD_CENTER_ID = '1'			AND	  TRANSF_YYYY = '1'			AND	  TRANSF_GRP_SNO = '1'			AND   confm_transf_div_cd IN ('1','2','3')			AND   exam_rslt_cd = '1'			 AND  					(ERROR_FLAG IS NULL OR ERROR_FLAG = '0' OR ERROR_FLAG = '1' OR ERROR_FLAG = '2')				  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlCurStateRjct
+
+		SELECT NVL(SUM(folder_rjct_cnt1), 0) folder_rjct_cnt1			, NVL(SUM(folder_rjct_cnt2), 0) folder_rjct_cnt2			, NVL(SUM(folder_rjct_cnt3), 0) folder_rjct_cnt3		FROM (			SELECT DECODE(NVL(RJCT_FLAG,'0'), '0', 1, 0) folder_rjct_cnt1				, DECODE(NVL(RJCT_FLAG,'0'), '1', 1, 0) folder_rjct_cnt2				, DECODE(NVL(RJCT_FLAG,'0'), '2', 1, 0) folder_rjct_cnt3			FROM  TB_DFRECVTRANSFLIST			WHERE RECORD_CENTER_ID = '1'			AND	  TRANSF_YYYY = '1'			AND	  TRANSF_GRP_SNO = '1'			AND   confm_transf_div_cd IN ('1','2','3')			AND   exam_rslt_cd = '1'						);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findRptFileCreateCheck
+
+		SELECT COUNT(1) AS folderCnt		FROM  TB_STSCHEDULE		WHERE RECORD_CENTER_ID = '1' 		AND   JOB_TYPE IN ('1')		AND   JOB_STATE IN ('0', '3')		AND   JOB_PARAM LIKE '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlRecvResultPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT C.*				FROM (					SELECT A.record_center_id						, (SELECT Z.record_center_nm FROM TB_STRECORDCENTER Z WHERE Z.record_center_id = A.record_center_id) AS record_center_nm						, A.transf_yyyy						, A.send_file_data_div						, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd='CR02' AND Z.com_cd=A.send_file_data_div) AS send_file_data_div_nm						, A.list_line_no						, A.transf_recv_error_cont						, A.recv_file_dtime						, (SELECT B.title FROM TB_DFRECVTRANSFLIST B WHERE B.record_center_id = '1' and B.transf_yyyy = A.transf_yyyy and B.transf_grp_sno = '1' and (B.creat_sys_cd || B.org_cd || B.clss_id || B.creat_yyyy || B.folder_reg_seq || B.ho_no) = (A.creat_sys_cd || A.org_cd || A.clss_id || A.creat_yyyy || A.folder_reg_seq || A.ho_no)) as title						, (SELECT B.transf_grp_sno FROM TB_DFRECVTRANSFLIST B WHERE B.record_center_id = '1' and B.transf_yyyy = A.transf_yyyy and B.transf_grp_sno = '1' and B.error_flag = '2' and (B.creat_sys_cd || B.org_cd || B.clss_id || B.creat_yyyy || B.folder_reg_seq || B.ho_no) = (A.creat_sys_cd || A.org_cd || A.clss_id || A.creat_yyyy || A.folder_reg_seq || A.ho_no)) as transf_grp_sno					FROM TB_DFTRANSFHANDLRECVRESULT A					WHERE A.record_center_id = '1'					AND   A.transf_yyyy = '1'				) C								ORDER BY C.record_center_id, C.transf_yyyy, C.send_file_data_div, C.list_line_no			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfHandlRecvResultPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT A.record_center_id				, A.transf_yyyy				, (SELECT B.transf_grp_sno FROM TB_DFRECVTRANSFLIST B WHERE B.record_center_id = '1' and B.transf_yyyy = A.transf_yyyy and B.transf_grp_sno = '1' and B.error_flag = '2' and (B.creat_sys_cd || B.org_cd || B.clss_id || B.creat_yyyy || B.folder_reg_seq || B.ho_no) = (A.creat_sys_cd || A.org_cd || A.clss_id || A.creat_yyyy || A.folder_reg_seq || A.ho_no)) as transf_grp_sno			FROM TB_DFTRANSFHANDLRECVRESULT A			WHERE A.record_center_id = '1'			AND   A.transf_yyyy = '1'		) C		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfWorkInfoList
+
+		SELECT A.TRANSF_YYYY			, A.TRANSF_HANDL_STATE			, A.TRANSF_FILE_CREATE_STATE_FLAG			, A.TRANSF_FILE_CREATE_END_DTIME			, B.SPLIT_SEQ			, B.SPLIT_STATE_CD			, B.WORK_END_DTIME			, B.TRANSF_GRP_SNO			, B.DOWNLOAD_FLAG			, B.DOWNLOAD_DTIME			, B.STORE_SEQ			, (B.STORE_SEQ -1) AS MSTORE_SEQ			, C.EXAM_NOT_CNT			, C.EXAM_NOML_CNT			, C.EXAM_ERROR_CNT			, C.TRANSF_INFRM_CNT			, C.TOTAL_CNT			, C.NOML_CNT			, C.ERROR_CNT			, C.BEF_TOTAL_CNT			, C.BEF_NOML_CNT			, C.BEF_ERROR_CNT        			  		FROM TB_DFTRANSFWORK A, TB_DFTRANSFSTORESLT B			, (			SELECT B.RECORD_CENTER_ID				, B.TRANSF_YYYY				, B.TRANSF_GRP_SNO				, B.SPLIT_SEQ				, MAX (DECODE (B.EXAM_RSLT_CD, '0', 0)) AS EXAM_NOT_CNT				, MAX (DECODE (B.EXAM_RSLT_CD, '1', 1)) AS EXAM_NOML_CNT				, MAX (DECODE (B.EXAM_RSLT_CD, '2', 2)) AS EXAM_ERROR_CNT				, COUNT (B.TRANSF_INFRM_FLAG) AS TRANSF_INFRM_CNT				, COUNT(A.ERROR_FLAG)  AS TOTAL_CNT				, COUNT(DECODE (A.ERROR_FLAG,  '1', 1))  AS NOML_CNT				, COUNT(DECODE (A.ERROR_FLAG,  '2', 2))  AS ERROR_CNT				, COUNT(B.BEF_ERROR_FLAG)  AS BEF_TOTAL_CNT				, COUNT(DECODE (B.BEF_ERROR_FLAG,  '1', 1))  AS BEF_NOML_CNT				, COUNT(DECODE (B.BEF_ERROR_FLAG,  '2', 2))  AS BEF_ERROR_CNT			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B             WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID            AND A.TRANSF_YYYY = B.TRANSF_YYYY            AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO            AND A.FOLDER_ID = B.FOLDER_ID            AND A.RECORD_CENTER_ID = '1'             AND A.TRANSF_YYYY = '1'            AND A.TRANSF_GRP_SNO = '1'            AND A.confm_transf_div_cd IN ('1', '2', '3')            AND A.exam_rslt_cd = '1'			 AND  					B.ERROR_FLAG = '2'				  	                                     GROUP BY  B.RECORD_CENTER_ID,  B.TRANSF_YYYY, B.TRANSF_GRP_SNO, B.SPLIT_SEQ            ) C		    		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.TRANSF_YYYY = B.TRANSF_YYYY		AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO		AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID         AND B.TRANSF_YYYY = C.TRANSF_YYYY        AND B.TRANSF_GRP_SNO = C.TRANSF_GRP_SNO        AND B.SPLIT_SEQ = C.SPLIT_SEQ		AND A.RECORD_CENTER_ID = '1'		AND A.TRANSF_YYYY = '1'		ORDER BY B.SPLIT_SEQ	       	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlInfrmCheck
+
+		SELECT COUNT(*) AS transf_infrm_check FROM TB_DFTRANSFSTOREFLD		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'		AND (FOLDER_STATE_CD = '0' OR FOLDER_STATE_CD = '1' OR FOLDER_STATE_CD = '2') 								                                        		 AND  				error_flag = '2'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlFinCheck
+
+		SELECT COUNT(FOLDER_ID) AS TRANSF_TRGT_CNT			, SUM(DECODE (NVL (RJCT_FLAG, '0'), '0', 1, 0)) AS NRECV_FLAG			, SUM(DECODE (NVL (RJCT_FLAG, '0'), '1', 1, 0)) AS OVER_FLAG			, SUM(DECODE (NVL (RJCT_FLAG, '0'), '2', 1, 0)) AS RJCT_FLAG			, (COUNT(FOLDER_ID) - SUM(DECODE (NVL (RJCT_FLAG, '0'), '1', 1, 0))) AS FIN_HANDL		FROM (			SELECT B.FOLDER_ID				, A.RJCT_FLAG		    FROM TB_DFRECVTRANSFLIST A, TB_RDFOLDER B		    WHERE     A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		    AND A.FOLDER_ID = B.FOLDER_ID(+)		    AND A.RECORD_CENTER_ID = '1'		    AND A.TRANSF_YYYY = '1'		    AND A.TRANSF_GRP_SNO = '1'		    AND A.confm_transf_div_cd IN ('1', '2', '3')		)  		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfIpInfo
+
+ 			SELECT COUNT(1) AS USER_YN		FROM TB_STDOWNIPMNG		WHERE RECORD_CENTER_ID = '1'		AND USER_IP = '1'     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlTakeResultPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT C.*				FROM (					SELECT A.record_center_id						, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=A.creat_sys_cd) AS creat_sys_cd_nm						, A.creat_sys_cd						, A.org_cd						, (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) AS org_abbr_nm						, (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) AS org_nm						, A.clss_id						, A.creat_yyyy						, A.folder_reg_seq						, A.ho_no						, A.title						, A.presv_term_cd						, A.folder_type_div_cd						, A.transf_rjct_flag						, DECODE(A.transf_rjct_flag,'1','인수','2','반려','') AS transf_rjct_flag_nm						, A.transf_take_error_cont						, (SELECT B.transf_grp_sno FROM TB_DFRECVTRANSFLIST B WHERE B.record_center_id = A.record_center_id and B.transf_yyyy = A.transf_yyyy and B.transf_grp_sno = '1' and B.rjct_flag is not null and (B.creat_sys_cd || B.org_cd || B.clss_id || B.creat_yyyy || B.folder_reg_seq || B.ho_no) = (A.creat_sys_cd || A.org_cd || A.clss_id || A.creat_yyyy || A.folder_reg_seq || A.ho_no)) as transf_grp_sno					FROM TB_DFTRANSFHANDLTAKERESULT a					WHERE A.record_center_id = '1'					AND   A.transf_yyyy = '1'					AND   A.transf_grp_sno = '1' AND 						A.org_cd = '1'					  AND 						A.transf_rjct_flag = '1'					 					AND A.accept_flag = '1'				) C			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfHandlTakeResultPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT A.record_center_id				, A.transf_yyyy				, (SELECT B.transf_grp_sno FROM TB_DFRECVTRANSFLIST B WHERE B.record_center_id = A.record_center_id and B.transf_yyyy = A.transf_yyyy and B.transf_grp_sno = '1' and B.rjct_flag is not null and (B.creat_sys_cd || B.org_cd || B.clss_id || B.creat_yyyy || B.folder_reg_seq || B.ho_no) = (A.creat_sys_cd || A.org_cd || A.clss_id || A.creat_yyyy || A.folder_reg_seq || A.ho_no)) as transf_grp_sno			FROM TB_DFTRANSFHANDLTAKERESULT a			WHERE A.record_center_id = '1'			AND   A.transf_yyyy = '1'			AND   A.transf_grp_sno = '1'			 AND 				A.org_cd = '1'			  AND 				A.transf_rjct_flag = '1'			 			AND A.accept_flag = '1'		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfEfileDelPagedList
+
+		SELECT F.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (				SELECT A.TRANSF_LIST_ID					, A.FOLDER_ID					, C.ORG_NM					, C.ORG_ABBR_NM					, DECODE(A.CLSS_DIV_CD,'1',(SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID),		                                   '2',(SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.UNIT_CD = A.CLSS_ID),		                                   '') CLSS_NM		            , B.TITLE		            , B.CREAT_YYYY		            , B.RECORD_REG_CNT		            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(B.PRESV_TERM_CD, '20', '25', B.PRESV_TERM_CD)) PRESV_TERM_NM		            , (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM		            , B.TRANSF_YMD		            , B.EFILE_DEL_CD		            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD90' AND C.COM_CD = B.EFILE_DEL_CD) EFILE_DEL_NM		            , B.folder_keep_state_cd		            , B.efile_del_flag				FROM  TB_DFRECVTRANSFLIST A, TB_RDFOLDER B, TB_STORG C				WHERE A.FOLDER_ID = B.FOLDER_ID(+)				AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				AND	  B.ORG_CD = C.ORG_CD				AND	  B.RECORD_CENTER_ID = C.RECORD_CENTER_ID				AND	  A.RECORD_CENTER_ID = '1'				AND	  A.TRANSF_YYYY = '1'								AND    A.rjct_flag = '1'				AND   B.LST_TRANF_STATE = '01'				AND   TO_NUMBER(CONFM_TRANSF_DIV_CD) <= 3				 AND  						A.ORG_CD = '1'					  AND 						A.ORG_CD = '1'					  AND 						(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')					  AND 						A.TITLE LIKE '1' 					  				UNION				SELECT A.TRANSF_LIST_ID					, A.FOLDER_ID					, C.ORG_NM					, C.ORG_ABBR_NM					, DECODE(A.CLSS_DIV_CD,'1',(SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID),		                                   '2',(SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.UNIT_CD = A.CLSS_ID),		                                   '') CLSS_NM		            , B.TITLE		            , B.CREAT_YYYY		            , B.RECORD_REG_CNT		            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM		            , (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD)  AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM		            , B.TRANSF_YMD		            , B.EFILE_DEL_CD		            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD90' AND C.COM_CD = B.EFILE_DEL_CD) EFILE_DEL_NM		            , B.folder_keep_state_cd		            , B.efile_del_flag				FROM  TB_DFRECVTRANSFLIST A, TB_NKFOLDER B, TB_STORG C				WHERE A.FOLDER_ID = B.FOLDER_ID(+)				AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				AND	  B.ORG_CD = C.ORG_CD				AND	  B.RECORD_CENTER_ID = C.RECORD_CENTER_ID				AND	  A.RECORD_CENTER_ID = '1'				AND	  A.TRANSF_YYYY = '1'								AND    A.rjct_flag = '1'				AND   B.LST_TRANF_STATE = '01'				AND   TO_NUMBER(CONFM_TRANSF_DIV_CD) <= 3				 AND  						A.ORG_CD = '1'					  AND 						A.ORG_CD = '1'					  AND 						(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')					  AND 						A.TITLE LIKE '1' 					  			) E			WHERE ROWNUM <= '1'		)F		WHERE F.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfEfileDelPagedList
+
+		SELECT (			SELECT COUNT(1)			FROM TB_DFRECVTRANSFLIST A, TB_RDFOLDER B, TB_STORG C			WHERE A.FOLDER_ID = B.FOLDER_ID(+)			AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)			AND B.ORG_CD = C.ORG_CD			AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID			AND A.RECORD_CENTER_ID = '1'			AND A.TRANSF_YYYY = '1'						AND A.rjct_flag = '1'			AND   B.LST_TRANF_STATE = '01'			AND   TO_NUMBER(CONFM_TRANSF_DIV_CD) <= 3			 AND  					A.ORG_CD = '1'				  AND 					A.ORG_CD = '1'				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					A.TITLE LIKE '1' 				  		)+(			SELECT COUNT(1) AA			FROM TB_DFRECVTRANSFLIST A, TB_NKFOLDER B, TB_STORG C			WHERE A.FOLDER_ID = B.FOLDER_ID(+)			AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)			AND B.ORG_CD = C.ORG_CD			AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID			AND A.RECORD_CENTER_ID = '1'			AND A.TRANSF_YYYY = '1'						AND A.rjct_flag = '1'			AND   B.LST_TRANF_STATE = '01'			AND   TO_NUMBER(CONFM_TRANSF_DIV_CD) <= 3			 AND  					A.ORG_CD = '1'				  AND 					A.ORG_CD = '1'				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					A.TITLE LIKE '1' 				  			) AS CNT		FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfEfileDelList
+
+		SELECT A.TRANSF_LIST_ID			, A.FOLDER_ID			, C.ORG_NM			, C.ORG_ABBR_NM			, DECODE(A.CLSS_DIV_CD,'1',(SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID),                                   '2',(SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.UNIT_CD = A.CLSS_ID),                                   '') CLSS_NM            , B.TITLE            , B.CREAT_YYYY            , B.RECORD_REG_CNT            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM            , (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM            , B.TRANSF_YMD            , B.EFILE_DEL_CD            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD90' AND C.COM_CD = B.EFILE_DEL_CD) EFILE_DEL_NM            , B.folder_keep_state_cd            , B.efile_del_flag		FROM  TB_DFRECVTRANSFLIST A, TB_RDFOLDER B, TB_STORG C		WHERE A.FOLDER_ID = B.FOLDER_ID(+)		AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		AND	  B.ORG_CD = C.ORG_CD		AND	  B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		AND	  A.RECORD_CENTER_ID = '1'		AND	  A.TRANSF_YYYY = '1'		AND    A.exam_rslt_cd = '1'		AND   TO_NUMBER(CONFM_TRANSF_DIV_CD) <= 3		 AND  				A.ORG_CD = '1'			  AND 				A.ORG_CD = '1'			  AND 				(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')			  AND 				A.TITLE LIKE '1' 			  		UNION		SELECT A.TRANSF_LIST_ID			, A.FOLDER_ID			, C.ORG_NM			, C.ORG_ABBR_NM			, DECODE(A.CLSS_DIV_CD,'1',(SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID),                                   '2',(SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.UNIT_CD = A.CLSS_ID),                                   '') CLSS_NM            , B.TITLE            , B.CREAT_YYYY            , B.RECORD_REG_CNT            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM            , (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM            , B.TRANSF_YMD            , B.EFILE_DEL_CD            , (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD90' AND C.COM_CD = B.EFILE_DEL_CD) EFILE_DEL_NM            , B.folder_keep_state_cd            , B.efile_del_flag		FROM  TB_DFRECVTRANSFLIST A, TB_NKFOLDER B, TB_STORG C		WHERE A.FOLDER_ID = B.FOLDER_ID(+)		AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		AND	  B.ORG_CD = C.ORG_CD		AND	  B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		AND	  A.RECORD_CENTER_ID = '1'		AND	  A.TRANSF_YYYY = '1'				AND    A.exam_rslt_cd = '1'		AND   TO_NUMBER(CONFM_TRANSF_DIV_CD) <= 3		 AND  				A.ORG_CD = '1'			  AND 				A.ORG_CD = '1'			  AND 				(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')			  AND 				A.TITLE LIKE '1' 			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtExamNeoFolderCheckedList
+
+		SELECT RECORD_CENTER_ID		    ,TRANSF_YYYY		    ,TRANSF_LIST_ID		    ,FOLDER_ID		    ,TITLE		    ,NEO_TRANS_STATE		    ,NEO_TRANS_STATE_NM		    ,NEO_TRANS_STATE_CHECK		    ,RECORD_NEO_TRANS_STATE		    ,RECORD_NEO_TRANS_STATE_CHECK		    ,RECORD_NEO_TRANS_STATE_NM		    ,RJCT_FLAG		    ,ERROR_FLAG		FROM (			SELECT A.RECORD_CENTER_ID		        ,A.TRANSF_YYYY		        ,A.TRANSF_LIST_ID		        ,A.FOLDER_ID		        ,A.TITLE		        ,A.NEO_TRANS_STATE		        ,(SELECT NEO_TRANS_STATE FROM TB_RDFOLDER WHERE  RECORD_CENTER_ID = A.RECORD_CENTER_ID AND FOLDER_ID = A.FOLDER_ID ) AS NEO_TRANS_STATE_CHECK		        ,B.COM_CD_NM AS NEO_TRANS_STATE_NM		        ,A.RECORD_NEO_TRANS_STATE		        ,(SELECT RECORD_NEO_TRANS_STATE FROM TB_RDFOLDER WHERE  RECORD_CENTER_ID = A.RECORD_CENTER_ID AND FOLDER_ID = A.FOLDER_ID ) AS RECORD_NEO_TRANS_STATE_CHECK		        ,C.COM_CD_NM AS RECORD_NEO_TRANS_STATE_NM		        ,A.RJCT_FLAG		        ,A.ERROR_FLAG		    FROM TB_DFRECVTRANSFLIST A		    	,(SELECT COM_CD, COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST03') B		        ,(SELECT COM_CD, COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST03') C		    WHERE A.RECORD_CENTER_ID = '1'		    AND A.TRANSF_YYYY = '1'		    AND A.NEO_TRANS_STATE = B.COM_CD(+)		    AND A.RECORD_NEO_TRANS_STATE = C.COM_CD(+) 		     AND TRANSF_LIST_ID IN		             ('1','1','1')  	    )		ORDER BY TITLE, FOLDER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtExamNeoFolderCheckedRecordPagedList
+
+		SELECT F.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (				SELECT B.RECORD_CENTER_ID				    ,B.RECORD_ID				    ,B.TITLE				    ,B.CREAT_YYYY				    ,B.ORG_CD				    ,C.ORG_NM				    ,C.ORG_ABBR_NM				    ,B.NEO_TRANS_STATE AS RECORD_NEO_TRANS_STATE_CHECK				    ,B.NEO_TRANS_STATE_2 AS RECORD_NEO_TRANS_STATE				    ,D.COM_CD_NM AS RECORD_NEO_TRANS_STATE_NM				    ,A.FOLDER_ID				    ,A.RJCT_FLAG				    ,A.ERROR_FLAG				FROM TB_DFRECVTRANSFLIST A				    ,TB_RDRECORD B				    ,TB_STORG C				    ,(SELECT COM_CD, COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST03') D				WHERE A.RECORD_CENTER_ID = '1'				AND A.TRANSF_YYYY = '1'				AND A.TRANSF_LIST_ID = '1'				AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID				AND A.FOLDER_ID = B.FOLDER_ID				AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)				AND B.ORG_CD = C.ORG_CD(+)				AND B.NEO_TRANS_STATE_2 = D.COM_CD(+) AND 					B.NEO_TRANS_STATE_2 = '1' 				 				ORDER BY B.RECORD_SNO, B.RECORD_ID			) E			WHERE ROWNUM <= '1'		) F		WHERE F.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfTrgtExamCheckFolderCheckedRecordPagedList
+
+		SELECT COUNT(1)		FROM TB_DFRECVTRANSFLIST A		    , TB_RDRECORD B		WHERE A.record_center_id = '1'		AND A.transf_yyyy = '1'		AND A.transf_list_id = '1'		AND A.record_center_id = B.record_center_id		AND A.folder_id = B.folder_id AND 			B.NEO_TRANS_STATE_2 = '1' 		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtQualityExam
+
+		SELECT record_center_id		    , folder_id		    , transf_yyyy		FROM TB_DFRECVTRANSFLIST		WHERE record_center_id = '1'		AND transf_yyyy = '1' AND transf_list_id IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtQualityExamBatch
+
+		SELECT A.record_center_id		    , A.folder_id		    , A.transf_yyyy		FROM TB_DFRECVTRANSFLIST A		WHERE A.record_center_id = '1'		AND A.transf_yyyy = '1'		AND	A.transf_grp_sno = '1'		AND A.confm_transf_div_cd IN ('1','2','3') AND 			A.org_cd = '1'		  AND 			(A.clss_div_cd = '1' AND A.clss_id = '1')		  AND 			A.title LIKE '1'		  AND  				(A.qulty_test_rslt_flag IS NULL OR A.qulty_test_rslt_flag = '' OR A.qulty_test_rslt_flag = '0')			   AND  				(A.exam_rslt_cd IS NULL OR A.exam_rslt_cd = '' OR A.exam_rslt_cd = '0')  		ORDER BY A.title, A.folder_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtExamCheckFolderCheckedList
+
+		SELECT record_center_id		    , transf_yyyy		    , transf_list_id		    , folder_id		    , org_cd		    , clss_id		    , title		    , creat_yyyy		    , presv_term_cd		    , presv_term_nm		    , error_flag		    , rjct_flag		    , rjct_cont		    , qulty_test_rslt_flag		    , qulty_test_rslt_flag_nm		    , erecord_flag		    , erecord_flag_nm		    , record_cnt		    , exam_rslt_cd		    , exam_rslt_nm		    , exam_cont		    , neo_trans_state		    , neo_trans_state_nm		    , record_neo_trans_state		    , record_neo_trans_state_nm 		    , folder_reg_seq		    , virus_flag_nm		    , creat_sys_cd		    , ho_no		FROM (			SELECT A.record_center_id		        , A.transf_yyyy		        , A.transf_list_id		        , A.folder_id		        , A.org_cd		        , A.clss_id		        , A.title		        , A.creat_yyyy		        , A.presv_term_cd		        , B.com_cd_nm presv_term_nm		        , A.error_flag		        , A.rjct_flag		        , NVL(DECODE(A.rjct_flag, '2', A.rjct_cont, ''), '') rjct_cont		        , A.qulty_test_rslt_flag		        , DECODE(A.qulty_test_rslt_flag,'1','O','2','X','미검사') qulty_test_rslt_flag_nm		        , D.erecord_flag		        , G.com_cd_nm erecord_flag_nm		        , NVL(A.record_cnt,0) record_cnt		        , NVL(A.exam_rslt_cd,'0') exam_rslt_cd		        , C.com_cd_nm exam_rslt_nm		        , A.exam_cont		        , A.neo_trans_state		        , E.com_cd_nm neo_trans_state_nm		        , A.record_neo_trans_state		        , F.com_cd_nm record_neo_trans_state_nm		        , A.folder_reg_seq		        , DECODE(D.virus_flag, '1', 'X', 'O') AS virus_flag_nm		        , A.creat_sys_cd		        , A.ho_no		    FROM TB_DFRECVTRANSFLIST A, TB_RDFOLDER D		        , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD07') B		        , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'TK03') C		        , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'ST03') E		        , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'ST03') F		        , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD23') G		    WHERE A.record_center_id = '1'		    AND A.transf_yyyy = '1'		    AND A.record_center_id = D.record_center_id(+)		    AND A.folder_id = D.folder_id(+)		    AND A.presv_term_cd = B.com_cd(+)		    AND NVL(A.exam_rslt_cd,'0') = C.com_cd(+)		    AND A.neo_trans_state = E.com_cd(+)		    AND A.record_neo_trans_state = F.com_cd(+)		    AND D.erecord_flag = G.com_cd(+) AND A.transf_list_id IN		             ('1','1','1')  		)		ORDER BY title, folder_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfTrgtExamCheckFolderCheckedRecordPagedList
+
+		SELECT G.*		FROM (			SELECT ROWNUM AS rnum				, F.*			FROM (				SELECT B.record_id				    , B.title				    , B.creat_yyyy				    , B.org_cd				    , C.org_nm				    , C.org_abbr_nm				    , DECODE(NVL(H.virus_file_cnt, 0), 0, 'O', 'X') AS virus_flag_nm				FROM TB_DFRECVTRANSFLIST A				    , TB_RDRECORD B				    , TB_STORG C				    , (				    SELECT HA.record_center_id				        , HA.folder_id				        , HA.record_id				        , COUNT(*) AS virus_file_cnt				    FROM (				    	SELECT RDFOLDER.record_center_id				            , RDFOLDER.folder_id				            , RDRECORD.record_id				            , OFILE.orign_id				        FROM TB_RDFOLDER RDFOLDER				            , TB_RDRECORD RDRECORD				            , TB_STRECORDORIGN RORIGN				            , TB_STORIGNFILE OFILE				            , TB_DFRECVTRANSFLIST TRANSFLIST				        WHERE RDFOLDER.record_center_id = RDRECORD.record_center_id				        AND RDFOLDER.folder_id = RDRECORD.folder_id				        AND RDRECORD.record_center_id = RORIGN.record_center_id				        AND RDRECORD.record_id = RORIGN.record_id				        AND RORIGN.record_center_id = OFILE.record_center_id				        AND RORIGN.orign_id = OFILE.orign_id				        AND RDFOLDER.record_center_id = TRANSFLIST.record_center_id(+)				        AND RDFOLDER.folder_id = TRANSFLIST.folder_id(+)				        AND TRANSFLIST.record_center_id = '1'				        AND TRANSFLIST.transf_yyyy = '1'				        AND TRANSFLIST.transf_list_id = '1'				        AND OFILE.virus_flag = '1'				        UNION ALL				        SELECT RDFOLDER.record_center_id				            , RDFOLDER.folder_id				            , RDRECORD.record_id				            , PFILE.orign_id				        FROM TB_RDFOLDER RDFOLDER				            , TB_RDRECORD RDRECORD				            , TB_STRECORDORIGN RORIGN				            , TB_STORIGNPDFA1FILE PFILE				            , TB_DFRECVTRANSFLIST TRANSFLIST				        WHERE RDFOLDER.record_center_id = RDRECORD.record_center_id				        AND RDFOLDER.folder_id = RDRECORD.folder_id				        AND RDRECORD.record_center_id = RORIGN.record_center_id				        AND RDRECORD.record_id = RORIGN.record_id				        AND RORIGN.record_center_id = PFILE.record_center_id				        AND RORIGN.orign_id = PFILE.orign_id				        AND RDFOLDER.record_center_id = TRANSFLIST.record_center_id(+)				        AND RDFOLDER.folder_id = TRANSFLIST.folder_id(+)				        AND TRANSFLIST.record_center_id = '1'				        AND TRANSFLIST.transf_yyyy = '1'				        AND TRANSFLIST.transf_list_id = '1'				        AND PFILE.virus_flag = '1'					) HA					GROUP BY HA.record_center_id, HA.folder_id, HA.record_id				) H				WHERE A.record_center_id = '1'				AND A.transf_yyyy = '1'				AND A.transf_list_id = '1'				AND A.record_center_id = B.record_center_id				AND A.folder_id = B.folder_id				AND B.record_center_id = C.record_center_id(+)				AND B.org_cd = C.org_cd(+)				AND B.record_center_id = H.record_center_id(+)				AND B.record_id = H.record_id(+)				ORDER BY B.record_sno, B.record_id			) F			WHERE ROWNUM <= '1'		) G		WHERE G.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfRecvErrorCont
+
+		SELECT TRANSF_RECV_ERROR_CONT		FROM TB_DFTRANSFHANDLRECVRESULT		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND (CREAT_SYS_CD || ORG_CD || CLSS_ID || CREAT_YYYY || FOLDER_REG_SEQ  || HO_NO) = '1' || '1' || '1' || '1' || '1' || '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findRecordCenterIdHandl
+
+		SELECT MAX(record_center_id) AS record_center_id		FROM TB_STRECORDCENTER		WHERE record_center_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findFolderClssIdHandlRecv
+
+	    SELECT C.creat_sys_cd 	        , C.org_cd 	        , C.clss_id 	        , C.creat_yyyy 	        , C.folder_reg_seq	        , C.ho_no                	    FROM TB_RDFOLDER C	    WHERE C.record_center_id = '1'	    AND   C.folder_id IN (	        SELECT B.folder_id	        FROM TB_DFTRANSFSTOREFLD A, TB_DFRECVTRANSFLIST B	        WHERE A.record_center_id = '1'	        AND A.transf_yyyy = '1'	        AND A.folder_clss_id = '1'	        AND A.record_center_id = B.record_center_id	        AND A.transf_yyyy = B.transf_yyyy	        AND A.transf_grp_sno = B.transf_grp_sno	        AND A.folder_id = B.folder_id	        AND B.confm_transf_div_cd IN ('1', '2', '3')	        AND B.exam_rslt_cd = '1'	    )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : finTransfHandlFinNmlRecvCount
+
+		SELECT SUM(decode(nvl(rjct_flag, '0'), '2', 1, 0)) rjct_flag		FROM TB_DFRECVTRANSFLIST		WHERE record_center_id	= '1'		AND transf_yyyy			= '1'		AND transf_grp_sno = '1' 		AND creat_sys_cd 		= '1'		AND org_cd 				= '1'		AND clss_id 			= '1'		AND creat_yyyy 			= '1'		AND folder_reg_seq 		= '1'		AND ho_no 				= '1'		AND confm_transf_div_cd IN ('1', '2', '3')         AND exam_rslt_cd = '1'  					;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfStoreFldPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT B.RECORD_CENTER_ID					, B.CREAT_YYYY		            , B.FOLDER_ID					, B.RECORD_CNT 					, B.ORG_CD					, (SELECT DEPT_NM FROM TB_STDEPT WHERE ORG_CD = B.ORG_CD) AS ORG_NM 					, (SELECT DEPT_ABBR_NM 	FROM TB_STDEPT WHERE ORG_CD = B.ORG_CD) AS ORG_ABBR_NM 					, B.CLSS_ID 					, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT BIS_CLSS_NM 	FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = B.CLSS_ID) WHEN B.CLSS_DIV_CD = '2' THEN (SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID 	AND UNIT_CD = B.CLSS_ID) END) AS CLSS_NM					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND 	C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM 					, B.TITLE					, A.TRANSF_YYYY					, A.STORE_SEQ					, A.TRANSF_GRP_SNO					, A.SPLIT_SEQ					, A.FOLDER_STATE_CD					, A.EXAM_RSLT_CD					, (SELECT MAX(EXAM_RSLT_CD) FROM TB_DFTRANSFSTORERCD WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND TRANSF_YYYY = A.TRANSF_YYYY AND TRANSF_GRP_SNO = A.TRANSF_GRP_SNO AND FOLDER_ID = A.FOLDER_ID) RECORD_EXAM_RSLT_CD					, A.EXAM_RSLT_DTIME				 					, A.FOLDER_SIZE					, A.FOLDER_META_SIZE				 					, A.ERROR_CD					, A.ERROR_CONT					, B.ERROR_FLAG		         	, B.RJCT_FLAG				    , A.BEF_ERROR_FLAG				    , A.BEF_RJCT_FLAG				FROM TB_DFTRANSFSTOREFLD A, TB_DFRECVTRANSFLIST B				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID				AND A.TRANSF_YYYY = B.TRANSF_YYYY				AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO				AND A.FOLDER_ID = B.FOLDER_ID				AND A.RECORD_CENTER_ID = '1'				AND A.TRANSF_YYYY = '1'				AND A.TRANSF_GRP_SNO = '1'				AND A.SPLIT_SEQ = '1'				 AND  						A.ERROR_FLAG = '2'					  				ORDER BY A.FOLDER_CLSS_ID			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countTransfStoreFldPagedList
+
+		SELECT COUNT(1)		FROM TB_DFTRANSFSTOREFLD A, TB_DFRECVTRANSFLIST B		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.TRANSF_YYYY = B.TRANSF_YYYY		AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO		AND A.FOLDER_ID = B.FOLDER_ID		AND A.RECORD_CENTER_ID = '1'		AND A.TRANSF_YYYY = '1'		AND A.TRANSF_GRP_SNO = '1'		AND A.SPLIT_SEQ = '1' AND  				A.ERROR_FLAG = '2'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findFolderClssIdHandlTake
+
+        SELECT ho_no        FROM  TB_RDFOLDER        WHERE record_center_id = '1'        AND creat_sys_cd = '1'         AND org_cd = '1'        AND clss_id = '1'        AND creat_yyyy = '1'        AND folder_reg_seq = '1'		     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlTakeResultTransfYyyy
+
+		SELECT MAX(TRANSF_YYYY) AS transf_yyyy		FROM TB_DFRECVTRANSFLIST		WHERE record_center_id 	= '1'		AND creat_sys_cd 		= '1'	 	AND org_cd 				= '1'		AND clss_id 			= '1'		AND creat_yyyy 			= '1'		AND folder_reg_seq 		= '1' AND 			ho_no 				= '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlFileInfrmOnline
+
+		SELECT MAX (DECODE (transf_infrm_status,  '1', '오류이관',  '2', '반려이관',  '이관')) transf_infrm_status_nm		 	, MAX (transf_infrm_flag) transf_infrm_flag 		    , MAX(DECODE(transf_infrm_flag,'1','통보(온라인)','2','통보(오프라인)','미통보'))  transf_infrm_flag_nm		    , MAX(transf_infrm_dtime) transf_infrm_dtime		FROM TB_DFTRANSFINFRMFILE		WHERE record_center_id = '1'		AND transf_infrm_creat_yyyy = '1'		AND transf_infrm_type = '2'		AND transf_infrm_sno = (			SELECT MAX(transf_infrm_sno)			FROM TB_DFTRANSFINFRMFILE			WHERE record_center_id = '1'			AND transf_infrm_creat_yyyy = '1'			AND transf_infrm_type = '2'			AND transf_grp_sno = '1'			 AND  					transf_infrm_status = '1'				  		)			                          		AND  transf_grp_sno = '1' AND  				 transf_infrm_status = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlFin
+
+		SELECT ERECORD_TAKOVR_USER_NM			, ERECORD_TAKE_USER_NM			, ERECORD_TRANSF_YMD			, NOELCT_TAKOVR_USER_NM			, NOELCT_TAKE_USER_NM			, NOELCT_TRANSF_YMD 		FROM TB_DFTRANSFWORK		WHERE RECORD_CENTER_ID = '1'		AND	TRANSF_YYYY = '1'		AND	TRANSF_GRP_SNO = '1'		AND	TRANSF_HANDL_STATE = '5'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findRecordCenterCd
+
+		SELECT record_center_cd		FROM TB_STRECORDCENTER		WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findEfileListWorkSno
+
+		SELECT MAX(work_sno) work_sno FROM TB_NKEFILELIST	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : insert
+-- Query Id : creatDfTransfHandlRecvResult
+
+		INSERT INTO TB_DFTRANSFHANDLRECVRESULT (record_center_id			, transf_yyyy			, send_file_data_div			, list_line_no			, transf_recv_error_cont			, send_div			, error_flag			, creat_Sys_Cd			, org_Cd			, clss_Id			, creat_Yyyy			, folder_reg_seq			, ho_No			, recv_file_info			, recv_file_dtime			, reg_dtime		) VALUES ('1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : countDfTransfHandlTakeResult
+
+		SELECT COUNT(1)		FROM TB_DFTRANSFHANDLTAKERESULT		WHERE RECORD_CENTER_ID 	= '1'		AND TRANSF_YYYY         = '1'		AND TRANSF_GRP_SNO      = '1'				AND CREAT_SYS_CD 		= '1'		AND ORG_CD 				= '1'		AND CLSS_ID 			= '1'		AND CREAT_YYYY 			= '1'		AND FOLDER_REG_SEQ 		= '1'		AND HO_NO  				= '1'		AND ACCEPT_FLAG 		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : insert
+-- Query Id : creatDfTransfHandlTakeResult
+
+		INSERT INTO TB_DFTRANSFHANDLTAKERESULT (record_center_id			, creat_sys_cd			, org_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no			, accept_flag			, title			, presv_term_cd			, folder_type_div_cd			, transf_rjct_flag			, transf_take_error_cont			, reg_dtime			, transf_yyyy			, transf_grp_sno		) VALUES ('1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			                        , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'			, '1'					);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateDfTransfHandlTakeResult
+
+		UPDATE TB_DFTRANSFHANDLTAKERESULT		SET   title = '1'		    , presv_term_cd = '1'		    , folder_type_div_cd = '1'		    , transf_rjct_flag = '1'		    , transf_take_error_cont = '1'                    , reg_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE record_center_id = '1'		AND   transf_yyyy      = '1'		AND   transf_grp_sno   = '1'					AND   creat_sys_cd     = '1'		AND   org_cd           = '1'		AND   clss_id          = '1'		AND   creat_yyyy       = '1'		AND   folder_reg_seq   = '1'		AND   ho_no            = '1'		AND   accept_flag      = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfTrgtQualityExam
+
+		UPDATE TB_DFRECVTRANSFLIST		SET qulty_test_rslt_flag = '3'		WHERE record_center_id = '1'		AND transf_yyyy = '1' AND transf_list_id IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfTrgtQualityExamBatch
+
+		UPDATE TB_DFRECVTRANSFLIST A		SET A.qulty_test_rslt_flag = '3'		WHERE A.record_center_id = '1'		AND A.transf_yyyy = '1'		AND	A.transf_grp_sno = '1'		AND A.confm_transf_div_cd IN ('1','2','3') AND 			A.org_cd = '1'		  AND 			(A.clss_div_cd = '1' AND A.clss_id = '1')		  AND 			A.title LIKE '1'		  AND  				(A.qulty_test_rslt_flag IS NULL OR A.qulty_test_rslt_flag = '' OR A.qulty_test_rslt_flag = '0')			   AND  				(A.exam_rslt_cd IS NULL OR A.exam_rslt_cd = '' OR A.exam_rslt_cd = '0')			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfTrgtQualityExamFin
+
+		UPDATE TB_DFRECVTRANSFLIST		SET qulty_test_rslt_flag = '1'		WHERE record_center_id = '1'		AND transf_yyyy = '1'		 AND transf_list_id IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfTrgtQualityExamBatchFin
+
+		UPDATE TB_DFRECVTRANSFLIST A		SET A.qulty_test_rslt_flag = '1'		WHERE A.record_center_id = '1'		AND A.transf_yyyy = '1'		AND	A.transf_grp_sno = '1'		AND A.confm_transf_div_cd IN ('1','2','3') AND 			A.org_cd = '1'		  AND 			(A.clss_div_cd = '1' AND A.clss_id = '1')		  AND 			A.title LIKE '1'		  AND  				(A.qulty_test_rslt_flag IS NULL OR A.qulty_test_rslt_flag = '' OR A.qulty_test_rslt_flag = '0')			   AND  				(A.exam_rslt_cd IS NULL OR A.exam_rslt_cd = '' OR A.exam_rslt_cd = '0')			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfTrgtExamCheckFolderNormal
+
+		UPDATE TB_DFRECVTRANSFLIST		SET exam_rslt_cd = '1'			, exam_cont = '1'		WHERE record_center_id = '1'		AND transf_yyyy = '1'		AND transf_list_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfTrgtExamCheckFolderAbnormal
+
+		UPDATE TB_DFRECVTRANSFLIST		SET exam_rslt_cd = '2'			, exam_cont = '1'		WHERE record_center_id = '1'		AND transf_yyyy = '1'		AND transf_list_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlErrRecvTransfList
+
+		UPDATE TB_DFRECVTRANSFLIST		SET error_flag = '1'		WHERE record_center_id = '1'		AND transf_yyyy = '1'        AND transf_grp_sno = '1'			AND confm_transf_div_cd IN ('1', '2', '3')   		AND exam_rslt_cd = '1'  		    		AND creat_sys_cd  = '1'	 		AND org_cd  = '1'	        AND clss_id  = '1'	        AND creat_yyyy  = '1'	        AND folder_reg_seq  = '1'		AND ho_no = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlNmlRecvTransfList
+
+        UPDATE TB_DFRECVTRANSFLIST        SET error_flag = '1'        WHERE record_center_id = '1'        AND transf_yyyy = '1'        AND transf_grp_sno = '1'        AND confm_transf_div_cd IN ('1', '2', '3')        AND exam_rslt_cd = '1'         AND (creat_sys_cd || org_cd || clss_id || creat_yyyy || folder_reg_seq || ho_no) NOT IN (       		SELECT creat_sys_cd || org_cd || clss_id || creat_yyyy || folder_reg_seq || ho_no             FROM TB_DFTRANSFHANDLRECVRESULT            WHERE  record_center_id = '1'              AND transf_yyyy = '1'            AND error_flag = '2'	   	)         		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFinNmlRecvTransfList
+
+        UPDATE TB_DFRECVTRANSFLIST        SET error_flag = '1'        WHERE record_center_id = '1'        AND transf_yyyy = '1'        AND transf_grp_sno = '1'        AND confm_transf_div_cd IN ('1', '2', '3')        AND exam_rslt_cd = '1'                		AND	creat_sys_cd = '1'		AND org_cd = '1'		AND clss_id = '1'		AND creat_yyyy = '1'		AND folder_reg_seq = '1'		AND	ho_no = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlTakeRjctFolder
+
+	  UPDATE TB_RDFOLDER		SET	lst_tranf_state = '1'			, lst_tranf_yyyy = '1'			, lst_tranf_grp_sno = '1'			, transf_state_cd = '1'		WHERE creat_sys_cd = '1'		AND	org_cd = '1'		AND	clss_id = '1'		AND	creat_yyyy = '1'		AND	folder_reg_seq = '1' AND 			ho_no = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFinNmlRecvTransfStoreErrList
+
+		UPDATE TB_DFTRANSFSTOREFLD 		SET error_flag = '1' 		WHERE record_center_id = '1'		AND transf_yyyy = '1' 		AND transf_grp_sno = '1' 		AND folder_clss_id || (SELECT ho_no						       FROM  TB_RDFOLDER						       WHERE record_center_id = '1'						       AND creat_sys_cd = '1' 						       AND org_cd = '1'						       AND clss_id = '1'						       AND creat_yyyy = '1'						       AND folder_reg_seq = '1') = '1'||'1'||'1'||'1'||'1'||'1'        AND error_flag = '2'	                	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFinNmlRecvTransfStoreRjctList
+
+		UPDATE TB_DFTRANSFSTOREFLD 		SET rjct_flag = '1' 		WHERE record_center_id = '1'		AND transf_yyyy = '1' 		AND transf_grp_sno = '1' 		AND folder_clss_id || (SELECT ho_no						       FROM  TB_RDFOLDER						       WHERE record_center_id = '1'						       AND creat_sys_cd = '1' 						       AND org_cd = '1'						       AND clss_id = '1'						       AND creat_yyyy = '1'						       AND folder_reg_seq = '1') = '1'||'1'||'1'||'1'||'1'||'1'         AND rjct_flag = '2'	                ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlTakeDfRecvTransfList
+
+		UPDATE TB_DFRECVTRANSFLIST		SET	rjct_flag = '1'			, rjct_cont = '1'		WHERE record_center_id = '1'		AND transf_yyyy = '1'		AND transf_grp_sno = '1' 		        AND confm_transf_div_cd IN ('1', '2', '3')        AND exam_rslt_cd = '1'				AND	creat_sys_cd = '1'		AND org_cd = '1'		AND clss_id = '1'		AND creat_yyyy = '1'		AND folder_reg_seq = '1'		AND	ho_no = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : delete
+-- Query Id : deleteTransfHandlRecvResult
+
+		DELETE FROM TB_DFTRANSFHANDLRECVRESULT		WHERE transf_yyyy = '1'		AND record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : delete
+-- Query Id : deleteTransfHandlTakeResult
+
+		DELETE FROM TB_DFTRANSFHANDLTAKERESULT		WHERE transf_yyyy = '1'		AND	record_center_id = '1'		AND	accept_flag = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : delete
+-- Query Id : deleteTransfHandlFinRecvResult
+
+		DELETE FROM TB_DFTRANSFHANDLRECVRESULT		WHERE transf_yyyy		= '1'		AND record_center_id	= '1'		AND creat_sys_cd 		= '1'		AND org_cd 				= '1'		AND clss_id 			= '1'		AND creat_yyyy 			= '1'		AND folder_reg_seq 		= '1'		AND ho_no 				= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : deleteTransfHandlFileReCreateSplit
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = ''		WHERE RECORD_CENTER_ID =  '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'		AND FOLDER_ID IN (			SELECT  B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND	((A.ERROR_FLAG IS NULL OR A.ERROR_FLAG = '0' OR A.ERROR_FLAG = '1') AND (A.RJCT_FLAG IS NULL OR A.RJCT_FLAG = '0' OR A.RJCT_FLAG = '1')) 		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileReCreateSplit
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'		AND FOLDER_ID IN (			SELECT  B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND ((A.ERROR_FLAG IS NULL OR A.ERROR_FLAG = '0' OR A.ERROR_FLAG = '1') AND (A.RJCT_FLAG IS NULL OR A.RJCT_FLAG = '0' OR A.RJCT_FLAG = '1')) 		)			 AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : deleteTransfHandlFileReCreateSplitError
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = ''		WHERE RECORD_CENTER_ID =  '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'		AND FOLDER_ID IN (			SELECT B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND	A.ERROR_FLAG = '2'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileReCreateSplitError
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'		AND FOLDER_ID IN (			SELECT B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND	A.ERROR_FLAG = '2'		)			 AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : deleteTransfHandlFileReCreateSplitRjct
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = ''		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'		AND FOLDER_ID IN (			SELECT  B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND	A.RJCT_FLAG = '2'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileReCreateSplitRjct
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'		AND FOLDER_ID IN (			SELECT  B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND	A.RJCT_FLAG = '2'		)			 AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : deleteTransfHandlFileReCreateFld
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = ''		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'			AND SPLIT_SEQ = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileReCreateFld
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET RECREATE_FLAG = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND STORE_SEQ = '1'			AND SPLIT_SEQ = '1'	 AND FOLDER_ID IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : deleteTransfHandlFileExmStoreCreateSplit
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET TRANSF_EXAM_FLAG = ''		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND FOLDER_ID IN (			SELECT B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1' 		)		AND TRANSF_EXAM_FLAG = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileExmStoreCreateSplit
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET TRANSF_EXAM_FLAG = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND FOLDER_ID IN (			SELECT  B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND ((B.ERROR_FLAG IS NULL OR B.ERROR_FLAG = '0' OR B.ERROR_FLAG = '1') AND (B.RJCT_FLAG IS NULL OR B.RJCT_FLAG = '0' OR B.RJCT_FLAG = '1') ) AND SPLIT_SEQ IN					 ('1','1','1')  										  		) AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileExmStoreCreateSplitError
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET TRANSF_EXAM_FLAG = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND FOLDER_ID IN (			SELECT  B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND B.ERROR_FLAG = '2' AND SPLIT_SEQ IN					 ('1','1','1')  										 		) AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFileExmStoreCreateSplitRjct
+
+		UPDATE TB_DFTRANSFSTOREFLD		SET TRANSF_EXAM_FLAG = '1'		WHERE RECORD_CENTER_ID =  '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'			AND FOLDER_ID IN (			SELECT B.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A, TB_DFTRANSFSTOREFLD B 			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND A.TRANSF_YYYY = B.TRANSF_YYYY			AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO			AND A.FOLDER_ID = B.FOLDER_ID			AND A.RECORD_CENTER_ID = '1' 			AND A.TRANSF_YYYY = '1'			AND A.TRANSF_GRP_SNO = '1'			AND A.confm_transf_div_cd IN ('1', '2', '3')			AND A.exam_rslt_cd = '1'			AND B.RJCT_FLAG = '2'			 AND SPLIT_SEQ IN					 ('1','1','1')  										 		) AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfFileDownloadRslt
+
+		UPDATE TB_DFTRANSFSTORESLT 		SET DOWNLOAD_FLAG = '1'		    ,DOWNLOAD_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') 		WHERE RECORD_CENTER_ID = '1' 		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'		AND STORE_SEQ = '1'		 AND SPLIT_SEQ IN				 ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFinFolder
+
+		UPDATE TB_RDFOLDER		SET TRANSF_STATE_CD = '1'			, TRANSF_YMD = '1'			, TRANSF_APROV_USER_ID = '1'			, TRANSF_APROV_USER_NM = '1'						, TRANSF_APROV_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			 				, FOLDER_KEEP_STATE_CD = '1'			 		WHERE FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfOpenList
+
+		UPDATE TB_STOPENLIST		SET	CHNG_TYPE = '04'			, CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')			, TRANSF_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')			, DISUSE_DIV = '02'			, OPENLIST_OFFER_FLAG = '0'		WHERE FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateTransfHandlFin
+
+		UPDATE TB_DFTRANSFWORK		SET TRANSF_HANDL_STATE = '5'			, TRANSF_HANDL_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')			, ERECORD_TAKOVR_USER_NM = '1'			, ERECORD_TAKE_USER_NM = '1'			, ERECORD_TRANSF_YMD = '1'			, NOELCT_TAKOVR_USER_NM = '1'			, NOELCT_TAKE_USER_NM = '1'			, NOELCT_TRANSF_YMD = '1'		WHERE RECORD_CENTER_ID = '1'		AND	TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : insert
+-- Query Id : createEfileDelWork
+
+		INSERT INTO TB_NKEFILELIST 		VALUES ('1'			, '1'			, '03'			, '1'			, '01'			, TO_CHAR(sys_datetime, 'yyyymmddhhmiss')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : update
+-- Query Id : updateEfileDelCdFolder
+
+		UPDATE TB_RDFOLDER		SET efile_del_cd = '02'		WHERE record_center_id = '1'		AND folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfSplitInfo
+
+		SELECT STORE_TOT		FROM TB_DFTRANSFSTOREMST		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND TRANSF_GRP_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfForderInfo
+
+		  SELECT DISTINCT		              AA.TRANSF_INFRM_CREAT_YYYY,		              AA.TRANSF_INFRM_CREAT_YYYY || '-' || BB.SPLIT_SEQ AS YYYY_SPLIT_SEQ,		              BB.SPLIT_SEQ,		              		              AA.FOLDER_CLSS_ID,		              AA.TRANSF_GRP_SNO,		              AA.A||'||'|| AA.B||'||'|| AA.C||'||'|| AA.D||'||'|| AA.E||'||'|| AA.F||'||'|| AA.G||'||'|| AA.H||'||'|| AA.I AS TRANSF_INFRM_FILE_NM		    FROM  (  SELECT  distinct X.RECORD_CENTER_ID,		                               X.TRANSF_INFRM_CREAT_YYYY,		                               X.TRANSF_INFRM_SNO,		                               X.FOLDER_ID,		                               X.FOLDER_CLSS_ID,		                               X.TRANSF_GRP_SNO,		                               MAX (CASE WHEN X.ORD_NUM = 1 THEN X.TRANSF_INFRM_FILE_NM END) A,		                               MAX (CASE WHEN X.ORD_NUM = 2 THEN X.TRANSF_INFRM_FILE_NM END) B,		                               MAX (CASE WHEN X.ORD_NUM = 3 THEN X.TRANSF_INFRM_FILE_NM END) C,		                               MAX (CASE WHEN X.ORD_NUM = 4 THEN X.TRANSF_INFRM_FILE_NM END) D,		                               MAX (CASE WHEN X.ORD_NUM = 5 THEN X.TRANSF_INFRM_FILE_NM END) E,		                               MAX (CASE WHEN X.ORD_NUM = 6 THEN X.TRANSF_INFRM_FILE_NM END) F,		                               MAX (CASE WHEN X.ORD_NUM = 7 THEN X.TRANSF_INFRM_FILE_NM END) G,		                               MAX (CASE WHEN X.ORD_NUM = 8 THEN X.TRANSF_INFRM_FILE_NM END) H,		                               MAX (CASE WHEN X.ORD_NUM = 9 THEN X.TRANSF_INFRM_FILE_NM END) I		                    FROM   (  SELECT C.RECORD_CENTER_ID,		                                               C.TRANSF_INFRM_CREAT_YYYY,		                                               C.TRANSF_INFRM_SNO,		                                               C.FOLDER_ID,		                                               C.FOLDER_CLSS_ID,		                                               C.TRANSF_GRP_SNO,		                                               C.TRANSF_INFRM_FILE_NM,		                                               C.CNT,		                                               COUNT (1) AS ORD_NUM		                                     FROM   (SELECT   B.RECORD_CENTER_ID,		                                                                B.TRANSF_INFRM_CREAT_YYYY,		                                                                B.TRANSF_INFRM_SNO,		                                                                B.FOLDER_ID,		                                                                B.FOLDER_CLSS_ID,		                                                                B.TRANSF_GRP_SNO,		                                                                B.TRANSF_INFRM_FILE_NM,		                                                                A.CNT		                                                    FROM  (  SELECT  RECORD_CENTER_ID,		                                                                               TRANSF_INFRM_CREAT_YYYY,		                                                                               TRANSF_INFRM_SNO,		                                                                               FOLDER_ID,		                                                                               FOLDER_CLSS_ID,		                                                                               TRANSF_GRP_SNO,		                                                                               COUNT (1) CNT		                                                                    FROM   TB_DFTRANSFINFRMFILE		                                                                  WHERE   TRANSF_INFRM_TYPE = '2'		                                                                       AND  RECORD_CENTER_ID = '1'		                                                                       AND TRANSF_GRP_SNO = '1'		                                                                       AND TRANSF_INFRM_CREAT_YYYY = '1'		                                                                       AND TRANSF_INFRM_SNO = (SELECT MAX(TRANSF_INFRM_SNO)                                                                                                         FROM TB_DFTRANSFINFRMFILE                                                                                                        WHERE RECORD_CENTER_ID = '1'                                                                                                          AND TRANSF_INFRM_CREAT_YYYY = '1'                                                                                                          AND TRANSF_INFRM_TYPE = '2'                                                                                                          AND TRANSF_INFRM_STATUS = '1'                                                                                                          AND TRANSF_GRP_SNO = '1')		                                                                GROUP BY   RECORD_CENTER_ID,		                                                                           TRANSF_INFRM_CREAT_YYYY,		                                                                           TRANSF_INFRM_SNO,		                                                                           FOLDER_ID,		                                                                           FOLDER_CLSS_ID,		                                                                           TRANSF_GRP_SNO) A		                                                JOIN		                                                   TB_DFTRANSFINFRMFILE B		                                                ON A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		                                                   AND A.TRANSF_INFRM_CREAT_YYYY = B.TRANSF_INFRM_CREAT_YYYY		                                                   AND A.TRANSF_INFRM_SNO = B.TRANSF_INFRM_SNO		                                                   AND A.FOLDER_ID = B.FOLDER_ID		                                                   AND A.FOLDER_CLSS_ID = B.FOLDER_CLSS_ID		                                                   AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO) C		                                   JOIN		                                      TB_DFTRANSFINFRMFILE D		                                   ON D.RECORD_CENTER_ID = C.RECORD_CENTER_ID		                                      AND D.TRANSF_INFRM_CREAT_YYYY = C.TRANSF_INFRM_CREAT_YYYY		                                      AND D.TRANSF_INFRM_SNO = C.TRANSF_INFRM_SNO		                                      AND D.FOLDER_ID = C.FOLDER_ID		                                      AND D.FOLDER_CLSS_ID = C.FOLDER_CLSS_ID		                                      AND D.TRANSF_GRP_SNO = C.TRANSF_GRP_SNO		                                      AND D.TRANSF_INFRM_FILE_NM <= C.TRANSF_INFRM_FILE_NM		                        GROUP BY   C.RECORD_CENTER_ID,		                                   C.TRANSF_INFRM_CREAT_YYYY,		                                   C.TRANSF_INFRM_SNO,		                                   C.FOLDER_ID,		                                   C.FOLDER_CLSS_ID,		                                   C.TRANSF_GRP_SNO,		                                   C.TRANSF_INFRM_FILE_NM,		                                   C.CNT) X		            GROUP BY   X.RECORD_CENTER_ID,		                       X.TRANSF_INFRM_CREAT_YYYY,		                       X.TRANSF_INFRM_SNO,		                       X.FOLDER_ID,		                       X.FOLDER_CLSS_ID,		                       X.TRANSF_GRP_SNO) AA,		           TB_DFTRANSFSTOREFLD BB		   WHERE       AA.RECORD_CENTER_ID = BB.RECORD_CENTER_ID		           AND AA.TRANSF_INFRM_CREAT_YYYY = BB.TRANSF_YYYY		           AND AA.TRANSF_GRP_SNO = BB.TRANSF_GRP_SNO		           AND AA.FOLDER_ID = BB.FOLDER_ID		           AND AA.FOLDER_CLSS_ID = BB.FOLDER_CLSS_ID		           AND BB.SPLIT_SEQ = '1'		   ORDER BY   AA.FOLDER_CLSS_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfNeoInfo
+
+		SELECT TRANSF_YYYY,					TRANSF_GRP_SNO,		            TRANSF_YYYY||'-'||SPLIT_SEQ AS YYYYSPLITSEQ,		            SPLIT_SEQ,		            FOLDER_CLSS_ID,		            RECORD_NEO_FILE_NM AS FOLDER_NEO_FILE_NM		   FROM TB_DFTRANSFSTORERCD		 WHERE RECORD_CENTER_ID = '1'		      AND TRANSF_YYYY = '1'     		  AND TRANSF_GRP_SNO = '1' 			  AND SPLIT_SEQ = '1'		UNION		 SELECT TRANSF_YYYY,		 			TRANSF_GRP_SNO,		            TRANSF_YYYY||'-'||SPLIT_SEQ AS YYYYSPLITSEQ,		            SPLIT_SEQ,		             		            FOLDER_CLSS_ID,		            FOLDER_NEO_FILE_NM  AS FOLDER_NEO_FILE_NM		   FROM TB_DFTRANSFSTOREFLD		 WHERE RECORD_CENTER_ID = '1'		      AND TRANSF_YYYY = '1'        	  AND TRANSF_GRP_SNO = '1' 			  AND SPLIT_SEQ = '1'         ORDER BY FOLDER_CLSS_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlFolderTrace
+
+	 	SELECT A.ORG_CD		      ,A.FOLDER_ID		      ,A.TRANSF_YMD		      ,B.TRANSF_RSN		      ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS FOLDER_KEY		FROM TB_RDFOLDER A, TB_DFTRANSFHIST B		WHERE A.RECORD_CENTER_ID = '1'		AND A.FOLDER_ID = '1'		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.FOLDER_ID = B.FOLDER_ID		AND	B.TRANSF_YYYY = '1'		AND	B.TRANSF_GRP_SNO = '1'		;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml

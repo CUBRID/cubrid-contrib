@@ -1,0 +1,431 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicTrgtPagedList
+
+		SELECT COUNT(1)        FROM  TB_RDFOLDER BIND, TB_STORG ORG, TB_ZZCOMCD C         WHERE BIND.ORG_CD = ORG.ORG_CD        AND BIND.FOLDER_KEEP_STATE_CD IN ('01', '04')         AND (DECODE(BIND.PRESV_TERM_CD, '20', '25', BIND.PRESV_TERM_CD) = C.COM_CD and C.COM_TYPE_CD = 'RD07')        AND BIND.RECORD_CENTER_ID = '1'        AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID        AND BIND.PRESV_TYPE_CD IN ('1','2') AND           	BIND.ORG_CD = '1'          AND            (BIND.CREAT_YYYY BETWEEN '1' AND '1')          AND            (BIND.TITLE LIKE '1' OR BIND.SUB_TITLE LIKE '1' OR BIND.CORCT_TITLE LIKE '1')          AND 	          (BIND.CLSS_DIV_CD= '1' AND BIND.CLSS_ID = '1')          AND     	      BIND.MF_PIC_STATE_CD IN ('1', '2')         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicTrgtPagedList
+
+		SELECT F.folder_id		      ,F.creat_sys_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = F.creat_sys_cd) AS creat_sys_nm		      ,F.org_cd		      ,F.clss_id		      ,F.clss_nm		      ,F.title		      ,F.creat_yyyy		      ,F.com_cd_nm AS presv_term_nm		      ,DECODE(NVL(F.MF_PIC_STATE_CD, '0'),'0', '미선정','1','선정','2','선정', '3','미선정') AS mf_pic_state_nm		      ,NVL(F.mf_pic_state_cd, '0') AS mf_pic_state_cd		      ,F.org_nm		      ,F.org_abbr_nm		FROM (		    SELECT E.*		    FROM (		        SELECT ROWNUM AS rnum		              ,D.*		        FROM (		            SELECT  BIND.FOLDER_ID,BIND.CREAT_SYS_CD,BIND.ORG_CD,BIND.CLSS_ID,BIND.CLSS_NM		                   ,BIND.TITLE,BIND.CREAT_YYYY,C.COM_CD_NM,BIND.MF_PIC_STATE_CD,ORG.ORG_NM		                   ,ORG.ORG_ABBR_NM		            FROM  TB_RDFOLDER BIND, TB_STORG ORG, TB_ZZCOMCD C 		            WHERE BIND.ORG_CD = ORG.ORG_CD		            AND BIND.FOLDER_KEEP_STATE_CD IN ('01', '04') 		            AND (DECODE(BIND.PRESV_TERM_CD, '20', '25', BIND.PRESV_TERM_CD) = C.COM_CD and C.COM_TYPE_CD = 'RD07')		            AND BIND.RECORD_CENTER_ID = '1'		            AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID		            AND BIND.PRESV_TYPE_CD IN ('1','2')		             AND 		              	BIND.ORG_CD = '1'		              AND 			              (BIND.CREAT_YYYY BETWEEN '1' AND '1')		              AND 			              (BIND.TITLE LIKE '1' OR BIND.SUB_TITLE LIKE '1' OR BIND.CORCT_TITLE LIKE '1')		              AND 		    	          (BIND.CLSS_DIV_CD= '1' AND BIND.CLSS_ID = '1')		              AND 		        	      BIND.MF_PIC_STATE_CD IN ('1', '2')		             		            ORDER BY BIND.FOLDER_ID		        ) D		        WHERE ROWNUM <= '1'		    ) E		    WHERE E.rnum >= '1'		) F		ORDER BY F.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicChoice
+
+	  UPDATE TB_RDFOLDER	  	 SET MEDIUM   = 'M/F',	  	   	 MF_PIC_STATE_CD = '1'	   WHERE FOLDER_ID = '1'	     AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicCncl
+
+	  UPDATE TB_RDFOLDER	  	 SET MEDIUM   = '',	  	   	 MF_PIC_STATE_CD = ''	   WHERE FOLDER_ID = '1'	     AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicPlanPagedList
+
+		SELECT  COUNT(1)        FROM TB_SRMFPIC MF, TB_STORG ORG, (SELECT *                                                  FROM TB_SRMFPIC Z                                                 WHERE                                                 EXISTS (SELECT 1                                                 FROM TB_SRMFPICDETL                                                  WHERE CONFM_FLAG='1'						 AND RECORD_CENTER_ID = Z.RECORD_CENTER_ID						 AND PIC_SNO = Z.PIC_SNO)) PIC        WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID        AND MF.PIC_SNO = PIC.PIC_SNO        AND MF.CREAT_ORG_CD = ORG.ORG_CD        AND MF.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID        AND MF.RECORD_CENTER_ID = '1'          AND              MF.PIC_SNO = '1'          AND              MF.CREAT_ORG_CD = '1'          AND              MF.PIC_REG_FLAG = '1'          AND              MF.pic_Expt_Ymd LIKE REPLACE('1','-','')          AND              MF.pic_User_Nm LIKE '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicPlanPagedList
+
+		SELECT C.record_center_id		      ,C.pic_sno		      ,C.record_center_id||'-'||LPAD(C.pic_sno,6,'0') AS mf_pic_plan_no		      ,C.edit_user_nm		      ,C.pic_expt_ymd		      ,C.pic_user_nm		      ,C.supvs_user_nm		      ,C.cut_cnt		      ,C.creat_org_cd AS org_cd		      ,C.org_nm AS org_nm		      ,DECODE(C.pic_reg_flag,'0','계획','1','등록') AS pic_reg_flag		      ,C.org_abbr_nm		      ,C.pic_plan_write_fin_flag		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		              ,A.*		        FROM (		            SELECT  MF.RECORD_CENTER_ID,MF.PIC_SNO,MF.EDIT_USER_NM,MF.PIC_EXPT_YMD,MF.pic_User_Nm		                   ,MF.SUPVS_USER_NM,MF.CUT_CNT,MF.CREAT_ORG_CD,ORG.ORG_NM,MF.PIC_REG_FLAG		                   ,ORG.ORG_ABBR_NM,MF.PIC_PLAN_WRITE_FIN_FLAG		            FROM TB_SRMFPIC MF, TB_STORG ORG, (SELECT *                                                        FROM TB_SRMFPIC Z                                                       WHERE                                                       EXISTS (SELECT 1                                                       FROM TB_SRMFPICDETL                                                        WHERE CONFM_FLAG='1'                                                       AND RECORD_CENTER_ID = Z.RECORD_CENTER_ID                                                       AND PIC_SNO = Z.PIC_SNO )) PIC		            WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID		            AND MF.PIC_SNO = PIC.PIC_SNO		            AND MF.CREAT_ORG_CD = ORG.ORG_CD		            AND MF.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID		            AND MF.RECORD_CENTER_ID = '1'		              AND 		                 MF.PIC_SNO = '1'		              AND 		                 MF.CREAT_ORG_CD = '1'		              AND 		                 MF.PIC_REG_FLAG = '1'		              AND 		                 MF.pic_Expt_Ymd LIKE REPLACE('1','-','')		              AND 		                 MF.pic_User_Nm LIKE '1'		             		            ORDER BY MF.PIC_SNO DESC		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfId
+
+		SELECT (CASE WHEN A.PIC_PLAN_WRITE_FIN_FLAG = '0' THEN A.PIC_SNO 		             ELSE A.PIC_SNO + 1		        END) AS PIC_SNO 		FROM TB_SRMFPIC A		WHERE RECORD_CENTER_ID = '1'		AND PIC_SNO = (		    SELECT MAX(PIC_SNO)		    FROM TB_SRMFPIC B		    WHERE A.RECORD_CENTER_ID = '1'		) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicPlanWrite
+
+		SELECT COUNT(1)		FROM  TB_SRMFPICDETL PIC, TB_RDRECORD DOC, TB_SRMFPIC PLN		WHERE PIC.RECORD_CENTER_ID	= '1'		AND   PIC.CONFM_FLAG		= '0'		AND   PIC.RECORD_CENTER_ID 	= DOC.RECORD_CENTER_ID		AND   PIC.RECORD_ID 		= DOC.RECORD_ID		AND   PIC.RECORD_CENTER_ID 	= PLN.RECORD_CENTER_ID		AND   PIC.PIC_SNO 			= PLN.PIC_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicPlanWrite
+
+		SELECT  PIC.RECORD_CENTER_ID		       ,PIC.PIC_SNO		       ,DOC.TITLE AS DOC_TITLE		       ,DOC.RECORD_ID		       ,DOC.FOLDER_ID		       ,(SELECT TITLE FROM TB_RDFOLDER WHERE RECORD_CENTER_ID=DOC.RECORD_CENTER_ID AND FOLDER_ID=DOC.FOLDER_ID) AS TITLE		       ,DOC.CREAT_REG_DTIME		       ,DOC.RECORD_PAGE_CNT AS RECORD_PAGE_CNT		       ,0 AS RECORD_REG_CNT		       ,0 AS START_CUT_LOC		       ,0 AS END_CUT_LOC		       ,NVL(PIC.CUT_SNO,0) AS CUT_SNO		FROM  TB_SRMFPICDETL PIC, TB_RDRECORD DOC, TB_SRMFPIC PLN		WHERE PIC.RECORD_CENTER_ID	= '1'		AND   PIC.CONFM_FLAG		= '0'		AND   PIC.RECORD_CENTER_ID 	= DOC.RECORD_CENTER_ID		AND   PIC.RECORD_ID 		= DOC.RECORD_ID		AND   PIC.RECORD_CENTER_ID 	= PLN.RECORD_CENTER_ID		AND   PIC.PIC_SNO 			= PLN.PIC_SNO		ORDER BY PIC.CUT_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicTrgtRecordPagedList
+
+		SELECT COUNT(1)        FROM TB_STORG ORG, TB_RDFOLDER  BIND            ,TB_RDRECORD PIC            WHERE BIND.RECORD_CENTER_ID = '1'        AND BIND.ORG_CD = ORG.ORG_CD        AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID        AND PIC.FOLDER_ID = BIND.FOLDER_ID        AND PIC.RECORD_CENTER_ID = BIND.RECORD_CENTER_ID        AND BIND.MEDIUM ='M/F'        AND BIND.MF_PIC_STATE_CD is not null                AND NOT EXISTS (SELECT RECORD_ID                           FROM TB_SRMFPICDETL Z                         WHERE Z.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID                           AND Z.RECORD_ID = PIC.RECORD_ID)          AND PIC.RECORD_PAGE_CNT IS NOT NULL         AND             (BIND.TITLE LIKE '1' OR BIND.SUB_TITLE LIKE '1' OR BIND.CORCT_TITLE LIKE '1')          AND             BIND.ORG_CD = '1'          AND             BIND.CREAT_YYYY = '1'          AND             (BIND.CLSS_DIV_CD= '1' AND BIND.CLSS_ID = '1')         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicTrgtRecordPagedList
+
+		SELECT C.*		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT BIND.FOLDER_ID		                    ,BIND.TITLE		                    ,BIND.CREAT_YYYY		                    ,BIND.PRESV_TERM_CD		                    ,PIC.TITLE AS DOCTITLE		                    ,PIC.RECORD_ID		                    ,BIND.STAKRM_MNG_NO		                    ,DECODE(NVL(BIND.OUT_FLAG, '0'),'0','반입','3','M/F촬영반출') AS OUT_FLAG		                    ,ORG.ORG_NM		                    ,ORG.ORG_CD		                    ,ORG.ORG_ABBR_NM		                    ,BIND.CLSS_ID		                    ,BIND.CLSS_NM		                    ,BIND.MF_PIC_STATE_CD		                    ,BIND.RECORD_REG_CNT		                    ,PIC.RECORD_PAGE_CNT		            FROM TB_STORG ORG, TB_RDFOLDER  BIND		                ,TB_RDRECORD PIC		            		            		            WHERE BIND.RECORD_CENTER_ID = '1'		            AND BIND.ORG_CD = ORG.ORG_CD		            AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID		            AND PIC.FOLDER_ID = BIND.FOLDER_ID		            AND PIC.RECORD_CENTER_ID = BIND.RECORD_CENTER_ID		            AND BIND.MEDIUM ='M/F'		            AND BIND.MF_PIC_STATE_CD is not null		            AND NOT EXISTS (SELECT RECORD_ID 		                               FROM TB_SRMFPICDETL Z		                              WHERE Z.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID		                                AND Z.RECORD_ID = PIC.RECORD_ID)  		              AND PIC.RECORD_PAGE_CNT IS NOT NULL		             AND 		                (BIND.TITLE LIKE '1' OR BIND.SUB_TITLE LIKE '1' OR BIND.CORCT_TITLE LIKE '1')		              AND 		                BIND.ORG_CD = '1'		              AND 		                BIND.CREAT_YYYY = '1'		              AND 		                (BIND.CLSS_DIV_CD= '1' AND BIND.CLSS_ID = '1')		                 		            ORDER BY BIND.FOLDER_ID, PIC.RECORD_ID		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPic
+
+		SELECT COUNT(1) FROM TB_SRMFPIC WHERE RECORD_CENTER_ID = '1' AND PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : insert
+-- Query Id : createMfPic
+
+		INSERT INTO TB_SRMFPIC (			RECORD_CENTER_ID,  PIC_SNO, MF_ARNG_FLAG, TOT_COPY_CNT, PIC_PLAN_WRITE_FIN_FLAG		) VALUES (			'1', '1', '0', '0', '0'		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPic
+
+		UPDATE TB_SRMFPIC		SET   PIC_PLAN_WRITE_FIN_FLAG = '0'		WHERE RECORD_CENTER_ID = '1' 		AND PIC_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : insert
+-- Query Id : createMfTrgtRecord
+
+		INSERT INTO TB_SRMFPICDETL (			RECORD_CENTER_ID, PIC_SNO, RECORD_ID, CONFM_FLAG, DEL_FLAG, REG_DTIME, CUT_SNO, FOLDER_ID		) VALUES (			'1', '1', '1', '1', '0'			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, NVL((SELECT MAX(CUT_SNO) FROM TB_SRMFPICDETL WHERE RECORD_CENTER_ID='1' AND PIC_SNO='1'),0)+1, '1'  		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : delete
+-- Query Id : deleteMfPicTrgtRecord
+
+		DELETE FROM TB_SRMFPICDETL WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicPlanWriteFin
+
+		UPDATE TB_SRMFPIC	  	SET  FILM_TYPE_CD 	= '1'	  		,GOODS_NM 		= '1'	  		,FILM_SPEC 		= '1'	  		,PIC_EXPT_YMD 	= '1'	  		,PIC_REG_FLAG 	= '0'	  		,PIC_REG_YMD 	= TO_CHAR(SYSDATE, 'YYYYMMDD')	  		,PIC_USER_NM	= '1'	  		,CUT_CNT 		= '1'	  		,CHOICE_CUT_CNT = '1'	  		,EDIT_USER_NM 	= '1'	  		,CAMERA 		= '1'	  		,REDUC_RATE 	= '1'	  		,SUPVS_USER_NM 	= '1'	  		,COPY_FLAG		= '0'	  		,CREAT_ORG_CD	= '1'	  		,CREAT_ORG_NM 	= '1'	  		,PIC_PLAN_WRITE_FIN_FLAG = '1'	  	WHERE RECORD_CENTER_ID = '1'		AND PIC_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicPlanDetail
+
+		UPDATE TB_SRMFPICDETL	  	SET  START_CUT_LOC = '1'	  		,END_CUT_LOC = '1'	  		,CONFM_FLAG = '1'	  		,REG_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')	  	WHERE RECORD_ID = '1'		AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicPlanInfo
+
+		SELECT  CREAT_ORG_CD		       ,CREAT_ORG_NM		       ,FILM_TYPE_CD		       ,GOODS_NM		       ,FILM_SPEC		       ,EDIT_USER_NM		       ,CAMERA		       ,REDUC_RATE		       ,SUPVS_USER_NM		       ,PIC_EXPT_YMD		       ,PIC_USER_NM		       ,CUT_CNT		FROM TB_SRMFPIC		WHERE RECORD_CENTER_ID = '1'		AND PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicPlanModify
+
+		SELECT   COUNT(1)		FROM TB_SRMFPICDETL PIC, TB_RDFOLDER BIND, TB_RDRECORD DOC, TB_SRMFPIC PLN                WHERE PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID(+)                AND PLN.PIC_SNO = PIC.PIC_SNO(+)                AND PIC.RECORD_ID = DOC.RECORD_ID(+)                AND DOC.FOLDER_ID = BIND.FOLDER_ID(+)		AND PIC.CONFM_FLAG = '1'		AND PIC.RECORD_CENTER_ID = '1'		AND PIC.PIC_SNO 		 = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicPlanModify
+
+		SELECT   PIC.RECORD_CENTER_ID				,PIC.PIC_SNO				,DOC.TITLE AS docTitle				,DOC.RECORD_ID				,BIND.TITLE				,BIND.FOLDER_ID				,DOC.CREAT_REG_DTIME				,NVL(DOC.RECORD_PAGE_CNT, '0') AS RECORD_PAGE_CNT				,NVL(BIND.RECORD_REG_CNT, '0') AS RECORD_REG_CNT				,NVL(PIC.START_CUT_LOC, '0') AS START_CUT_LOC				,NVL(PIC.END_CUT_LOC, '0') AS END_CUT_LOC				,NVL(PIC.CUT_SNO, '0') AS CUT_SNO		FROM TB_SRMFPICDETL PIC, TB_RDFOLDER BIND, TB_RDRECORD DOC, TB_SRMFPIC PLN		                WHERE PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID(+)                AND PLN.PIC_SNO = PIC.PIC_SNO(+)                AND PIC.RECORD_ID = DOC.RECORD_ID(+)                AND DOC.FOLDER_ID = BIND.FOLDER_ID(+)		AND PIC.CONFM_FLAG = '1'		AND PIC.RECORD_CENTER_ID = '1'		AND PIC.PIC_SNO 		 = '1'     	ORDER BY PIC.CUT_SNO, PIC.START_CUT_LOC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : delete
+-- Query Id : deleteMfPicPlanDetl
+
+		DELETE FROM TB_SRMFPICDETL WHERE RECORD_CENTER_ID = '1' AND PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : delete
+-- Query Id : deleteMfPicPlan
+
+		DELETE FROM TB_SRMFPIC WHERE RECORD_CENTER_ID = '1' AND PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findPrintDocMfPicPlanHead
+
+	SELECT MF.RECORD_CENTER_ID||'-'||LPAD(MF.PIC_SNO,6,'0') mfPicPlanNo			 ,to_char(to_date(MF.PIC_EXPT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') PIC_EXPT_YMD			 ,MF.GOODS_NM			 ,MF.FILM_SPEC			 ,MF.pic_User_Nm  		FROM 			TB_SRMFPIC MF, 			(select *  			   from TB_SRMFPIC  			  where RECORD_CENTER_ID in  (select RECORD_CENTER_ID from TB_SRMFPICDETL WHERE CONFM_FLAG = '1' ) 			    AND PIC_SNO IN (select PIC_SNO from TB_SRMFPICDETL WHERE CONFM_FLAG = '1')) PIC 	    WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID 	      AND MF.PIC_SNO = PIC. PIC_SNO		  AND PIC.RECORD_CENTER_ID = SUBSTR('1',1,7)		  AND PIC.PIC_SNO = SUBSTR('1',8)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findPrintDocMfPicPlanData
+
+		SELECT   BIND.STAKRM_MNG_NO				,BIND.TITLE				,BIND.org_cd, BIND.clss_id				,BIND.creat_yyyy				,BIND.folder_reg_seq				,BIND.ho_no				,DOC.TITLE DOCTITLE				,DOC.RECORD_PAGE_CNT				,PIC.START_CUT_LOC				,PIC.END_CUT_LOC			  			 		FROM TB_SRMFPICDETL PIC, TB_RDFOLDER BIND, TB_RDRECORD DOC, TB_SRMFPIC PLN		WHERE PIC.RECORD_ID = DOC.RECORD_ID		AND DOC.FOLDER_ID = BIND. FOLDER_ID		AND PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID		AND PLN.PIC_SNO = PIC.PIC_SNO		AND PIC.RECORD_CENTER_ID = SUBSTR('1',1,7)		AND PIC.PIC_SNO = SUBSTR('1',8)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicConfirm
+
+		UPDATE TB_SRMFPIC		SET  PIC_YMD   	 = '1'			,PIC_REG_YMD  = TO_CHAR(SYSDATE, 'YYYYMMDD')			,PIC_REG_FLAG = '1'			,PIC_USER_NM  = '1'		WHERE RECORD_CENTER_ID = '1'		AND   PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicFolderConfirm
+
+		UPDATE TB_RDFOLDER		SET MF_PIC_STATE_CD = '1'		WHERE RECORD_CENTER_ID = '1'		AND	  FOLDER_ID  IN (							 SELECT DISTINCT FOLDER_ID 							 FROM TB_RDRECORD 							 WHERE RECORD_ID IN (							 					 SELECT RECORD_ID 							 					 FROM TB_SRMFPICDETL  		                                 		 WHERE RECORD_CENTER_ID = '1'		                                  		 AND PIC_SNO = '1'		                         				)							)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicPagedList
+
+		SELECT COUNT(1)        FROM TB_SRMFPIC MF               ,(SELECT ORG_CD FROM TB_STORG GROUP BY ORG_CD) ORG               ,(SELECT RECORD_CENTER_ID, PIC_SNO                  FROM TB_SRMFPIC                  WHERE RECORD_CENTER_ID                   IN (SELECT RECORD_CENTER_ID                       FROM TB_SRMFPICDETL                       WHERE CONFM_FLAG = '1'                        GROUP BY RECORD_CENTER_ID)                  AND PIC_SNO                   IN (SELECT PIC_SNO                        FROM TB_SRMFPICDETL                        WHERE CONFM_FLAG = '1' GROUP BY PIC_SNO)) PIC       WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID       AND MF.PIC_SNO = PIC.PIC_SNO       AND MF.CREAT_ORG_CD = ORG.ORG_CD       AND MF.PIC_PLAN_WRITE_FIN_FLAG = '1'       AND MF.RECORD_CENTER_ID = '1'        AND            MF.PIC_SNO = '1'         AND            MF.pic_Expt_Ymd LIKE REPLACE('1','-','')         AND            MF.pic_User_Nm LIKE '1'         AND            MF.CREAT_ORG_CD = '1'         AND            MF.PIC_REG_FLAG = '1'        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicPagedList
+
+		SELECT C.record_center_id		      ,C.pic_sno		      ,C.record_center_id||'-'||LPAD(C.pic_sno, 6, '0') AS mf_pic_plan_no		      ,C.edit_user_nm		      ,C.pic_expt_ymd		      ,C.pic_user_nm		      ,C.supvs_user_nm		      ,C.cut_cnt		      ,C.creat_org_cd AS org_cd		      ,C.pic_reg_flag		      ,DECODE(C.pic_reg_flag,'0','계획','1','등록') AS pic_reg_flag_nm		      ,C.pic_plan_write_fin_flag		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT  MF.RECORD_CENTER_ID, MF.PIC_SNO, MF.EDIT_USER_NM, MF.PIC_EXPT_YMD, MF.PIC_USER_NM		                   ,MF.SUPVS_USER_NM, MF.CUT_CNT, MF.CREAT_ORG_CD, MF.PIC_REG_FLAG, MF.PIC_PLAN_WRITE_FIN_FLAG		             FROM TB_SRMFPIC MF		                    ,(SELECT ORG_CD FROM TB_STORG GROUP BY ORG_CD) ORG		                    ,(SELECT RECORD_CENTER_ID, PIC_SNO		                       FROM TB_SRMFPIC		                       WHERE RECORD_CENTER_ID 		                       IN (SELECT RECORD_CENTER_ID		                            FROM TB_SRMFPICDETL		                            WHERE CONFM_FLAG = '1' 		                            GROUP BY RECORD_CENTER_ID)		                       AND PIC_SNO 		                       IN (SELECT PIC_SNO		                             FROM TB_SRMFPICDETL		                             WHERE CONFM_FLAG = '1' GROUP BY PIC_SNO)) PIC		            WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID		            AND MF.PIC_SNO = PIC.PIC_SNO		            AND MF.CREAT_ORG_CD = ORG.ORG_CD		            AND MF.PIC_PLAN_WRITE_FIN_FLAG = '1'		            AND MF.RECORD_CENTER_ID = '1' AND 		            	MF.PIC_SNO = '1'		              AND 		            	MF.pic_Expt_Ymd LIKE REPLACE('1','-','')		              AND 		            	MF.pic_User_Nm LIKE '1'		              AND 		            	MF.CREAT_ORG_CD = '1'		              AND 		            	MF.PIC_REG_FLAG = '1'		             		            ORDER BY MF.PIC_SNO DESC		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPicCopyPagedList
+
+		SELECT  COUNT(1)        FROM TB_SRMFPIC PIC, TB_SRMFCOPY CP        WHERE PIC.RECORD_CENTER_ID = '1'        AND CP.RECORD_CENTER_ID(+) = PIC.RECORD_CENTER_ID        AND PIC.PIC_REG_FLAG = '1'        AND  CP.PIC_SNO(+) = PIC.PIC_SNO AND              PIC.pic_Sno LIKE '1'          AND              PIC.pic_User_Nm LIKE '1'          AND              PIC.CREAT_ORG_CD = '1'          AND              PIC.pic_Expt_Ymd LIKE REPLACE('1','-','')          AND              PIC.COPY_FLAG = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPicCopyPagedList
+
+		SELECT C.record_center_id		      ,C.pic_sno		      ,C.record_center_id||'-'||LPAD(C.pic_sno, 6, '0') AS mf_pic_plan_no		      ,C.edit_user_nm		      ,C.pic_user_nm		      ,DECODE(C.copy_sno,NULL,'0',C.copy_sno) AS copy_sno		      ,C.copy_ymd		      ,C.copy_cnt		      ,C.copy_rsn		      ,C.copy_flag		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		              ,A.*		        FROM (		            SELECT  PIC.RECORD_CENTER_ID,PIC.PIC_SNO,PIC.EDIT_USER_NM,PIC.PIC_USER_NM,CP.COPY_SNO		                   ,CP.COPY_YMD,CP.COPY_CNT,CP.COPY_RSN,PIC.COPY_FLAG		            FROM TB_SRMFPIC PIC, TB_SRMFCOPY CP		            WHERE PIC.RECORD_CENTER_ID = '1'		            AND CP.RECORD_CENTER_ID(+) = PIC.RECORD_CENTER_ID		            AND PIC.PIC_REG_FLAG = '1'		            AND  CP.PIC_SNO(+) = PIC.PIC_SNO		             AND 		                 PIC.pic_Sno LIKE '1'		              AND 		                 PIC.pic_User_Nm LIKE '1'		              AND 		                 PIC.CREAT_ORG_CD = '1'		              AND 		                 PIC.pic_Expt_Ymd LIKE REPLACE('1','-','')		              AND 		                 PIC.COPY_FLAG = '1'		             		            ORDER BY PIC.RECORD_CENTER_ID DESC, CP.COPY_SNO DESC, PIC.PIC_SNO DESC		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfCopyId
+
+		SELECT  DECODE(max(COPY_SNO),null,0,max(COPY_SNO))+1 COPY_SNO 		FROM TB_SRMFCOPY		WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : insert
+-- Query Id : createMfPicCopy
+
+		INSERT INTO TB_SRMFCOPY (			RECORD_CENTER_ID, PIC_SNO, COPY_SNO, COPY_YMD, COPY_CNT, COPY_RSN, WORK_USER_ID		)(			SELECT   RECORD_CENTER_ID            		,PIC_SNO            		,'1'            		,'1'            		,'1'            		,'1'            		,'1'             FROM TB_SRMFPIC 			WHERE RECORD_CENTER_ID = '1'			AND PIC_SNO = '1'        );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfCopyCnt
+
+		SELECT DECODE(SUM(COPY_CNT),null,0, SUM(COPY_CNT)) COPY_CNT 		FROM TB_SRMFCOPY		WHERE RECORD_CENTER_ID = '1'		AND   PIC_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfPicCopy
+
+		UPDATE TB_SRMFPIC		SET  COPY_FLAG = '1'	  		,TOT_COPY_CNT = '1'		WHERE RECORD_CENTER_ID = '1'		AND PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : delete
+-- Query Id : deleteMfPicCopy
+
+		DELETE FROM TB_SRMFCOPY WHERE RECORD_CENTER_ID = '1' AND   PIC_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfArngPagedList
+
+		SELECT COUNT(1)        FROM TB_SRMFPIC A,((SELECT B.RECORD_CENTER_ID, B.PIC_SNO                            FROM TB_SRMFPICDETL B, TB_RDFOLDER C                            WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID                            AND B.FOLDER_ID = C.FOLDER_ID                             AND                             	C.DISU_DIV_CD = '1'                              AND                            		C.LAST_EVAL_YYYY = '1'                                                         GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO                            )                             UNION ALL                             (SELECT B.RECORD_CENTER_ID, B.PIC_SNO                             FROM TB_SRMFPICDETL B, TB_NKFOLDER C                             WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID                             AND B.FOLDER_ID = C.FOLDER_ID                              AND                              	C.DISU_DIV_CD = '1'  AND                    	          	C.LAST_EVAL_YYYY = '1'                                                           GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO)) D        WHERE A.RECORD_CENTER_ID = '1'        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID        AND A.PIC_SNO = D.PIC_SNO        AND A.PIC_REG_FLAG = '1'        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfArngPagedList
+
+		SELECT G.record_center_id			  ,G.pic_sno		      ,G.edit_user_nm		      ,G.pic_user_nm		      ,G.pic_ymd		      ,G.mf_stakrm_id		      ,G.mf_booksf_id		      ,G.booksf_shelf_cno		      ,G.booksf_shelf_rno		      ,G.shelf_r_sno		      ,G.mf_arng_ymd		      ,DECODE(G.mf_arng_flag, '0', '미배치', '1', '배치', '2', '재배치') AS mf_arng_flag_nm		      ,G.mf_arng_flag		      ,(CASE WHEN (SELECT COUNT(F.disu_div_cd)		                   FROM TB_SRMFPICDETL E, TB_RDFOLDER F		                   WHERE E.record_center_id = F.record_center_id		                   AND E.folder_id = F.folder_id		                   AND E.record_center_id = G.record_center_id		                   AND E.pic_sno = G.pic_sno) > 0		             THEN '재책정'		        END) AS disu_div_cd_nm		      ,DECODE(G.mf_stakrm_id, '','',G.mf_stakrm_id||'-'||G.mf_booksf_id||'-'||LPAD(G.booksf_shelf_cno, '3', '0')||'-'||LPAD(G.booksf_shelf_rno, '3', '0')||'-'||LPAD(G.shelf_r_sno, '3', '0')) AS batch_info		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		                ,E.*		        FROM (		            SELECT A.RECORD_CENTER_ID,A.PIC_SNO,A.EDIT_USER_NM,A.PIC_USER_NM,A.PIC_YMD		                  ,A.MF_STAKRM_ID,A.MF_BOOKSF_ID,A.BOOKSF_SHELF_CNO,A.BOOKSF_SHELF_RNO,A.SHELF_R_SNO		                  ,A.MF_ARNG_YMD,A.MF_ARNG_FLAG		            FROM TB_SRMFPIC A,((SELECT B.RECORD_CENTER_ID, B.PIC_SNO		                                FROM TB_SRMFPICDETL B, TB_RDFOLDER C		                                WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		                                AND B.FOLDER_ID = C.FOLDER_ID		                                 AND 		                                	C.DISU_DIV_CD = '1'		                                  AND 		                               		C.LAST_EVAL_YYYY = '1'		                                 		                                GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO		                                ) 		                                UNION ALL 		                                (SELECT B.RECORD_CENTER_ID, B.PIC_SNO		                                 FROM TB_SRMFPICDETL B, TB_NKFOLDER C		                                 WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		                                 AND B.FOLDER_ID = C.FOLDER_ID		                                  AND 		                                 	C.DISU_DIV_CD = '1'		                                   AND 		                       	          	C.LAST_EVAL_YYYY = '1'		                                  		                                 GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO)) D		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID		            AND A.PIC_SNO = D.PIC_SNO		            AND A.PIC_REG_FLAG = '1'		                		            ORDER BY A.PIC_SNO		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfBooksfIdList
+
+		SELECT MF_STAKRM_ID, MF_BOOKSF_ID, MF_BOOKSF_NM, SHELF_C_CNT, SHELF_R_CNT 		FROM TB_SRMFBOOKSF		WHERE RECORD_CENTER_ID = '1'		AND MF_STAKRM_ID = '1' AND 			MF_BOOKSF_ID = '1'		 		ORDER BY MF_STAKRM_ID, MF_BOOKSF_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfBooksfArng
+
+		UPDATE TB_SRMFPIC 	  	SET  MF_STAKRM_ID = '1'	  		,MF_BOOKSF_ID = '1'	  		,BOOKSF_SHELF_CNO = '1'	  		,BOOKSF_SHELF_RNO = '1'	  		,SHELF_R_SNO = (SELECT (NVL(MAX(SHELF_R_SNO),0))+1 	  					    FROM TB_SRMFPIC 	  					    WHERE MF_STAKRM_ID='1' 	  					    AND MF_BOOKSF_ID = '1'	  					    AND BOOKSF_SHELF_CNO = '1' 	  					    AND BOOKSF_SHELF_RNO = '1'	  					    AND RECORD_CENTER_ID = '1')			,MF_ARNG_FLAG = '1'			,MF_ARNG_YMD = '1'  	     		WHERE RECORD_CENTER_ID  = '1'		AND PIC_SNO 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfBooksfFilmCnt
+
+		UPDATE TB_SRMFBOOKSF A		SET CUR_ARNG_FILM_CNT = (SELECT COUNT(1)                                  FROM TB_SRMFPIC B                                  WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID                                  AND B.MF_STAKRM_ID = A.MF_STAKRM_ID                                  AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID)		WHERE A.RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfBooksfArngCncl
+
+	  	UPDATE TB_SRMFPIC 	  	SET MF_STAKRM_ID = '',  	  		MF_BOOKSF_ID = '', 	  		BOOKSF_SHELF_CNO = 0, 	  		BOOKSF_SHELF_RNO = 0, 	  		SHELF_R_SNO = 0,	  		MF_ARNG_FLAG = '0', 	  		MF_ARNG_YMD = ''   	     		WHERE RECORD_CENTER_ID = '1'			 AND PIC_SNO = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfBooksfShelfRsno
+
+	  	UPDATE TB_SRMFPIC 		SET SHELF_R_SNO = (SHELF_R_SNO - 1)				  		WHERE MF_STAKRM_ID = '1' 	  	AND MF_BOOKSF_ID = '1' 	  	AND BOOKSF_SHELF_CNO = '1' 	  	AND BOOKSF_SHELF_RNO = '1'	  	AND SHELF_R_SNO > '1'	  	AND RECORD_CENTER_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfBooksfPagedList
+
+        SELECT COUNT(1)        FROM     TB_SRMFSTAKRM A, TB_SRMFBOOKSF B        WHERE     A.MF_STAKRM_ID = B.MF_STAKRM_ID        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID        AND A.RECORD_CENTER_ID = '1'        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfBooksfPagedList
+
+		SELECT E.mf_stakrm_id		      ,E.mf_stakrm_nm		      ,E.mf_booksf_id		      ,E.mf_booksf_nm		      ,E.shelf_c_cnt		      ,E.shelf_r_cnt		      ,max_arng_film_cnt		      ,cur_arng_film_cnt		      ,E.remk AS booksf_remk		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT A.MF_STAKRM_ID,A.MF_STAKRM_NM,B.MF_BOOKSF_ID,B.MF_BOOKSF_NM,B.SHELF_C_CNT		                  ,B.SHELF_R_CNT,B.MAX_ARNG_FILM_CNT,B.CUR_ARNG_FILM_CNT,B.REMK 		            FROM     TB_SRMFSTAKRM A, TB_SRMFBOOKSF B		            WHERE     A.MF_STAKRM_ID = B.MF_STAKRM_ID(+)		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		            AND A.RECORD_CENTER_ID = '1'		            		            ORDER BY B.record_center_id, B.mf_stakrm_id, B.mf_booksf_id		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfStakrm
+
+		SELECT COUNT(1)        FROM TB_SRMFSTAKRM          WHERE RECORD_CENTER_ID = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfStakrm
+
+		SELECT D.mf_stakrm_id		      ,D.mf_stakrm_nm		      ,D.booksf_cnt		      ,D.remk AS stakrm_remk		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		                ,B.*		        FROM (		            SELECT *		            FROM TB_SRMFSTAKRM  		            WHERE RECORD_CENTER_ID = '1' 		            		            ORDER BY MF_STAKRM_ID DESC 		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMaxMfStakrmId
+
+		SELECT MAX(MF_STAKRM_ID) AS MF_STAKRM_ID		FROM TB_SRMFSTAKRM		WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : insert
+-- Query Id : createMfStakrm
+
+		INSERT INTO TB_SRMFSTAKRM (			MF_STAKRM_ID, RECORD_CENTER_ID, MF_STAKRM_NM, BOOKSF_CNT, REMK		) VALUES (	  		'1', '1', '1', '1', '1'	  	)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfStakrm
+
+		UPDATE TB_SRMFSTAKRM 	  	SET 	MF_STAKRM_NM = '1'	  	       ,REMK		 = '1'	  	     		WHERE MF_STAKRM_ID   = '1'		AND RECORD_CENTER_ID = '1' 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : delete
+-- Query Id : deleteMfStakrm
+
+		DELETE FROM TB_SRMFSTAKRM WHERE RECORD_CENTER_ID = '1' AND MF_STAKRM_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfStakrmIdList
+
+		SELECT	 MF_STAKRM_ID AS MF_STAKRM_ID				,MF_STAKRM_NM AS MF_STAKRM_NM				,NVL(BOOKSF_CNT,'0') AS MF_BOOKSF_CNT				,REMK AS MF_STAKRM_REMK 		FROM  TB_SRMFSTAKRM  		WHERE  RECORD_CENTER_ID = '1'         ORDER BY MF_STAKRM_ID ASC 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMaxMfStakrmBooksfId
+
+		SELECT MAX(MF_BOOKSF_ID)		FROM TB_SRMFBOOKSF		WHERE RECORD_CENTER_ID = '1'		AND MF_STAKRM_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : insert
+-- Query Id : createMfBooksf
+
+		INSERT INTO TB_SRMFBOOKSF (			RECORD_CENTER_ID, MF_BOOKSF_ID, MF_BOOKSF_NM, MF_STAKRM_ID, MF_STAKRM_SNO, 	  		   	SHELF_C_CNT, SHELF_R_CNT, MAX_ARNG_FILM_CNT, CUR_ARNG_FILM_CNT, REMK		) VALUES (			'1', '1', '1', '1'		   ,(SELECT (COUNT(MF_BOOKSF_ID)+1) AS STAKRMSEQ FROM TB_SRMFBOOKSF WHERE MF_STAKRM_ID='1')	  	   ,'1', '1', '1', '1', '1'	  	)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : addMfBooksfCnt
+
+	  	UPDATE TB_SRMFSTAKRM 	  	SET BOOKSF_CNT = (SELECT COUNT(MF_STAKRM_ID) FROM TB_SRMFBOOKSF WHERE MF_STAKRM_ID='1')	  	     		WHERE RECORD_CENTER_ID = '1'		AND   MF_STAKRM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : updateMfBooksf
+
+		UPDATE TB_SRMFBOOKSF 		SET MF_BOOKSF_NM = '1' 	  	   	 , REMK	= '1' 	  	   	 , SHELF_C_CNT = '1' 	  	   	 , SHELF_R_CNT = '1' 	  	   	 , MAX_ARNG_FILM_CNT = '1'  	 	WHERE RECORD_CENTER_ID = '1' 	   	AND MF_STAKRM_ID = '1'	 	   	AND MF_BOOKSF_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : delete
+-- Query Id : deleteMfStakrmBooksf
+
+		DELETE FROM TB_SRMFBOOKSF		WHERE RECORD_CENTER_ID = '1'		AND MF_STAKRM_ID = '1'		AND MF_BOOKSF_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : update
+-- Query Id : minMfBooksfCnt
+
+	  	UPDATE TB_SRMFSTAKRM 	  	SET BOOKSF_CNT=(SELECT NVL(COUNT(MF_STAKRM_ID), 0) FROM TB_SRMFBOOKSF WHERE MF_STAKRM_ID='1')	  	     		WHERE RECORD_CENTER_ID = '1'		AND   MF_STAKRM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfStakrmCount
+
+		SELECT 	COUNT(MF_STAKRM_ID) 		FROM TB_SRMFSTAKRM  			WHERE RECORD_CENTER_ID = '1' 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : countMfPagedList
+
+		SELECT COUNT(1)        FROM TB_SRMFPIC        WHERE RECORD_CENTER_ID = '1'        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml
+-- Query    : select
+-- Query Id : findMfPagedList
+
+		SELECT C.record_center_id			  ,lpad(C.pic_sno, 6, '0') as pic_sno		      ,C.edit_user_nm		      ,C.pic_user_nm		      ,C.pic_ymd		      ,C.tot_copy_cnt		      ,C.mf_stakrm_id		      ,C.mf_booksf_id		      ,C.booksf_shelf_cno		      ,C.booksf_shelf_rno		      ,C.shelf_r_sno		      ,DECODE(C.mf_stakrm_id, '','',C.mf_stakrm_id||'-'||C.mf_booksf_id||'-'||LPAD(C.booksf_shelf_cno, '3', '0')||'-'||LPAD(C.booksf_shelf_rno, '3', '0')||'-'||LPAD(C.shelf_r_sno, '3', '0')) AS batch_info		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		              ,A.*		        FROM (		            SELECT *		            FROM TB_SRMFPIC		            WHERE RECORD_CENTER_ID = '1'		                		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\media\PresvMf.xml

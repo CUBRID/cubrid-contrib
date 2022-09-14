@@ -1,0 +1,130 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findComCd
+
+		SELECT com_type_cd AS type			, com_cd    AS code			, com_cd_nm AS name						, use_flag  AS "use"			, sub_com_type_cd AS subType		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = '1'		ORDER BY COM_CD;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findAllCd
+
+		SELECT	com_type_cd as type, com_cd as code, com_cd_nm as name		FROM	TB_ZZCOMCD;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findSubComCd
+
+		SELECT COM_CD AS code,		       COM_CD_NM AS name,		       SUB_COM_TYPE_CD AS subType		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = '1'		AND SUB_COM_TYPE_CD IS NOT NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findRecordCenterCd
+
+		SELECT RECORD_CENTER_ID AS CODE,		       RECORD_CENTER_NM AS NAME		FROM TB_STRECORDCENTER		ORDER BY RECORD_CENTER_NM;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakovrRecordCenterCd
+
+		SELECT RECORD_CENTER_ID AS CODE,		       RECORD_CENTER_NM AS NAME		FROM TB_STRECORDCENTER		WHERE TAKE_TAKOVR_DIV_CD = '2'		ORDER BY RECORD_CENTER_NM	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakeRecordCenterCd
+
+		SELECT RECORD_CENTER_ID AS CODE,		       RECORD_CENTER_NM AS NAME		FROM TB_STRECORDCENTER		WHERE TAKE_TAKOVR_DIV_CD = '1'		ORDER BY RECORD_CENTER_NM	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findMenuGrantGrpCd
+
+		SELECT MENU_GRANT_GRP_CD AS CODE,		       MENU_GRANT_GRP_NM AS NAME		FROM TB_STMENUGRANTGRP		WHERE RECORD_CENTER_ID = '1'		ORDER BY DEFAULT_GRANT_DIV	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findLinkTrgtCd
+
+		SELECT DISTINCT LINK_TRGT_ID AS CODE		     , LINK_TRGT_NM AS NAME		FROM TB_STLINKTRGT		ORDER BY LINK_TRGT_NM;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakovrRecordCenterId
+
+		SELECT A.TAKOVR_RECORD_CENTER_ID AS CODE		     , MAX(B.RECORD_CENTER_NM) AS NAME		FROM TB_DFORGTAKE A, TB_STRECORDCENTER B		WHERE A.TAKOVR_RECORD_CENTER_ID = B.RECORD_CENTER_ID		GROUP BY A.TAKOVR_RECORD_CENTER_ID		ORDER BY A.TAKOVR_RECORD_CENTER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findReportYyyy
+
+		SELECT CODE, NAME 		FROM		(			SELECT CR_REPORT_YYYY AS CODE			     , CR_REPORT_YYYY AS NAME			FROM TB_CRREPORT			WHERE RECORD_CENTER_ID = '1'			  AND CREAT_SYS_CD IN ('01', '02')  AND CR_REPORT_YYYY <= TO_CHAR(SYSDATE,'YYYY') 			UNION ALL			SELECT CR_REPORT_YYYY AS CODE			     , CR_REPORT_YYYY AS NAME			  FROM TB_CRFOLDER 			 WHERE RECORD_CENTER_ID = '1'			   AND CREAT_SYS_CD = '03'  AND CR_REPORT_YYYY <= TO_CHAR(SYSDATE,'YYYY') 			   AND CR_REPORT_YYYY IS NOT NULL			UNION ALL 			SELECT TO_CHAR(SYSDATE,'YYYY') CODE,			       TO_CHAR(SYSDATE,'YYYY') NAME		    FROM DUAL		)		GROUP BY CODE, NAME		ORDER BY CODE DESC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakovrSno
+
+		SELECT ORG_TAKOVR_SNO AS CODE		     , TAKOVR_YYYY||'-'||LPAD(ORG_TAKOVR_SNO,3,'0') AS NAME		FROM TB_DFORGTAKOVR		WHERE TAKOVR_YYYY = TO_CHAR(SYSDATE,'YYYY')		AND   RECORD_CENTER_ID = '1'		ORDER BY ORG_TAKOVR_SNO  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakeSno
+
+		SELECT ORG_TAKE_SNO AS CODE		     , ORG_TAKE_YYYY||'-'||LPAD(ORG_TAKE_SNO,3,'0') AS NAME		FROM TB_DFORGTAKE		WHERE ORG_TAKE_YYYY = TO_CHAR(SYSDATE,'YYYY')		ORDER BY ORG_TAKE_SNO DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findCreatSysCd
+
+		SELECT creat_sys_cd  AS CODE, 			   (SELECT D.com_cd_nm			    FROM TB_ZZCOMCD D			    WHERE D.com_type_cd = 'RD17'			    AND   D.com_cd = A.creat_sys_cd) as NAME		FROM TB_STCREATSYS A		WHERE RECORD_CENTER_ID = '1'		AND ORG_CD = '1'		ORDER BY creat_sys_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakeRepIng
+
+		SELECT take_takovr_mng_no AS CODE		     , take_takovr_rep_nm AS NAME		FROM TB_RDTAKETAKOVRPLAN A		WHERE record_center_id = '1'		AND   take_takovr_div_cd = '2'		AND   run_state_cd IN ('01','02','03')		ORDER BY take_takovr_rep_nm	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakeRepAll
+
+		SELECT take_takovr_mng_no AS CODE		     , take_takovr_rep_nm AS NAME		FROM TB_RDTAKETAKOVRPLAN A		WHERE record_center_id = '1'		AND   take_takovr_div_cd = '2'		AND   run_state_cd IN ('01','02','03','04')		ORDER BY take_takovr_rep_nm	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakovrRepIng
+
+		SELECT take_takovr_mng_no AS CODE		     , take_takovr_rep_nm AS NAME		FROM TB_RDTAKETAKOVRPLAN A		WHERE record_center_id = '1'		AND   take_takovr_div_cd = '1'		AND   run_state_cd IN ('01','02','03')		ORDER BY take_takovr_rep_nm	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakeRepEnd
+
+		SELECT take_takovr_rep_cd AS CODE		     , take_takovr_rep_nm AS NAME		FROM (			SELECT take_takovr_rep_cd			     , MAX(take_takovr_rep_nm) take_takovr_rep_nm			FROM TB_RDTAKETAKOVRPLAN A			WHERE record_center_id = '1'			AND   take_takovr_div_cd = '2'			AND   run_state_cd = '04'			GROUP BY take_takovr_rep_cd		)		ORDER BY take_takovr_rep_nm;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml
+-- Query    : select
+-- Query Id : findTakovrRepEnd
+
+		SELECT take_takovr_rep_cd AS CODE		     , take_takovr_rep_nm AS NAME		FROM (			SELECT take_takovr_rep_cd			     , MAX(take_takovr_rep_nm) take_takovr_rep_nm			FROM TB_RDTAKETAKOVRPLAN A			WHERE record_center_id = '1'			AND   take_takovr_div_cd = '1'			AND   run_state_cd = '04'			GROUP BY take_takovr_rep_cd		)		ORDER BY take_takovr_rep_nm;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\code\ZzComCd.xml

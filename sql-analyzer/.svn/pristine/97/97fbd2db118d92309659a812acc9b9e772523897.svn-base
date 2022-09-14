@@ -1,0 +1,84 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+
+createRegTakeRegFolder
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_tkfolder_record_center_id_folder_take_seq(B+tree: 4|106|570) ON CLASS tb_tkfolder(CLASS_OID: 0|487|5). key: {'1', '1'}(OID: 1|1492|15).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : insert
+-- Query Id : createRegTakeRegFolder
+
+		INSERT INTO TB_TKFOLDER		(			record_center_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy			, take_sno, clss_nm, title, sub_title, folder_type_div_cd			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, error_flag			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime			, folder_close_dtime, virus_flag, erecord_flag		)		VALUES		(			'1', '1', '1', '1', '1'			, '1', '1', '1', '1', TO_CHAR(SYSDATE,'YYYY')			, '1', (SELECT bis_clss_nm FROM TB_ZZBISCLSS WHERE bis_clss_id = '1' UNION SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID='1' AND UNIT_CD = '1' )			, '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			                        , '1'||'090000', TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), '1', '1', '1'			, '1', '1', '1', '1', '1'||'0101000000'			, '1'||'1231000000', '1', '1'		);
+
+createRegTakeHonoAddFolder
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_tkfolder_record_center_id_folder_take_seq(B+tree: 4|106|570) ON CLASS tb_tkfolder(CLASS_OID: 0|487|5). key: {'1', '1'}(OID: 1|1492|15).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : insert
+-- Query Id : createRegTakeHonoAddFolder
+
+		INSERT INTO TB_TKFOLDER		(			record_center_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy			, take_sno, clss_nm, title, sub_title, folder_type_div_cd			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, error_flag			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime			, folder_close_dtime, virus_flag, erecord_flag		)		SELECT record_center_id, '1', creat_sys_cd, take_org_cd, clss_div_cd			, clss_id, creat_yyyy, folder_reg_seq, 			(	SELECT LPAD(MAX(HO_NO)+1, 3, '0') 				FROM TB_TKFOLDER 				WHERE RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ IN (					SELECT RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ 					FROM TB_TKFOLDER  					WHERE FOLDER_TAKE_SEQ = '1' )			)			, take_yyyy			, take_sno, clss_nm, title, sub_title, folder_type_div_cd			, folder_detl_type_cd, sumry, '0', '0', '0'			, '0', old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm			                        , creat_dtime, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), org_cd, group_presv_term_cd, error_flag			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime			, folder_close_dtime, virus_flag, erecord_flag			FROM TB_TKFOLDER 			WHERE FOLDER_TAKE_SEQ = '1'	;
+
+deleteRegTakeRegFolder
+Update/Delete operations are restricted by the foreign key 'tb_tkrecord_fk01'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : delete
+-- Query Id : deleteRegTakeRegFolder
+
+		DELETE TB_TKFOLDER		WHERE record_center_id = '1'		AND   folder_take_seq = '1'	;
+
+createRegTakeRegRecord
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_tkrecord_record_center_id_record_take_seq(B+tree: 4|69|320) ON CLASS tb_tkrecord(CLASS_OID: 0|486|32). key: {'1', '1'}(OID: 2|2405|12).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : insert
+-- Query Id : createRegTakeRegRecord
+
+		INSERT INTO TB_TKRECORD		(			record_center_id, record_take_seq, folder_take_seq, creat_sys_cd, org_cd			, creat_yyyy, creat_reg_dtime, title, sub_title, record_reg_div_cd			, record_detl_type_cd, record_size, record_page_cnt, duty_chrgr_nm, erecord_flag			, old_record_presv_term, open_div_cd, open_grade, part_open_rsn, open_limit_part			, recver, sender, folder_clss_no, spcl_record_type, orign_copy_flag			, new_div_cd, chng_flag, rjct_flag, doc_no, creat_sys_record_id			, error_flag, take_fin_flag, reg_dtime, record_sumry, creat_reg_no			, dtch_reg_no, exam_rslt_cd, attach_cnt, record_sno, creat_user_id			, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm, creat_dtime			, secret_clss, secret_term, oper_read_range_cd, audvis_record_type, pic_ymd			, pic_area, main_user_nm, old_record_docno, old_record_creat_org_nm, record_clss_cd		)		VALUES		(			'1', '1', '1', '1'			, (SELECT org_cd FROM TB_TKFOLDER 			   WHERE record_center_id='1' 			   AND   folder_take_seq='1')			, SUBSTR('1',1,4), ('1'||'090000'), '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1'			, (SELECT org_cd||clss_id||creat_yyyy||folder_reg_seq||ho_no FROM TB_TKFOLDER 			   WHERE record_center_id='1' 			   AND   folder_take_seq='1')			, '1', '1'			, '1', '1', '1', '1', '1'                        , '1', '1', TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'||'090000'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'		);
+
+deleteRegTakeRegRecord
+Update/Delete operations are restricted by the foreign key 'tb_tkspcllist_fk02'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : delete
+-- Query Id : deleteRegTakeRegRecord
+
+		DELETE TB_TKRECORD		WHERE record_center_id = '1'		AND   record_take_seq = '1'	;
+
+createRegTakeRegDclssfyFolder
+Operation would have caused one or more unique constraint violations. INDEX tb_rdfolder_ux01(B+tree: 4|431|2190) ON CLASS tb_rdfolder(CLASS_OID: 0|489|13). key: {'1', '1', '1', '1', '1', '1', '1'}(OID: 1|7960|11).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : insert
+-- Query Id : createRegTakeRegDclssfyFolder
+
+		INSERT INTO TB_RDFOLDER		(			record_center_id, folder_id, folder_take_seq, creat_sys_cd, take_org_cd, cur_keep_org_cd, clss_div_cd			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy			, take_yyyy_sno, clss_nm, org_title, title, sub_title, folder_type_div_cd			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, folder_start_dtime 			, folder_close_dtime, virus_flag, erecord_flag, open_div_cd, mig_flag, folder_keep_state_cd, efile_del_flag, secret_rels_record_yn		)		VALUES 		(			'1', TO_CHAR(SYSDATE, 'YYYY')  || LPAD((TB_RDFOLDER_SQ01.nextval), 10, '0'), '1', '1', '1', '1', '1'			, '1', '1', '1', '1', TO_CHAR(SYSDATE,'YYYY')			, '1', (SELECT bis_clss_nm FROM TB_ZZBISCLSS WHERE bis_clss_id = '1' UNION SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID='1' AND UNIT_CD = '1' )			, '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1'||'090000', TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), '1', '1', '1'||'0101000000'  			, '1'||'1231000000', '1', '1', '3', '0', '', '0', '1'		);
+
+createRegTakeHonoAddDclssfyFolder
+Operation would have caused one or more unique constraint violations. INDEX tb_rdfolder_ux01(B+tree: 4|431|2190) ON CLASS tb_rdfolder(CLASS_OID: 0|489|13). key: {'1', '1', '1', '1', '1', '1', '002'}(OID: 1|7960|11).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : insert
+-- Query Id : createRegTakeHonoAddDclssfyFolder
+
+		INSERT INTO TB_RDFOLDER		(			record_center_id, folder_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy			, take_yyyy_sno, clss_nm, org_title, title, sub_title, folder_type_div_cd			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd			, folder_start_dtime			, folder_close_dtime, virus_flag, erecord_flag, open_div_cd, secret_rels_record_yn		)		SELECT record_center_id, TO_CHAR(SYSDATE, 'YYYY')  || LPAD((TB_RDFOLDER_SQ01.nextval), 10, '0'), '1', creat_sys_cd, take_org_cd, clss_div_cd			, clss_id, creat_yyyy, folder_reg_seq, 			(	SELECT LPAD(MAX(HO_NO)+1, 3, '0') 				FROM TB_RDFOLDER 				WHERE RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ IN (					SELECT RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ 					FROM TB_RDFOLDER  					WHERE FOLDER_TAKE_SEQ = '1' )			)			, take_yyyy			, take_yyyy_sno, clss_nm, title, title, sub_title, folder_type_div_cd			, folder_detl_type_cd, sumry, '0', '0', '0'			, '0', old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm			, creat_dtime, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), org_cd, group_presv_term_cd			, folder_start_dtime			, folder_close_dtime, virus_flag, erecord_flag, '3', secret_rels_record_yn			FROM TB_RDFOLDER 			WHERE FOLDER_TAKE_SEQ = '1'	;
+
+createRegTakeRegDclssfyFolderCreat
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_rdfoldercreat_record_center_id_folder_id_agent_sno(B+tree: 4|408|2080) ON CLASS tb_rdfoldercreat(CLASS_OID: 0|489|3). key: {'1', '20160000000196', 1}(OID: 3|10781|7).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml
+-- Query    : insert
+-- Query Id : createRegTakeRegDclssfyFolderCreat
+
+		INSERT INTO TB_RDFOLDERCREAT		(			record_center_id			, folder_id			, agent_sno			, agent_type_cd			, agent_id			, agent_nm			, agent_org_cd			, agent_org_nm			, agent_pos_rank_nm			, opin			, duty_type_cd			, duty_act_dtime			, reg_dtime		)		(			SELECT '1'   	               , folder_id	               , (SELECT NVL(MAX(agent_sno),0)+1 agent_sno  	                  FROM TB_TKFOLDERCREAT	                  WHERE record_center_id = '1'	                  AND   folder_take_seq = '1')		           , '1'		           , '1'		           , '1'		           , '1'		           , '1'		           , '1'		           , '1'		           , '1'		           , '1'		           , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		    FROM TB_RDFOLDER 		    WHERE record_center_id = '1'		    AND folder_take_seq =  '1'		)			;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\regTake\RegTake.xml

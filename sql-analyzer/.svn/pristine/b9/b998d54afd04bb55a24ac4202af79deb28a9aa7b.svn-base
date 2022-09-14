@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.multiTakovr">
+
+	<!-- 공동형인계인수-기록물인계
+		인계계획등록 목록을 조회한다. 
+	-->
+	<resultMap id="findMultiTakovrSetPlanPagedList-result" class="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		<result property="takeTakovrSndRepCd" 				column="take_takovr_snd_rep_cd"/>
+		<result property="takeTakovrSndRepNm" 				column="take_takovr_snd_rep_nm"/>
+		<result property="takeTakovrYyyy"	 				column="take_takovr_yyyy"/>
+		<result property="takeTakovrSnoStr"	 				column="take_takovr_sno_str"/>
+		<result property="takeTakovrSno"	 				column="take_takovr_sno"/>
+		<result property="recordCenterId"	 				column="record_center_id"/>
+		<result property="takeTakovrRcvRepCd" 				column="take_takovr_rcv_rep_cd"/>
+		<result property="rcvRecordCenterId"	 			column="rcv_record_center_id"/>
+		<result property="takeTakovrRcvRepNm" 				column="take_takovr_rcv_rep_nm"/>
+		<result property="takeStateSndDivCd" 				column="take_state_snd_div_cd"/>
+		<result property="takeStateSndDivNm" 				column="take_state_snd_div_nm"/>
+		<result property="takeTakovrRsn" 					column="take_takovr_rsn"/>
+	</resultMap>
+	<select id="findMultiTakovrSetPlanPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultMap="findMultiTakovrSetPlanPagedList-result">
+		SELECT C.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT A.take_takovr_snd_rep_cd
+			      	  ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd) take_takovr_snd_rep_nm
+				      ,A.take_takovr_yyyy
+				      ,A.take_takovr_sno
+				      ,LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str
+				      ,A.record_center_id
+				      ,A.take_takovr_rcv_rep_cd
+				      ,(SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) rcv_record_center_id
+				      ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) take_takovr_rcv_rep_nm
+				      ,A.take_state_snd_div_cd
+				      ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD88' AND com_cd = A.take_state_snd_div_cd) take_state_snd_div_nm
+				      ,A.take_takovr_rsn
+				FROM tb_rdmultitakovrplan A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				<isNotEmpty prepend="AND" property="takeTakovrYyyy">
+					A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#	
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="takeStateSndDivCd">
+					A.take_state_snd_div_cd = #takeStateSndDivCd:VARCHAR#	
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="takeTakovrRcvRepCd">
+					A.take_takovr_rcv_rep_cd = (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = #takeTakovrRcvRepCd:VARCHAR#)
+				</isNotEmpty>
+				ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<select id="countMultiTakovrSetPlanPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM tb_rdmultitakovrplan A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="takeTakovrYyyy">
+			A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#	
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="takeStateSndDivCd">
+			A.take_state_snd_div_cd = #takeStateSndDivCd:VARCHAR#	
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="takeTakovrRcvRepCd">
+			A.take_takovr_rcv_rep_cd = (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = #takeTakovrRcvRepCd:VARCHAR#)
+		</isNotEmpty>
+	</select>
+	
+	<!--
+		기록물인계_인계계획등록   
+		: 공동형인계계획등록시 최종순번을 조회한다.
+	-->
+	<select id="findMultiTakovrMaxSno" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="int">
+	 	SELECT NVL(MAX(take_takovr_sno), 0)+1 
+		FROM   tb_rdmultitakovrplan
+		WHERE take_takovr_snd_rep_cd = (SELECT record_center_cd FROM tb_strecordcenter where record_center_id = #takeTakovrSndRepCd:VARcHAR#)
+		AND   take_takovr_yyyy 		 = #takeTakovrYyyy:VARCHAR#
+	 </select>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 공동형인계계획을 등록한다.
+	 --> 
+	<insert id="createMultiTakovrSetPlan" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		INSERT INTO tb_rdmultitakovrplan 
+					(take_takovr_snd_rep_cd
+					,take_takovr_yyyy
+					,take_takovr_sno
+					,record_center_id
+					,take_takovr_rcv_rep_cd
+					,take_state_snd_div_cd
+					,take_state_flag
+					,take_takovr_snd_user_id
+					,non_elect_take_plan_yyyy
+					,take_takovr_rsn
+					,reg_dtime)
+		VALUES( (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = #takeTakovrSndRepCd:VARCHAR#)
+				,#takeTakovrYyyy:VARCHAR#
+				,#takeTakovrSno:NUMBER#
+				,#recordCenterId:VARCHAR#
+				,(SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = #takeTakovrRcvRepCd:VARCHAR#)
+				,#takeStateSndDivCd:VARCHAR#
+				,#takeStateFlag:VARCHAR#
+				,#takeTakovrSndUserId:VARCHAR#
+				,#nonElectTakePlanYyyy:VARCHAR#
+				,#takeTakovrRsn:VARCHAR#
+				<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'))-->
+				,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))
+	</insert>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 공동형인계계획을 수정한다.
+	 -->
+	<update id="updateMultiTakovrSetPlan" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		UPDATE tb_rdmultitakovrplan A
+		   SET A.take_takovr_yyyy = #modTakeTakovrYyyy:VARCHAR#
+		      ,A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #takeTakovrRcvRepCd:VARCHAR#)
+		      ,A.take_takovr_rsn = #takeTakovrRsn:VARCHAR#
+		 WHERE A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+		   AND A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #takeTakovrSndRepCd:VARCHAR#)
+		   AND A.take_takovr_sno = #takeTakovrSno:NUMBER# 
+	</update>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 공동형인계계획을 삭제한다. (인계계획 목록)
+	 -->
+	<delete id="deleteMultiTakovrList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		DELETE tb_rdmultitakovrlist 
+		 WHERE take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+		   AND take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		   AND take_takovr_sno = #takeTakovrSno:NUMBER#
+	</delete>
+	
+	<!-- 
+		기록물인계_인계계획등록
+		: 공동형인계계획을 삭제한다. (인계계획)
+	 -->
+	<delete id="deleteMultiTakovrPlan" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		DELETE tb_rdmultitakovrplan 
+		 WHERE take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+		   AND take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		   AND take_takovr_sno = #takeTakovrSno:NUMBER#
+	</delete>
+	
+	
+	
+	<!-- 공동형인계인수 기록물인계 인계계획번호 목록 조회한다. -->
+	<resultMap id="findMultiTakovrPlanMngNoList-result" class="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		<result property="takeTakovrSndRepCd" 					column="take_takovr_snd_rep_cd"/>
+		<result property="takeTakovrRcvRepCd" 					column="take_takovr_rcv_rep_cd"/>
+		<result property="recordCenterId"	 					column="record_center_id"/>
+		<result property="takeTakovrYyyy" 						column="take_takovr_yyyy"/>
+		<result property="takeTakovrSno" 						column="take_takovr_sno"/>
+		<result property="takeTakovrSnoStr"	 					column="take_takovr_sno_str"/>
+		<result property="takeTakovrSndRepNm" 					column="take_takovr_snd_rep_nm"/>
+		<result property="takeTakovrRcvRepNm" 					column="take_takovr_rcv_rep_nm"/>
+		<result property="takeTakovrRsn"	 					column="take_takovr_rsn"/>
+		<result property="takeTakovrFolderCnt"	 				column="take_takovr_folder_cnt"/>
+		<result property="takeStateSndDivCd"	 				column="take_state_snd_div_cd"/>
+	</resultMap>
+	<!-- 공동형인계인수 기록물인계 인계계획번호 목록 조회한다. -->
+	<select id="findMultiTakovrPlanMngNoList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultMap="findMultiTakovrPlanMngNoList-result">
+		SELECT A.take_takovr_snd_rep_cd
+			,A.take_takovr_rcv_rep_cd
+			,A.record_center_id
+			,A.take_takovr_yyyy
+			,A.take_takovr_sno
+			,LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str
+			,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd) take_takovr_snd_rep_nm
+			,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) take_takovr_rcv_rep_nm
+			,A.take_takovr_rsn
+			,(SELECT COUNT(1) FROM tb_rdmultitakovrlist Z WHERE Z.take_takovr_snd_rep_cd = A.take_takovr_snd_rep_cd AND Z.take_takovr_yyyy = A.take_takovr_yyyy AND Z.take_takovr_sno = A.take_takovr_sno) take_takovr_folder_cnt
+			,A.take_state_snd_div_cd
+		FROM tb_rdmultitakovrplan A
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND A.take_state_snd_div_cd IN ('01', '02')
+		ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno
+	</select>
+	
+	
+	<!-- 공동형인계인수 기록물인계 인계대상선정 생산부서 목록 조회한다. -->
+	<resultMap id="findMultiTakovrOrgTrgtFixPagedList-result" class="rms.transf.multiTakovr.domain.MultiTakovrTrgt">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="folderCnt"		 		column="folder_cnt"/>
+		<result property="nonFixedFolderCnt" 		column="non_fixed_folder_cnt"/>
+		<result property="fixedFolderCnt"	 		column="fixed_folder_cnt"/>
+	</resultMap>
+	<!-- 
+		SELECT - 공동형인계인수 기록물인계 인계대상선정 생산부서 목록 조회한다.
+	 -->
+	<select id="findMultiTakovrOrgTrgtPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt" resultMap="findMultiTakovrOrgTrgtFixPagedList-result">
+		<!-- 
+		SELECT C.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT record_center_id
+					, org_cd, org_nm
+					, folder_cnt
+					, non_fixed_folder_cnt
+					, fixed_folder_cnt
+				FROM (
+				    SELECT record_center_id
+					      ,org_cd, org_nm
+					      ,folder_cnt
+					      ,non_fixed_folder_cnt
+					      ,folder_cnt-non_fixed_folder_cnt fixed_folder_cnt 
+					FROM (
+						SELECT a.record_center_id
+						      ,A.org_cd
+						      ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm
+						      ,COUNT(1) folder_cnt
+						      ,(SELECT COUNT (1) FROM tb_rdfolder Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd AND NOT EXISTS (SELECT X.folder_id FROM tb_rdmultitakovrlist X WHERE X.record_center_id = Z.record_center_id AND X.folder_id = Z.folder_id)) non_fixed_folder_cnt
+						FROM tb_rdfolder A 
+						WHERE A.record_center_id = #recordCenterId:VARCHAR:VARCHAR#
+						<isNotEmpty prepend="AND" property="creatOrgCd">
+							  A.org_cd = #creatOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatOrgCd">
+							  A.org_cd = #creatOrgCd:VARCHAR#
+						</isNotEmpty>
+						AND A.folder_keep_state_cd != '05'
+						AND NOT EXISTS (SELECT Z.folder_id 
+						                FROM TB_rdmultitakovrlist Z 
+						                WHERE Z.record_center_id = A.record_center_id 
+						                AND Z.folder_id = A.folder_id
+						                AND (Z.take_takovr_snd_rep_cd != #takeTakovrSndRepCd:VARCHAr# OR Z.take_takovr_yyyy != #takeTakovrYyyy:VARCHAR# OR Z.take_takovr_sno != #takeTakovrSno:NUMBER#) 
+						   			    ) 
+						GROUP BY record_center_id, org_cd
+						)
+					) L
+				WHERE L.folder_cnt != 0
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		-->
+		SELECT C.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT RECORD_CENTER_ID,
+				       ORG_CD,
+				       ORG_NM || '(' || ORG_CD || ')' AS ORG_NM,
+				       ALL_FOLDER_CNT - MINUS_FOLDER_CNT AS FOLDER_CNT,
+				       ALL_FOLDER_CNT - MINUS_FOLDER_CNT - FIXED_FOLDER_CNT AS NON_FIXED_FOLDER_CNT,
+				       FIXED_FOLDER_CNT
+				  FROM
+				  (
+				       SELECT A.RECORD_CENTER_ID,
+				              A.ORG_CD,
+				              (SELECT Z.FULL_ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.ORG_CD) AS ORG_NM,
+				              COUNT(1) AS ALL_FOLDER_CNT,
+				              SUM(CASE WHEN C.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS MINUS_FOLDER_CNT,
+				              SUM(CASE WHEN B.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS FIXED_FOLDER_CNT
+				         FROM TB_RDFOLDER A,
+				              (
+				                   SELECT T.RECORD_CENTER_ID,
+				                          T.FOLDER_ID
+				                     FROM TB_RDMULTITAKOVRLIST T
+				                    WHERE T.TAKE_TAKOVR_SND_REP_CD = #takeTakovrSndRepCd:VARCHAR#
+				                      AND T.TAKE_TAKOVR_YYYY = #takeTakovrYyyy:VARCHAR#
+				                      AND T.TAKE_TAKOVR_SNO = #takeTakovrSno:NUMBER#
+				                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID
+				               ) B,
+				              (
+				                   SELECT T.RECORD_CENTER_ID,
+				                          T.FOLDER_ID
+				                     FROM TB_RDMULTITAKOVRLIST T
+				                    WHERE T.TAKE_TAKOVR_SND_REP_CD != #takeTakovrSndRepCd:VARCHAr#
+				                       OR T.TAKE_TAKOVR_YYYY != #takeTakovrYyyy:VARCHAR#
+				                       OR T.TAKE_TAKOVR_SNO != #takeTakovrSno:NUMBER#
+				                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID
+				               ) C
+				        WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+				          AND A.FOLDER_ID = B.FOLDER_ID(+)
+				          AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)
+				          AND A.FOLDER_ID = C.FOLDER_ID(+)
+				          AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				          AND A.FOLDER_KEEP_STATE_CD != '05'
+				          <isNotEmpty prepend="AND" property="creatOrgCd">
+				          		A.ORG_CD = #creatOrgCd:VARCHAR#
+				          </isNotEmpty>
+				       GROUP BY A.RECORD_CENTER_ID, A.ORG_CD
+				   )
+				 WHERE ALL_FOLDER_CNT - MINUS_FOLDER_CNT != 0
+				ORDER BY ORG_NM
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 공동형인계인수 기록물인계 인계대상선정 생산부서 목록 조회한다.
+	 -->
+	<select id="countMultiTakovrOrgTrgtPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt" resultClass="java.lang.Long"> 
+		<!-- 
+		SELECT COUNT(1)
+		FROM (
+		    SELECT A.org_cd
+		          ,(SELECT COUNT(1) FROM tb_rdfolder Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) folder_cnt
+		    FROM tb_rdfolder A
+		    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		    <isNotEmpty prepend="AND" property="creatOrgCd">
+            	  A.org_cd = #creatOrgCd:VARCHAR#
+            </isNotEmpty>
+            AND A.folder_keep_state_cd != '05'
+		    AND NOT EXISTS (SELECT Z.folder_id 
+		                    FROM tb_rdmultitakovrlist Z
+		                    WHERE Z.record_center_id     = A.record_center_id
+		                    AND   Z.folder_id             = A.folder_id
+		                    AND (Z.take_takovr_snd_rep_cd != #takeTakovrSndRepCd:VARCHAr# OR Z.take_takovr_yyyy != #takeTakovrYyyy:VARCHAR# OR Z.take_takovr_sno != #takeTakovrSno:NUMBER#)
+		    )
+		    GROUP BY A.record_center_id, A.org_cd
+		) L
+		WHERE L.folder_cnt != 0
+		-->
+		 
+		 SELECT COUNT(1)
+		  FROM
+		  (
+		       SELECT A.RECORD_CENTER_ID,
+		              A.ORG_CD,
+		              (SELECT Z.FULL_ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.ORG_CD) AS ORG_NM,
+		              COUNT(1) AS ALL_FOLDER_CNT,
+		              SUM(CASE WHEN C.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS MINUS_FOLDER_CNT,
+		              SUM(CASE WHEN B.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS FIXED_FOLDER_CNT
+		         FROM TB_RDFOLDER A,
+		              (
+		                   SELECT T.RECORD_CENTER_ID,
+		                          T.FOLDER_ID
+		                     FROM TB_RDMULTITAKOVRLIST T
+		                    WHERE T.TAKE_TAKOVR_SND_REP_CD = #takeTakovrSndRepCd:VARCHAR#
+		                      AND T.TAKE_TAKOVR_YYYY = #takeTakovrYyyy:VARCHAR#
+		                      AND T.TAKE_TAKOVR_SNO = #takeTakovrSno:NUMBER#
+		                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID
+		               ) B,
+		              (
+		                   SELECT T.RECORD_CENTER_ID,
+		                          T.FOLDER_ID
+		                     FROM TB_RDMULTITAKOVRLIST T
+		                    WHERE T.TAKE_TAKOVR_SND_REP_CD != #takeTakovrSndRepCd:VARCHAr#
+		                       OR T.TAKE_TAKOVR_YYYY != #takeTakovrYyyy:VARCHAR#
+		                       OR T.TAKE_TAKOVR_SNO != #takeTakovrSno:NUMBER#
+		                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID
+		               ) C
+		        WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		          AND A.FOLDER_ID = B.FOLDER_ID(+)
+		          AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)
+		          AND A.FOLDER_ID = C.FOLDER_ID(+)
+		          AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		          AND A.FOLDER_KEEP_STATE_CD != '05'
+		          <isNotEmpty prepend="AND" property="creatOrgCd">
+		          		A.ORG_CD = #creatOrgCd:VARCHAR#
+		          </isNotEmpty>
+		       GROUP BY A.RECORD_CENTER_ID, A.ORG_CD
+		   )
+		 WHERE ALL_FOLDER_CNT - MINUS_FOLDER_CNT != 0
+	</select>
+	
+	<!-- 
+		공동형인계인수_인계대상선정
+		: 인계대상을 선정한다. (처리과별, 기록물철별)
+	 -->
+	<insert id="createMultiTakovrTrgtFixReg" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt">
+		INSERT INTO tb_rdmultitakovrlist(take_takovr_snd_rep_cd
+		                                ,take_takovr_yyyy
+		                                ,take_takovr_sno
+		                                ,folder_id
+		                                ,record_center_id
+		                                ,take_takovr_rcv_rep_cd
+		                                ,take_fin_flag
+		                                ,reg_dtime) 
+		(   SELECT #takeTakovrSndRepCd:VARCHAR#
+		          ,#takeTakovrYyyy:VARCHAR#
+		          ,#takeTakovrSno#
+		          ,A.folder_id
+		          ,A.record_center_id
+		          ,#takeTakovrRcvRepCd:VARCHAR#
+		          ,'0'
+		          <!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		          ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		      FROM tb_rdfolder A
+		     WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		     <dynamic>
+		     	<isNotEmpty prepend="AND" property="orgCd">
+		     		A.org_cd = #orgCd:VARCHAR#
+			     </isNotEmpty>
+			     <isNotEmpty prepend="AND" property="folderId">
+			     	A.folder_id = #folderId:VARCHAR#
+			     </isNotEmpty>
+		     </dynamic>
+		       AND A.folder_keep_state_cd != '05'
+		       AND NOT EXISTS (SELECT Z.folder_id FROM tb_rdmultitakovrlist Z
+		                        WHERE Z.record_center_id = A.record_center_id
+		                          AND Z.folder_id = A.folder_id
+		       )
+		)
+	</insert>
+	
+	<!-- 
+		공동형인계인수_인계대상선정
+		: 인계대상을 삭제한다(처리과별)
+	 -->
+	<delete id="deleteMultiTakovrTrgtFixBatchReg" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt">
+	 	DELETE FROM tb_rdmultitakovrlist A 
+	 	 WHERE A.take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+	 	   AND A.take_takovr_yyyy       = #takeTakovrYyyy:VARCHAR#
+	 	   AND A.take_takovr_sno 		= #takeTakovrSno:NUMBER#
+	 	   <!--cubrid AND (A.record_center_id, A.folder_id)
+	 	    IN (SELECT Z.record_center_id, Z.folder_id-->
+                   AND 
+	 	    EXISTS (SELECT 1
+	 	          FROM tb_rdfolder Z 
+	 	         WHERE Z.record_center_id = #recordCenterId:VARCHAR#
+	 	           AND Z.record_center_id = A.record_center_id
+	 	    	   AND Z.org_cd = #orgCd:VARCHAR#
+                           <!--cubrid-->
+                           AND Z.record_center_id = A.record_center_id
+                           AND Z.folder_id = A.folder_id
+	 	    )
+	</delete>
+	
+	<!-- 
+		공동형인계인수_인계대상선정
+		: 인계대상을 삭제한다. (기록물철별)
+	 -->
+	<delete id="deleteMultiTakovrTrgtFixReg" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt">
+	 	DELETE FROM tb_rdmultitakovrlist A 
+	 	 WHERE A.take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+	 	   AND A.take_takovr_yyyy		= #takeTakovrYyyy:VARCHAR#
+	 	   AND A.take_takovr_sno 		= #takeTakovrSno:NUMBER#
+	 	   AND A.record_center_id 		= #recordCenterId:VARCHAR#
+	 	   AND A.folder_id 				= #folderId:VARCHAR#
+	 </delete>
+	
+	
+	<!-- 
+		공동형인계인수_인계대상선정
+		: 선정된 기록물철의 수량을 조회한다.
+	 -->
+	<select id="findMultiTakovrFixedCnt" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1) 
+		FROM TB_RDMULTITAKOVRLIST
+		WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		AND   take_takovr_yyyy       = #takeTakovrYyyy:VARCHAR#    
+		AND   take_takovr_sno        = #takeTakovrSno:VARCHAR#
+	 </select>
+	 
+	<!-- 
+		공동형인계인수_인계대상선정
+		: 인계계획의 상태를 변경한다.	
+	 -->
+	<update id="updateMultiTakovrState" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		UPDATE tb_rdmultitakovrplan A
+		   SET A.take_state_snd_div_cd 	= #takeStateSndDivCd:VARCHAR#
+		   	<isEqual prepend=", " property="takeStateSndDivCd" compareValue="02">
+		   	   A.take_takovr_folder_cnt = (SELECT COUNT(1) 
+		       								 FROM tb_rdmultitakovrlist B 
+		       								WHERE B.take_takovr_snd_rep_cd 	= A.take_takovr_snd_rep_cd 
+		       								  AND B.take_takovr_yyyy 		= A.take_takovr_yyyy 
+		       								  AND B.take_takovr_sno 		= A.take_takovr_sno)
+			  ,A.take_takovr_record_cnt = (SELECT COUNT(1) 
+		          						  	 FROM tb_rdrecord B 
+		          						  	<!--cubrid WHERE (B.record_center_id, B.folder_id) 
+		          						  	   IN (SELECT C.record_center_id, C.folder_id -->
+		          						  	WHERE 
+		          						  	   EXISTS (SELECT 1
+
+		          						  	         FROM tb_rdmultitakovrlist C 
+		          						  	        WHERE C.take_takovr_snd_rep_cd 	= A.take_takovr_snd_rep_cd 
+		          						  	          AND C.take_takovr_yyyy 		= A.take_takovr_yyyy 
+		          						  	          AND C.take_takovr_sno 		= A.take_takovr_sno
+                                                                                          <!--cubrid-->
+                                                                                          AND C.record_center_id = B.record_center_id
+                                                                                          AND C.folder_id = B.folder_id))
+		   	</isEqual>
+		   	<isEqual prepend=", " property="takeStateSndDivCd" compareValue="03">
+		   		A.take_state_flag = #takeStateFlag:VARCHAR#
+		   	</isEqual>
+		   	<isEqual prepend=", " property="takeStateSndDivCd" compareValue="03">
+		  		<isNotEmpty property="takeStateRcvDivCd">
+		  			A.take_state_rcv_div_cd = #takeStateRcvDivCd:VARCHAR#
+		  		,   A.take_state_rcv_flag = '0'
+		  		</isNotEmpty>
+		   	</isEqual>
+		 WHERE A.take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		   AND A.take_takovr_yyyy 		= #takeTakovrYyyy:VARCHAR#
+		   AND A.take_takovr_sno 		= #takeTakovrSno:NUMBER#	 
+	 </update>
+	 
+	
+	<!-- 공동형인계인수 기록물인계 인계대상선정 철 목록 조회한다. -->
+	<resultMap id="findMultiTakovrTrgtFolderPagedList-result"  class="rms.transf.multiTakovr.domain.MultiTakovrTrgtFolder">
+		<result property="recordCenterId" 	    column="record_center_id"/>
+		<result property="folderId" 			column="folder_id"/>
+		<result property="clssDivCd" 			column="clss_div_cd"/>
+		<result property="clssId" 				column="clss_id"/>
+		<result property="clssNm" 				column="clss_nm"/>
+		<result property="title" 				column="title"/>
+		<result property="orgCd" 				column="org_cd"/>
+		<result property="orgNm" 				column="org_nm"/>
+		<result property="creatYyyy" 			column="creat_yyyy"/>
+		<result property="creatSysCd" 			column="creat_sys_cd"/>
+		<result property="creatSysNm" 			column="creat_sys_nm"/>
+		<result property="presvTermCd" 			column="presv_term_cd"/>
+		<result property="presvTermNm" 			column="presv_term_nm"/>
+		<result property="erecordFlag" 			column="erecord_flag"/>
+		<result property="erecordFlagNm" 		column="erecord_flag_nm"/>
+		<result property="fixedFlag" 			column="fixed_flag"/>
+		<result property="takeTakovrSndRepCd" 	column="take_takovr_snd_rep_cd"/>
+		<result property="takeTakovrYyyy" 		column="take_takovr_yyyy"/>
+		<result property="takeTakovrSno" 		column="take_takovr_sno"/>
+	 </resultMap>
+	 <!-- 
+	 	SELECT - 공동형인계인수 기록물인계 인계대상선정 철 목록 조회한다.
+	  -->
+	 <select id="findMultiTakovrTrgtFolderPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt" resultMap="findMultiTakovrTrgtFolderPagedList-result"> 
+	 	SELECT E.*
+	 	FROM (
+	 		SELECT ROWNUM AS rnum
+	 			,D.*
+	 		FROM (
+			 	SELECT B.record_center_id
+			 		, B.folder_id
+			 		, B.clss_div_cd
+			 		, B.clss_id
+			 		, B.clss_nm
+				    , B.title
+				    , B.org_cd
+				    , B.org_nm
+				    , B.creat_yyyy
+				    , B.creat_sys_cd
+				    , B.creat_sys_nm
+				    , B.presv_term_cd
+				    , B.presv_term_nm
+				    , B.erecord_flag
+				    , B.erecord_flag_nm
+				    , B.fixed_flag
+				    , C.take_takovr_snd_rep_cd
+				    , C.take_takovr_yyyy
+				    , C.take_takovr_sno
+				FROM (
+				    SELECT A.record_center_id
+				          ,A.folder_id
+				          ,A.clss_div_cd
+				          ,A.clss_id
+				          ,A.clss_nm
+				          ,A.title
+				          ,A.org_cd
+				          ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm
+				          ,A.creat_yyyy
+				          ,A.creat_sys_cd
+				          ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = A.creat_sys_cd) creat_sys_nm
+				          ,A.presv_term_cd
+				          ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = A.presv_term_cd) presv_term_nm
+				          ,A.erecord_flag
+				          ,(CASE WHEN A.erecord_flag = '1' THEN '전자'
+				                 WHEN A.erecord_flag = '2' THEN '비전자'
+				                 ELSE '혼용'
+				            END) erecord_flag_nm
+				          ,NVL ((SELECT DISTINCT '1' FROM tb_rdmultitakovrlist Z WHERE Z.record_center_id = A.record_center_id AND Z.folder_id = A.folder_id), '0') fixed_flag
+				          ,#takeTakovrSndRepCd:VARCHAR# take_takovr_snd_rep_cd
+				          ,#takeTakovrYyyy:VARCHAR# take_takovr_yyyy
+				          ,#takeTakovrSno:NUMBER# take_takovr_sno
+				      FROM tb_rdfolder A
+				      WHERE record_center_id 	= #recordCenterId:VARCHAR#
+				      AND A.org_cd 				= #orgCd:VARCHAR#
+			      	<isNotEmpty prepend="AND" property="clssId">
+						A.clss_id = #clssId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="title">
+						A.title like #title#
+					</isNotEmpty>
+					  AND A.folder_keep_state_cd != '05'
+				) B, tb_rdmultitakovrlist C
+				WHERE B.record_center_id   		= C.record_center_id (+)
+				AND   B.folder_id 				= C.folder_id  (+)
+				AND   B.take_takovr_snd_rep_cd 	= C.take_takovr_snd_rep_cd 
+				AND   B.take_takovr_yyyy 		= C.take_takovr_yyyy 
+				AND   B.take_takovr_sno 		= C.take_takovr_sno
+				UNION 
+				SELECT A.record_center_id
+				      ,A.folder_id
+				      ,A.clss_div_cd
+				      ,A.clss_id
+				      ,A.clss_nm
+				      ,A.title
+				      ,A.org_cd
+				      ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm
+				      ,A.creat_yyyy
+				      ,A.creat_sys_cd
+				      ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = A.creat_sys_cd) creat_sys_nm
+				      ,A.presv_term_cd
+				      ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = A.presv_term_cd) presv_term_nm
+				      ,A.erecord_flag
+				      ,(CASE WHEN A.erecord_flag = '1' THEN '전자'
+				             WHEN A.erecord_flag = '2' THEN '비전자'
+				             ELSE '혼용'
+				        END) erecord_flag_nm
+				      ,NVL ((SELECT DISTINCT '1' FROM tb_rdmultitakovrlist Z WHERE Z.record_center_id = A.record_center_id AND Z.folder_id = A.folder_id), '0') fixed_flag
+				      ,'' take_takovr_snd_rep_cd
+				      ,'' take_takovr_yyyy
+				      ,0 take_takovr_sno
+				FROM tb_rdfolder A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND A.org_cd 			 = #orgCd:VARCHAR#
+				<isNotEmpty prepend="AND" property="clssId">
+					A.clss_id = #clssId:VARCHAR#			
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					A.title like #title#
+				</isNotEmpty>
+				AND A.folder_keep_state_cd != '05'
+				AND NOT EXISTS (SELECT Z.folder_id 
+							    FROM tb_rdmultitakovrlist Z
+							    WHERE Z.record_center_id 	= A.record_center_id
+							    AND   Z.folder_id 			= A.folder_id)
+                                <!--cubrid-->
+				ORDER BY 1, 6
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 공동형인계인수 기록물인계 인계대상선정 철 목록 조회한다.
+	 -->
+	<select id="countMultiTakovrTrgtFolderPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrTrgt" resultClass="java.lang.Long">
+	 	SELECT SUM(row_cnt)
+		FROM (
+		    SELECT COUNT(1) row_cnt
+		    FROM (
+		        SELECT A.record_center_id
+		              ,A.folder_id
+		              ,#takeTakovrSndRepCd:VARCHAR# take_takovr_snd_rep_cd
+		              ,#takeTakovrYyyy:VARCHAR# take_takovr_yyyy
+		              ,#takeTakovrSno:NUMBER# take_takovr_sno
+		        FROM tb_rdfolder A
+		        WHERE record_center_id = #recordCenterId:VARCHAR#
+		        AND A.org_cd 			 = #orgCd:VARCHAR#
+		        <dynamic>
+					<isNotEmpty prepend="AND" property="clssId">
+						A.clss_id = #clssId:VARCHAR#			
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="title">
+						A.title like #title#
+					</isNotEmpty>
+				</dynamic>
+				AND A.folder_keep_state_cd != '05'
+				) B, tb_rdmultitakovrlist C
+		    WHERE b.record_center_id   	 = C.record_center_id (+)
+		    AND B.folder_id 		  	 = C.folder_id  (+)
+		    AND B.take_takovr_snd_rep_cd = C.take_takovr_snd_rep_cd 
+		    AND B.take_takovr_yyyy 		 = C.take_takovr_yyyy 
+		    AND B.take_takovr_sno 		 = C.take_takovr_sno
+		    UNION 
+		    SELECT COUNT(1) 
+		    FROM tb_rdfolder A
+		    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		    AND A.org_cd 			 = #orgCd:VARCHAR#
+		    <dynamic>
+				<isNotEmpty prepend="AND" property="clssId">
+					A.clss_id = #clssId:VARCHAR#			
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					A.title like #title#
+				</isNotEmpty>
+			</dynamic>
+			AND A.folder_keep_state_cd != '05'
+		    AND NOT EXISTS (SELECT Z.folder_id 
+					        FROM tb_rdmultitakovrlist Z
+					        WHERE Z.record_center_id = A.record_center_id
+					        AND   Z.folder_id = A.folder_id))
+	</select>
+	 
+	 
+	<!-- 공동형인계인수 기록물인계 인계처리 대상목록을 조회한다. -->
+	<resultMap id="findMultiTakovrProcPagedList-result" class="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+	 	<result property="takeTakovrSndRepCd" 				column="take_takovr_snd_rep_cd"/>
+	 	<result property="takeTakovrRcvRepNm" 				column="take_takovr_rcv_rep_nm"/>
+	 	<result property="takeTakovrYyyy" 					column="take_takovr_yyyy"/>
+	 	<result property="takeTakovrSno" 					column="take_takovr_sno"/>
+	 	<result property="takeTakovrSnoStr" 				column="take_takovr_sno_str"/>
+	 	<result property="takeTakovrFolderCnt" 				column="take_takovr_folder_cnt"/>
+	 	<result property="takeTakovrRecordCnt" 				column="take_takovr_record_cnt"/>
+	 	<result property="takeStateSndDivCd" 				column="take_state_snd_div_cd"/>
+	 	<result property="takeStateSndDivNm" 				column="take_state_snd_div_nm"/>
+	 	<result property="takeStateFlag" 					column="take_state_flag"/>
+	 	<result property="takeStateFlagNm" 					column="take_state_flag_nm"/>
+		<result property="takeStateRcvDivCd" 				column="take_state_rcv_div_cd"/>
+		<result property="takeStateRcvDivNm" 				column="take_state_rcv_div_nm"/>
+	</resultMap>
+	<!-- 
+		SELECT - 공동형인계인수 기록물인계 인계처리 대상목록을 조회한다.
+	 -->
+	<select id="findMultiTakeTakovrProcPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultMap="findMultiTakovrProcPagedList-result">
+		SELECT C.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT A.take_takovr_snd_rep_cd
+					, (SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) take_takovr_rcv_rep_nm
+				    , A.take_takovr_yyyy
+				    , A.take_takovr_sno
+				    , LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str
+				    , A.take_takovr_folder_cnt
+				    , A.take_takovr_record_cnt
+				    , A.take_state_snd_div_cd
+				    , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD88' AND Z.com_cd = A.take_state_snd_div_cd) take_state_snd_div_nm
+				    , A.take_state_flag
+				    , (CASE WHEN A.take_state_snd_div_cd = '02' THEN '미처리'
+				            WHEN A.take_state_snd_div_cd = '03' THEN (CASE WHEN A.take_state_flag = '1' THEN '인계처리중'
+				                                                           WHEN A.take_state_flag = '2' THEN '인계완료'
+				                                                           ELSE '미처리'
+				                                                      END)
+				            WHEN A.take_state_snd_div_cd = '04' THEN '인계완료'
+				       END) take_state_flag_nm
+				    , A.take_state_rcv_div_cd
+		        	, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD89' AND Z.com_cd = A.take_state_rcv_div_cd) take_state_rcv_div_nm
+				FROM tb_rdmultitakovrplan A
+				WHERE A.take_state_snd_div_cd IN ('02', '03', '04')
+			  	<isNotEmpty prepend="AND" property="takeTakovrSndRepCd">
+			 		A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #takeTakovrSndRepCd:VARCHAR#) 		
+			  	</isNotEmpty>
+		 		<isNotEmpty prepend="AND" property="takeTakovrYyyy">
+		 			A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#	
+		 		</isNotEmpty>
+				<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+					A.take_state_rcv_div_cd IS NOT NULL
+				</isEqual>
+				<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+					A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #recordCenterId:VARCHAR#)
+				</isEqual>
+				ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 공동형인계인수 기록물인계 인계처리 대상목록을 조회한다.
+	 -->
+	<select id="countMultiTakeTakovrProcPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM tb_rdmultitakovrplan A
+		WHERE A.take_state_snd_div_cd IN ('02', '03', '04')
+		<isNotEmpty prepend="AND" property="takeTakovrSndRepCd">
+	 		A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #takeTakovrSndRepCd:VARCHAR#) 		
+	  	</isNotEmpty>
+ 		<isNotEmpty prepend="AND" property="takeTakovrYyyy">
+ 			A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#	
+ 		</isNotEmpty>
+ 		<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+		   	A.take_state_rcv_div_cd IS NOT NULL
+		</isEqual>
+		<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+			A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #recordCenterId:VARCHAR#)
+		</isEqual>
+	</select>
+</sqlMap>

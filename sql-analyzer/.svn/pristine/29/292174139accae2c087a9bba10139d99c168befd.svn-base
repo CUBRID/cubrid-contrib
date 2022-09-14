@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.stndinfo">
+	
+		<!-- 기준정보 준칙/기준관리 준칙/기준관리 적용대상 -->
+	<resultMap id="stnd-stndmngtype-result" class="rms.stnd.stndinfo.domain.StndMngType" >
+		<result property="stndMngTypeCd"	column="STND_MNG_TYPE_CD"/>
+		<result property="cdDiv"			column="CD_DIV"/>
+		<result property="applyTrgtNm" 		column="APPLY_TRGT_NM"/>	
+	</resultMap>
+	<!-- 기준정보 준칙/기준관리 준칙/기준관리 적용대상을 조회한다. -->
+	<select id="findStndMngType" parameterClass="rms.stnd.stndinfo.domain.StndMngType" resultMap="stnd-stndmngtype-result">
+		SELECT '' AS STND_MNG_TYPE_CD
+			, '' CD_DIV
+			, '전체' AS APPLY_TRGT_NM
+		FROM DUAL
+		UNION ALL
+		SELECT /*+ index_desc (TB_ZZSTNDMNGTYPE TB_ZZSTNDMNGTYPE_PK) */ 
+			A.STND_MNG_TYPE_CD
+			, A.CD_DIV	
+			, A.APPLY_TRGT_NM
+		FROM TB_ZZSTNDMNGTYPE A 
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="cdDiv">
+			A.CD_DIV = #cdDiv:VARCHAR# 
+		</isNotEmpty>
+	</select>
+	
+		
+	<!-- 기준정보 준칙/기준관리 준칙/기준관리 적용대상을 추가한다. -->
+	<insert id="createStndMngType" parameterClass="rms.stnd.stndinfo.domain.StndMngType">
+		INSERT INTO TB_ZZSTNDMNGTYPE (
+			record_center_id, stnd_mng_type_cd, cd_div, apply_trgt_nm, reg_user_id, reg_dtime
+		) VALUES (
+			#recordCenterId:VARCHAR# , (SELECT NVL(MAX(TO_NUMBER(STND_MNG_TYPE_CD)),0) FROM TB_ZZSTNDMNGTYPE WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# )+1
+			, #cdDiv:VARCHAR#, #applyTrgtNm:VARCHAR#, #regUserId:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		CREATE
+	 
+	<insert id="createStndMngType" parameterClass="rms.stnd.stndinfo.domain.StndMngType">
+		INSERT INTO TB_ZZSTNDMNGTYPE(STND_MNG_TYPE_CD, CD_DIV, APPLY_TRGT_NM, REG_USER_ID, REG_DTIME, RECORD_CENTER_ID) 
+		VALUES ((SELECT NVL(MAX(TO_NUMBER(STND_MNG_TYPE_CD)),0) FROM TB_ZZSTNDMNGTYPE WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) + 1 ,#cdDiv#, #applyTrgtNm#, #regUserId#, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #recordCenterId# )
+	</insert>
+	-->
+</sqlMap>

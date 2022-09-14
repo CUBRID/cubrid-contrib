@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.clssmng">
+
+	<resultMap id="stnd-notifile-result" class="rms.stnd.clssmng.domain.NotiFile" >
+		<result property="bisClssId"		     column="BIS_CLSS_ID"/>
+		<result property="bisTypeNm"		     column="BIS_TYPE_NM"/>
+		<result property="policyFieldNm"	     column="POLICY_FIELD_NM"/>			
+		<result property="policyAreaNm" 	     column="POLICY_AREA_NM"/>	
+		<result property="lrgNm" 			     column="LRG_NM"/>	
+		<result property="midNm" 			     column="MID_NM"/>	
+		<result property="smlNm" 			     column="SML_NM"/>	
+		<result property="taskNm" 			     column="TASK_NM"/>	
+		<result property="presvTermNm" 		     column="PRESV_TERM_NM"/>	
+		<result property="presvTermFixRsn"	     column="PRESV_TERM_FIX_RSN"/>	
+		<result property="presvTermHandlState"	 column="PRESV_TERM_HANDL_STATE"/>
+		<result property="taskDescr"             column="TASK_DESCR"/>
+		<result property="funshRecord"           column="FUNSH_RECORD"/>
+		<result property="openDetlStnd"          column="OPEN_DETL_STND"/>
+		<result property="readRangeDetlStnd"     column="READ_RANGE_DETL_STND"/>
+		<result property="funshFlag"          	 column="FUNSH_FLAG"/>
+		<result property="funshRsn"         	 column="FUNSH_RSN"/>
+		<result property="funshTerm"        	 column="FUNSH_TERM"/>
+	</resultMap>
+	
+	<resultMap id="stnd-recordclssnoti-result" class="rms.stnd.clssmng.domain.NotiFile" >
+		<result property="notiYyyy"			column="NOTI_YYYY"/>
+		<result property="infoFileId"		column="INFO_FILE_ID"/>
+	</resultMap>
+	
+	<resultMap id="stnd-findnotifile-result" class="rms.stnd.clssmng.domain.NotiFile" >
+		<result property="recordCenterId"			column="RECORD_CENTER_ID"/>
+		<result property="infoFileId"		        column="INFO_FILE_ID"/>
+	</resultMap>
+
+	<!-- 
+		SELECT(고시파일을 만들기 위한 조회)
+	 -->
+	<select id="findCurTaskList" parameterClass="rms.stnd.clssmng.domain.NotiFile" resultMap="stnd-notifile-result">
+		SELECT A.BIS_CLSS_ID,
+		       NVL((SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ03' AND USE_FLAG = '1' AND COM_CD = REPLACE(A.BIS_TYPE,'B','')),REPLACE(A.BIS_TYPE,'B','')) BIS_TYPE_NM,
+		       F.BIS_CLSS_NM AS POLICY_FIELD_NM,
+		       E.BIS_CLSS_NM AS POLICY_AREA_NM,
+		       D.BIS_CLSS_NM AS LRG_NM,
+		       C.BIS_CLSS_NM AS MID_NM,
+		       B.BIS_CLSS_NM AS SML_NM,
+		       A.BIS_CLSS_NM AS TASK_NM,
+		       (SELECT COM_CD_NM 
+		          FROM TB_ZZCOMCD 
+		         WHERE COM_TYPE_CD = 'RD07' 
+		           AND USE_FLAG = '1' 
+		           AND COM_CD = A.PRESV_TERM_CD
+		       ) AS PRESV_TERM_NM,
+		       REPLACE(A.PRESV_TERM_FIX_RSN     , CHR(9), '') AS PRESV_TERM_FIX_RSN,
+		       REPLACE(A.PRESV_TERM_HANDL_STATE , CHR(9), '') AS PRESV_TERM_HANDL_STATE,
+		       REPLACE(A.TASK_DESCR             , CHR(9), '') AS TASK_DESCR,
+		       REPLACE(A.FUNSH_RECORD           , CHR(9), '') AS FUNSH_RECORD,
+		       REPLACE(A.OPEN_DETL_STND         , CHR(9), '') AS OPEN_DETL_STND,
+		       REPLACE(A.READ_RANGE_DETL_STND   , CHR(9), '') AS READ_RANGE_DETL_STND,		       
+		       REPLACE(A.FUNSH_FLAG   , CHR(9), '') AS FUNSH_FLAG,
+		       REPLACE(A.FUNSH_RSN   , CHR(9), '') AS FUNSH_RSN,
+		       REPLACE(A.FUNSH_TERM   , CHR(9), '') AS FUNSH_TERM
+		  FROM TB_ZZBISCLSS A,
+		       TB_ZZBISCLSS B,
+		       TB_ZZBISCLSS C,
+		       TB_ZZBISCLSS D,
+		       TB_ZZBISCLSS E,
+		       TB_ZZBISCLSS F
+		 WHERE A.UPPER_BIS_CLSS_ID = B.BIS_CLSS_ID
+		   AND B.UPPER_BIS_CLSS_ID = C.BIS_CLSS_ID
+		   AND C.UPPER_BIS_CLSS_ID = D.BIS_CLSS_ID
+		   AND D.UPPER_BIS_CLSS_ID = E.BIS_CLSS_ID
+		   AND E.UPPER_BIS_CLSS_ID = F.BIS_CLSS_ID
+		   AND A.LEVL = '6'
+		   AND A.PRESV_TERM_STATE = '4'
+		ORDER BY A.BIS_TYPE DESC
+	</select>		
+	
+	<!-- 
+		CREATE
+	 -->
+	<insert id="createNotiFile" parameterClass="rms.stnd.clssmng.domain.NotiFile">
+		INSERT INTO TB_ZZRECORDCLSSNOTI(NOTI_YYYY, NOTI_FILE_NM, INFO_FILE_ID, NOTI_USER_ID, NOTI_YMD, RECORD_CENTER_ID) 
+		VALUES (#notiYyyy# ,#notiFileNm#, #infoFileId#, #notiUserId#, #notiYmd#, #recordCenterId#)
+	</insert>
+	
+	<update id="updateNotiFile" parameterClass="rms.stnd.clssmng.domain.NotiFile">
+	    UPDATE TB_ZZRECORDCLSSNOTI SET NOTI_FILE_NM=#notiFileNm:VARCHAR#
+	    ,INFO_FILE_ID=#infoFileId:VARCHAR#
+	    ,NOTI_USER_ID=#notiUserId:VARCHAR#
+	    ,NOTI_YMD=#notiYmd:VARCHAR#
+	    WHERE NOTI_YYYY=#notiYyyy:VARCHAR#
+	    AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</update>	
+		
+	<select id="findNotiFile" parameterClass="rms.stnd.clssmng.domain.NotiFile" resultMap="stnd-findnotifile-result">
+	    SELECT RECORD_CENTER_ID,INFO_FILE_ID
+	    FROM TB_ZZRECORDCLSSNOTI
+	    WHERE NOTI_YYYY=#notiYyyy:VARCHAR#
+	    AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</select>
+	
+	<select id="isNotiFile" parameterClass="rms.stnd.clssmng.domain.NotiFile" resultClass="java.lang.Integer">
+	    SELECT count(1)
+	    FROM TB_ZZRECORDCLSSNOTI
+	    WHERE NOTI_YYYY=#notiYyyy:VARCHAR#
+	    AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</select>		
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findNotiList" parameterClass="rms.stnd.clssmng.domain.NotiFile" resultMap="stnd-recordclssnoti-result">
+		SELECT NOTI_YYYY,INFO_FILE_ID
+		FROM TB_ZZRECORDCLSSNOTI
+		WHERE NOTI_YYYY = #notiYyyy:VARCHAR#
+		AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</select>
+	
+	<!--  고시파일 생성 이력을 등록  -->
+	<insert id="creatNotiFileBisClssHistInfo" parameterClass="rms.stnd.clssmng.domain.NotiFile">
+	    INSERT INTO TB_ZZBISCLSSHIST
+		(
+			BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL
+			, SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG
+			, LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN
+			, RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME
+		)
+		(
+	        SELECT A.BIS_CLSS_ID,
+	              (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 
+	                 FROM TB_ZZBISCLSSHIST 
+	               WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#) BIS_CLSS_HIST_NO,
+	               A.BIS_CLSS_NM,
+	               A.UPPER_BIS_CLSS_ID,
+	               A.LEVL,
+	               A.SORT_SNO,
+	               A.BIS_TYPE,
+	               A.START_DTIME,
+	               A.CLOSE_DTIME,
+	               A.DEL_FLAG,
+	               A.LAW_BASIS,
+	               A.PRESV_TERM_CD,
+	               A.PRESV_TERM_HANDL_STATE,
+	               A.PRESV_TERM_FIX_YMD,
+	               A.PRESV_TERM_FIX_RSN,
+	               '1' RECORD_CENTER_CONFM_FLAG,
+                   A.TASK_DESCR,
+                   <!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') WORK_DTIME,-->
+                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') WORK_DTIME,
+                   '5' WORK_TYPE_CD,
+                   <!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') LINK_DTIME-->
+                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') LINK_DTIME
+            FROM  TB_ZZBISCLSS A, TB_ZZPRESVTERMHIST B
+            WHERE A.BIS_CLSS_ID = #bisClssId:VARCHAR#
+            AND   A.BIS_CLSS_ID = B.BIS_CLSS_ID
+		)
+	 </insert>
+	 
+	 <update id="updatePresvTermState" parameterClass="rms.stnd.clssmng.domain.NotiFile">
+	    UPDATE TB_ZZBISCLSS
+	     SET PRESV_TERM_STATE='5'
+	    WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+	    
+	</update>
+	
+	<select id="checkNotiFileHist" parameterClass="rms.stnd.clssmng.domain.NotiFile" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZBISCLSSHIST
+		WHERE (BIS_CLSS_ID,PRESV_TERM_CD,PRESV_TERM_FIX_RSN)
+               =(SELECT BIS_CLSS_ID,PRESV_TERM_CD,PRESV_TERM_FIX_RSN 
+                   FROM TB_ZZBISCLSS
+                  WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#)
+          AND WORK_TYPE_CD='5'
+	</select>
+
+</sqlMap>

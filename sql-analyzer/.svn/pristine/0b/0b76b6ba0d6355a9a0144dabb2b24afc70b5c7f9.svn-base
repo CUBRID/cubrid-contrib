@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.read">
+
+	<!-- 
+		열람승인(처리부서)_기록물철
+		: 기록물철 목록 조회
+	 -->
+	<resultMap id="findReadApprFolderPagedList-result" class="rms.srch.read.domain.ReadApprFolder">
+		<result property="keepRecordCenterId" column="KEEP_RECORD_CENTER_ID"/>
+		<result property="reqRecordCenterId" column="REQ_RECORD_CENTER_ID"/>
+		<result property="reqRecordCenterNm" column="REQ_RECORD_CENTER_NM"/>
+		<result property="readReqno"        column="READ_REQNO"        />
+		<result property="folderId"         column="FOLDER_ID"         />
+		<result property="title"            column="TITLE"             />
+		<result property="creatYyyy"        column="CREAT_YYYY"        />
+		<result property="orgCd"            column="ORG_CD"            />
+		<result property="orgNm"            column="ORG_NM"            />
+		<result property="orgAbbrNm"        column="ORG_ABBR_NM"       />
+		<result property="readUserId"      	column="READ_USER_ID"      />
+		<result property="readUserNm"      	column="READ_USER_NM"      />
+		<result property="readAprovCd"  	column="READ_APROV_CD"     />		
+		<result property="readAprovNm"  	column="READ_APROV_NM"     />	
+		<result property="readReqYmd"       column="READ_REQ_YMD"      />
+		<result property="readYmd"          column="READ_YMD"          />
+		<result property="readStartYmd"  	column="READ_START_YMD"    />		
+		<result property="readCloseYmd"     column="READ_CLOSE_YMD"    />		
+		<result property="readRsn"          column="READ_RSN"          />						
+		<result property="clssId"           column="CLSS_ID"           />
+		<result property="clssNm"           column="CLSS_NM"           />
+		<result property="readYmdStart"     column="READ_YMD_START"    />
+		<result property="readYmdClose"     column="READ_YMD_CLOSE"    />
+		<result property="readAprovUserId"  column="READ_APROV_USER_ID"/>
+		<result property="readAprovUserNm"  column="READ_APROV_USER_NM"/>
+		<result property="handlOrgCd"  	    column="HANDL_ORG_CD"      />		
+		<result property="handlOrgNm"  	    column="HANDL_ORG_NM"      />	
+		<result property="readAprovYmd"  	column="READ_APROV_YMD"    />			
+		<result property="readAprovRsn"  	column="READ_APROV_RSN"    />
+		<result property="readReturnCd"  	column="READ_RETURN_CD"    />
+		<result property="readUserDeptNm"  	column="READ_USER_DEPT_NM" />
+		<result property="readReqProgStateCd"  	column="READ_REQ_PROG_STATE_CD"    />		
+		<result property="readReqNo"   		column="readReqNo"         />
+	</resultMap>
+	<select id="countReadApprFolderPagedList" parameterClass="rms.srch.read.domain.ReadApprFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)             
+        FROM  TB_RDREADREQ A, TB_RDFOLDERREADDETL B, TB_RDFOLDER C
+        WHERE C.FOLDER_ID = B.FOLDER_ID
+        AND B.READ_REQNO = A.READ_REQNO
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID        
+        AND B.KEEP_RECORD_CENTER_ID = C.RECORD_CENTER_ID
+        AND A.READ_REQ_DIV_CD = '1'        
+        AND B.KEEP_RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND B.HANDL_ORG_CD = #handlOrgCd:VARCHAR#
+        AND READ_REQ_YMD BETWEEN #readYmdStart:VARCHAR# AND #readYmdClose:VARCHAR#        
+        <dynamic>        
+        	<isNotEmpty prepend="AND" property="readUserId">
+         		A.READ_USER_ID = #readUserId:VARCHAR#
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="title">
+            	(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="readAprovCd">
+            	<isNotEqual property="readAprovCd" compareValue="4">
+                	B.READ_APROV_CD LIKE #readAprovCd:VARCHAR# AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+                </isNotEqual>
+                <isEqual property="readAprovCd" compareValue="4">
+                	B.READ_RETURN_CD ='1' AND B.READ_APROV_CD = '1'
+                </isEqual>
+			</isNotEmpty>
+            <isNotEmpty prepend="AND" property="reReadAprovCd">
+            	B.READ_APROV_CD IN ('2','3') AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findReadApprFolderPagedList" parameterClass="rms.srch.read.domain.ReadApprFolder" resultMap="findReadApprFolderPagedList-result">
+		SELECT E.keep_record_center_id
+		      ,E.req_record_center_id
+		      ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_id = E.req_record_center_id) AS req_record_center_nm
+		      ,E.read_reqno
+		      ,SUBSTR(E.READ_REQNO, 1, 4)||'-'||SUBSTR(E.READ_REQNO, 5, 6) AS readReqNo
+		      ,E.folder_id
+		      ,E.org_cd
+		      ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = E.keep_record_center_id AND Z.org_cd = E.org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = E.keep_record_center_id AND Z.org_cd = E.org_cd) AS org_abbr_nm
+		      ,E.title
+		      ,E.creat_yyyy
+		      ,E.clss_id
+		      ,E.clss_nm
+		      ,E.read_req_ymd
+		      ,E.read_start_ymd
+		      ,E.read_close_ymd
+		      ,E.read_user_dept_nm
+		      ,E.read_ymd
+		      ,E.read_user_id
+		      ,E.read_user_nm
+		      ,E.read_rsn
+		      ,E.read_aprov_cd
+		      ,E.read_aprov_user_id
+		      ,(SELECT Z.user_nm FROM TB_STUSER Z WHERE Z.user_id = E.read_aprov_user_id AND Z.record_center_id = E.req_record_center_id) AS read_aprov_user_nm
+		      ,E.handl_org_cd
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.org_cd = E.handl_org_cd AND Z.record_center_id = E.keep_record_center_id) AS handl_org_nm
+		      ,E.read_aprov_ymd
+		      ,'' AS read_ymd_start
+		      ,'' AS read_ymd_close
+		      ,E.read_aprov_rsn
+		      ,CASE WHEN E.read_aprov_cd ='1' AND E.read_return_cd IS NULL THEN '미처리' 
+		            WHEN E.read_aprov_cd ='2' THEN '승인'||'('||(SELECT USER_NM FROM TB_STUSER WHERE USER_ID = E.READ_APROV_USER_ID)||')'
+		            WHEN E.read_aprov_cd ='3' THEN '열람불가'
+		            WHEN E.read_return_cd ='1' AND E.read_aprov_cd = '1' THEN '반려'
+		       END  AS read_aprov_nm
+		      ,E.read_return_cd
+		      ,E.read_req_prog_state_cd
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		               ,C.*
+		        FROM (
+		            SELECT B.keep_record_center_id AS keep_record_center_id, A.record_center_id AS req_record_center_id, A.read_reqno, B.folder_id, C.org_cd
+                          ,C.title, C.creat_yyyy, C.clss_id, C.clss_nm, A.read_req_ymd
+                          ,A.read_start_ymd, A.read_close_ymd, A.read_user_dept_nm, B.read_ymd, A.read_user_id
+                          ,A.read_user_nm, A.read_rsn, B.read_aprov_cd, B.read_aprov_user_id, B.handl_org_cd   
+                          ,B.read_aprov_ymd, B.read_aprov_rsn, B.read_return_cd, B.read_req_prog_state_cd
+                    FROM  TB_RDREADREQ A, TB_RDFOLDERREADDETL B, TB_RDFOLDER C
+		            WHERE C.FOLDER_ID = B.FOLDER_ID
+		            AND B.READ_REQNO = A.READ_REQNO
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID        
+		            AND B.KEEP_RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND A.READ_REQ_DIV_CD = '1'        
+		            AND B.KEEP_RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND B.HANDL_ORG_CD = #handlOrgCd:VARCHAR#
+		            AND READ_REQ_YMD BETWEEN #readYmdStart:VARCHAR# AND #readYmdClose:VARCHAR#        
+		            <dynamic>        
+		            	<isNotEmpty prepend="AND" property="readUserId">
+		             		A.READ_USER_ID = #readUserId:VARCHAR#
+		                </isNotEmpty>    
+		                <isNotEmpty prepend="AND" property="title">
+		                	(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>    
+		                <isNotEmpty prepend="AND" property="readAprovCd">
+		                	<isNotEqual property="readAprovCd" compareValue="4">
+		                    	B.READ_APROV_CD LIKE #readAprovCd:VARCHAR# AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+		                    </isNotEqual>
+		                    <isEqual property="readAprovCd" compareValue="4">
+		                    	B.READ_RETURN_CD ='1' AND B.READ_APROV_CD = '1'
+		                    </isEqual>
+						</isNotEmpty>
+		                <isNotEmpty prepend="AND" property="reReadAprovCd">
+		                	B.READ_APROV_CD IN ('2','3') AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+		                </isNotEmpty>
+		                <isEqual prepend="ORDER BY " property="orderDiv" compareValue="1">
+		                	A.read_req_dtime desc, A.read_reqno desc, C.folder_id desc
+		                </isEqual>
+		                <isEqual prepend="ORDER BY " property="orderDiv" compareValue="2">
+		                	TO_NUMBER(DECODE(A.record_center_id, #recordCenterId:VARCHAR#, '0', A.record_center_id)), A.read_reqno desc, C.folder_id desc
+		                </isEqual>            
+		            </dynamic>
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		열람승인(처리부서)_기록물철
+		:기록물철 열람 승인 또는 불가 처리를 한다.
+	 -->
+	<update id="updateReadApprFolderConfirm" parameterClass="rms.srch.read.domain.ReadApprFolder">
+		UPDATE TB_RDFOLDERREADDETL
+	  	SET    READ_APROV_CD = #readAprovCd:VARCHAR#
+	  		   <isNotEmpty prepend="," property="readReqProgStateCd">
+	  		   	READ_REQ_PROG_STATE_CD = #readReqProgStateCd:VARCHAR#
+	  		   </isNotEmpty>
+	  		   <isNotEmpty prepend="," property="readAprovUserId">
+	  		   	<isNotEqual property="readAprovCd" compareValue="1">
+	  		   		READ_APROV_USER_ID = #readAprovUserId:VARCHAR#
+	  		   	</isNotEqual>
+	  		   </isNotEmpty>
+	  	       <isNotEmpty prepend="," property="readAprovRsn">
+				READ_APROV_RSN = #readAprovRsn:VARCHAR#  		   
+	  		   </isNotEmpty>
+	  		   <isNotEqual prepend="," property="readAprovCd" compareValue="1">
+	  		  	READ_APROV_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD') 
+	  		   </isNotEqual>
+	  	       <isNotEmpty prepend="," property="readReturnCd">
+	  	       	READ_RETURN_CD = #readReturnCd:VARCHAR#
+	  	       </isNotEmpty>
+	  	       <isNotEmpty prepend="," property="readReturnRsn">
+	  	       	READ_RETURN_RSN = #readReturnRsn:VARCHAR#
+	  	       </isNotEmpty>
+	  	WHERE  RECORD_CENTER_ID = #reqRecordCenterId:VARCHAR#
+	  	AND	   FOLDER_ID = #folderId:VARCHAR#
+	  	AND    READ_REQNO = #readReqno:VARCHAR#
+	</update>
+	
+	<!-- 
+		열람승인(처리부서)_기록물건
+		: 기록물건 목록 조회
+	 -->
+	<resultMap id="findReadApprRecordPagedList-result" class="rms.srch.read.domain.ReadApprRecord">
+		<result property="keepRecordCenterId" column="KEEP_RECORD_CENTER_ID"/>
+		<result property="reqRecordCenterId" column="REQ_RECORD_CENTER_ID"/>
+		<result property="reqRecordCenterNm" column="REQ_RECORD_CENTER_NM"/>
+		<result property="readReqno"        column="READ_REQNO"        />
+		<result property="recordId"         column="RECORD_ID"         />
+		<result property="title"            column="TITLE"             />
+		<result property="creatRegDtime"    column="CREAT_REG_DTIME"   />
+		<result property="orgCd"            column="ORG_CD"            />
+		<result property="orgNm"            column="ORG_NM"            />
+		<result property="orgAbbrNm"        column="ORG_ABBR_NM"       />
+		<result property="readUserId"      	column="READ_USER_ID"      />
+		<result property="readUserNm"      	column="READ_USER_NM"      />	
+		<result property="readAprovCd"  	column="READ_APROV_CD"     />		
+		<result property="readAprovNm"  	column="READ_APROV_NM"     />	
+		<result property="readReqYmd"       column="READ_REQ_YMD"      />
+		<result property="readYmd"          column="READ_YMD"          />
+		<result property="readStartYmd"  	column="READ_START_YMD"    />		
+		<result property="readCloseYmd"     column="READ_CLOSE_YMD"    />		
+		<result property="readRsn"          column="READ_RSN"          />						
+		<result property="readYmdStart"     column="READ_YMD_START"    />
+		<result property="readYmdClose"     column="READ_YMD_CLOSE"    />
+		<result property="readAprovUserId"  column="READ_APROV_USER_ID"/>
+		<result property="readAprovUserNm"  column="READ_APROV_USER_NM"/>
+		<result property="handlOrgCd"  	    column="HANDL_ORG_CD"      />		
+		<result property="handlOrgNm"  	    column="HANDL_ORG_NM"      />	
+		<result property="readAprovYmd"  	column="READ_APROV_YMD"    />
+		<result property="readAprovRsn"  	column="READ_APROV_RSN"    />
+		<result property="openDivCd"  		column="OPEN_DIV_CD"       />
+		<result property="openDivNm"  		column="OPEN_DIV_NM"       />
+		<result property="operReadRangeCd"  column="OPER_READ_RANGE_CD"   />
+		<result property="operReadRangeNm"  column="OPER_READ_RANGE_NM"   />
+		<result property="readAprovRsn"  	column="READ_APROV_RSN"    />
+		<result property="readAprovNm"  	column="READ_APROV_NM"     />
+		<result property="readUserDeptNm"  	column="READ_USER_DEPT_NM"    />
+		<result property="readReturnCd"  	column="READ_RETURN_CD"    />
+		<result property="readReqProgStateCd"  	column="READ_REQ_PROG_STATE_CD"    />
+		<result property="readReqNo"   		column="readReqNo"             />
+	</resultMap>
+	<select id="countReadApprRecordPagedList" parameterClass="rms.srch.read.domain.ReadApprRecord" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM   TB_RDREADREQ A, TB_RDRECORDREADDETL B, TB_RDRECORD C
+        WHERE C.RECORD_ID = B.RECORD_ID
+        AND B.READ_REQNO = A.READ_REQNO
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID        
+        AND B.KEEP_RECORD_CENTER_ID = C.RECORD_CENTER_ID
+        AND A.READ_REQ_DIV_CD = '2'        
+        AND B.KEEP_RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND B.HANDL_ORG_CD = #handlOrgCd:VARCHAR#
+        AND READ_REQ_YMD BETWEEN #readYmdStart:VARCHAR# AND #readYmdClose:VARCHAR#                        
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="readUserId">
+                A.READ_USER_ID = #readUserId:VARCHAR#
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="title">
+                (C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="readAprovCd">
+                B.READ_APROV_CD LIKE #readAprovCd:VARCHAR# AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="reReadAprovCd">
+                B.READ_APROV_CD IN ('2','3') AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+            </isNotEmpty>
+            <isEqual prepend="ORDER BY " property="orderDiv" compareValue="1">
+            	A.read_req_dtime desc, A.read_reqno desc, C.folder_id desc
+            </isEqual>                
+            <isEqual prepend="ORDER BY " property="orderDiv" compareValue="2">
+            	TO_NUMBER(DECODE(A.record_center_id, #recordCenterId:VARCHAR#, '0', C.record_center_id)), A.read_reqno desc, C.folder_id desc
+            </isEqual>
+        </dynamic>
+	</select>
+	<select id="findReadApprRecordPagedList" parameterClass="rms.srch.read.domain.ReadApprRecord" resultMap="findReadApprRecordPagedList-result">
+		SELECT E.keep_record_center_id
+	          ,E.req_record_center_id
+	          ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_id = E.req_record_center_id) req_record_center_nm
+	          ,E.read_reqno
+	          ,SUBSTR(E.read_reqno, 1, 4)||'-'||SUBSTR(E.read_reqno, 5, 6) AS readReqNo
+	          ,E.record_id
+	          ,E.org_cd
+	          ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = E.keep_record_center_id AND Z.org_cd = E.org_cd) AS org_nm
+	          ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = E.keep_record_center_id AND Z.org_cd = E.org_cd) AS org_abbr_nm
+	          ,E.title
+	          ,SUBSTR(E.creat_reg_dtime, 0, 8) AS creat_reg_dtime
+	          ,E.read_req_ymd
+	          ,E.read_start_ymd
+	          ,E.read_close_ymd
+	          ,E.read_ymd
+	          ,E.read_user_id
+	          ,E.read_user_nm
+	          ,E.read_user_dept_nm
+	          ,E.read_rsn
+	          ,E.read_aprov_cd
+	          ,E.read_aprov_user_id
+	          ,(SELECT Z.user_nm FROM TB_STUSER Z WHERE Z.user_id = E.read_aprov_user_id AND Z.record_center_id = E.req_record_center_id) AS read_aprov_user_nm
+	          ,E.handl_org_cd
+	          ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.org_cd = E.handl_org_cd AND Z.record_center_id = E.keep_record_center_id) AS handl_org_nm
+	          ,E.read_aprov_ymd
+	          ,'' AS read_ymd_start
+	          ,'' AS read_ymd_close
+	          ,E.read_aprov_rsn
+	          ,E.open_div_cd
+	          ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD05' AND Z.com_cd = E.open_div_cd) AS open_div_nm
+	          ,E.oper_read_range_cd
+	          ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm
+	          ,CASE WHEN E.read_aprov_cd ='1' AND E.read_return_cd IS NULL THEN '미처리' 
+	                WHEN E.read_aprov_cd ='2' THEN '승인'||'('||(SELECT USER_NM FROM TB_STUSER WHERE USER_ID = E.READ_APROV_USER_ID)||')'
+	                WHEN E.read_aprov_cd ='3' THEN '열람불가'
+	                WHEN E.read_return_cd ='1' AND E.read_aprov_cd = '1' THEN '반려'
+	           END AS read_aprov_nm
+	          ,E.read_return_cd
+	          ,E.read_req_prog_state_cd
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT C.record_center_id as keep_record_center_id, A.record_center_id as req_record_center_id, A.read_reqno, B.record_id, C.org_cd
+		                  ,C.title, A.read_req_ymd, A.read_start_ymd, A.read_close_ymd, B.read_ymd
+		                  ,A.read_user_id, A.read_user_nm, A.read_user_dept_nm, A.read_rsn, B.read_aprov_cd
+		                  ,B.read_aprov_user_id, B.handl_org_cd, B.read_aprov_ymd, B.read_aprov_rsn, C.open_div_cd
+		                  ,C.oper_read_range_cd, B.read_return_cd, B.read_req_prog_state_cd, C.creat_reg_dtime
+		            FROM   TB_RDREADREQ A, TB_RDRECORDREADDETL B, TB_RDRECORD C
+		            WHERE C.RECORD_ID = B.RECORD_ID
+		            AND B.READ_REQNO = A.READ_REQNO
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID        
+		            AND B.KEEP_RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND A.READ_REQ_DIV_CD = '2'        
+		            AND B.KEEP_RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND B.HANDL_ORG_CD = #handlOrgCd:VARCHAR#
+		            AND READ_REQ_YMD BETWEEN #readYmdStart:VARCHAR# AND #readYmdClose:VARCHAR#                        
+		            <dynamic>        
+		                <isNotEmpty prepend="AND" property="readUserId">
+		                    A.READ_USER_ID = #readUserId:VARCHAR#
+		                </isNotEmpty>    
+		                <isNotEmpty prepend="AND" property="title">
+		                    (C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>    
+		                <isNotEmpty prepend="AND" property="readAprovCd">
+		                    B.READ_APROV_CD LIKE #readAprovCd:VARCHAR# AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="reReadAprovCd">
+		                    B.READ_APROV_CD IN ('2','3') AND B.READ_REQ_PROG_STATE_CD IN ('2','3')
+		                </isNotEmpty>
+		                <isEqual prepend="ORDER BY " property="orderDiv" compareValue="1">
+		                	A.read_req_dtime desc, A.read_reqno desc, C.folder_id desc
+		                </isEqual>                
+		                <isEqual prepend="ORDER BY " property="orderDiv" compareValue="2">
+		                	TO_NUMBER(DECODE(A.record_center_id, #recordCenterId:VARCHAR#, '0', C.record_center_id)), A.read_reqno desc, C.folder_id desc
+		                </isEqual>
+		            </dynamic>
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		열람승인(처리부서)_기록물건
+		:기록물건 열람 승인 또는 불가 처리를 한다.
+	 -->
+	<update id="updateReadApprRecordConfirm" parameterClass="rms.srch.read.domain.ReadApprRecord">
+		UPDATE TB_RDRECORDREADDETL
+	  	SET    READ_APROV_CD = #readAprovCd:VARCHAR#
+	  		   <isNotEmpty prepend="," property="readReqProgStateCd">
+	  		   	READ_REQ_PROG_STATE_CD = #readReqProgStateCd:VARCHAR#
+	  		   </isNotEmpty>
+	  		   <isNotEmpty prepend="," property="readAprovUserId">
+	  		   	<isNotEqual property="readAprovCd" compareValue="1">
+	  		   		READ_APROV_USER_ID = #readAprovUserId:VARCHAR#
+	  		   	</isNotEqual>
+	  		   </isNotEmpty>
+	  	       <isNotEmpty prepend="," property="readAprovRsn">
+				READ_APROV_RSN = #readAprovRsn:VARCHAR#  		   
+	  		   </isNotEmpty>
+	  		   <isNotEqual prepend="," property="readAprovCd" compareValue="1">
+	  		  	READ_APROV_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD') 
+	  		   </isNotEqual>
+	  	       <isNotEmpty prepend="," property="readReturnCd">
+	  	       	READ_RETURN_CD = #readReturnCd:VARCHAR#
+	  	       </isNotEmpty>
+	  	       <isNotEmpty prepend="," property="readReturnRsn">
+	  	       	READ_RETURN_RSN = #readReturnRsn:VARCHAR#
+	  	       </isNotEmpty>
+	  	WHERE  RECORD_CENTER_ID = #reqRecordCenterId:VARCHAR#
+	  	AND	   RECORD_ID = #recordId:VARCHAR#
+	  	AND    READ_REQNO = #readReqno:VARCHAR#
+	</update>
+	
+		
+</sqlMap>

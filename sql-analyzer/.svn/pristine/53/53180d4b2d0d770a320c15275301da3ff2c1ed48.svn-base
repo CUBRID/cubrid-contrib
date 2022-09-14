@@ -1,0 +1,1216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.stat">
+
+	<!--
+		생산현황 일반통계
+		: 기록물철 (기록유형-전자여부)
+	-->
+	<resultMap id="findCreateCurStateNomalStatTypeElecFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="title"     	        column="folder_type_div_nm"		/>
+	    <result property="total"     			column="total" 					/>
+	    <result property="sumA"           		column="sum_a"    				/>
+	    <result property="sumB"        			column="sum_b"       			/>
+	    <result property="sumC"    				column="sum_c"  				/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatTypeElecFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatTypeElecFolderList-result">
+		SELECT '총계' AS folder_type_div_nm
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag='3' THEN 1 ELSE 0 END)),0) AS sum_c
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatTypeElecFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatTypeElecFolderList-result">
+		SELECT (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd) AS folder_type_div_nm
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag='3' THEN 1 ELSE 0 END)),0) AS sum_c
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		GROUP BY A.folder_type_div_cd
+		ORDER BY folder_type_div_nm
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물철 (생산년도-전자여부)
+	-->
+	<resultMap id="findCreateCurStateNomalStatYearElecFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="title"     		column="creat_yyyy"			/>
+	    <result property="total"     		column="total" 				/>
+	    <result property="sumA"       		column="sum_a"    			/>
+	    <result property="sumB"    			column="sum_b"   			/>
+	    <result property="sumC"    			column="sum_c" 				/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatYearElecFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearElecFolderList-result">
+		SELECT '총계' AS creat_yyyy
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag='3' THEN 1 ELSE 0 END)),0) AS sum_c
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatYearElecFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearElecFolderList-result">
+		SELECT A.creat_yyyy
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag='3' THEN 1 ELSE 0 END)),0) AS sum_c
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		GROUP BY A.creat_yyyy
+		ORDER BY creat_yyyy
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물철 (생산년도-기록유형)
+	-->
+	<resultMap id="findCreateCurStateNomalStatYearTypeFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+		<result property="title"				column="creat_yyyy"			/>
+		<result property="total"				column="total" 				/>
+		<result property="sumA"					column="sum_a"   			/>
+		<result property="sumB"					column="sum_b"   			/>
+		<result property="sumC"					column="sum_c"  			/>
+		<result property="sumD"					column="sum_d"   			/>
+		<result property="sumE"					column="sum_e"   			/>
+		<result property="sumF"					column="sum_f"  			/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatYearTypeFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearTypeFolderList-result">
+		SELECT '총계' AS creat_yyyy
+			, NVL(SUM((CASE WHEN ((A.folder_detl_type_cd='01' AND A.folder_type_div_cd='1') OR (A.folder_detl_type_cd='02' AND A.folder_type_div_cd IN ('1','2','3','4','5'))) THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='01' AND A.folder_type_div_cd='1') THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='1') THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='2') THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='3') THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='4') THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='5') THEN 1 ELSE 0 END)),0) AS sum_f
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatYearTypeFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearTypeFolderList-result">
+		SELECT A.creat_yyyy
+			, NVL(SUM((CASE WHEN ((A.folder_detl_type_cd='01' AND A.folder_type_div_cd='1') OR (A.folder_detl_type_cd='02' AND A.folder_type_div_cd IN ('1','2','3','4','5'))) THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='01' AND A.folder_type_div_cd='1') THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='1') THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='2') THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='3') THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='4') THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN (A.folder_detl_type_cd='02' AND A.folder_type_div_cd='5') THEN 1 ELSE 0 END)),0) AS sum_f
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		GROUP BY A.creat_yyyy
+		ORDER BY creat_yyyy
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물철 (생산부서-보존기간)
+	-->
+	<resultMap id="findCreateCurStateNomalStatOrgPresvFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="orgCd"		column="org_cd"			/>
+	    <result property="orgNm"		column="org_nm"			/>
+	    <result property="orgAbbrNm"	column="org_abbr_nm"	/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"   		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatOrgPresvFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatOrgPresvFolderList-result">
+		SELECT '' AS org_cd
+			, '총계' AS org_nm
+			, '총계' AS org_abbr_nm
+			, NVL(SUM((CASE WHEN A.presv_term_cd IN ('01','03','05','10','20','25','30','40') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END)),0) AS sum_f
+			, NVL(SUM((CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END)),0) AS sum_g
+		FROM  TB_CRFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatOrgPresvFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatOrgPresvFolderList-result">
+		SELECT B.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_abbr_nm
+			, B.total
+			, B.sum_a
+			, B.sum_b
+			, B.sum_c
+			, B.sum_d
+			, B.sum_e
+			, B.sum_f
+			, B.sum_g
+		FROM (
+			SELECT A.record_center_id
+				, A.org_cd
+				, NVL(SUM((CASE WHEN A.presv_term_cd IN ('01','03','05','10','20','25','30','40') THEN 1 ELSE 0 END)),0) AS total
+				, NVL(SUM((CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END)),0) AS sum_a
+				, NVL(SUM((CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END)),0) AS sum_b
+				, NVL(SUM((CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END)),0) AS sum_c
+				, NVL(SUM((CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END)),0) AS sum_d
+				, NVL(SUM((CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END)),0) AS sum_e
+				, NVL(SUM((CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END)),0) AS sum_f
+				, NVL(SUM((CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END)),0) AS sum_g
+			FROM  TB_CRFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatFromYyyy">
+					<isNotEmpty property="creatToYyyy">
+						(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+					</isNotEmpty>
+					<isEmpty property="creatToYyyy">
+						A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+					</isEmpty>
+				</isNotEmpty>
+				<isEmpty prepend="AND" property="creatFromYyyy">
+					<isNotEmpty property="creatToYyyy">
+						A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+					</isNotEmpty>
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+			GROUP BY A.record_center_id, A.org_cd
+		) B
+		ORDER BY org_nm
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물철 (생산부서-생산년도)
+	-->
+	<resultMap id="findCreateCurStateNomalStatOrgYearFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="orgCd"		column="org_cd"			/>
+	    <result property="orgNm"		column="org_nm"			/>
+	    <result property="orgAbbrNm"	column="org_abbr_nm"	/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"   		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	    <result property="sumH"			column="sum_h"   		/>
+	    <result property="sumI"			column="sum_i"   		/>
+	    <result property="sumJ"			column="sum_j"   		/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatOrgYearFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatOrgYearFolderList-result">
+		SELECT '' AS org_cd
+			, '총계' AS org_nm
+			, '총계' AS org_abbr_nm
+			, (B.sum_a+B.sum_b+B.sum_c+B.sum_d+B.sum_e+B.sum_f+B.sum_g+B.sum_h+B.sum_i+B.sum_j) AS total
+			, B.sum_a
+			, B.sum_b
+			, B.sum_c
+			, B.sum_d
+			, B.sum_e
+			, B.sum_f
+			, B.sum_g
+			, B.sum_h
+			, B.sum_i
+			, B.sum_j
+		FROM (
+			SELECT A.record_center_id
+				, A.org_cd
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+			FROM  TB_CRFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatToYyyy">
+					(A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+		) B
+	</select>
+	<select id="findCreateCurStateNomalStatOrgYearFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatOrgYearFolderList-result">
+		SELECT B.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_abbr_nm
+			, (B.sum_a+B.sum_b+B.sum_c+B.sum_d+B.sum_e+B.sum_f+B.sum_g+B.sum_h+B.sum_i+B.sum_j) AS total
+			, B.sum_a
+			, B.sum_b
+			, B.sum_c
+			, B.sum_d
+			, B.sum_e
+			, B.sum_f
+			, B.sum_g
+			, B.sum_h
+			, B.sum_i
+			, B.sum_j
+		FROM (
+			SELECT A.record_center_id
+				, A.org_cd
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+			FROM  TB_CRFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatToYyyy">
+					(A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+			GROUP BY A.record_center_id, A.org_cd
+		) B
+		ORDER BY org_nm
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물건 (기록유형-전자여부)
+	-->
+	<resultMap id="findCreateCurStateNomalStatTypeElecRecordList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="title"     	        column="record_detl_type_nm"	/>
+	    <result property="total"     			column="total" 					/>
+	    <result property="sumA"           		column="sum_a"    				/>
+	    <result property="sumB"        			column="sum_b"       			/>
+	    <result property="totalFile"     		column="total_file" 			/>
+	    <result property="sumFileA"				column="sum_file_a"				/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatTypeElecRecordTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatTypeElecRecordList-result">
+		SELECT '총계' AS record_detl_type_nm
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN A.attach_cnt ELSE 0 END)),0) AS total_file
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN A.attach_cnt ELSE 0 END)),0) AS sum_file_a
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatTypeElecRecordList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatTypeElecRecordList-result">
+		SELECT (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=A.record_detl_type_cd) AS record_detl_type_nm
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN A.attach_cnt ELSE 0 END)),0) AS total_file
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN A.attach_cnt ELSE 0 END)),0) AS sum_file_a
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		GROUP BY A.record_detl_type_cd
+		ORDER BY record_detl_type_nm
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물건 (생산년도-전자여부)
+	-->
+	<resultMap id="findCreateCurStateNomalStatYearElecRecordList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="title"     		column="creat_yyyy"			/>
+	    <result property="total"     		column="total" 				/>
+	    <result property="sumA"       		column="sum_a"    	/>
+	    <result property="sumB"    			column="sum_b"   	/>
+	    <result property="totalFile"     	column="total_file" 		/>
+	    <result property="sumFileA"			column="sum_file_a"			/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatYearElecRecordTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearElecRecordList-result">
+		SELECT '총계' AS creat_yyyy
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN A.attach_cnt ELSE 0 END)),0) AS total_file
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN A.attach_cnt ELSE 0 END)),0) AS sum_file_a
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatYearElecRecordList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearElecRecordList-result">
+		SELECT A.creat_yyyy
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.erecord_flag='2' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.erecord_flag IN ('1','2') THEN A.attach_cnt ELSE 0 END)),0) AS total_file
+			, NVL(SUM((CASE WHEN A.erecord_flag='1' THEN A.attach_cnt ELSE 0 END)),0) AS sum_file_a
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		GROUP BY A.creat_yyyy
+		ORDER BY creat_yyyy
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물건 (생산년도-기록유형)
+	-->
+	<resultMap id="findCreateCurStateNomalStatYearTypeRecordList-result" class="rms.srch.stat.domain.CreateCurState">
+		<result property="title"		column="creat_yyyy"		/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"   		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	    <result property="sumH"			column="sum_h"   		/>
+	    <result property="sumI"			column="sum_i"   		/>
+	    <result property="totalFile"	column="total_file" 	/>
+	    <result property="sumFileA"		column="sum_file_a"		/>
+	    <result property="sumFileB"		column="sum_file_b"		/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatYearTypeRecordTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearTypeRecordList-result">
+		SELECT '총계' AS creat_yyyy
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd IN ('01','02','03','04','05','06','07','08','09') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='01' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='02' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='03' THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='04' THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='05' THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='06' THEN 1 ELSE 0 END)),0) AS sum_f
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='07' THEN 1 ELSE 0 END)),0) AS sum_g
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='08' THEN 1 ELSE 0 END)),0) AS sum_h
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='09' THEN 1 ELSE 0 END)),0) AS sum_i
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd IN ('01','02') THEN NVL(A.attach_cnt,0) ELSE 0 END)),0) AS total_file
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='01' THEN NVL(A.attach_cnt,0) ELSE 0 END)),0) AS sum_file_a
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='02' THEN NVL(A.attach_cnt,0) ELSE 0 END)),0) AS sum_file_b
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatYearTypeRecordList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatYearTypeRecordList-result">
+		SELECT A.creat_yyyy
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd IN ('01','02','03','04','05','06','07','08','09') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='01' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='02' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='03' THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='04' THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='05' THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='06' THEN 1 ELSE 0 END)),0) AS sum_f
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='07' THEN 1 ELSE 0 END)),0) AS sum_g
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='08' THEN 1 ELSE 0 END)),0) AS sum_h
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='09' THEN 1 ELSE 0 END)),0) AS sum_i
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd IN ('01','02') THEN NVL(A.attach_cnt,0) ELSE 0 END)),0) AS total_file
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='01' THEN NVL(A.attach_cnt,0) ELSE 0 END)),0) AS sum_file_a
+			, NVL(SUM((CASE WHEN A.record_detl_type_cd='02' THEN NVL(A.attach_cnt,0) ELSE 0 END)),0) AS sum_file_b
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		GROUP BY A.creat_yyyy
+		ORDER BY creat_yyyy
+	</select>
+
+	<!--
+		생산현황 일반통계
+		: 기록물건 (생산부서-생산년도)
+	-->
+	<resultMap id="findCreateCurStateNomalStatOrgYearRecordList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="orgCd"		column="org_cd"			/>
+	    <result property="orgNm"		column="org_nm"			/>
+	    <result property="orgAbbrNm"	column="org_abbr_nm"	/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"   		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	    <result property="sumH"			column="sum_h"   		/>
+	    <result property="sumI"			column="sum_i"   		/>
+	    <result property="sumJ"			column="sum_j"   		/>
+	</resultMap>
+	<select id="findCreateCurStateNomalStatOrgYearRecordTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatOrgYearRecordList-result">
+		SELECT '' AS org_cd
+			, '총계' AS org_nm
+			, '총계' AS org_abbr_nm
+			, NVL(SUM((CASE WHEN ( A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0')
+								OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') )
+							THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+			, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatToYyyy">
+				(A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCreateCurStateNomalStatOrgYearRecordList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateNomalStatOrgYearRecordList-result">
+		SELECT B.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_abbr_nm
+			, B.total
+			, B.sum_a
+			, B.sum_b
+			, B.sum_c
+			, B.sum_d
+			, B.sum_e
+			, B.sum_f
+			, B.sum_g
+			, B.sum_h
+			, B.sum_i
+			, B.sum_j
+		FROM (
+			SELECT A.record_center_id
+				, A.org_cd
+				, NVL(SUM((CASE WHEN ( A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0')
+									OR A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') )
+								THEN 1 ELSE 0 END)),0) AS total
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+				, NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+			FROM  TB_CRRECORD A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatToYyyy">
+					(A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+			GROUP BY A.record_center_id, A.org_cd
+		) B
+		ORDER BY org_nm
+	</select>
+
+	<!--
+		생산현황 시스템별통계
+	-->
+	<resultMap id="findCreateCurStateSysStatList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="divCd"		column="div_cd"			/>
+	    <result property="title"		column="title"			/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"  		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	    <result property="sumH"			column="sum_h"   		/>
+	    <result property="sumI"			column="sum_i"   		/>
+	    <result property="sumJ"			column="sum_j"   		/>
+	</resultMap>
+	<select id="findCreateCurStateSysStatTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateSysStatList-result">
+		SELECT '' AS div_cd
+		    , '총계' AS title
+			, NVL((SUM(B.sum_a)+SUM(B.sum_b)+SUM(B.sum_c)+SUM(B.sum_d)+SUM(B.sum_e)+SUM(B.sum_f)+SUM(B.sum_g)+SUM(B.sum_h)+SUM(B.sum_i)+SUM(B.sum_j)),0) total
+		    , NVL(SUM(B.sum_a),0) AS sum_a
+		    , NVL(SUM(B.sum_b),0) AS sum_b
+		    , NVL(SUM(B.sum_c),0) AS sum_c
+		    , NVL(SUM(B.sum_d),0) AS sum_d
+		    , NVL(SUM(B.sum_e),0) AS sum_e
+		    , NVL(SUM(B.sum_f),0) AS sum_f
+		    , NVL(SUM(B.sum_g),0) AS sum_g
+		    , NVL(SUM(B.sum_h),0) AS sum_h
+		    , NVL(SUM(B.sum_i),0) AS sum_i
+		    , NVL(SUM(B.sum_j),0) AS sum_j
+		FROM (
+		    (
+	            SELECT NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+	            FROM  TB_CRFOLDER A
+	            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	            AND   A.creat_sys_cd = #creatSysCd:VARCHAR#
+	            AND  (A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+		        <isEqual prepend="AND" property="creatSysCd" compareValue="01">
+		        	A.folder_type_div_cd = '1' AND A.folder_detl_type_cd = '01'
+		        </isEqual>
+		        <isNotEqual prepend="AND" property="creatSysCd" compareValue="01">
+			        <isEqual property="creatSysCd" compareValue="04">
+			        	A.folder_type_div_cd = '1' AND A.folder_detl_type_cd = '01'
+			        </isEqual>
+			        <isNotEqual property="creatSysCd" compareValue="04">
+			        	A.folder_detl_type_cd = '02'
+			        </isNotEqual>
+		        </isNotEqual>
+		    )
+		    UNION ALL
+		    (
+	            SELECT NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+	                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+	            FROM  TB_CRRECORD A
+	            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	            AND   A.creat_sys_cd = #creatSysCd:VARCHAR#
+	            AND  (A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+		        <isEqual prepend="AND" property="creatSysCd" compareValue="01">
+		        	A.record_detl_type_cd IN ('01','02','03','04')
+		        </isEqual>
+		        <isNotEqual prepend="AND" property="creatSysCd" compareValue="01">
+			        <isEqual property="creatSysCd" compareValue="04">
+			        	A.record_detl_type_cd IN ('01','02','03','04')
+			        </isEqual>
+			        <isNotEqual property="creatSysCd" compareValue="04">
+			        	A.record_detl_type_cd IN ('05','06','07','08','09')
+			        </isNotEqual>
+		        </isNotEqual>
+		    )
+		) B
+	</select>
+	<select id="findCreateCurStateSysStatList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateSysStatList-result">
+		SELECT D.div_cd
+		    , D.com_cd_nm AS title
+		    , NVL(D.total,0) AS total
+		    , NVL(D.sum_a,0) AS sum_a
+		    , NVL(D.sum_b,0) AS sum_b
+		    , NVL(D.sum_c,0) AS sum_c
+		    , NVL(D.sum_d,0) AS sum_d
+		    , NVL(D.sum_e,0) AS sum_e
+		    , NVL(D.sum_f,0) AS sum_f
+		    , NVL(D.sum_g,0) AS sum_g
+		    , NVL(D.sum_h,0) AS sum_h
+		    , NVL(D.sum_i,0) AS sum_i
+		    , NVL(D.sum_j,0) AS sum_j
+		FROM (
+		    (
+		        SELECT '1' AS div_cd
+		            , B.com_cd
+		            , B.com_cd_nm
+		            , (C.sum_a+C.sum_b+C.sum_c+C.sum_d+C.sum_e+C.sum_f+C.sum_g+C.sum_h+C.sum_i+C.sum_j) AS total
+		            , C.sum_a
+		            , C.sum_b
+		            , C.sum_c
+		            , C.sum_d
+		            , C.sum_e
+		            , C.sum_f
+		            , C.sum_g
+		            , C.sum_h
+		            , C.sum_i
+		            , C.sum_j
+		        FROM 
+			        <isEqual property="creatSysCd" compareValue="01">
+			        (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD41' AND com_cd='01') B
+			        </isEqual>
+			        <isNotEqual property="creatSysCd" compareValue="01">
+				        <isEqual property="creatSysCd" compareValue="04">
+				        (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD41' AND com_cd='01') B
+				        </isEqual>
+				        <isNotEqual property="creatSysCd" compareValue="04">
+				        (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD01') B
+				        </isNotEqual>
+			        </isNotEqual>
+		        , (
+		            SELECT A.folder_type_div_cd, A.folder_detl_type_cd
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+		            FROM  TB_CRFOLDER A
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		            AND   A.creat_sys_cd = #creatSysCd:VARCHAR#
+		            AND  (A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+					<isNotEmpty prepend="AND" property="orgCd">
+						A.org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+			        <isEqual prepend="AND" property="creatSysCd" compareValue="01">
+			        	A.folder_type_div_cd = '1' AND A.folder_detl_type_cd = '01'
+			        </isEqual>
+			        <isNotEqual prepend="AND" property="creatSysCd" compareValue="01">
+				        <isEqual property="creatSysCd" compareValue="04">
+				        	A.folder_type_div_cd = '1' AND A.folder_detl_type_cd = '01'
+				        </isEqual>
+				        <isNotEqual property="creatSysCd" compareValue="04">
+				        	A.folder_detl_type_cd = '02'
+				        </isNotEqual>
+			        </isNotEqual>
+		            GROUP BY A.folder_type_div_cd, A.folder_detl_type_cd
+		        ) C
+		        <dynamic prepend="WHERE">
+			        <isEqual prepend="AND" property="creatSysCd" compareValue="01">
+			        	B.com_cd = C.folder_detl_type_cd(+)
+			        </isEqual>
+			        <isNotEqual prepend="AND" property="creatSysCd" compareValue="01">
+				        <isEqual property="creatSysCd" compareValue="04">
+				        	B.com_cd = C.folder_detl_type_cd(+)
+				        </isEqual>
+				        <isNotEqual property="creatSysCd" compareValue="04">
+				        	B.com_cd = C.folder_type_div_cd(+)
+				        </isNotEqual>
+			        </isNotEqual>
+		        </dynamic>
+		    )
+		    UNION ALL
+		    (
+		        SELECT '2' AS div_cd
+		            , B.com_cd
+		            , B.com_cd_nm
+		            , (C.sum_a+C.sum_b+C.sum_c+C.sum_d+C.sum_e+C.sum_f+C.sum_g+C.sum_h+C.sum_i+C.sum_j) AS total
+		            , C.sum_a
+		            , C.sum_b
+		            , C.sum_c
+		            , C.sum_d
+		            , C.sum_e
+		            , C.sum_f
+		            , C.sum_g
+		            , C.sum_h
+		            , C.sum_i
+		            , C.sum_j
+		        FROM
+			        <isEqual property="creatSysCd" compareValue="01">
+			        (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD03' AND com_cd IN ('01','02','03','04')) B
+			        </isEqual>
+			        <isNotEqual property="creatSysCd" compareValue="01">
+				        <isEqual property="creatSysCd" compareValue="04">
+				        (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD03' AND com_cd IN ('01','02','03','04')) B
+				        </isEqual>
+				        <isNotEqual property="creatSysCd" compareValue="04">
+				        (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD03' AND com_cd IN ('05','06','07','08','09')) B
+				        </isNotEqual>
+			        </isNotEqual>
+		        , (
+		            SELECT A.record_detl_type_cd
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') THEN 1 ELSE 0 END)),0) AS sum_a
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-8),4,'0') THEN 1 ELSE 0 END)),0) AS sum_b
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-7),4,'0') THEN 1 ELSE 0 END)),0) AS sum_c
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-6),4,'0') THEN 1 ELSE 0 END)),0) AS sum_d
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-5),4,'0') THEN 1 ELSE 0 END)),0) AS sum_e
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-4),4,'0') THEN 1 ELSE 0 END)),0) AS sum_f
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-3),4,'0') THEN 1 ELSE 0 END)),0) AS sum_g
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-2),4,'0') THEN 1 ELSE 0 END)),0) AS sum_h
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-1),4,'0') THEN 1 ELSE 0 END)),0) AS sum_i
+		                , NVL(SUM((CASE WHEN A.creat_yyyy=LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-0),4,'0') THEN 1 ELSE 0 END)),0) AS sum_j
+		            FROM  TB_CRRECORD A
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		            AND   A.creat_sys_cd = #creatSysCd:VARCHAR#
+		            AND  (A.creat_yyyy BETWEEN LPAD(TO_CHAR(TO_NUMBER(#creatToYyyy:VARCHAR#)-9),4,'0') AND #creatToYyyy:VARCHAR#)
+					<isNotEmpty prepend="AND" property="orgCd">
+						A.org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+			        <isEqual prepend="AND" property="creatSysCd" compareValue="01">
+			        	A.record_detl_type_cd IN ('01','02','03','04')
+			        </isEqual>
+			        <isNotEqual prepend="AND" property="creatSysCd" compareValue="01">
+				        <isEqual property="creatSysCd" compareValue="04">
+				        	A.record_detl_type_cd IN ('01','02','03','04')
+				        </isEqual>
+				        <isNotEqual property="creatSysCd" compareValue="04">
+				        	A.record_detl_type_cd IN ('05','06','07','08','09')
+				        </isNotEqual>
+			        </isNotEqual>
+		            GROUP BY A.record_detl_type_cd 
+		        ) C
+		        WHERE B.com_cd = C.record_detl_type_cd(+)
+		    )
+		) D
+		ORDER BY D.div_cd, D.com_cd
+	</select>
+
+	<!--
+		생산현황 생산현황통보서식
+		: 생산기록물현황 (총괄표)
+	-->
+	<resultMap id="findCreateCurStateInformFormCreateFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="title"		column="title"			/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"   		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	</resultMap>
+	<select id="findCreateCurStateInformFormCreateFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateInformFormCreateFolderList-result">
+		SELECT '총계(권)' AS title
+			, NVL(B.sum_a+B.sum_b+B.sum_c+B.sum_d+B.sum_e+B.sum_f+B.sum_g,0) AS total
+		    , NVL(B.sum_a,0) AS sum_a
+		    , NVL(B.sum_b,0) AS sum_b
+		    , NVL(B.sum_c,0) AS sum_c
+		    , NVL(B.sum_d,0) AS sum_d
+		    , NVL(B.sum_e,0) AS sum_e
+		    , NVL(B.sum_f,0) AS sum_f
+		    , NVL(B.sum_g,0) AS sum_g
+		FROM (
+			SELECT SUM((CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END)) AS sum_a
+				, SUM((CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END)) AS sum_b
+				, SUM((CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END)) AS sum_c
+				, SUM((CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END)) AS sum_d
+				, SUM((CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END)) AS sum_e
+				, SUM((CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END)) AS sum_f
+				, SUM((CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END)) AS sum_g
+			FROM  TB_CRFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#
+			AND   A.folder_type_div_cd IN ('1','2','5')
+		) B
+	</select>
+	<select id="findCreateCurStateInformFormCreateFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateInformFormCreateFolderList-result">
+		SELECT Z.com_cd_nm||(CASE WHEN Z.com_cd='1' THEN '(권) (대장포함)' ELSE '(권)' END) AS title
+		    , NVL(B.sum_a+B.sum_b+B.sum_c+B.sum_d+B.sum_e+B.sum_f+B.sum_g,0) AS total
+		    , NVL(B.sum_a,0) AS  sum_a
+		    , NVL(B.sum_b,0) AS  sum_b
+		    , NVL(B.sum_c,0) AS  sum_c
+		    , NVL(B.sum_d,0) AS  sum_d
+		    , NVL(B.sum_e,0) AS  sum_e
+		    , NVL(B.sum_f,0) AS  sum_f
+		    , NVL(B.sum_g,0) AS  sum_g
+		FROM (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD01' AND com_cd IN ('1','2','5')) Z
+		, ( SELECT A.folder_type_div_cd
+		        , SUM((CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END)) AS sum_a
+		        , SUM((CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END)) AS sum_b
+		        , SUM((CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END)) AS sum_c
+		        , SUM((CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END)) AS sum_d
+		        , SUM((CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END)) AS sum_e
+		        , SUM((CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END)) AS sum_f
+		        , SUM((CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END)) AS sum_g
+		    FROM  TB_CRFOLDER A
+		    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		    AND   A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#
+		    AND   A.folder_type_div_cd IN ('1','2','5')
+		    GROUP BY A.folder_type_div_cd
+		) B
+		WHERE Z.com_cd = B.folder_type_div_cd(+)
+	</select>
+
+	<!--
+		생산현황 생산현황통보서식
+		: 보유기록물현황 (총괄표)
+	-->
+	<resultMap id="findCreateCurStateInformFormPresvFolderList-result" class="rms.srch.stat.domain.CreateCurState">
+	    <result property="title"		column="title"			/>
+	    <result property="total"		column="total" 			/>
+	    <result property="sumA"			column="sum_a"   		/>
+	    <result property="sumB"			column="sum_b"  		/>
+	    <result property="sumC"			column="sum_c"  		/>
+	    <result property="sumD"			column="sum_d"   		/>
+	    <result property="sumE"			column="sum_e"   		/>
+	    <result property="sumF"			column="sum_f"  		/>
+	    <result property="sumG"			column="sum_g"   		/>
+	</resultMap>
+	<select id="findCreateCurStateInformFormPresvFolderTotal" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateInformFormPresvFolderList-result">
+		SELECT '총계(권)' AS title
+			, NVL(B.sum_a+B.sum_b+B.sum_c+B.sum_d+B.sum_e+B.sum_f+B.sum_g,0) AS total
+		    , NVL(B.sum_a,0) AS sum_a
+		    , NVL(B.sum_b,0) AS sum_b
+		    , NVL(B.sum_c,0) AS sum_c
+		    , NVL(B.sum_d,0) AS sum_d
+		    , NVL(B.sum_e,0) AS sum_e
+		    , NVL(B.sum_f,0) AS sum_f
+		    , NVL(B.sum_g,0) AS sum_g
+		FROM (
+			SELECT A.folder_type_div_cd
+				, SUM((CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END)) AS sum_a
+				, SUM((CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END)) AS sum_b
+				, SUM((CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END)) AS sum_c
+				, SUM((CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END)) AS sum_d
+				, SUM((CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END)) AS sum_e
+				, SUM((CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END)) AS sum_f
+				, SUM((CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END)) AS sum_g
+			FROM  TB_RDFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.take_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+			AND   A.folder_type_div_cd IN ('1','2','5')
+			AND   NOT EXISTS (SELECT 1 FROM TB_RDFOLDER F
+			                    WHERE F.record_center_id=A.record_center_id
+			                    AND   F.folder_id=A.folder_id
+			                    AND  (F.disuse_ymd <![CDATA[<]]> #creatToYyyy:VARCHAR#||'1231' OR F.transf_ymd <![CDATA[<]]> #creatToYyyy:VARCHAR#||'1231')
+			                )
+		) B
+	</select>
+	<select id="findCreateCurStateInformFormPresvFolderList" parameterClass="rms.srch.stat.domain.CreateCurState" resultMap="findCreateCurStateInformFormPresvFolderList-result">
+		SELECT Z.com_cd_nm||(CASE WHEN Z.com_cd='1' THEN '(권) (대장포함)' ELSE '(권)' END) AS title
+			, NVL(B.sum_a+B.sum_b+B.sum_c+B.sum_d+B.sum_e+B.sum_f+B.sum_g,0) AS total
+			, NVL(B.sum_a,0) AS sum_a
+			, NVL(B.sum_b,0) AS sum_b
+			, NVL(B.sum_c,0) AS sum_c
+			, NVL(B.sum_d,0) AS sum_d
+			, NVL(B.sum_e,0) AS sum_e
+			, NVL(B.sum_f,0) AS sum_f
+			, NVL(B.sum_g,0) AS sum_g
+		FROM (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='RD01' AND com_cd IN ('1','2','5')) Z
+		, ( SELECT A.folder_type_div_cd
+		        , SUM((CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END)) AS sum_a
+		        , SUM((CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END)) AS sum_b
+		        , SUM((CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END)) AS sum_c
+		        , SUM((CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END)) AS sum_d
+		        , SUM((CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END)) AS sum_e
+		        , SUM((CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END)) AS sum_f
+		        , SUM((CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END)) AS sum_g
+		    FROM  TB_RDFOLDER A
+		    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		    AND   A.take_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+		    AND   A.folder_type_div_cd IN ('1','2','5')
+		    AND   NOT EXISTS (SELECT 1 FROM TB_RDFOLDER F
+		                        WHERE F.record_center_id=A.record_center_id
+		                        AND   F.folder_id=A.folder_id
+		                        AND  (F.disuse_ymd <![CDATA[<]]> #creatToYyyy:VARCHAR#||'1231' OR F.transf_ymd <![CDATA[<]]> #creatToYyyy:VARCHAR#||'1231')
+		                    )
+		    GROUP BY A.folder_type_div_cd
+		) B
+		WHERE Z.com_cd = B.folder_type_div_cd(+)
+	</select>
+
+</sqlMap>

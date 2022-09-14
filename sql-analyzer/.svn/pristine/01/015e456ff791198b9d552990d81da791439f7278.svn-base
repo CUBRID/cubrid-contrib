@@ -1,0 +1,1206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.multiTake">
+
+	<!-- 공동형인계인수 기록물인수 인수처리 -->
+	<resultMap id="findMultiTakeProcPagedList-result" class="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+	 	<result property="takeTakovrSndRepCd" 				column="take_takovr_snd_rep_cd"/>
+	 	<result property="takeTakovrSndRepNm" 				column="take_takovr_snd_rep_nm"/>
+	 	<result property="takeTakovrYyyy" 					column="take_takovr_yyyy"/>
+	 	<result property="takeTakovrSno" 					column="take_takovr_sno"/>
+	 	<result property="takeTakovrSnoStr" 				column="take_takovr_sno_str"/>
+	 	<result property="takeTakovrFolderCnt" 				column="take_takovr_folder_cnt"/>
+	 	<result property="takeTakovrRecordCnt" 				column="take_takovr_record_cnt"/>
+	 	<result property="takeStateSndDivCd" 				column="take_state_snd_div_cd"/>
+	 	<result property="takeStateSndDivNm" 				column="take_state_snd_div_nm"/>
+	 	<result property="takeStateFlag" 					column="take_state_flag"/>
+	 	<result property="takeStateFlagNm" 					column="take_state_flag_nm"/>
+	 	<result property="takeStateRcvDivCd" 				column="take_state_rcv_div_cd"/>
+	 	<result property="takeStateRcvDivNm" 				column="take_state_rcv_div_nm"/>
+	 	<result property="takeStateRcvFlag" 				column="take_state_rcv_flag"/>
+	</resultMap>
+	<!-- 
+	 	SELECT - 공동형인계인수 기록물인수 인수처리 인계계획 목록을 조회한다.
+	 -->
+	<select id="findMultiTakeProcPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultMap="findMultiTakeProcPagedList-result">
+		SELECT C.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT A.take_takovr_snd_rep_cd
+				    , (SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_id = A.record_center_id AND Z.record_center_cd = A.take_takovr_snd_rep_cd) take_takovr_snd_rep_nm
+				    , A.take_takovr_yyyy
+				    , A.take_takovr_sno
+				    , LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str
+				    , A.take_takovr_folder_cnt
+				    , A.take_takovr_record_cnt
+				    , A.take_state_snd_div_cd
+				    , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD88' AND Z.com_cd = A.take_state_snd_div_cd) take_state_snd_div_nm
+				    , A.take_state_flag
+				    , (CASE WHEN A.take_state_snd_div_cd = '02' THEN '미처리'
+				            WHEN A.take_state_snd_div_cd = '03' THEN (CASE WHEN A.take_state_flag = '1' THEN '인계처리중'
+				                                                           WHEN A.take_state_flag = '2' THEN '인계완료'
+				                                                           ELSE '미처리'
+				                                                      END)
+				            WHEN A.take_state_snd_div_cd = '04' THEN '인계완료'
+				       END) take_state_flag_nm
+				    , A.take_state_rcv_div_cd
+		          	, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD89' AND Z.com_cd = A.take_state_rcv_div_cd) take_state_rcv_div_nm
+		          	, A.take_state_rcv_flag
+				FROM tb_rdmultitakovrplan A
+				WHERE A.take_state_snd_div_cd IN ('02', '03', '04')
+		  		<isNotEmpty prepend="AND" property="takeTakovrSndRepCd">
+		 			A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #takeTakovrSndRepCd:VARCHAR#) 		
+		  		</isNotEmpty>
+				<isNotEmpty prepend="AND" property="takeTakovrYyyy">
+					A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#	
+				</isNotEmpty>
+		   		<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+				   	A.take_state_rcv_div_cd IS NOT NULL
+				</isEqual>
+				<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+					A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #recordCenterId:VARCHAR#)
+				</isEqual>
+				ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+	 	COUNT - 공동형인계인수 기록물인수 인수처리 인계계획 목록을 조회한다.
+	 -->
+	<select id="countMultiTakeProcPagedList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM tb_rdmultitakovrplan A
+		WHERE A.take_state_snd_div_cd IN ('02', '03', '04')
+		<isNotEmpty prepend="AND" property="takeTakovrSndRepCd">
+ 			A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #takeTakovrSndRepCd:VARCHAR#) 		
+  		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="takeTakovrYyyy">
+			A.take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#	
+		</isNotEmpty>
+   		<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+		   	A.take_state_rcv_div_cd IS NOT NULL
+		</isEqual>
+		<isEqual prepend="AND" property="searchDiv" compareValue="TAKE">
+			A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = #recordCenterId:VARCHAR#)
+		</isEqual>
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인계계획별 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findMultiTakeTrgtFolderPagedList-result" class="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+		<result property="recordCenterId"					column="record_center_id"/>
+	 	<result property="folderId"							column="folder_id"/>
+	 	<result property="orgCd"							column="org_cd"/>
+	 	<result property="orgNm"							column="org_nm"/>
+	 	<result property="orgAbbrNm"						column="org_abbr_nm"/>
+	 	<result property="title"							column="title"/>
+	 	<result property="creatYyyy"						column="creat_yyyy"/>
+	 	<result property="presvTermCd"						column="presv_term_cd"/>
+	 	<result property="presvTermNm"						column="presv_term_nm"/>
+	 	<result property="erecordFlag"						column="erecord_flag"/>
+	 	<result property="erecordFlagNm"					column="erecord_flag_nm"/>
+	 	<result property="creatSysCd"						column="creat_sys_cd"/>
+	 	<result property="creatSysNm"						column="creat_sys_nm"/>
+	 	<result property="takeFinFlag"						column="take_fin_flag"/>
+	 	<result property="takeFinFlagNm"					column="take_fin_flag_nm"/>
+	</resultMap>
+	<select id="countMultiTakeTrgtFolderPagedList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgt" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM tb_rdfolder A, (SELECT (CASE WHEN B.take_fin_flag = '0' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)
+                                          WHEN B.take_fin_flag = '2' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd)
+                                          ELSE (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)
+                                     END) record_center_id
+                                    ,A.take_takovr_snd_rep_cd
+                                    ,A.take_takovr_yyyy
+                                    ,A.take_takovr_sno
+                                    ,B.folder_id
+                                    ,B.take_fin_flag
+                                    ,(CASE WHEN B.take_fin_flag = '1' THEN '인수중'
+                                           WHEN B.take_fin_flag = '2' THEN '인수완료'
+                                           ELSE '미처리'
+                                      END) take_fin_flag_nm
+                             FROM tb_rdmultitakovrplan A, tb_rdmultitakovrlist B
+                             WHERE A.take_takovr_snd_rep_cd = B.take_takovr_snd_rep_cd
+                             AND A.take_takovr_yyyy         = B.take_takovr_yyyy
+                             AND A.take_takovr_sno             = B.take_takovr_sno) B
+        WHERE A.record_center_id         = B.record_center_id
+        AND A.folder_id                 = B.folder_id
+        <dynamic>
+            <isNotEmpty prepend="AND" property="title"> 
+                A.title like #title:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+        AND B.take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+        AND B.take_takovr_yyyy           = #takeTakovrYyyy:VARCHAR#
+        AND B.take_takovr_sno            = #takeTakovrSno:NUMMBER#
+	</select>
+	<select id="findMultiTakeTrgtFolderPagedList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgt" resultMap="findMultiTakeTrgtFolderPagedList-result">
+		SELECT E.*
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT A.record_center_id
+		                   ,A.folder_id
+		                  ,A.org_cd
+		                  ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm
+		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_abbr_nm
+		                  ,A.title
+		                  ,A.creat_yyyy
+		                  ,A.presv_term_cd
+		                  ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = A.presv_term_cd) presv_term_nm
+		                  ,A.erecord_flag
+		                  ,(CASE WHEN A.erecord_flag = '1' THEN '전자'
+		                         WHEN A.erecord_flag = '2' THEN '비전자'
+		                         ELSE '혼용'
+		                    END) erecord_flag_nm
+		                  ,A.creat_sys_cd
+		                  ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD10' AND Z.com_cd = A.creat_sys_cd) creat_sys_nm
+		                  ,B.take_fin_flag
+		                  ,B.take_fin_flag_nm
+		            FROM tb_rdfolder A, (SELECT (CASE WHEN B.take_fin_flag = '0' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)
+		                                              WHEN B.take_fin_flag = '2' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd)
+		                                              ELSE (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)
+		                                         END) record_center_id
+		                                        ,A.take_takovr_snd_rep_cd
+		                                        ,A.take_takovr_yyyy
+		                                        ,A.take_takovr_sno
+		                                        ,B.folder_id
+		                                        ,B.take_fin_flag
+		                                        ,(CASE WHEN B.take_fin_flag = '1' THEN '인수중'
+		                                               WHEN B.take_fin_flag = '2' THEN '인수완료'
+		                                               ELSE '미처리'
+		                                          END) take_fin_flag_nm
+		                                 FROM tb_rdmultitakovrplan A, tb_rdmultitakovrlist B
+		                                 WHERE A.take_takovr_snd_rep_cd = B.take_takovr_snd_rep_cd
+		                                 AND A.take_takovr_yyyy         = B.take_takovr_yyyy
+		                                 AND A.take_takovr_sno             = B.take_takovr_sno) B
+		            WHERE A.record_center_id         = B.record_center_id
+		            AND A.folder_id                 = B.folder_id
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="title"> 
+		                    A.title like #title:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            AND B.take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		            AND B.take_takovr_yyyy           = #takeTakovrYyyy:VARCHAR#
+		            AND B.take_takovr_sno            = #takeTakovrSno:NUMMBER#
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 공동형 인수 작업 등록전 인수기록관에 볼륨이 존재하는지 확인한다.
+	 -->
+	<select id="findRcvRecordCenterLstVolm" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="java.lang.String">
+	 	SELECT MAX(volm_id) FROM tb_stvolm WHERE record_center_id = #rcvRecordCenterId:VARCHAR# AND volm_div_cd = #volmDivCd:VARCHAR#
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 공동형 인수 작업시 인계계획의 상태를 변경한다.
+	 -->
+	<update id="updateMultiTakovrPlan" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+	 	UPDATE tb_rdmultitakovrplan
+	 	   SET take_state_rcv_div_cd 	= #takeStateRcvDivCd:VARCHAR#
+	 	      ,take_state_rcv_flag 		= #takeStateRcvFlag:VARCHAR#
+	 	 WHERE take_takovr_snd_rep_cd 	= #takeTakovrSndRepCd:VARCHAR#
+	 	   AND take_takovr_yyyy 		= #takeTakovrYyyy:VARCHAR#
+	 	   AND take_takovr_sno 			= #takeTakovrSno:VARCHAR#
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 공동형 인수 작업시 처리과코드를 복사한다 (상위기관존재시 상위기관도 함께)
+	 -->
+	<insert id="createOrgCd" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+	 	INSERT INTO tb_storg (
+		    record_center_id, org_cd, org_nm, org_abbr_nm, full_org_nm, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd, take_org_flag, link_trgt_id, take_takovr_mng_no
+		)
+		(
+		    SELECT *
+		    FROM (
+		        SELECT DISTINCT (SELECT Z.record_center_id 
+                                 FROM tb_strecordcenter Z 
+                                 WHERE Z.record_center_cd = (SELECT take_takovr_rcv_rep_cd 
+                                                             FROM tb_rdmultitakovrplan 
+                                                             WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+                                                             AND take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+                                                             AND take_takovr_sno = #takeTakovrSno:NUMBER#)) record_center_id 
+					, org_cd, org_nm, org_abbr_nm, full_org_nm, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd, '1', link_trgt_id, take_takovr_mng_no
+		        FROM tb_storg
+		        START WITH  org_cd IN (SELECT org_cd 
+		                               FROM tb_rdfolder AAA
+		                               <!--CUBRID
+		                               WHERE (record_center_id, folder_id) in (SELECT record_center_id, folder_id 
+		                               -->
+		                               WHERE EXISTS (SELECT 1
+		                                                                       FROM tb_rdmultitakovrlist
+		                                                                       WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		                                                                       AND take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+		                                                                       AND take_takovr_sno = #takeTakovrSno:NUMBER#
+		                                                                       AND AAA.record_center_id = record_center_id
+		                                                                       AND AAA.folder_id = folder_id
+		                                                                       )
+		                               GROUP BY org_cd)
+		        CONNECT BY PRIOR upper_org_cd = org_cd
+		    ) A WHERE NOT EXISTS (
+		        SELECT Z.org_cd FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd
+		    )
+		)
+	 </insert>
+	 
+	 <!-- 
+	 	공동형인계인수_기록물인수
+	 	: 공동형 인수 작업시 단위업무를 복사한다.
+	  -->
+	 <insert id="creatUnitCd" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+	 	INSERT INTO tb_zzunit (
+		        record_center_id,unit_cd,unit_nm,unit_descr,nars_handl_dtime
+		        ,creat_stnd_ymd,temp_unit_cd,lrg_cd,lrg_nm,mid_cd
+		        ,mid_nm,sml_cd,sml_nm,presv_term_cd,presv_term_fix_rsn,presv_method_cd
+		        ,presv_area_cd,funsh_record_flag,funsh_record_transf_ymd,main_read_usg,transf_read_expt_cnt
+		        ,spcl_list_loc,spcl_list1,spcl_list2,spcl_list3,state_cd
+		        ,take_flag,reg_user_id,reg_dtime,take_takovr_mng_no,presvterm_state_cd
+		        ,com_unit_flag,presvterm_chng_rsn_cd,take_mng_no,unit_alias
+		)
+		(
+		    SELECT *
+		    FROM (
+		        SELECT   (SELECT Z.record_center_id 
+                                 FROM tb_strecordcenter Z 
+                                 WHERE Z.record_center_cd = (SELECT take_takovr_rcv_rep_cd 
+                                                             FROM tb_rdmultitakovrplan 
+                                                             WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+                                                             AND take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+                                                             AND take_takovr_sno = #takeTakovrSno:NUMBER#)) record_center_id
+					 	,unit_cd,unit_nm,unit_descr,nars_handl_dtime
+		                ,creat_stnd_ymd,temp_unit_cd,lrg_cd,lrg_nm,mid_cd
+		                ,mid_nm,sml_cd,sml_nm,presv_term_cd,presv_term_fix_rsn,presv_method_cd
+		                ,presv_area_cd,funsh_record_flag,funsh_record_transf_ymd,main_read_usg,transf_read_expt_cnt
+		                ,spcl_list_loc,spcl_list1,spcl_list2,spcl_list3,state_cd
+		                <!--cubrid ,take_flag,reg_user_id,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		                ,take_flag,reg_user_id,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+				,take_takovr_mng_no,presvterm_state_cd
+		                ,com_unit_flag,presvterm_chng_rsn_cd,take_mng_no,unit_alias 
+		        FROM  tb_zzunit 
+		        WHERE record_center_id = (SELECT record_center_id FROM TB_STRECORDCENTER WHERE record_center_cd = #takeTakovrSndRepCd:VARCHAR#)
+		        AND   unit_cd IN (SELECT clss_id 
+		                          FROM tb_rdfolder AAA
+		                          <!--CUBRID
+		                          WHERE (record_center_id, folder_id) in (SELECT record_center_id, folder_id 
+		                          -->
+		                                                    WHERE EXISTS ( SELECT 1
+		                                                                  FROM tb_rdmultitakovrlist 
+		                                                                  WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		                                                                  AND take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+		                                                                  AND take_takovr_sno = #takeTakovrSno:NUMBER#
+		                                                                  AND AAA.record_center_id = record_center_id
+		                                                                  AND AAA.folder_id = folder_id
+		                                                                  )
+		                          AND clss_div_cd = '2'
+		                          GROUP BY clss_id)    
+		    ) A WHERE NOT EXISTS (
+		        SELECT Z.unit_cd FROM tb_zzunit Z WHERE Z.record_center_id = A.record_center_id AND Z.unit_cd = A.unit_cd
+		    )
+		)
+	</insert>
+	 
+	<!-- 
+	 	공동형인계인수_기록물인수
+	 	: 공동형 인수 작업시 처리과단위업무를 복사한다.
+	  -->
+	<insert id="creatOrgUnit" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		 INSERT INTO tb_zzorgunit (
+		     record_center_id, org_cd, unit_cd, use_flag, take_flag, reg_dtime
+		    ,take_takovr_mng_no, com_unit_flag, take_mng_no, state_cd 
+		)
+		(
+		    SELECT * 
+		    FROM (
+		            SELECT (SELECT Z.record_center_id 
+                                 FROM tb_strecordcenter Z 
+                                 WHERE Z.record_center_cd = (SELECT take_takovr_rcv_rep_cd 
+                                                             FROM tb_rdmultitakovrplan 
+                                                             WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+                                                             AND take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+                                                             AND take_takovr_sno = #takeTakovrSno:NUMBER#)) record_center_id
+					    , org_cd, unit_cd, use_flag, take_flag
+					    <!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+					    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		                , take_takovr_mng_no, com_unit_flag, take_mng_no, state_cd 
+		        FROM tb_zzorgunit AAAA
+		        WHERE 
+		             <!--CUBRID
+		             (org_cd, unit_cd) IN (SELECT org_cd, clss_id
+		             --> 
+		             EXISTS (SELECT 1
+		                          FROM tb_rdfolder AAA
+		                          <!--CUBRID
+		                          WHERE (record_center_id, folder_id) in (SELECT record_center_id, folder_id 
+		                          -->
+		                          WHERE EXISTS ( SELECT 1
+		                                                              FROM tb_rdmultitakovrlist
+		                                                              WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		                                                              AND take_takovr_yyyy = #takeTakovrYyyy:VARCHAR#
+		                                                              AND take_takovr_sno = #takeTakovrSno:NUMBER#
+		                                                              AND AAA.record_center_id = record_center_id
+		                                                              AND AAA.folder_id = folder_id
+		                                                              )
+		                          AND clss_div_cd = '2'
+		                          AND AAAA.org_cd = AAA.org_cd
+		                          AND AAAA.unit_cd = AAA.clss_id
+		                          GROUP BY org_cd, clss_id)
+		       
+		    ) A WHERE NOT EXISTS (
+		        SELECT Z.unit_cd, Z.org_cd FROM tb_zzorgunit Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd AND Z.unit_cd = A.unit_cd
+		    )
+		)
+	</insert>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 공동형 인수 대상 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findMultiTakovrTrgtFolderList-result" class="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+		<result property="sndRecordCenterId"				column="snd_record_center_id"/>	 
+		<result property="folderId"							column="folder_id"/>
+		<result property="rcvRecordCenterId"				column="rcv_record_center_id"/>
+		<result property="folderNeoFileId"					column="folder_neo_file_id"/>
+	</resultMap> 
+	<select id="findMultiTakovrTrgtFolderList" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultMap="findMultiTakovrTrgtFolderList-result">
+		SELECT A.snd_record_center_id
+		 	   ,A.folder_id
+		 	   ,A.rcv_record_center_id
+		 	   ,(SELECT Z.folder_neo_file_id FROM tb_rdfolder Z WHERE Z.record_center_id = A.snd_record_center_id AND Z.folder_id = A.folder_id) folder_neo_file_id 
+		 FROM 
+		 (
+			SELECT 	 (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd) snd_record_center_id
+					,folder_id
+					,(SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) rcv_record_center_id
+	  		  FROM tb_rdmultitakovrlist A
+			 WHERE take_takovr_snd_rep_cd 	= #takeTakovrSndRepCd:VARCHAR#
+		   	   AND take_takovr_yyyy 		= #takeTakovrYyyy:VARCHAR#	
+			   AND take_takovr_sno 			= #takeTakovrSno:VARCHAR#	
+	 	 ) A
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 공동형인수 대상 기록물 철의 인수상태를 갱신한다.
+	 -->
+	<update id="updateMultiTakovrFolderTakeFinState" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdmultitakovrlist
+	 	   SET take_fin_flag 			= #takeFinFlag:VARCHAR#
+	 	 WHERE take_takovr_snd_rep_cd 	= #takeTakovrSndRepCd:VARCHAR#
+	 	   AND take_takovr_yyyy 		= #takeTakovrYyyy:VARCHAR#
+	 	   AND take_takovr_sno 			= #takeTakovrSno:VARCHAR#
+	 	   AND folder_id 				= #folderId:VARCHAR#
+	</update>
+	
+	 <!--  
+	 	공동형인계인수_기록물인수
+	 	: 폐기평가 선정사유 조회
+	 -->
+	<resultMap id="findMultiTakeDfDisuseReason-result" class="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	<result property="discuYyyy" 		column="discu_yyyy"/>
+	 	<result property="discuReason" 		column="discu_reason"/>
+	</resultMap>
+	<select id="findMultiTakeDfDisuseReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder" resultMap="findMultiTakeDfDisuseReason-result">
+	    SELECT discu_yyyy
+	         , discu_reason 
+	    FROM TB_DFDISUSEREASON AAA
+	    WHERE 
+	    <!--CUBRID
+	        (record_center_id, discu_yyyy, discu_seq)
+	    IN (
+	        SELECT record_center_id, discu_yyyy, discu_seq 
+	    -->
+	       EXISTS (SELECT 1
+	        FROM   TB_DFDISUSEOPINHIST
+	        WHERE  record_center_id = #sndRecordCenterId:VARCHAR#
+	        AND    folder_id = #folderId:VARCHAR#
+	        AND AAA.record_center_id = record_center_id
+	        AND AAA.discu_yyyy = discu_yyyy
+	        AND AAA.discu_seq = discu_seq
+	    ) 
+	</select>
+	 
+	<!--
+		공동형인계인수_기록물인수
+		: 폐기평가년도별 사유등록여부 
+	-->
+	<select id="countMultiTakeDfDisuseReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder" resultClass="java.lang.Integer">
+	 	SELECT COUNT(1)
+		FROM   TB_DFDISUSEREASON
+		WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND    discu_yyyy = #discuYyyy:VARCHAR#
+		AND    discu_reason = #discuReason:VARCHAR#
+	</select> 
+
+	<!--
+		공동형인계인수_기록물인수
+		: 평가폐기 선정사유 등록
+	-->
+	<insert id="createDfDisuseReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	INSERT INTO TB_DFDISUSEREASON  (
+	 		record_center_id, discu_yyyy, discu_seq, discu_reason
+	 	) VALUES (
+			  #rcvRecordCenterId:VARCHAR#
+			, #discuYyyy:VARCHAR#
+			, NVL(( SELECT MAX(discu_seq)+1 
+			 		FROM   TB_DFDISUSEREASON 
+			  	    WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+			  	    AND    discu_yyyy = #discuYyyy:VARCHAR#), 1)
+			, #discuReason:VARCHAR#
+	 	)
+	</insert>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 평가폐기 년도별 일련번호 조회
+	 -->
+	<select id="findDfDisuseReasonSeq" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder" resultClass="string">
+	 	SELECT DISTINCT discu_seq 
+		FROM   TB_DFDISUSEREASON
+		WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND    discu_yyyy = #discuYyyy:VARCHAR#
+		AND    discu_reason = #discuReason:VARCHAR#
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 폐기평가의견 테이블 갱신 
+	-->
+	<update id="updateDfDisuseOpin" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_dfdisuseopin SET record_center_id = #rcvRecordCenterId:VARCHAR# <isNotEqual prepend="," property="discuSeq" compareValue="0">discu_seq = #discuSeq:NUMBER#</isNotEqual> WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 폐기평가심의이력 테이블 갱신 
+	-->
+	<update id="updateDfDisuseOpinHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_dfdisuseopinhist SET record_center_id = #rcvRecordCenterId:VARCHAR# <isNotEqual prepend="," property="discuSeq" compareValue="0">discu_seq = #discuSeq:NUMBER#</isNotEqual> WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철변경이력 테이블 갱신 
+	-->
+	<update id="updateRdFolderChngHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfolderchnghist SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update> 
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 생산정보 테이블 갱신 
+	-->
+	<update id="updateRdFolderCreat" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfoldercreat SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update> 
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 색인정보 테이블 갱신 
+	-->
+	<update id="updateRdFolderKeywd" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfolderkeywd SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update> 
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철목적분류 테이블 갱신 
+	-->
+	<update id="updateRdFolderPjtClss" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfolderpjtclss SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update> 
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 접근범위재분류 테이블 갱신 
+	-->
+	<update id="updateRdFolderReadRang" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfolderreadrang SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 관계정보 테이블 갱신 
+	-->
+	<update id="updateRdFolderRel" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfolderrel SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철인수인계정보 테이블 갱신 
+	-->
+	<update id="updateRdFolderTakeTakovr" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE tb_rdfoldertaketakovr SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#
+	</update>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 테이블 갱신 
+	-->
+	<update id="updateRdFolder" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	UPDATE TB_RDFOLDER A
+	 	   SET A.record_center_id 			= #rcvRecordCenterId:VARCHAR#
+	 		  ,A.booksf_arng_flag 			= '0'
+	 		  ,A.stakrm_mng_no_div_cd 		= ''
+	 		  ,A.stakrm_mng_no_rule 		= ''
+	 		  ,A.stakrm_mng_no				= ''
+	 		  ,A.presv_box_id				= ''
+	 		  ,A.folder_keep_state_cd 		= (CASE WHEN A.folder_keep_state_cd = '01' THEN '04'
+	 		  										ELSE A.folder_keep_state_cd
+	 		  								   END)
+	 		  ,A.opti_disk_store_state_cd	= ''
+	 	 WHERE record_center_id 	= #sndRecordCenterId:VARCHAR# 
+	 	   AND folder_id 			= #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철NEO 파일목록 조회
+	 -->
+	<resultMap id="findFolderNeoFileList-result" class="java.util.HashMap">
+	 	<result property="recordCenterId"			column="record_center_id"/>
+	 	<result property="folderNeoFileId"			column="folder_neo_file_id"/>
+	 	<result property="mediumId"					column="medium_id"/>
+	 	<result property="mediumCd"					column="medium_cd"/>
+	 	<result property="mediumDetailCd"			column="medium_detail_cd"/>
+	 	<result property="mediumPath"				column="medium_path"/>
+<!-- 	 	 인수처리 버튼 시 오류 발생 수정 2015.06.06 정대입 수정  시작 -->
+<!-- 		<result property="fileSize" 				column="folder_size"/> -->
+	 	<result property="fileSize" 				column="file_size"/>
+<!-- 	 	 인수처리 버튼 시 오류 발생 수정 2015.06.06 정대입 수정  시작 -->
+	 </resultMap>
+	 <select id="findFolderNeoFileList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder" resultMap="findFolderNeoFileList-result">
+		 SELECT A.record_center_id
+              ,folder_neo_file_id
+              ,medium_id
+              ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd
+              ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd
+              ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path
+              ,file_size
+        FROM tb_stfolderneofile A
+        WHERE A.record_center_id = #sndRecordCenterId:VARCHAR#
+        AND   A.folder_neo_file_id = #folderNeoFileId:VARCHAR#
+	 </select>
+	
+	
+	<!-- 공동형인계인수_기록물인수
+		: 인수기록관 Medium_id 조회 
+	-->
+	<select id="findRcvMediumId" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT MIN(medium_id)
+		FROM TB_STMEDIUM 
+		WHERE record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND   volm_id          = #volmId:VARCHAR#
+		AND   medium_cd        = #mediumCd:VARCHAR#
+		AND   (tot_size - use_size) > 0
+		<isEmpty prepend="AND" property="mediumDetailCd">
+			medium_detail_cd IS NULL
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="mediumDetailCd">
+			medium_detail_cd = #mediumDetailCd:VARCHAR#
+		</isNotEmpty>
+		<isEqual prepend="AND" property="mediumCd" compareValue="01">
+		      medium_path = #mediumPath:VARCHAR#
+		</isEqual>
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인계대상 기록물철, 건 전자파일의 용량 조회
+	 -->
+	<select id="findTakovrTrgtSize" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan" resultClass="java.lang.String">
+		SELECT SUM(FILE_SIZE) 
+		FROM (
+		    SELECT SUM(RECORD_SIZE) AS FILE_SIZE
+		    FROM TB_RDRECORD AAA
+		    <!--CUBRID
+		    WHERE (RECORD_CENTER_ID, FOLDER_ID) 
+		    IN (SELECT RECORD_CENTER_ID, FOLDER_ID 
+		    -->
+		    WHERE EXISTS (SELECT 1
+		        FROM TB_RDMULTITAKOVRLIST 
+		        WHERE TAKE_TAKOVR_SND_REP_CD = #takeTakovrSndRepCd:VARCHAR#
+		        AND TAKE_TAKOVR_YYYY = #takeTakovrYyyy:VARCHAR#
+		        AND TAKE_TAKOVR_SNO = #takeTakovrSno:NUMBER#
+		        AND AAA.record_center_id = record_center_id
+		        AND AAA.folder_id = folder_id
+		    )
+		    UNION ALL
+		    SELECT FILE_SIZE 
+		    FROM TB_STFOLDERNEOFILE AAA
+		    <!--CUBRID
+		    WHERE (RECORD_CENTER_ID, FOLDER_ID) 
+		    IN (SELECT RECORD_CENTER_ID, FOLDER_ID 
+		    -->
+		    WHERE EXISTS (SELECT 1
+		        FROM TB_RDMULTITAKOVRLIST 
+		        WHERE TAKE_TAKOVR_SND_REP_CD = #takeTakovrSndRepCd:VARCHAR#
+		        AND TAKE_TAKOVR_YYYY = #takeTakovrYyyy:VARCHAR#
+		        AND TAKE_TAKOVR_SNO = #takeTakovrSno:NUMBER#
+		        AND AAA.record_center_id = record_center_id
+		        AND AAA.folder_id = folder_id
+		    )
+		)
+	</select>
+	
+	<!-- 
+		공동형인계인수_ 기록물인수
+		: 인수기록관에 Medium_ID 를 추가한다.
+	 -->
+	<insert id="createMultiTakeMediumId" parameterClass="java.util.HashMap">
+	 	INSERT INTO TB_STMEDIUM (
+		    record_center_id, medium_id, volm_id, medium_nm, medium_cd, medium_path, tot_size, use_size, del_flag, reg_dtime, chng_dtime, remk, medium_detail_cd 
+		)
+		(
+		    SELECT #rcvRecordCenterId:VARCHAR#
+		          ,NVL(LPAD(MAX(medium_id)+1, 3, '0'), '001')
+		          ,#lastVolm:VARCHAR#
+		          ,'MEDIUM'||NVL(LPAD(MAX(medium_id)+1, 3, '0'), '001')
+		          ,#mediumCd:VARCHAR#
+		          <dynamic>
+		          	<isEqual prepend="," property="mediumCd" compareValue="01">
+		          		#mediumPath:VARCHAR# 
+		          	</isEqual>
+		          	<isNotEqual prepend="," property="mediumCd" compareValue="01">
+		          		''
+		          	</isNotEqual>
+		          </dynamic>
+		          ,#mediumSize:VARCHAR#
+		          ,#mediumSize:VARCHAR#
+		          ,'0'
+		          <!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		          ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		          ,''
+		          ,'공동형인계인수 추가저장소'||NVL(LPAD(MAX(medium_id)+1, 3, '0'), '001')
+		          ,#mediumDetailCd:VARCHAR#
+		    FROM tb_stmedium
+		    WHERE record_center_id = #rcvRecordCenterId:VARCHAR#
+		)
+	 </insert>
+	 
+	
+	<!-- 공동형인계인수_기록물인수
+		: 기록물철 Neo파일 사이즈 조회 
+	-->
+	<select id="findRcvFolderNeoFileSize" parameterClass="java.util.HashMap" resultClass="java.lang.Long">
+		SELECT file_size FROM tb_stfolderneofile WHERE folder_neo_file_id = #folderNeoFileId:VARCHAR#	
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 Neo파일 테이블 갱신
+	 -->
+	<update id="updateStFolderNeoFile" parameterClass="java.util.HashMap">  
+	 	UPDATE tb_stfolderneofile
+	 	   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+	 	      ,medium_id 		= #rcvMediumId:VARCHAR#
+
+	 	 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+<!-- 	 	 인수처리 버튼 시 오류 발생 수정 2015.06.06 정대입 수정  시작 -->
+<!-- 	 	   AND orign_id 		= #orignId:VARCHAR# -->
+<!-- 	 	   AND orign_neo_file_id= #orignNeoFileId:VARCHAR# -->
+		AND folder_id   = #folderId:VARCHAR#
+		AND folder_neo_file_id= #folderNeoFileId:VARCHAR#
+<!-- 	 	 인수처리 버튼 시 오류 발생 수정 2015.06.06 정대입 수정  종료 -->
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인계기록관의 MediumSize 조정
+	 -->
+	<update id="updateMediumSize" parameterClass="rms.sys.storageMng.domain.Medium">
+		UPDATE TB_STMEDIUM
+		   SET use_size = (use_size-#useSize:NUMBER#)
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND medium_id = #mediumId:VARCHAR#
+		   AND medium_cd = #mediumCd:VARCHAR#
+		   AND medium_detail_cd = #mediumDetailCd:VARCHAR#
+		   <isEqual prepend="AND" property="mediumCd" compareValue="01">
+			   medium_path = #mediumPath:VARCHAR#
+		   </isEqual>	
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물철 인계인수 이력 생성
+	 -->
+	<insert id="createFolderTakeTakovrHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder">
+	 	INSERT INTO tb_rdfoldertaketakovr(record_center_id, folder_id, sno, take_takovr_div_cd, take_takovr_creat_dtime, take_takovr_org_cd, take_takovr_org_nm, reg_dtime)
+		VALUES (
+		    #rcvRecordCenterId:VARCHAR#
+		   ,#folderId:VARCHAR#
+		   ,(SELECT NVL(MAX(sno)+1, 1) FROM tb_rdfoldertaketakovr WHERE record_center_id = #rcvRecordCenterId:VARCHAR# AND folder_id = #folderId:VARCHAR#)
+		   ,'2'
+		   ,#takeTakovrCreatDtime:VARCHAR#
+		   ,(SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = #sndRecordCenterId#)
+		   ,(SELECT Z.org_nm FROM tb_storg Z WHERE record_center_id = #rcvRecordCenterId:VARCHAR# AND org_cd = (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = #sndRecordCenterId#))
+		   <!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')    -->
+		   ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')    
+		)
+	</insert>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인수대상 건목록 조회 
+	-->
+	<resultMap id="findMultiTakovrTrgtRecordList-result" class="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	<result property="recordId"			column="record_id"/>
+	 	<result property="orignId"			column="orign_id"/>
+	</resultMap>
+	<select id="findMultiTakovrTrgtRecordList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtFolder" resultMap="findMultiTakovrTrgtRecordList-result">
+	 	SELECT record_id, orign_id
+	 	FROM tb_rdrecord 
+	 	WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	 	AND folder_id = #folderId:VARCHAR#
+	</select>
+	 
+	<!-- 
+	 	공동형인계인수_기록물인수
+	 	: 건 인수전 공개재분류 사유 조회
+	 -->
+	<resultMap id="findMultiTakeRdOpenResortReason-result" class="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	  	<result property="resortYyyy" column="resort_yyyy"/>
+	  	<result property="resortCase" column="resort_case"/>
+	  	<result property="resortReason" column="resort_reason"/>
+	</resultMap>
+	<select id="findMultiTakeRdOpenResortReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultMap="findMultiTakeRdOpenResortReason-result">
+	    SELECT #rcvRecordCenterId:VARCHAR#
+	         , resort_yyyy
+	         , resort_case
+	         , resort_reason
+	    FROM TB_RDOPENRESORTREASON AAA
+	    WHERE 
+	       <!--CUBRID
+	       (record_center_id, resort_yyyy, resort_case, resort_case_no)
+	    IN (
+	        SELECT distinct record_center_id, resort_yyyy, resort_case, resort_case_no 
+	    -->
+	        EXISTS (SELECT 1
+	        FROM   TB_RDOPENHIST
+	        WHERE  record_center_id = #sndRecordCenterId:VARCHAR#
+	        AND    record_id = #recordId:VARCHAR#
+	        AND record_center_id = AAA.record_center_id
+	        AND resort_yyyy = AAA.resort_yyyy
+	        AND resort_case = AAA.resort_case
+	        AND resort_case_no = AAA.resort_case_no
+	    ) 
+ 	</select>
+ 	 
+ 	<!-- 
+ 	 	공동형인계인수_기록물인수
+ 	 	: 공개재분류 사유 등록여부를 조회한다.
+ 	 -->
+ 	<select id="countMultiTakeRdOpenResortReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultClass="java.lang.Integer">
+	 	SELECT COUNT(1)
+		FROM   TB_RDOPENRESORTREASON
+		WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND    resort_yyyy = #resortYyyy:VARCHAR#
+		AND    resort_case = #resortCase:VARCHAR#
+		AND    resort_reason = #resortReason:VARCHAR#	 
+	</select>
+ 	 
+ 	<!-- 
+ 	 	공동형인계인수_기록물인수
+ 	 	: 공개재분류 선정사유를 등록한다.
+ 	 -->
+ 	<insert id="createRdOpenResortReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+		INSERT INTO TB_RDOPENRESORTREASON  (
+			record_center_id, resort_yyyy, resort_case, resort_case_no, resort_reason
+		) VALUES (
+			  #rcvRecordCenterId:VARCHAR#
+			, #resortYyyy:VARCHAR#
+			, #resortCase:VARCHAR#
+			, NVL(( SELECT MAX(resort_case_no)+1 
+			        FROM   TB_RDOPENRESORTREASON 
+			        WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+			        AND    resort_yyyy = #resortYyyy:VARCHAR#
+			        AND    resort_case = #resortCase:VARCHAR#), 1)
+			, #resortReason:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 공개재분류 선정사유 일련번호 조회
+	 -->
+ 	<select id="findRdOpenResortReasonCaseNo" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultClass="string">
+		SELECT DISTINCT resort_case_no
+		FROM   TB_RDOPENRESORTREASON
+		WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND    resort_yyyy = #resortYyyy:VARCHAR#
+		AND    resort_case = #resortCase:VARCHAR#
+		AND    resort_reason = #resortReason:VARCHAR#	 
+	</select>
+ 	 
+ 	<!-- 공개재분류의견 테이블 갱신 -->
+	<update id="updateRdOpenResortOpin" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdopenresortopin SET record_center_id = #rcvRecordCenterId:VARCHAR# <isNotEqual prepend="," property="resortCaseNo" compareValue="0">resort_case_no = #resortCaseNo:NUMBER#</isNotEqual> WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!-- 공개속성변경이력 테이블 갱신 -->
+	<update id="updateRdOpenHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdopenhist SET record_center_id = #rcvRecordCenterId:VARCHAR# <isNotEqual prepend="," property="resortCaseNo" compareValue="0">resort_case_no = #resortCaseNo:NUMBER#</isNotEqual> WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+ 	
+ 	<!-- 
+ 		공동형인계인수_기록물인수
+ 		: 건 인수전 접근범위재분류 사유 조회
+ 	 -->
+ 	<resultMap id="findMultiTakeRdRangeResortReason-result" class="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	  	<result property="resortYyyy" column="resort_yyyy"/>
+	  	<result property="resortCase" column="resort_case"/>
+	  	<result property="resortReason" column="resort_reason"/>
+	</resultMap>
+ 	<select id="findMultiTakeRdRangeResortReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultMap="findMultiTakeRdRangeResortReason-result">
+	 	SELECT #rcvRecordCenterId:VARCHAR#
+	         , resort_yyyy
+	         , resort_case
+	         , resort_reason
+	    FROM TB_RDRANGERESORTREASON AAA
+	    WHERE 
+	    <!--CUBRID
+	    (record_center_id, resort_yyyy, resort_case, resort_case_no)
+	    IN (
+	        SELECT distinct record_center_id, resort_yyyy, resort_case, resort_case_no 
+	    -->    
+	    EXISTS (SELECT 1
+	        FROM   TB_RDRANGERESORTHIST
+	        WHERE  record_center_id = #sndRecordCenterId:VARCHAR#
+	        AND    record_id = #recordId:VARCHAR#
+	        AND record_center_id = AAA.record_center_id
+	        AND resort_yyyy = AAA.resort_yyyy
+	        AND resort_case = AAA.resort_case
+	        AND resort_case_no = AAA.resort_case_no
+	    ) 
+	</select>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 접근범위재분류 사유등록여부를 조회한다.
+	 -->
+	<select id="countMultiTakeRdRangeResortReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultClass="java.lang.Integer">
+	 	SELECT COUNT(1)
+		FROM   TB_RDRANGERESORTREASON
+		WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND    resort_yyyy = #resortYyyy:VARCHAR#
+		AND    resort_case = #resortCase:VARCHAR#
+		AND    resort_reason = #resortReason:VARCHAR#	 
+	</select>
+	 
+ 	<!-- 
+		 공동형인계인수_기록물인수
+ 	 	: 접근범위재분류 선정사유를 등록한다.	
+ 	 -->
+ 	<insert id="createRdRangeResortReason" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+		INSERT INTO TB_RDRANGERESORTREASON  (
+			record_center_id, resort_yyyy, resort_case, resort_case_no, resort_reason
+		) VALUES (
+			  #rcvRecordCenterId:VARCHAR#
+			, #resortYyyy:VARCHAR#
+			, #resortCase:VARCHAR#
+			, NVL(( SELECT MAX(resort_case_no)+1 
+			        FROM   TB_RDRANGERESORTREASON 
+			        WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+			        AND    resort_yyyy = #resortYyyy:VARCHAR#
+			        AND    resort_case = #resortCase:VARCHAR#), 1)
+			, #resortReason:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 접근범위 재분류 선정사유 일련번호
+	 -->
+	<select id="findRdRangeResortReasonCaseNo" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultClass="string">
+		SELECT DISTINCT resort_case_no
+		FROM   TB_RDRANGERESORTREASON
+		WHERE  record_center_id = #rcvRecordCenterId:VARCHAR#
+		AND    resort_yyyy = #resortYyyy:VARCHAR#
+		AND    resort_case = #resortCase:VARCHAR#
+		AND    resort_reason = #resortReason:VARCHAR#	 
+	</select>
+ 	
+	<!--  
+		공동형인계인수_기록물인수
+		: 접근범위재분류의견등록 테이블 갱신 
+	-->
+	<update id="updateRdRangeResortOpin" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrangeresortopin SET record_center_id = #rcvRecordCenterId:VARCHAR# <isNotEqual prepend="," property="resortCaseNo" compareValue="0">resort_case_no = #resortCaseNo:NUMBER#</isNotEqual> WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 접근범위재분류 속성변경이력 테이블 갱신
+	-->
+	<update id="updateRdRangeResortHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+		UPDATE tb_rdrangeresorthist SET record_center_id = #rcvRecordCenterId:VARCHAR# <isNotEqual prepend="," property="resortCaseNo" compareValue="0">resort_case_no = #resortCaseNo:NUMBER#</isNotEqual> WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건변경이력  테이블 갱신 
+	-->
+	<update id="updateRdRecordChngHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecordchnghist SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건생산내역  테이블 갱신 
+	-->
+	<update id="updateRdRecordCreat" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecordcreat SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건정보출처  테이블 갱신 
+	-->
+	<update id="updateRdRecordInfoSrc" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecordinfosrc SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건 색인정보  테이블 갱신 
+	-->
+	<update id="updateRdRecordKeywd" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecordkeywd SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update> 
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건 관계정보  테이블 갱신 
+	-->
+	<update id="updateRdRecordRel" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecordrel SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	 
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건제목변경이력 테이블 갱신 
+	-->
+	<update id="updateRdRecordTitleHist" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecordtitlehist SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	  
+	<!--  
+		공동형인계인수_기록물인수
+		: 기록물건 테이블 갱신 
+	-->
+	<update id="updateRdRecord" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord">
+	 	UPDATE tb_rdrecord SET record_center_id = #rcvRecordCenterId:VARCHAR# WHERE record_center_id = #sndRecordCenterId:VARCHAR# AND record_id = #recordId:VARCHAR#
+	</update>
+	
+	<!-- 공동형인계인수_기록물인수
+		: 인수대상 원문파일 목록 조회 
+	-->
+	 <resultMap id="findMultiTakovrTrgtOrignFileIdList-result" class="java.util.HashMap">
+	 	<result property="recordCenterId"			column="record_center_id"/>
+	 	<result property="orignId"					column="orign_id"/>
+	 	<result property="orignFileId"				column="orign_file_id"/>
+	 	<result property="mediumId"					column="medium_id"/>
+	 	<result property="mediumCd"					column="medium_cd"/>
+	 	<result property="mediumDetailCd"			column="medium_detail_cd"/>
+	 	<result property="mediumPath"				column="medium_path"/>
+	 	<result property="fileSize"					column="file_size"/>
+	 </resultMap>
+	<select id="findMultiTakovrTrgtOrignFileIdList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultMap="findMultiTakovrTrgtOrignFileIdList-result">
+	 	SELECT A.record_center_id
+	 		  ,orign_id
+		      ,orign_file_id
+		      ,medium_id
+		      ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd
+		      ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd
+		      ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path
+		      ,file_size
+		FROM tb_storignfile A
+		WHERE A.record_center_id = #sndRecordCenterId:VARCHAR#
+		AND A.orign_id 			 = #orignId:VARCHAR#
+	</select>
+	 
+	<!-- 
+		공동형인계인수
+		: 원문파일 사이즈 조회 
+	-->
+	<select id="findRcvOrignFileSize" parameterClass="java.util.HashMap" resultClass="java.lang.Long">
+		SELECT file_size FROM tb_storignfile WHERE record_center_id = #recordCenterId:VARCHAR# AND orign_id = #orignId:VARCHAR# AND orign_file_id = #orignFileId:VARCHAR#
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 기록물건 원문테이블 갱신 
+	-->
+	<update id="updateStRecordOrignHist" parameterClass="java.util.HashMap">
+		UPDATE tb_strecordorignhist
+		   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+		 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	   	   AND orign_id         = #orignId:VARCHAR#
+	</update>
+	 
+	<!-- 
+	 	공동형인계인수_기록물인수
+	 	: 기록물건 원문변경이력 테이블 갱신 
+	 -->
+	<update id="updateStRecordOrign" parameterClass="java.util.HashMap">
+	 	UPDATE tb_strecordorign
+		   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+		 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	   	   AND orign_id         = #orignId:VARCHAR#
+	</update>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 원문변경이력 테이블 갱신
+	-->
+	<update id="updateStOrignFileHist" parameterClass="java.util.HashMap">
+	 	UPDATE tb_storignfilehist
+   		   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+	    	  ,medium_id 		= #rcvMediumId:VARCHAR#
+	 	 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	   	   AND orign_id         = #orignId:VARCHAR#
+	   	   AND orign_file_id    = #orignFileId:VARCHAR#
+	</update>
+	 
+	<!-- 
+	 	공동형인계인수_기록물인수
+	 	: 원문 테이블 갱신 
+	 -->
+	<update id="updateStOrignFile" parameterClass="java.util.HashMap">
+	 	UPDATE tb_storignfile
+   		   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+	    	  ,medium_id 		= #rcvMediumId:VARCHAR#
+	 	 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	   	   AND orign_id         = #orignId:VARCHAR#
+	   	   AND orign_file_id    = #orignFileId:VARCHAR#
+	</update>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인수대상 PDFA1 파일 목록 조회	
+	 -->
+	<resultMap id="findMultiTakovrTrgtOrignPdfA1FileIdList-result" class="java.util.HashMap">
+	 	<result property="recordCenterId"			column="record_center_id"/>
+	 	<result property="orignId"					column="orign_id"/>
+	 	<result property="pdfA1FileId"				column="pdf_a1_file_id"/>
+	 	<result property="mediumId"					column="medium_id"/>
+	 	<result property="mediumCd"					column="medium_cd"/>
+	 	<result property="mediumDetailCd"			column="medium_detail_cd"/>
+	 	<result property="mediumPath"				column="medium_path"/>
+	 	<result property="fileSize"					column="file_size"/>
+	</resultMap>
+	<select id="findMultiTakovrTrgtOrignPdfA1FileIdList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultMap="findMultiTakovrTrgtOrignPdfA1FileIdList-result">
+	 	SELECT A.record_center_id
+	 		  ,orign_id
+		      ,pdf_a1_file_id
+		      ,medium_id
+		      ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd
+		      ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd
+		      ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path
+		      ,file_size
+		FROM tb_storignpdfa1file A
+		WHERE A.record_center_id = #sndRecordCenterId:VARCHAR#
+		AND A.orign_id 			 = #orignId:VARCHAR#
+	</select>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: PDF 파일 사이즈 조회 
+	-->
+	<select id="findRcvOrignPdfA1FileSize" parameterClass="java.util.HashMap" resultClass="java.lang.Long">
+		SELECT file_size FROM tb_storignpdfa1file WHERE record_center_id = #recordCenterId:VARCHAR# AND orign_id = #orignId:VARCHAR# AND pdf_a1_file_id = #pdfA1FileId:VARCHAR#
+	</select>
+	
+	<!-- 
+		공동형인계인수_기록물인수
+		: PDF-A1 테이블 갱신 
+	--> 
+	<update id="updateStOrignPdfA1File" parameterClass="java.util.HashMap">  
+	 	UPDATE tb_storignpdfa1file
+	 	   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+	 	      ,medium_id 		= #rcvMediumId:VARCHAR#
+	 	 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	 	   AND orign_id 		= #orignId:VARCHAR#
+	 	   AND pdf_a1_file_id	= #pdfA1FileId:VARCHAR#
+	</update>
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인수대상 NEO 파일 목록 조회 
+	--> 
+	<resultMap id="findMultiTakovrTrgtOrignNeoFileIdList-result" class="java.util.HashMap">
+	 	<result property="recordCenterId"			column="record_center_id"/>
+	 	<result property="orignId"					column="orign_id"/>
+	 	<result property="orignNeoFileId"			column="orign_neo_file_id"/>
+	 	<result property="mediumId"					column="medium_id"/>
+	 	<result property="mediumCd"					column="medium_cd"/>
+	 	<result property="mediumDetailCd"			column="medium_detail_cd"/>
+	 	<result property="mediumPath"				column="medium_path"/>
+	 	<result property="fileSize"					column="file_size"/>
+	</resultMap>
+	<select id="findMultiTakovrTrgtOrignNeoFileIdList" parameterClass="rms.transf.multiTake.domain.MultiTakeTrgtRecord" resultMap="findMultiTakovrTrgtOrignNeoFileIdList-result">
+	 	SELECT A.record_center_id
+	 		  ,orign_id
+		      ,orign_neo_file_id
+		      ,medium_id
+		      ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd
+		      ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd
+		      ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path
+		      ,file_size
+		FROM tb_storignneofile A
+		WHERE A.record_center_id = #sndRecordCenterId:VARCHAR#
+		AND A.orign_id 			 = #orignId:VARCHAR#
+	</select>
+	 
+	<!-- Neo 파일 사이즈 조회 -->
+	<select id="findRcvOrignNeoFileSize" parameterClass="java.util.HashMap" resultClass="java.lang.Long">
+		SELECT file_size FROM tb_storignneofile WHERE record_center_id = #recordCenterId:VARCHAR# AND orign_id = #orignId:VARCHAR# AND orign_neo_file_id = #orignNeoFileId:VARCHAR#
+	</select>
+	
+	<!-- NEO 테이블 갱신 --> 
+	<update id="updateStOrignNeoFile" parameterClass="java.util.HashMap">  
+	 	UPDATE tb_storignneofile
+	 	   SET record_center_id = #rcvRecordCenterId:VARCHAR#
+	 	      ,medium_id 		= #rcvMediumId:VARCHAR#
+	 	 WHERE record_center_id = #sndRecordCenterId:VARCHAR#
+	 	   AND orign_id 		= #orignId:VARCHAR#
+	 	   AND orign_neo_file_id= #orignNeoFileId:VARCHAR#
+	</update>
+	 
+	 
+	<!-- 
+		공동형인계인수_기록물인수
+		: 인계계획의 인계, 인수상태를 갱신한다. (인계완료 및 인수확정처리)
+	 -->
+	<update id="updateMultiTakeState" parameterClass="rms.transf.multiTakovr.domain.MultiTakovrPlan">
+		UPDATE tb_rdmultitakovrplan 
+		   SET take_state_snd_div_cd  = #takeStateSndDivCd:VARCHAR#
+		      ,take_state_rcv_div_cd  = #takeStateRcvDivCd:VARCHAR#
+		 WHERE take_takovr_snd_rep_cd = #takeTakovrSndRepCd:VARCHAR#
+		   AND take_takovr_yyyy		  = #takeTakovrYyyy:VARCHAR#
+		   AND take_takovr_sno		  = #takeTakovrSno:VARCHAR#
+	</update>
+	
+	
+	
+</sqlMap>

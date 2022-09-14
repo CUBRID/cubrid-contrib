@@ -1,0 +1,74 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+
+createOrignFile
+The constraint of the foreign key 'tb_storignfile_fk01' is invalid, due to value '{'1', '1'}'.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : insert
+-- Query Id : createOrignFile
+
+		INSERT INTO		TB_STORIGNFILE (RECORD_CENTER_ID		,ORIGN_FILE_ID		,ORIGN_ID		,DOC_TYPE_CD		,DOC_TYPE_SNO		,FILE_NM		,STORE_FILE_NM		,DATA_FORMAT_CD		,FILE_SIZE		,STORE_FILE_ID		,MEDIUM_ID		,AGENT_NM		,VER		,PAGE_CNT		,PDF_A1_TRANS_STATE		,DEL_FLAG		,REG_DTIME		,ATTACH_FILE_MNG_INFO		,ATTACH_FILE_SEQ		,FILE_PATH_RULE		,VIRUS_FLAG)		VALUES ('1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,'1'		,'1'		,'1'		,'1')	;
+
+createOrignPage
+The constraint of the foreign key 'tb_storignpage_fk01' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : insert
+-- Query Id : createOrignPage
+
+		INSERT INTO		TB_STORIGNPAGE (ORIGN_PAGE_ID		,ORIGN_FILE_ID		,SNO		,ORIGN_PAGE_FILE_NM		,STORE_PAGE_FILE_NM		,DATA_FORMAT_CD		,FILE_SIZE		,DEL_FLAG		,REG_DTIME		,STORE_FILE_ID		,FILE_PATH_RULE)		VALUES ('1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,'1'		,'1')	;
+
+findOrignPdfa1PageInfoList
+Semantic: Class (TB_STORIGNPDFA1PAGE) does not have attribute FILE_PATH_RULE. select OPPAGE.PDF_A1_PAGE_ID, OPFILE.RECORD_CENTER_ID, OPFIL...[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : select
+-- Query Id : findOrignPdfa1PageInfoList
+
+		SELECT OPPAGE.PDF_A1_PAGE_ID		,OPFILE.RECORD_CENTER_ID		,OPFILE.ORIGN_ID		,OPPAGE.PDF_A1_FILE_ID		,OPPAGE.SNO		,OPPAGE.ORIGN_PAGE_FILE_NM		,OPPAGE.DATA_FORMAT_CD		,(SELECT COM_CD_NM FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1' AND OPPAGE.DATA_FORMAT_CD =		COM_CD)		DATA_FORMAT_NM		,OPPAGE.FILE_SIZE		,OPPAGE.DEL_FLAG		,OPPAGE.REG_DTIME		,OPPAGE.ORIGN_FILE_ID		,OPPAGE.STORE_FILE_ID		,OPPAGE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE OPFILE		,TB_STORIGNPDFA1PAGE OPPAGE		,TB_STMEDIUM MEDIUM		WHERE RORIGN.RECORD_CENTER_ID = OPFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID = OPFILE.ORIGN_ID		AND OPFILE.PDF_A1_FILE_ID = OPPAGE.PDF_A1_FILE_ID		AND OPFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND OPFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RORIGN.RECORD_CENTER_ID = '1'		AND RORIGN.RECORD_ID = '1'		AND RORIGN.DEL_FLAG = '1'		AND OPFILE.DEL_FLAG = '1'		AND OPPAGE.DEL_FLAG = '1' AND 			OPFILE.DOC_TYPE_CD = '1'		  AND				(OPPAGE.SNO =  ('1'OR'1'OR'1') ) 		ORDER BY OPPAGE.PDF_A1_FILE_ID, OPPAGE.SNO	;
+
+createInfoFile
+The constraint of the foreign key 'tb_stinfofile_fk01' is invalid, due to value '{'1', '1'}'.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : insert
+-- Query Id : createInfoFile
+
+		INSERT INTO		TB_STINFOFILE (RECORD_CENTER_ID		,INFO_FILE_ID		,MEDIUM_ID		,INFO_FILE_TITLE		,FILE_NM		,STORE_FILE_NM		,DATA_FORMAT_CD		,FILE_SIZE		,DEL_FLAG		,REG_DTIME		,STORE_FILE_ID)		VALUES ('1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,'1')	;
+
+createRecordOrignHist
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_strecordorignhist_orign_id(B+tree: 4|146|770) ON CLASS tb_strecordorignhist(CLASS_OID: 0|487|31). key: '1'(OID: 3|330|2).[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : insert
+-- Query Id : createRecordOrignHist
+
+		INSERT INTO TB_STRECORDORIGNHIST		( RECORD_CENTER_ID		,ORIGN_ID		,CHNG_DTIME		,RECORD_ID )		VALUES		( '1'		,'1'		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,'1'		)	;
+
+createOrignFileHist
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_storignfilehist_orign_file_id(B+tree: 4|178|930) ON CLASS tb_storignfilehist(CLASS_OID: 0|487|47). key: '1'(OID: 1|390|2).[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : insert
+-- Query Id : createOrignFileHist
+
+		INSERT INTO TB_STORIGNFILEHIST		( RECORD_CENTER_ID		,ORIGN_FILE_ID		,ORIGN_ID		,DOC_TYPE_CD		,FILE_NM		,FILE_SIZE		,MEDIUM_ID		,PAGE_CNT		,CHNG_DTIME )		VALUES		(		'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+createOrignPageHist
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_storignpagehist_orign_page_id(B+tree: 4|164|860) ON CLASS tb_storignpagehist(CLASS_OID: 0|487|42). key: '1'(OID: 2|370|2).[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml
+-- Query    : insert
+-- Query Id : createOrignPageHist
+
+		INSERT INTO TB_STORIGNPAGEHIST		( ORIGN_PAGE_ID		,ORIGN_PAGE_FILE_NM		,STORE_PAGE_FILE_NM		,STORE_FILE_ID		,DATA_FORMAT_CD		,FILE_SIZE		,CHNG_USER_ID		,CHNG_RSN		,ORIGN_FILE_ID		,CHNG_DTIME		,FILE_PATH_RULE )		VALUES		(		'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,'1'		);
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\src\main\resources\egovframework\sqlmap\orign\default\orign\FileSysDao.xml

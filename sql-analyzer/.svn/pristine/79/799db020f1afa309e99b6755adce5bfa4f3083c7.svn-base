@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace.Record">
+	
+	<resultMap id="accs-record-result" class="rms.accs.trace.domain.Record" >
+		<result property="recordId" 	column="RECORD_ID"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm" 		column="ORG_ABBR_NM"/>
+		<result property="creatYyyy" 	column="CREAT_YYYY"/>
+		<result property="dutyChrgrNm" 	column="DUTY_CHRGR_NM"/>
+		<result property="erecordFlagNm"	column="ERECORD_FLAG_NM"/>
+		<result property="openDivNm"	column="OPEN_DIV_NM"/>
+	</resultMap>
+			
+	<!-- 
+		SELECT
+	 -->
+	<select id="findRecord" parameterClass="rms.accs.trace.domain.Record" resultMap="accs-record-result">
+		SELECT A.RECORD_ID
+		, A.TITLE
+		, (SELECT B.ORG_NM FROM TB_STORG B WHERE B.ORG_CD=A.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_NM
+		, (SELECT B.ORG_ABBR_NM FROM TB_STORG B WHERE B.ORG_CD=A.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_ABBR_NM
+		, A.CREAT_YYYY
+		, A.DUTY_CHRGR_NM
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD23' AND USE_FLAG='1' AND COM_CD = A.ERECORD_FLAG ) ERECORD_FLAG_NM 	
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD05' AND USE_FLAG='1' AND COM_CD = A.OPEN_DIV_CD ) OPEN_DIV_NM 	
+		FROM TB_RDRECORD A
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="recordId">
+				A.record_id = #recordId:VARCHAR#
+			</isNotEmpty>			
+		</dynamic>		
+	</select>
+	
+</sqlMap>

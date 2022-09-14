@@ -1,0 +1,291 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countCntChkDiskPlanPagedList
+
+		SELECT COUNT(1)        FROM TB_SROPTIDISK_CNTCHK A, TB_STUSER C, TB_ZZCOMCD D        WHERE A.WORK_USER_ID = C.USER_ID        AND (A.CNTCHK_PROG_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')        AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID        AND A.RECORD_CENTER_ID = '1'        AND A.MEDIA_DIV = '1'         AND                  A.CNTCHK_PROG_STATE_CD = '1'              AND                 A.CNTCHK_PROG_STATE_CD = '1'              AND                 A.CNTCHK_ID = REPLACE('1', '-', '')              AND                 A.PLAN_YMD = REPLACE('1', '-', '')              AND                 A.WORK_USER_ID = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkDiskPlanPagedList
+
+		SELECT H.CNTCHK_ID		      ,H.PLAN_YMD		      ,H.CHECK_YMD		      ,H.USER_NM AS WORK_USER_NM		      ,H.COM_CD_NM AS CHECK_STATE_NM		      ,H.COM_CD AS CHECK_STATE_CD		      ,H.MEDIA_DIV		      ,(CASE WHEN H.MEDIA_DIV = '1' THEN '±¤µð½ºÅ©' WHEN H.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM		FROM (		    SELECT G.*		    FROM (		        SELECT ROWNUM AS rnum		                , F.*		        FROM (		            SELECT DISTINCT(SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6)) AS CNTCHK_ID		            	  ,A.PLAN_YMD, A.CHECK_YMD, C.USER_NM, D.COM_CD_NM     		                  ,D.COM_CD, A.MEDIA_DIV		            FROM TB_SROPTIDISK_CNTCHK A, TB_STUSER C, TB_ZZCOMCD D		            WHERE A.WORK_USER_ID = C.USER_ID		            AND (A.CNTCHK_PROG_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')		            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND A.RECORD_CENTER_ID = '1'		            AND A.MEDIA_DIV = '1'		             AND  		                    A.CNTCHK_PROG_STATE_CD = '1'		                  AND 		                    A.CNTCHK_PROG_STATE_CD = '1'		                  AND 		                    A.CNTCHK_ID = REPLACE('1', '-', '')		                  AND 		                    A.PLAN_YMD = REPLACE('1', '-', '')		                  AND 		                    A.WORK_USER_ID = '1'		                  		            ORDER BY CNTCHK_ID DESC		        ) F		        WHERE ROWNUM <= '1'		    ) G		    WHERE G.rnum >= '1'		) H		ORDER BY H.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkDiskPlanTempAll
+
+		DELETE FROM TB_ZZSTAKRMTMP WHERE USER_ID = '1' AND RECORD_CENTER_ID = '1' AND MEDIA_DIV = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countCntChkDiskPlanWritePagedList
+
+ 	            SELECT COUNT(1)	            FROM TB_SROPTIDISK_BOOKSF A, TB_SROPTIDISK_STAKRM C, TB_ZZSTAKRMTMP D	            WHERE A.OPTIDISK_STAKRM_ID = C.OPTIDISK_STAKRM_ID	            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID	            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID	            AND A.RECORD_CENTER_ID = '1'	            AND (A.OPTIDISK_STAKRM_ID = D.TRGT_ID AND A.OPTIDISK_BOOKSF_ID = D.REMK AND D.USER_ID = '1' AND D.MEDIA_DIV = '1')	             AND 	                A.OPTIDISK_STAKRM_ID = '1'	              AND 	                A.OPTIDISK_BOOKSF_ID = '1'	              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkDiskPlanWritePagedList
+
+ 	        SELECT G.*	        FROM (	            SELECT F.*	            FROM (	                SELECT ROWNUM AS rnum	                        ,E.*	                FROM (	                    SELECT A.OPTIDISK_STAKRM_ID	                            ,C.OPTIDISK_STAKRM_NM	                            ,A.OPTIDISK_BOOKSF_ID	                            ,A.OPTIDISK_BOOKSF_NM	                            ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS DISK_CNT	                            ,(SELECT NVL(SUM(SPLIT_TOT), 0) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS SPLIT_CNT  	                            ,A.LAST_CHECK_YYYY	                            ,'1' AS MEDIA_DIV	                            ,'±¤µð½ºÅ©' AS MEDIA_DIV_NM	                    FROM TB_SROPTIDISK_BOOKSF A, TB_SROPTIDISK_STAKRM C, TB_ZZSTAKRMTMP D	                    WHERE A.OPTIDISK_STAKRM_ID = C.OPTIDISK_STAKRM_ID	                    AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID	                    AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID	                    AND A.RECORD_CENTER_ID = '1'	                    AND (A.OPTIDISK_STAKRM_ID = D.TRGT_ID AND A.OPTIDISK_BOOKSF_ID = D.REMK AND D.USER_ID = '1' AND D.MEDIA_DIV = '1')	                     AND 	                        A.OPTIDISK_STAKRM_ID = '1'	                      AND 	                        A.OPTIDISK_BOOKSF_ID = '1'	                     	                    ORDER BY A.OPTIDISK_STAKRM_ID, A.OPTIDISK_BOOKSF_ID	                ) E	                WHERE ROWNUM <= '1'	            ) F	            WHERE F.rnum >= '1'	        ) G	        ORDER BY G.rnum	     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countOptidiskStakrmBooksfPagedList
+
+ 	            SELECT COUNT(1)	            FROM TB_SROPTIDISK_BOOKSF A	            WHERE A.RECORD_CENTER_ID = '1'	            AND NOT EXISTS (	                SELECT E.TRGT_ID 	                FROM TB_ZZSTAKRMTMP E	                WHERE E.RECORD_CENTER_ID = '1'	                AND E.USER_ID = '1'	                AND E.TRGT_ID = A.OPTIDISK_STAKRM_ID	                AND E.REMK = A.OPTIDISK_BOOKSF_ID	                AND E.MEDIA_DIV = '1' 	                AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID	            )	             AND 	                A.OPTIDISK_STAKRM_ID = '1'	              AND 	                A.OPTIDISK_BOOKSF_ID = '1'	              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskStakrmBooksfPagedList
+
+ 	        SELECT D.*	        FROM (	            SELECT C.*	            FROM (	                SELECT ROWNUM AS rnum	                        , B.*	                FROM (	                    SELECT A.OPTIDISK_STAKRM_ID	                            ,A.OPTIDISK_BOOKSF_ID	                            ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID=A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_CENTER_ID = '1' ) AS DISK_CNT	                            ,(SELECT NVL(SUM(SPLIT_TOT), 0) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID=A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_CENTER_ID = '1' ) AS SPLIT_CNT  	                            ,A.LAST_CHECK_YYYY	                    FROM TB_SROPTIDISK_BOOKSF A	                    WHERE A.RECORD_CENTER_ID = '1'	                    AND NOT EXISTS (	                        SELECT E.TRGT_ID 	                        FROM TB_ZZSTAKRMTMP E	                        WHERE E.RECORD_CENTER_ID = '1'	                        AND E.USER_ID = '1'	                        AND E.TRGT_ID = A.OPTIDISK_STAKRM_ID	                        AND E.REMK = A.OPTIDISK_BOOKSF_ID	                        AND E.MEDIA_DIV = '1' 	                        AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID	                    )	                     AND 	                        A.OPTIDISK_STAKRM_ID = '1'	                      AND 	                        A.OPTIDISK_BOOKSF_ID = '1'	                     	                    ORDER BY A.OPTIDISK_STAKRM_ID, a.OPTIDISK_BOOKSF_ID	                ) B	                WHERE ROWNUM <= '1'	            ) C	            WHERE C.rnum >= '1'	        ) D	        ORDER BY D.rnum	     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkDiskTemp
+
+		INSERT INTO TB_ZZSTAKRMTMP (RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK, MEDIA_DIV)		VALUES ('1', '1', '1', '1', '1') ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkDiskTemp
+
+		DELETE FROM TB_ZZSTAKRMTMP		WHERE RECORD_CENTER_ID = '1'		AND TRGT_ID = '1'		AND REMK    = '1'		AND USER_ID = '1'		AND MEDIA_DIV = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkDiskSno
+
+		SELECT NVL(MAX(SNO), 0) + 1 AS SNO                            		  FROM TB_SROPTIDISK_CNTCHK		WHERE CHECK_YYYY = '1'		AND RECORD_CENTER_ID = '1'		AND MEDIA_DIV = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkDiskTempList
+
+ 			SELECT 			      A.OPTIDISK_STAKRM_ID			     , C.OPTIDISK_STAKRM_NM			     , A.OPTIDISK_BOOKSF_ID				 , A.OPTIDISK_BOOKSF_NM				 , (SELECT COUNT(1) FROM TB_SROPTIDISK_MST B 				    WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID					  AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID					  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) DISK_CNT				 , (SELECT NVL(SUM(SPLIT_TOT), 0) FROM TB_SROPTIDISK_MST B 				    WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID					  AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID					  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) SPLIT_CNT  			     , A.LAST_CHECK_YYYY			     , '±¤µð½ºÅ©' AS MEDIA_DIV_NM     			  FROM TB_SROPTIDISK_BOOKSF A, TB_SROPTIDISK_STAKRM C, TB_ZZSTAKRMTMP D			 WHERE A.OPTIDISK_STAKRM_ID = C.OPTIDISK_STAKRM_ID			   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID			   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID			   AND A.RECORD_CENTER_ID = '1'			   AND (A.OPTIDISK_STAKRM_ID = D.TRGT_ID AND A.OPTIDISK_BOOKSF_ID = D.REMK AND D.USER_ID = '1' AND D.MEDIA_DIV = '1') AND 					A.OPTIDISK_STAKRM_ID = '1'				  AND 					A.OPTIDISK_BOOKSF_ID = '1'				 				ORDER BY A.OPTIDISK_STAKRM_ID, A.OPTIDISK_BOOKSF_ID		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkDiskTrgtDisk
+
+ 			SELECT ORG_CD			       , SEQ			  FROM TB_SROPTIDISK_MST			 WHERE OPTIDISK_STAKRM_ID = '1'			   AND OPTIDISK_BOOKSF_ID = '1'			   AND RECORD_CENTER_ID = '1'     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkDiskTrgtMedia
+
+ 			SELECT SPLIT_TOT			FROM TB_SROPTIDISK_MST			WHERE OPTIDISK_STAKRM_ID = '1'			AND OPTIDISK_BOOKSF_ID = '1'			AND RECORD_CENTER_ID = '1'			AND ORG_CD = '1'			AND SEQ = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkDiskPlan
+
+		INSERT INTO TB_SROPTIDISK_CNTCHK (			RECORD_CENTER_ID, CNTCHK_ID,CHECK_YYYY,SNO,PLAN_YMD,WORK_USER_ID,CNTCHK_PROG_STATE_CD, MEDIA_DIV		) VALUES (			'1', '1', '1', '1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkDiskDetlPlan
+
+		INSERT INTO TB_SROPTIDISK_CNTCHKDETL (			RECORD_CENTER_ID,CNTCHK_ID, ORG_CD, SEQ, OPTIDISK_STAKRM_ID, OPTIDISK_BOOKSF_ID, MEDIA_DIV, SPLIT_TOT		) VALUES (			'1', REPLACE('1', '-', ''), '1', '1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkDiskPlanChngTemp
+
+		INSERT INTO TB_ZZSTAKRMTMP (			RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK, MEDIA_DIV		) (			SELECT '1' RECORD_CENTER_ID		     	  ,'1' USER_ID			 	  ,B.OPTIDISK_STAKRM_ID		     	  ,B.OPTIDISK_BOOKSF_ID		     	  ,B.MEDIA_DIV		  	FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B		 	WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 		    AND A.CNTCHK_ID = B.CNTCHK_ID		    AND A.MEDIA_DIV = B.MEDIA_DIV		 		    AND A.RECORD_CENTER_ID = '1'		    AND B.CNTCHK_ID = REPLACE('1', '-', '')		    AND A.MEDIA_DIV = '1'		 	GROUP BY B.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID, B.MEDIA_DIV		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkDiskDetl
+
+	  	DELETE FROM TB_SROPTIDISK_CNTCHKDETL		WHERE CNTCHK_ID = REPLACE('1', '-', '')		AND RECORD_CENTER_ID = '1'		AND MEDIA_DIV = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkDiskPlan
+
+	  	DELETE FROM TB_SROPTIDISK_CNTCHK		WHERE CNTCHK_ID = REPLACE('1', '-', '')		AND RECORD_CENTER_ID = '1'		AND MEDIA_DIV = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findExcelCntChkDiskPlanPagedList
+
+ 		  SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID			       ,C.SPLIT_TOT			       ,C.OPTIDISK_YYYY			       ,LPAD(C.OPTIDISK_STAKRM_ID,3,'0')||'-'||LPAD(C.OPTIDISK_BOOKSF_ID,3,'0')||'-'||LPAD(C.FLOOR_NO,3,'0')||'-'||LPAD(C.COL_NO,3,'0') AS OPTIDISK_LOC			       ,C.OPTIDISK_STAKRM_ID			       ,C.OPTIDISK_BOOKSF_ID			       ,B.CNTCHK_RSLT_CD			       ,(SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z				   WHERE Z.COM_TYPE_CD = 'SR08'				   AND Z.COM_CD = B.CNTCHK_RSLT_CD) CNTCHK_RSLT_NM				   ,B.CHECK_YMD				   ,HANDL_RSLT_CONT				   ,A.MEDIA_DIV				   ,(CASE WHEN A.MEDIA_DIV = '1' THEN '±¤µð½ºÅ©'				            WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM				   ,SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID				   ,B.CNTCHK_CNT				   ,B.REFER_DOCU				   ,A.CHECK_YYYY			FROM   TB_SROPTIDISK_CNTCHK A			       ,TB_SROPTIDISK_CNTCHKDETL B			       ,TB_SROPTIDISK_MST C			WHERE A.RECORD_CENTER_ID = '1'			AND   A.WORK_USER_ID = '1'			AND A.CNTCHK_ID IN				 			REPLACE( ('1','1','1') , '-', '')			AND   A.MEDIA_DIV = '1'			AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			AND   B.CNTCHK_ID = A.CNTCHK_ID			AND   B.MEDIA_DIV = A.MEDIA_DIV			AND   C.ORG_CD = B.ORG_CD			AND   C.SEQ = B.SEQ			AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID			ORDER BY A.CNTCHK_ID DESC, TRGT_ID ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countOptidiskCntChkRslt
+
+		SELECT COUNT(1)                FROM TB_SROPTIDISK_CNTCHK A ,(SELECT CNTCHK_ID                                            ,COUNT(*) AS CNT_PLAN_TRGT                                            ,SUM(CASE WHEN CNTCHK_RSLT_CD != '0' THEN 1 ELSE 0 END) AS CNT_CHECKED                                            ,SUM(CASE WHEN CNTCHK_RSLT_CD = '0' THEN 1 ELSE 0 END) AS CNT_UNCHECKED                                      FROM TB_SROPTIDISK_CNTCHKDETL                                      WHERE RECORD_CENTER_ID = '1'                                       AND                                          	MEDIA_DIV = '1'                                       GROUP BY CNTCHK_ID) B        WHERE A.CNTCHK_ID = B.CNTCHK_ID        AND   A.RECORD_CENTER_ID = '1'        AND   A.WORK_USER_ID = '1'        AND   A.CHECK_YYYY = '1'         AND                 A.MEDIA_DIV = '1'  AND            A.CNTCHK_ID = REPLACE('1', '-', '')          AND            A.CNTCHK_PROG_STATE_CD = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntChkRslt
+
+		SELECT E.cntchk_id		      ,E.plan_ymd		      ,E.check_ymd		      ,E.cnt_plan_trgt		      ,E.cnt_checked		      ,E.cnt_unchecked		      ,E.cntchk_prog_state_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'SR09' AND Z.com_cd = E.cntchk_prog_state_cd) AS cntchk_prog_state_nm		      ,E.media_div		      ,(CASE WHEN E.media_div = '1' THEN '±¤µð½ºÅ©' WHEN E.media_div = '2' THEN 'M/F' END) AS media_div_nm		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                , C.*		        FROM (		            SELECT SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID		                   ,A.PLAN_YMD,A.CHECK_YMD,B.CNT_PLAN_TRGT,B.CNT_CHECKED		                   ,B.CNT_UNCHECKED,A.CNTCHK_PROG_STATE_CD,A.MEDIA_DIV        		            FROM TB_SROPTIDISK_CNTCHK A ,(SELECT CNTCHK_ID		                                                ,COUNT(*) AS CNT_PLAN_TRGT		                                                ,SUM(CASE WHEN CNTCHK_RSLT_CD != '0' THEN 1 ELSE 0 END) AS CNT_CHECKED		                                                ,SUM(CASE WHEN CNTCHK_RSLT_CD = '0' THEN 1 ELSE 0 END) AS CNT_UNCHECKED		                                          FROM TB_SROPTIDISK_CNTCHKDETL		                                          WHERE RECORD_CENTER_ID = '1' AND    		                                          	MEDIA_DIV = '1' 		                                          GROUP BY CNTCHK_ID) B		            WHERE A.CNTCHK_ID = B.CNTCHK_ID		            AND   A.RECORD_CENTER_ID = '1'		            AND   A.WORK_USER_ID = '1'		            AND   A.CHECK_YYYY = '1'		             AND    		                 A.MEDIA_DIV = '1'  AND 		               A.CNTCHK_ID = REPLACE('1', '-', '')		              AND 		               A.CNTCHK_PROG_STATE_CD = '1'		             		            ORDER BY A.CNTCHK_ID DESC		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntChkSearchCondList
+
+	 	SELECT A.CHECK_YYYY || '-' || LPAD(SNO, 6, '0') AS CNTCHK_ID		FROM TB_SROPTIDISK_CNTCHK A		WHERE A.RECORD_CENTER_ID   = '1'		AND A.CHECK_YYYY = '1'		AND A.WORK_USER_ID = '1'		 AND    			A.MEDIA_DIV = '1' 		ORDER BY A.CHECK_YYYY, A.SNO	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countCntChkRsltDetailPagedList
+
+             SELECT COUNT(1)            FROM   TB_SROPTIDISK_CNTCHK A,TB_SROPTIDISK_CNTCHKDETL B,TB_SROPTIDISK_MST C            WHERE A.RECORD_CENTER_ID = '1'            AND   A.WORK_USER_ID = '1'            AND   A.CHECK_YYYY = '1'            AND   A.CNTCHK_ID = REPLACE('1', '-', '')            AND   A.MEDIA_DIV = '1'                 AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID            AND   B.CNTCHK_ID = A.CNTCHK_ID            AND   B.MEDIA_DIV = A.MEDIA_DIV                AND   C.ORG_CD = B.ORG_CD            AND   C.SEQ = B.SEQ            AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID             AND                 B.CNTCHK_RSLT_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkRsltDetailPagedList
+
+ 			SELECT F.trgt_id			        ,F.split_tot			        ,F.optidisk_yyyy			        ,LPAD(F.optidisk_stakrm_id,3,'0')||'-'||LPAD(F.optidisk_booksf_id,3,'0')||'-'||LPAD(F.floor_no,3,'0')||'-'||LPAD(F.col_no,3,'0') AS optidisk_loc			        ,F.optidisk_stakrm_id			        ,F.optidisk_booksf_id			        ,F.cntchk_rslt_cd			        ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'SR08' AND Z.com_cd = F.cntchk_rslt_cd) AS cntchk_rslt_nm			        ,F.check_ymd			        ,F.handl_rslt_cont			        ,F.media_div			        ,(CASE WHEN F.media_div = '1' THEN '±¤µð½ºÅ©' WHEN F.media_div = '2' THEN 'M/F' END) AS media_div_nm			        ,F.cntchk_id			        ,F.cntchk_cnt			        ,F.refer_docu			        ,F.check_yyyy			FROM(			    SELECT E.*			    FROM (			        SELECT ROWNUM AS rnum			                 ,D.*			        FROM (			            SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID			                   ,C.SPLIT_TOT,C.OPTIDISK_YYYY,C.OPTIDISK_STAKRM_ID,C.OPTIDISK_BOOKSF_ID			                   ,C.FLOOR_NO,C.COL_NO,B.CNTCHK_RSLT_CD,B.CHECK_YMD,HANDL_RSLT_CONT			                   ,A.MEDIA_DIV,A.CNTCHK_ID,B.CNTCHK_CNT,B.REFER_DOCU,A.CHECK_YYYY			            FROM   TB_SROPTIDISK_CNTCHK A,TB_SROPTIDISK_CNTCHKDETL B,TB_SROPTIDISK_MST C			            WHERE A.RECORD_CENTER_ID = '1'			            AND   A.WORK_USER_ID = '1'			            AND   A.CHECK_YYYY = '1'			            AND   A.CNTCHK_ID = REPLACE('1', '-', '')			            AND   A.MEDIA_DIV = '1'     			            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			            AND   B.CNTCHK_ID = A.CNTCHK_ID			            AND   B.MEDIA_DIV = A.MEDIA_DIV    			            AND   C.ORG_CD = B.ORG_CD			            AND   C.SEQ = B.SEQ			            AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID			             AND 			                B.CNTCHK_RSLT_CD = '1'			             			            ORDER BY TRGT_ID			        ) D			        WHERE  ROWNUM <= '1'			    ) E			    WHERE E.rnum >= '1'			) F			ORDER BY F.rnum			 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countOptidiskCntchkCurStatPagedList
+
+		SELECT COUNT(1)        FROM (            SELECT A.CNTCHK_ID            FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B            WHERE 1 = 1            AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID            AND B.CNTCHK_ID = A.CNTCHK_ID            AND B.MEDIA_DIV = A.MEDIA_DIV            AND A.RECORD_CENTER_ID = '1'            AND A.MEDIA_DIV = '1' AND              		A.CNTCHK_ID = REPLACE('1', '-', '')                  AND              		A.CHECK_YYYY = '1'                  AND              		A.CHECK_YMD = REPLACE('1','-','')                  AND              		B.OPTIDISK_STAKRM_ID = '1'                  AND              		B.OPTIDISK_BOOKSF_ID = '1'                              GROUP BY A.RECORD_CENTER_ID, A.MEDIA_DIV, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID             ORDER BY A.CNTCHK_ID DESC        ) C	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntchkCurStatPagedList
+
+		SELECT E.record_center_id		      ,SUBSTR(E.CNTCHK_ID, 1, 4)||'-'||SUBSTR(E.CNTCHK_ID, 5, 6) CNTCHK_ID		      ,E.media_div		      ,E.optidisk_stakrm_id		      ,E.optidisk_booksf_id		      ,E.optidisk_stakrm_nm		      ,E.optidisk_booksf_nm		      ,E.tot_cnt		      ,E.chk1_cnt		      ,E.chk2_cnt		      ,E.chk3_cnt		      ,E.chk4_cnt		      ,E.chk5_cnt		      ,E.cntchk_prog_state_cd		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'SR09' AND com_cd = E.cntchk_prog_state_cd) AS cntchk_prog_state_nm		      ,E.check_ymd		      ,E.work_user_id		      ,E.work_user_nm		      ,(CASE WHEN E.media_div = '1' THEN '±¤µð½ºÅ©' WHEN E.media_div = '2' THEN 'M/F' END) AS media_div_nm		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                , C.*		        FROM (		            SELECT A.RECORD_CENTER_ID		                 , A.CNTCHK_ID		                 , A.MEDIA_DIV		                 , B.OPTIDISK_STAKRM_ID		                 , B.OPTIDISK_BOOKSF_ID  		                 , MAX(( SELECT OPTIDISK_STAKRM_NM FROM TB_SROPTIDISK_STAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID )) AS OPTIDISK_STAKRM_NM		                 , MAX(( SELECT OPTIDISK_BOOKSF_NM FROM TB_SROPTIDISK_BOOKSF WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND OPTIDISK_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID )) AS OPTIDISK_BOOKSF_NM 		                 , COUNT(*) AS TOT_CNT		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) AS CHK1_CNT		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) AS CHK2_CNT		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) AS CHK3_CNT		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '9' THEN 1 ELSE 0 END) AS CHK4_CNT		                 , COUNT(*) - SUM(CASE WHEN B.CNTCHK_RSLT_CD IN ('1','2','3','9') THEN 1 ELSE 0 END) AS CHK5_CNT		                 , MAX(A.CNTCHK_PROG_STATE_CD) AS CNTCHK_PROG_STATE_CD 		                 , MAX(A.CHECK_YMD) AS CHECK_YMD		                 , MAX(A.WORK_USER_ID) AS WORK_USER_ID		                 , MAX(( SELECT USER_NM FROM TB_STUSER WHERE USER_ID = A.WORK_USER_ID)) AS WORK_USER_NM		            FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B		            WHERE 1 = 1		            AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND B.CNTCHK_ID = A.CNTCHK_ID		            AND B.MEDIA_DIV = A.MEDIA_DIV		            AND A.RECORD_CENTER_ID = '1'		            AND A.MEDIA_DIV = '1'		                 AND 		             		A.CNTCHK_ID = REPLACE('1', '-', '')		                  AND 		             		A.CHECK_YYYY = '1'		                  AND 		             		A.CHECK_YMD = REPLACE('1','-','')		                  AND 		             		B.OPTIDISK_STAKRM_ID = '1'		                  AND 		             		B.OPTIDISK_BOOKSF_ID = '1'		                 		             GROUP BY A.RECORD_CENTER_ID, A.MEDIA_DIV, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID		             ORDER BY A.CNTCHK_ID DESC		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countOptidiskCntchkCurStatStakrmPagedList
+
+  		        SELECT COUNT(1)                FROM TB_SROPTIDISK_STAKRM                WHERE RECORD_CENTER_ID = '1'                 AND                 	OPTIDISK_STAKRM_ID = '1'                   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntchkCurStatStakrmPagedList
+
+  		        SELECT D.optidisk_stakrm_id		                ,D.optidisk_stakrm_nm		        FROM (		            SELECT C.*		            FROM (		                SELECT ROWNUM AS rnum		                        , B.*		                FROM (		                    SELECT *		                      FROM TB_SROPTIDISK_STAKRM		                     WHERE RECORD_CENTER_ID = '1'		                      AND 		                     	OPTIDISK_STAKRM_ID = '1'		                      		                     ORDER BY OPTIDISK_STAKRM_ID		                ) B		                WHERE ROWNUM <= '1'		            ) C		            WHERE C.rnum >= '1'		        ) D		        ORDER BY D.rnum		       ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : update
+-- Query Id : updateOptidiskCntChkRsltDetail
+
+	   UPDATE TB_SROPTIDISK_CNTCHKDETL		   SET CHECK_YMD = '1'		      ,CNTCHK_RSLT_CD = '1'		      ,HANDL_RSLT_CONT = '1'		      ,REFER_DOCU = '1'			   				,CNTCHK_CNT = '1'			    							,CNTCHK_CNT = '1' 		WHERE RECORD_CENTER_ID = '1'		AND   CNTCHK_ID = REPLACE('1', '-', '')		AND	 ORG_CD = SUBSTR('1',1,7)		AND	 SEQ = TO_NUMBER(SUBSTR('1',9,6))		AND   MEDIA_DIV = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : update
+-- Query Id : updateOptidiskCntChkRsltProgState
+
+		 UPDATE TB_SROPTIDISK_CNTCHK A		   SET A.CNTCHK_PROG_STATE_CD = 		     ( SELECT CASE WHEN COUNT(1) > 0 THEN '0' ELSE '1' END		         FROM TB_SROPTIDISK_CNTCHKDETL B		        WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		          AND B.CNTCHK_ID = A.CNTCHK_ID		          AND B.MEDIA_DIV = A.MEDIA_DIV		          AND B.CNTCHK_RSLT_CD = '0'		     )		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.CNTCHK_ID = REPLACE('1', '-', '')		   AND A.MEDIA_DIV = '1'		   AND A.CNTCHK_PROG_STATE_CD <> '2'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : update
+-- Query Id : updateOptidiskCntChkRsltFin
+
+		UPDATE TB_SROPTIDISK_CNTCHK		   SET CHECK_YMD = '1'		      , CNTCHK_PROG_STATE_CD = '2'		 WHERE RECORD_CENTER_ID = '1'		   AND CNTCHK_ID = REPLACE('1', '-', '')		   AND CNTCHK_PROG_STATE_CD = '1'		   AND WORK_USER_ID = '1'		   AND MEDIA_DIV = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : update
+-- Query Id : updateOptidiskCntChkRsltlastChkYyyy
+
+ 			UPDATE TB_SROPTIDISK_BOOKSF AAA			SET      LAST_CHECK_YYYY = '1'			WHERE RECORD_CENTER_ID = '1'			AND    			                              EXISTS (SELECT 1			                              FROM   TB_SROPTIDISK_CNTCHKDETL			                              WHERE  RECORD_CENTER_ID = '1'			                              AND    CNTCHK_ID = REPLACE('1', '-', '')			                              AND 	MEDIA_DIV = '1'			                              AND OPTIDISK_STAKRM_ID = AAA.OPTIDISK_STAKRM_ID			                              AND OPTIDISK_BOOKSF_ID = AAA.OPTIDISK_BOOKSF_ID			                              ) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findCntchkProgStateCd
+
+		SELECT CNTCHK_PROG_STATE_CD		FROM TB_SROPTIDISK_CNTCHK		WHERE RECORD_CENTER_ID = '1'		AND MEDIA_DIV = '1'		AND CNTCHK_ID = REPLACE('1', '-', '')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findExcelOptidiskCntChkRslt
+
+ 			SELECT SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID		       ,A.PLAN_YMD		       ,A.CHECK_YMD		       ,B.CNT_PLAN_TRGT		       ,B.CNT_CHECKED		       ,B.CNT_UNCHECKED		       ,A.CNTCHK_PROG_STATE_CD		       ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z			   WHERE Z.com_type_cd = 'SR09'			   AND Z.com_cd = A.CNTCHK_PROG_STATE_CD) CNTCHK_PROG_STATE_NM			   ,A.MEDIA_DIV					   ,(CASE WHEN A.MEDIA_DIV = '1' THEN '±¤µð½ºÅ©'			            WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM		FROM TB_SROPTIDISK_CNTCHK A		,(SELECT CNTCHK_ID		     , COUNT(*) AS CNT_PLAN_TRGT		     , SUM(CASE WHEN CNTCHK_RSLT_CD <> '0' THEN 1 ELSE 0 END) AS CNT_CHECKED		     , SUM(CASE WHEN CNTCHK_RSLT_CD = '0' THEN 1 ELSE 0 END) AS CNT_UNCHECKED		  FROM TB_SROPTIDISK_CNTCHKDETL		  WHERE RECORD_CENTER_ID = '1' AND       		  MEDIA_DIV = '1' 		  GROUP BY CNTCHK_ID      		) B		WHERE A.CNTCHK_ID = B.CNTCHK_ID		AND   A.RECORD_CENTER_ID = '1'		AND   A.WORK_USER_ID = '1'		AND   A.CHECK_YYYY = '1' AND       		  A.MEDIA_DIV = '1'  AND 		   A.CNTCHK_ID = REPLACE('1', '-', '')		  AND 		   A.CNTCHK_PROG_STATE_CD = '1'		 		ORDER BY A.CNTCHK_ID DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntChkRsltDetailExcelErrorXls
+
+		SELECT file_nm, file_key FROM TB_ZZREQEXCELLIST WHERE REQ_USER_ID = '1' AND REQ_MENU_ID = '1' AND REQ_INDEX = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : delete
+-- Query Id : deleteOptidiskCntChkRsltErrorXls
+
+		DELETE FROM TB_ZZREQEXCELLIST WHERE FILE_KEY = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countOptidiskCntchkCurStatBooksfPagedList
+
+                SELECT COUNT(1)                    FROM TB_SROPTIDISK_BOOKSF               WHERE RECORD_CENTER_ID   = '1'               AND OPTIDISK_STAKRM_ID = '1'               ORDER BY OPTIDISK_BOOKSF_ID	     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntchkCurStatBooksfPagedList
+
+ 	        SELECT D.optidisk_booksf_id	                ,D.optidisk_booksf_nm	                ,D.shelf_c_cnt	                ,D.shelf_r_cnt	        FROM (	            SELECT C.*	            FROM (	                SELECT ROWNUM AS rnum	                        ,B.*	                FROM (	                    SELECT *     	                    FROM TB_SROPTIDISK_BOOKSF	                    WHERE RECORD_CENTER_ID   = '1'	                    AND OPTIDISK_STAKRM_ID = '1'	                    ORDER BY OPTIDISK_BOOKSF_ID	                ) B	                WHERE ROWNUM <= '1'	            ) C	            WHERE C.rnum >= '1'	        ) D	        ORDER BY D.rnum	     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findExcelDocCntChkCurStat
+
+		SELECT RANK() OVER(ORDER BY A.RECORD_CENTER_ID, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID) AS rankNo		     , A.RECORD_CENTER_ID as recordCenterId		     , SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) cntChkId		     , A.MEDIA_DIV		     , (CASE WHEN A.MEDIA_DIV = '1' THEN '±¤µð½ºÅ©'		              WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) as mediaDivNm		     , B.OPTIDISK_STAKRM_ID as optidiskStakrmId		     , B.OPTIDISK_BOOKSF_ID as optidiskBooksfId 		     , MAX(( SELECT OPTIDISK_STAKRM_NM FROM TB_SROPTIDISK_STAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID )) AS optidiskStakrmNm		     , MAX(( SELECT OPTIDISK_BOOKSF_NM FROM TB_SROPTIDISK_BOOKSF 		       WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND OPTIDISK_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID )) AS optidiskBooksfNm		   		     , COUNT(*) AS totCnt		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) AS chk1Cnt		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) AS chk2Cnt		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) AS chk3Cnt		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '9' THEN 1 ELSE 0 END) AS chk4Cnt		     , COUNT(*) - SUM(CASE WHEN B.CNTCHK_RSLT_CD IN ('1','2','3','9') THEN 1 ELSE 0 END) AS chk5Cnt		     , MAX(A.CNTCHK_PROG_STATE_CD) AS cntChkProgStateCd 		     , MAX((SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR09' AND COM_CD = A.CNTCHK_PROG_STATE_CD)) AS cntchkProgStateNm		     , MAX(A.CHECK_YMD) AS checkYmd		     , MAX(( SELECT USER_NM FROM TB_STUSER WHERE USER_ID = A.WORK_USER_ID)) AS workUserNm		  FROM TB_SROPTIDISK_CNTCHK A		     , TB_SROPTIDISK_CNTCHKDETL B		 WHERE A.RECORD_CENTER_ID = '1'		 AND A.MEDIA_DIV = '1' AND 		 A.CNTCHK_ID = REPLACE('1', '-', '')			  AND 		 A.CHECK_YYYY = '1'			  AND 		 A.CHECK_YMD = REPLACE('1','-','')			 		   AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		   AND B.CNTCHK_ID = A.CNTCHK_ID		   AND B.MEDIA_DIV = A.MEDIA_DIV			 AND 		 B.OPTIDISK_STAKRM_ID = '1'			  AND 		 B.OPTIDISK_BOOKSF_ID = '1'			 		 GROUP BY A.RECORD_CENTER_ID, A.MEDIA_DIV, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID		 ORDER BY A.CNTCHK_ID DESC, rankNo DESC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : countOptidiskCntChkCurStatDetail
+
+               SELECT COUNT(1)             FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B              LEFT OUTER JOIN TB_SROPTIDISK_MST C             ON C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.ORG_CD = B.ORG_CD AND C.SEQ = B.SEQ             WHERE A.RECORD_CENTER_ID = '1'             AND A.CNTCHK_ID = REPLACE('1', '-', '')             AND A.MEDIA_DIV = '1'             AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID             AND B.CNTCHK_ID = A.CNTCHK_ID             AND B.MEDIA_DIV = A.MEDIA_DIV              AND                  B.OPTIDISK_STAKRM_ID = '1'               AND                  B.OPTIDISK_BOOKSF_ID = '1'               ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findOptidiskCntChkCurStatDetail
+
+ 	        SELECT F.*	        FROM (	            SELECT E.*	            FROM (	                SELECT ROWNUM AS rnum	                        ,D.*	                FROM (	                    SELECT A.RECORD_CENTER_ID	                            , A.CNTCHK_ID	                            , B.OPTIDISK_STAKRM_ID	                            , ( SELECT OPTIDISK_STAKRM_NM FROM TB_SROPTIDISK_STAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID ) AS OPTIDISK_STAKRM_NM	                            , B.OPTIDISK_BOOKSF_ID	                            , ( SELECT OPTIDISK_BOOKSF_NM FROM TB_SROPTIDISK_BOOKSF WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND OPTIDISK_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID ) AS OPTIDISK_BOOKSF_NM	                            , A.CNTCHK_PROG_STATE_CD 	                            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR09' AND COM_CD = A.CNTCHK_PROG_STATE_CD) AS CNTCHK_PROG_STATE_NM	                            , (CASE WHEN C.BOOKSF_ARNG_FLAG = '1' THEN C.OPTIDISK_STAKRM_ID || '-' || C.OPTIDISK_BOOKSF_ID || '-' || C.FLOOR_NO || '-' || C.COL_NO END) AS BOOKSF_LOCATION	                            , C.FLOOR_NO	                            , C.COL_NO	                            , B.ORG_CD	                            , B.SEQ	                            , B.ORG_CD || '-' || LPAD(B.SEQ,6,'0') AS ORG_CD_SEQ	                            , B.SPLIT_TOT	                            , B.CNTCHK_CNT	                            , B.CNTCHK_RSLT_CD	                            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR08' AND COM_CD = B.CNTCHK_RSLT_CD) AS CNTCHK_RSLT_NM     	                            , B.HANDL_RSLT_CONT	                            , B.CHECK_YMD	                            , '±¤µð½ºÅ©' AS MEDIA_DIV_NM	                    FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B 	                    LEFT OUTER JOIN TB_SROPTIDISK_MST C	                    ON C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.ORG_CD = B.ORG_CD AND C.SEQ = B.SEQ	                    WHERE A.RECORD_CENTER_ID = '1'	                    AND A.CNTCHK_ID = REPLACE('1', '-', '')	                    AND A.MEDIA_DIV = '1'	                    AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID	                    AND B.CNTCHK_ID = A.CNTCHK_ID	                    AND B.MEDIA_DIV = A.MEDIA_DIV	                     AND 	                        B.OPTIDISK_STAKRM_ID = '1'	                      AND 	                        B.OPTIDISK_BOOKSF_ID = '1'	                        	                    ORDER BY B.ORG_CD, B.SEQ	                ) D	                WHERE ROWNUM <= '1'	            ) E	            WHERE E.rnum >= '1'	        ) F	        ORDER BY F.rnum	     ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml

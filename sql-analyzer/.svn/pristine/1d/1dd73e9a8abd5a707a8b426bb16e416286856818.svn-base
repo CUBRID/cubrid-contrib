@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.trace">
+
+	<!-- 
+		감사추적 정보 이력 저장
+	 -->
+	<insert id="createTrace" parameterClass="rms.common.trace.domain.Trace">
+		INSERT INTO TB_ZZTRACE (
+			record_center_id, trace_ymd, trace_sno, trgt_div_cd, trgt_id
+			, user_id, work_type_cd, work_dtime, conn_ip
+		) VALUES (
+			#recordCenterId:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDD'), TB_ZZTRACE_SQ01.NEXTVAL, #trgtDivCd:VARCHAR#, #trgtId:VARCHAR#
+			<!--cubrid , #userId:VARCHAR#, #workTypeCd:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #connIp:VARCHAR#-->
+			, #userId:VARCHAR#, #workTypeCd:VARCHAR#, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), #connIp:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		기록물철/건 검색열람통계 저장
+	 -->
+	<insert id="createSrchReadStat" parameterClass="rms.common.trace.domain.SrchReadStat">
+		INSERT INTO TB_RDSRCHREADSTAT (
+			record_center_id, srch_ymd, srch_sno, org_cd, srch_read_div_cd, srch_div_cd
+		) VALUES (
+			#recordCenterId:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDD'), (SELECT NVL(MAX(srch_sno),0)+1 FROM TB_RDSRCHREADSTAT WHERE record_center_id=#recordCenterId:VARCHAR# AND srch_ymd=TO_CHAR(SYSDATE, 'YYYYMMDD')), #orgCd:VARCHAR#, #srchReadDivCd:VARCHAR#, #srchDivCd:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		기록물철/건 검색어 저장
+	 -->
+	<insert id="createSrchReadRank" parameterClass="rms.common.trace.domain.SrchReadRank">
+		INSERT INTO TB_RDSRCHREADRANKNG (
+			record_center_id, srch_ymd, srch_sno, srch_read_div_cd, keywd
+		) VALUES (
+			#recordCenterId:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDD'), (SELECT NVL(MAX(srch_sno),0)+1 FROM TB_RDSRCHREADRANKNG WHERE record_center_id=#recordCenterId:VARCHAR# AND srch_ymd=TO_CHAR(SYSDATE, 'YYYYMMDD')), #srchReadDivCd:VARCHAR#, #keywd:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		공개목록 수정목록 정보를 생성한다.
+	 -->
+	<insert id="createTraceOpenListChng" parameterClass="rms.common.trace.domain.OpenListChng">
+		INSERT INTO TB_OPOPENLISTCHNG (
+		     record_center_id, open_sys_cd, open_dtime, list_type_cd, org_cd
+		    ,folder_id, record_id, open_gubun, part_open_rsn, presv_term_cd
+		    ,takovr_org_cd, takovr_org_nm, take_org_cd, take_org_nm, disuse_ymd
+		    ,transf_ymd, chng_rsn, reg_dtime, folder_key, record_key
+		) (
+		    SELECT #recordCenterId:VARCHAR#, #openSysCd:VARCHAR#, #openDtime:VARCHAR#, #listTypeCd:VARCHAR#, #orgCd:VARCHAR#
+		          ,#folderId:VARCHAR#, #recordId:VARCHAR#, #openGubun:VARCHAR#, #partOpenRsn:VARCHAR#, #presvTermCd:VARCHAR#
+		          ,#takovrOrgCd:VARCHAR#, #takovrOrgNm:VARCHAR#, #takeOrgCd:VARCHAR#, #takeOrgNm:VARCHAR#, #disuseYmd:VARCHAR#
+		          <!--cubrid ,#transfYmd:VARCHAR#, #chngRsn:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #folderKey:VARCHAR#, #recordKey:VARCHAR#-->
+		          ,#transfYmd:VARCHAR#, #chngRsn:VARCHAR#, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), #folderKey:VARCHAR#, #recordKey:VARCHAR#
+		    FROM  DUAL
+		)
+	</insert>
+	
+</sqlMap>

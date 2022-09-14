@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="orign.FormatTransIntlk">
+
+	<resultMap id="trans-exe-record-req-folder-list" class="rms.orign.server.domain.FormatTransIntlk">
+		<result property="folderId" column="FOLDER_ID" />
+	</resultMap>
+
+	<!-- SELECT(건변환 철단위 요청한 작업[PDF,NEO]의 철ID 조회) -->
+	<select id="findTransExeRecordReqFolderList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="trans-exe-record-req-folder-list">
+		SELECT RRECORD.FOLDER_ID
+		FROM TB_RDFOLDER RFOLDER
+		,TB_RDRECORD RRECORD
+		WHERE RFOLDER.RECORD_CENTER_ID = RRECORD.RECORD_CENTER_ID
+		AND RFOLDER.FOLDER_ID = RRECORD.FOLDER_ID
+		AND RRECORD.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(RRECORD.RECORD_ID = #params[].recordId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		GROUP BY RRECORD.FOLDER_ID
+		ORDER BY RRECORD.FOLDER_ID
+	</select>
+
+</sqlMap>

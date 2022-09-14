@@ -1,0 +1,14 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+
+createOrgCdApply
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_storg_record_center_id_org_cd(B+tree: 4|184|960) ON CLASS tb_storg(CLASS_OID: 0|487|50). key: {'0000001', '1'}(OID: 1|1857|16).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createOrgCdApply
+
+		INSERT INTO TB_STORG		(			record_center_id, org_cd, org_nm, org_abbr_nm, full_org_nm			, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag			, apply_start_ymd, apply_close_ymd, link_trgt_id		)		(			SELECT E.record_center_id				 , E.org_cd			     , replace(NVL(TRIM(SUBSTR(E.FULL_ORG_NM, DECODE(INSTR(E.FULL_ORG_NM, 																	       (SELECT B.rep_org_nm																			FROM TB_STRECORDCENTER B																			WHERE B.record_center_id=E.record_center_id))																	,1,LENGTH((SELECT B.rep_org_nm																			FROM TB_STRECORDCENTER B																			WHERE B.record_center_id=E.record_center_id))+1,0) )),E.FULL_ORG_NM),'"','')				 , replace(E.org_abbr_nm,'"','')				 , replace(E.full_org_nm,'"','')				 , E.hupper_org_cd				 , E.upper_org_cd				 , E.levl				 , E.org_seq				 , E.close_flag				 , E.apply_start_ymd				 , E.apply_close_ymd				 , E.link_trgt_id			FROM (				SELECT NVL(B.record_center_id,C.record_center_id) record_center_id					 , A.org_cd				     , A.org_nm					 , A.org_abbr_nm					 , A.full_org_nm					 , A.hupper_org_cd					 , DECODE(A.upper_org_cd,'0000000','0',A.upper_org_cd) upper_org_cd					 , A.levl					 , A.org_seq					 , A.close_flag					 , A.apply_start_ymd					 , A.apply_close_ymd					 , NVL(B.link_trgt_id,D.link_trgt_id) link_trgt_id				FROM  TB_STORGTEMP A				    , (SELECT * FROM TB_STORG WHERE RECORD_CENTER_ID = '1') B					, (SELECT MIN(record_center_id) record_center_id FROM TB_STRECORDCENTER) C					, (SELECT MIN(link_trgt_id) link_trgt_id FROM TB_STLINKTRGT) D				WHERE A.upper_org_cd = B.org_cd(+)				AND   (B.upper_org_cd IS NULL OR B.upper_org_cd != 'ZZZZZZZ')				AND   A.levl = '1'				AND   A.org_cd NOT IN (SELECT org_cd FROM TB_STORG WHERE RECORD_CENTER_ID = '1') 			) E		);
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml

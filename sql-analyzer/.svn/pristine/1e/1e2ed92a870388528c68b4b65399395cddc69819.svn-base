@@ -1,0 +1,88 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findUserInfo
+
+		SELECT A.user_id		     , A.user_nm		     , A.dept_cd		     , (SELECT Z.dept_nm FROM TB_STDEPT Z WHERE Z.record_center_id = A.record_center_id AND Z.dept_cd = A.dept_cd ) AS dept_nm		     , A.pos		     , A.RANK		     , A.user_pwd		     , A.pki_name_check		FROM TB_STUSER A		WHERE     A.use_flag = '1'		AND A.login_user_id = '1'		AND A.user_pwd = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findLoginUserIdList
+
+		SELECT user_id, resid_no		FROM   TB_STUSER		WHERE  use_flag = '1'		AND    login_user_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findLoginUserId
+
+		SELECT A.user_id		     , A.user_nm		     , A.user_div			 , A.record_center_id			 , A.user_pwd			 , A.dept_cd			 , A.work_flag			 , A.reg_dtime			 , B.dept_nm			 , B.org_cd			 , C.org_nm		FROM TB_STUSER A		   , TB_STDEPT B		   , TB_STORG C		WHERE A.use_flag = '1'		AND   A.user_id = '1'		AND   A.record_center_id = B.record_center_id(+)		AND   A.dept_cd = B.dept_cd(+)		AND   B.record_center_id = C.record_center_id(+)		AND   B.org_cd = C.org_cd(+);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : insert
+-- Query Id : createLoginUserTrace
+
+		INSERT INTO TB_STUSERLOGIN (			USER_ID, DEPT_CD, CONN_DTIME, CONN_CLOSE_DTIME, LOGIN_IP		) VALUES (			'1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : update
+-- Query Id : UpdateLoginFailCountTrx
+
+		 UPDATE  TB_STUSER		 SET LOGIN_ERROR_CNT = (SELECT 						            CASE						            WHEN LOGIN_ERROR_CNT >= 10 then						            10						            ELSE						            LOGIN_ERROR_CNT+1						            END						         FROM TB_STUSER  WHERE USER_ID='1'						        )		 WHERE USER_ID='1'                      	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : update
+-- Query Id : UpdateLoginSuccessCountTrx
+
+		 UPDATE  TB_STUSER		 SET LOGIN_ERROR_CNT = 0		 WHERE USER_ID='1'                      	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : update
+-- Query Id : updateOpenAutoOpenRecordRslt
+
+		UPDATE TB_RDRECORD		   SET open_resort_prog_state = '7',		       open_revw_prog_state = '5',		       open_limit_part = '',		       open_div_cd = '1',		       last_open_resort_yyyy = TO_CHAR(SYSDATE, 'YYYY'),		       open_grade = 'NNNNNNNN'   		  WHERE record_center_id = (SELECT record_center_id		                                     FROM TB_STUSER		                                    WHERE user_id = '1' 		                                      AND use_flag = '1'		                                      AND user_div = '3')		  AND SUBSTR(open_limit_date, 1, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD') 			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : update
+-- Query Id : updateOpenAutoRecordExpertReviewRslt
+
+		UPDATE tb_rdrecord A		SET open_resort_prog_state = '7'			, open_revw_prog_state = '5'			, open_limit_part = (SELECT auto_limit_part                                  FROM tb_rdopenresortauto                                 WHERE record_center_id = A.record_center_id                                 AND record_id = A.record_id)			, open_div_cd = (SELECT auto_org_open_div_cd                                  FROM tb_rdopenresortauto                                 WHERE record_center_id = A.record_center_id                                 AND record_id = A.record_id)			, last_open_resort_yyyy = (SELECT resort_yyyy	                                   FROM tb_rdopenresortauto                                       WHERE record_center_id = A.record_center_id	                                   AND record_id = A.record_id)			, open_grade = (SELECT auto_open_grade                            FROM tb_rdopenresortauto                            WHERE record_center_id = A.record_center_id                            AND record_id = A.record_id)		WHERE record_center_id = (SELECT record_center_id FROM TB_STUSER     												  WHERE user_id = '1'        												  AND use_flag = '1'       												  AND user_div = '3')		AND A.record_id in (					        SELECT RECORD_ID					        FROM tb_rdopenresortauto					        WHERE record_center_id = (SELECT record_center_id FROM TB_STUSER     												  WHERE user_id = '1'        												  AND use_flag = '1'       												  AND user_div = '3')					        AND resort_case = '5'					        AND auto_org_open_ymd IS NOT NULL					        AND auto_org_open_ymd > (select TO_CHAR(SYSDATE, 'YYYYMMDD') from dual)		                   )	    AND A.open_resort_prog_state != '7'	    AND A.open_revw_prog_state is null		                   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findLoginErrorCnt
+
+		SELECT  LOGIN_ERROR_CNT		FROM   TB_STUSER		WHERE  USER_ID='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findLoginUserList
+
+		SELECT A.user_id		     , A.user_nm			 , A.dept_cd			 , B.dept_nm			 , A.pos			 , A.rank		FROM TB_STUSER A		   , TB_STDEPT B		WHERE A.use_flag = '1'		AND   A.login_user_id = '1'		AND   A.record_center_id = B.record_center_id		AND   A.dept_cd = B.dept_cd;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findRecordCenterCnt
+
+		SELECT record_center_id, count(1) record_center_cnt FROM TB_STRECORDCHRGR GROUP BY record_center_id ORDER BY record_center_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml
+-- Query    : select
+-- Query Id : findChrgrList
+
+		SELECT A.sno		      ,B.record_center_nm		      ,B.record_center_id		      ,B.record_center_cd		      ,A.chrgr_nm		      ,A.pos		      ,A.duty		      ,A.remk		      ,A.tel_no		      ,A.email		FROM 	TB_STRECORDCHRGR A, tb_strecordcenter B		WHERE 	A.record_center_id = B.record_center_id		ORDER BY A.record_center_id, A.sno	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\loginout\Loginout.xml

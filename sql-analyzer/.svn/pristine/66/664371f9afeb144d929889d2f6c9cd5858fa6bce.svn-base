@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.tree">
+
+	<!-- 
+		사용자검색
+	 -->
+	<resultMap id="findUserNm-resultMap" class="rms.common.tree.domain.TreeUser">
+		<result property="userId"	column="user_id" />
+		<result property="loginUserId"	column="login_user_id" />
+		<result property="userNm"	column="user_nm" />
+		<result property="deptCd"	column="dept_cd" />
+		<result property="deptNm"	column="dept_nm" />
+		<result property="useFlag"	column="use_flag" />		
+	</resultMap>
+	<select id="countUserNm" parameterClass="rms.common.tree.domain.TreeUser" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_STUSER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="userId">
+				A.user_id = #userId:VARCHAR#
+			</isNotEmpty>
+		    <isNotEmpty prepend="AND" property="userNm">
+				A.user_nm LIKE #userNm:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findUserNm" parameterClass="rms.common.tree.domain.TreeUser" resultMap="findUserNm-resultMap">
+		SELECT C.user_id
+			, C.user_nm
+			, C.login_user_id
+			, C.dept_nm
+			, C.dept_cd
+			, C.use_flag
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+			    SELECT A.user_id 
+					, A.user_nm
+					, A.login_user_id
+					, A.dept_cd
+					, (SELECT Z.dept_nm FROM TB_STDEPT Z WHERE Z.record_center_id=A.record_center_id AND Z.dept_cd=A.dept_cd) AS dept_nm
+					, (CASE WHEN A.use_flag='0' THEN '미사용' ELSE '사용' END) AS use_flag
+				FROM  TB_STUSER A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				<dynamic>
+				    <isNotEmpty prepend="AND" property="userId">
+						A.user_id = #userId:VARCHAR#
+					</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="userNm">
+						A.user_nm LIKE #userNm:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="useFlag">
+						A.use_flag = #useFlag:VARCHAR#
+					</isNotEmpty>
+				</dynamic>
+				ORDER BY A.user_nm
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		사용자 트리 검색 
+	-->
+	<select id="findUserTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		(
+			SELECT C.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, A.user_id AS id
+					, A.user_nm AS text
+					, 'open' AS state
+					, (CASE WHEN A.use_flag = '0' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM  TB_STUSER A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.dept_cd = #id:VARCHAR#
+			) C
+		)
+		UNION ALL
+		(
+			SELECT C.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.dept_cd AS id
+					, A.dept_abbr_nm AS text
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STDEPT B WHERE B.upper_dept_cd = A.dept_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_STUSER B WHERE B.dept_cd = A.dept_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STDEPT A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+				<dynamic>
+					<isEqual prepend="AND" property="treeType" compareValue="0">
+						NOT EXISTS (SELECT 1 FROM TB_STDEPT B WHERE B.record_center_id=A.record_center_id AND B.dept_cd=A.upper_dept_cd)
+					</isEqual>
+					<isNotEqual prepend="AND" property="treeType" compareValue="0">
+						A.upper_dept_cd = #id:VARCHAR#
+					</isNotEqual>
+				</dynamic>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.dept_cd, A.apply_start_ymd, A.dept_abbr_nm
+			) C
+		)
+	</select>
+</sqlMap>

@@ -1,0 +1,95 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findBRMPresvTermInfmCnt2
+
+		SELECT A.BIS_CLSS_ID,		       A.BIS_CLSS_NM,		       A.UPPER_BIS_CLSS_ID,		       A.RECORD_CENTER_CONFM_FLAG,		       B.RECORD_CENTER_PRESV_TERM_CD,		       B.RECORD_CENTER_OPIN,		       B.RECORD_CENTER_CHECK_YMD		  FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B 		 WHERE A.PRESV_TERM_FILE_CREAT_STATE='0'		   AND A.PRESV_TERM_STATE = '2'		   AND A.BIS_CLSS_ID=B.BIS_CLSS_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findBRMPresvTermInfmCnt4
+
+				SELECT A.BIS_CLSS_ID,		       A.BIS_CLSS_NM,		       A.UPPER_BIS_CLSS_ID,		       A.RECORD_CENTER_CONFM_FLAG,		       B.NARS_PRESV_TERM_CD AS RECORD_CENTER_PRESV_TERM_CD,		       B.NARS_OPIN AS RECORD_CENTER_OPIN,		       B.NARS_CHECK_YMD AS RECORD_CENTER_CHECK_YMD		  FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B 		 WHERE A.PRESV_TERM_FILE_CREAT_STATE='0'		   AND A.PRESV_TERM_STATE = '4' 		   AND A.BIS_CLSS_ID=B.BIS_CLSS_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findBRMPresvTermInfm
+
+		SELECT A.BIS_CLSS_ID,A.BIS_CLSS_NM,A.UPPER_BIS_CLSS_ID,A.RECORD_CENTER_CONFM_FLAG,B.RECORD_CENTER_PRESV_TERM_CD,B.RECORD_CENTER_OPIN,B.RECORD_CENTER_CHECK_YMD		FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B 		WHERE A.PRESV_TERM_FILE_CREAT_STATE='0'   		AND A.PRESV_TERM_STATE = '2'	    AND A.PRESV_TERM_HANDL_STATE='1'		AND A.BIS_CLSS_ID=B.BIS_CLSS_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : update
+-- Query Id : updateBRMInfmFileFlag
+
+		UPDATE TB_ZZBISCLSS 		   SET PRESV_TERM_FILE_CREAT_STATE='1'		 WHERE BIS_CLSS_ID='1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findNarsBRMPresvTermInfm
+
+		SELECT A.BIS_CLSS_ID,A.BIS_CLSS_NM,A.UPPER_BIS_CLSS_ID,A.RECORD_CENTER_CONFM_FLAG,			B.RECORD_CENTER_PRESV_TERM_CD,B.RECORD_CENTER_OPIN,B.RECORD_CENTER_CHECK_YMD		FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B 		WHERE A.PRESV_TERM_FILE_CREAT_STATE='0' 		AND A.PRESV_TERM_STATE = '2'		AND A.PRESV_TERM_HANDL_STATE >'1'		AND A.BIS_CLSS_ID=B.BIS_CLSS_ID		UNION		SELECT A.BIS_CLSS_ID,A.BIS_CLSS_NM,A.UPPER_BIS_CLSS_ID,A.RECORD_CENTER_CONFM_FLAG,			B.NARS_PRESV_TERM_CD,B.NARS_OPIN,B.NARS_CHECK_YMD		FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B 		WHERE A.PRESV_TERM_FILE_CREAT_STATE='0'		AND A.PRESV_TERM_STATE = '4'		AND A.PRESV_TERM_HANDL_STATE >='1'  		AND A.BIS_CLSS_ID=B.BIS_CLSS_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : insert
+-- Query Id : creatMakeBisClssHistInfo
+
+		INSERT INTO TB_ZZBISCLSSHIST 		(			BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL			, SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG			, LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN			, RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME		)		(	       SELECT  A.BIS_CLSS_ID,	              (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 	                 FROM TB_ZZBISCLSSHIST 	               WHERE BIS_CLSS_ID='1') BIS_CLSS_HIST_NO,	               A.BIS_CLSS_NM,	               A.UPPER_BIS_CLSS_ID,	               A.LEVL,	               A.SORT_SNO,	               A.BIS_TYPE,	               A.START_DTIME,	               A.CLOSE_DTIME,	               A.DEL_FLAG,	               A.LAW_BASIS,	               B.RECORD_CENTER_PRESV_TERM_CD PRESV_TERM_CD,	               A.PRESV_TERM_HANDL_STATE,	               B.RECORD_CENTER_CHECK_YMD PRESV_TERM_FIX_YMD,	               B.RECORD_CENTER_OPIN PRESV_TERM_FIX_RSN,	               '1' RECORD_CENTER_CONFM_FLAG,                   A.TASK_DESCR,                                      TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') WORK_DTIME,                   '2' WORK_TYPE_CD,                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') LINK_DTIME            FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B           WHERE A.BIS_CLSS_ID = B.BIS_CLSS_ID             AND A.BIS_CLSS_ID='1'		)	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : insert
+-- Query Id : creatRemakeBisClssHistInfo
+
+		INSERT INTO TB_ZZBISCLSSHIST		(			BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL			, SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG			, LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN			, RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME		)		(	       SELECT  A.BIS_CLSS_ID,	              (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 	                 FROM TB_ZZBISCLSSHIST 	               WHERE BIS_CLSS_ID='1') BIS_CLSS_HIST_NO,	               A.BIS_CLSS_NM,	               A.UPPER_BIS_CLSS_ID,	               A.LEVL,	               A.SORT_SNO,	               A.BIS_TYPE,	               A.START_DTIME,	               A.CLOSE_DTIME,	               A.DEL_FLAG,	               A.LAW_BASIS,	               NVL(B.NARS_PRESV_TERM_CD,B.RECORD_CENTER_PRESV_TERM_CD) PRESV_TERM_CD,	               A.PRESV_TERM_HANDL_STATE,	               NVL(B.NARS_CHECK_YMD,B.RECORD_CENTER_CHECK_YMD) PRESV_TERM_FIX_YMD,	               NVL(B.NARS_OPIN,B.RECORD_CENTER_OPIN) PRESV_TERM_FIX_RSN,	               '1' RECORD_CENTER_CONFM_FLAG,                   A.TASK_DESCR,                                      TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') WORK_DTIME,                   '2' WORK_TYPE_CD,                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') LINK_DTIME            FROM TB_ZZBISCLSS A,TB_ZZPRESVTERMHIST B           WHERE A.BIS_CLSS_ID = B.BIS_CLSS_ID             AND A.BIS_CLSS_ID='1'		)	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findPresvTermReqFileInfo
+
+		SELECT D.CREAT_YYYY	      ,D.ORG_CD	      ,D.BIS_TYPE	      ,D.BIS_CLSS_ID	      ,D.BIS_CLSS_NM	      ,D.UPPER_BIS_CLSS_ID	      ,D.BIS_CLSS_PATH_NM	      ,D.START_DTIME	      ,D.CLOSE_DTIME	      ,D.CREAT_ORG_PRESV_TERM_CD	      ,D.CREAT_ORG_OPIN	      ,D.RECORD_CENTER_PRESV_TERM_CD	      ,D.RECORD_CENTER_OPIN	      ,D.LAW_BASIS	      ,D.TASK_DESCR	      ,D.RECORD_CENTER_CHECK_YMD	      ,D.DEL_FLAG		FROM (			SELECT SUBSTR(B.START_DTIME,0,4) CREAT_YYYY			      ,(SELECT ORG_CD 			          FROM TB_ZZBISORG			         WHERE LINK_DTIME = (SELECT MAX(LINK_DTIME) FROM TB_ZZBISORG			                             WHERE BIS_CLSS_ID = B.BIS_CLSS_ID)			           AND BIS_CLSS_ID=B.BIS_CLSS_ID			           AND ROWNUM = 1) ORG_CD			      ,B.BIS_TYPE			      ,B.BIS_CLSS_ID			      ,replace(replace(replace(B.BIS_CLSS_NM,chr(0),''),chr(10),''),chr(13),'') as BIS_CLSS_NM			      ,B.UPPER_BIS_CLSS_ID			      ,replace(replace(replace(B.BIS_CLSS_PATH_NM,chr(0),''),chr(10),''),chr(13),'') as BIS_CLSS_PATH_NM			      ,B.START_DTIME			      ,B.CLOSE_DTIME			      ,C.CREAT_ORG_PRESV_TERM_CD			      ,replace(replace(replace(C.CREAT_ORG_OPIN,chr(0),''),chr(10),''),chr(13),'') as CREAT_ORG_OPIN			      ,C.RECORD_CENTER_PRESV_TERM_CD			      ,replace(replace(replace(C.RECORD_CENTER_OPIN,chr(0),''),chr(10),''),chr(13),'') as RECORD_CENTER_OPIN		      			      ,replace(replace(replace(B.LAW_BASIS,chr(0),''),chr(10),''),chr(13),'') as LAW_BASIS		      			      ,replace(replace(replace(B.TASK_DESCR,chr(0),''),chr(10),''),chr(13),'') as TASK_DESCR		      			      ,C.RECORD_CENTER_CHECK_YMD      		      ,B.DEL_FLAG		   FROM 		  (SELECT A.BIS_CLSS_ID		        ,A.START_DTIME		        ,A.BIS_TYPE		        ,A.BIS_CLSS_NM		        ,A.UPPER_BIS_CLSS_ID		        ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') BIS_CLSS_PATH_NM		        ,A.CLOSE_DTIME		        ,A.LAW_BASIS		        ,A.TASK_DESCR		        ,A.DEL_FLAG		  FROM TB_ZZBISCLSS A 	      WHERE A.levl='6' 	            	      START WITH A.bis_clss_id ='00000000000000000000000000000000000'	      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) B,TB_ZZPRESVTERMHIST C	      WHERE B.BIS_CLSS_ID = C.BIS_CLSS_ID ) D WHERE  		  	    D.BIS_CLSS_PATH_NM LIKE '1'		        AND 		  	    D.BIS_CLSS_PATH_NM LIKE '1'		        AND 			    D.BIS_CLSS_ID = '1' 			    AND 					D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= '1')  AND 				D.PRESV_TERM_CD = '1'			    AND 				D.BIS_TYPE = '1'			    AND 				D.DEL_FLAG = '1'			    AND 			    SUBSTR(D.START_DTIME,0,4) = '1' 			      			      ORDER BY D.START_DTIME			    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findSelectPresvTermReqFile
+
+		SELECT D.CREAT_YYYY	      ,D.ORG_CD	      ,D.BIS_TYPE	      ,D.BIS_CLSS_ID	      ,D.BIS_CLSS_NM	      ,D.UPPER_BIS_CLSS_ID	      ,D.BIS_CLSS_PATH_NM	      ,D.START_DTIME	      ,D.CLOSE_DTIME	      ,D.CREAT_ORG_PRESV_TERM_CD	      ,D.CREAT_ORG_OPIN	      ,D.RECORD_CENTER_PRESV_TERM_CD	      ,D.RECORD_CENTER_OPIN	      ,D.LAW_BASIS	      ,D.TASK_DESCR	      ,D.RECORD_CENTER_CHECK_YMD		FROM ( SELECT SUBSTR(B.START_DTIME,0,4) CREAT_YYYY		      ,(SELECT ORG_CD 		          FROM TB_ZZBISORG		         WHERE LINK_DTIME = (SELECT MAX(LINK_DTIME) FROM TB_ZZBISORG		                             WHERE BIS_CLSS_ID = B.BIS_CLSS_ID)		           AND BIS_CLSS_ID=B.BIS_CLSS_ID		           AND ROWNUM = 1) ORG_CD		      ,B.BIS_TYPE		      ,B.BIS_CLSS_ID		      ,replace(replace(replace(B.BIS_CLSS_NM,chr(0),''),chr(10),''),chr(13),'') as BIS_CLSS_NM		      ,B.UPPER_BIS_CLSS_ID		      ,replace(replace(replace(B.BIS_CLSS_PATH_NM,chr(0),''),chr(10),''),chr(13),'') as BIS_CLSS_PATH_NM		      ,B.START_DTIME		      ,B.CLOSE_DTIME		      ,C.CREAT_ORG_PRESV_TERM_CD		      ,replace(replace(replace(C.CREAT_ORG_OPIN,chr(0),''),chr(10),''),chr(13),'') as CREAT_ORG_OPIN		      ,C.RECORD_CENTER_PRESV_TERM_CD		      ,replace(replace(replace(C.RECORD_CENTER_OPIN,chr(0),''),chr(10),''),chr(13),'') as RECORD_CENTER_OPIN		      		      ,replace(replace(replace(B.LAW_BASIS,chr(0),''),chr(10),''),chr(13),'') as LAW_BASIS		      		      ,replace(replace(replace(B.TASK_DESCR,chr(0),''),chr(10),''),chr(13),'') as TASK_DESCR		      ,C.RECORD_CENTER_CHECK_YMD		      ,B.DEL_FLAG	   		FROM 			  (SELECT A.BIS_CLSS_ID			        ,A.START_DTIME			        ,A.BIS_TYPE			        ,A.BIS_CLSS_NM			        ,A.UPPER_BIS_CLSS_ID			        ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') BIS_CLSS_PATH_NM			        ,A.CLOSE_DTIME			        ,A.LAW_BASIS			        ,A.TASK_DESCR			        ,A.DEL_FLAG			  FROM TB_ZZBISCLSS A 		      WHERE A.levl='6'		      START WITH A.bis_clss_id ='00000000000000000000000000000000000'		      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) B,TB_ZZPRESVTERMHIST C		   WHERE B.BIS_CLSS_ID = C.BIS_CLSS_ID ) D					  WHERE D.BIS_CLSS_ID IN ('1','1','1')   			    ORDER BY D.START_DTIME			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findRecordCenterCd
+
+		SELECT RECORD_CENTER_CD		FROM TB_STRECORDCENTER		WHERE RECORD_CENTER_ID='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : select
+-- Query Id : findRecordCenterNm
+
+		SELECT RECORD_CENTER_NM		FROM TB_STRECORDCENTER		WHERE RECORD_CENTER_ID='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : update
+-- Query Id : createBisClssCreatFileState
+
+		UPDATE TB_ZZBISCLSS 		   SET PRESV_TERM_FILE_CREAT_STATE='1',RESUBMIT_FLAG=DECODE(PRESV_TERM_STATE,4,1,0),		       PRESV_TERM_STATE='3',		       PRESV_TERM_HANDL_STATE='0'     		 WHERE BIS_CLSS_ID='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml
+-- Query    : update
+-- Query Id : updateBisClssPresvTerm
+
+	    UPDATE TB_ZZBISCLSS	       SET PRESV_TERM_CD=(SELECT COM_CD 	                            FROM TB_ZZCOMCD 	                           WHERE COM_TYPE_CD='RD07'	                             AND COM_CD='1'	                          UNION	                          SELECT COM_CD	                            FROM TB_ZZCOMCD	                           WHERE COM_TYPE_CD='RD07'	                             AND COM_CD_NM='1')	           ,PRESV_TERM_FIX_YMD='1'	           ,PRESV_TERM_FIX_RSN='1'	     WHERE BIS_CLSS_ID='1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\BRMPresvTermInfm.xml

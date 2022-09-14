@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.clssmng">
+
+	<resultMap id="stnd-taskhist-result" class="rms.stnd.clssmng.domain.TaskHist" >
+		<result property="bisClssId"		column="BIS_CLSS_ID"/>
+		<result property="chngDtime"		column="CHNG_DTIME"/>			
+		<result property="chngItemNm" 		column="CHNG_ITEM_NM"/>	
+		<result property="chngBefVal" 		column="CHNG_BEF_VAL"/>	
+		<result property="chngAftVal" 		column="CHNG_AFT_VAL"/>	
+		<result property="presvTermFixRsn"	column="PRESV_TERM_FIX_RSN"/>	
+	</resultMap>
+	<!-- 
+		COUNT
+	 -->
+	<select id="countTaskHist" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZBISCLSSCHNG A
+		WHERE A.BIS_CLSS_ID > '0'
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="bisClssId">
+				A.BIS_CLSS_ID = #bisClssId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>				
+	</select>	
+		
+	<!-- 
+		SELECT
+	 -->
+	<select id="findTaskHist" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultMap="stnd-taskhist-result">
+		SELECT A.BIS_CLSS_ID
+			, A.CHNG_DTIME
+			, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ10' AND USE_FLAG = '1' AND COM_CD = A.CHNG_ITEM_CD ) CHNG_ITEM_NM 	
+			, A.CHNG_BEF_VAL
+			, A.CHNG_AFT_VAL
+			, '' PRESV_TERM_FIX_RSN
+		FROM TB_ZZBISCLSSCHNG A
+		WHERE A.BIS_CLSS_ID > '0'
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="bisClssId">
+				A.BIS_CLSS_ID = #bisClssId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.BIS_CLSS_ID, A.CHNG_DTIME
+	</select>		
+
+	<!-- 
+		COUNT
+	 -->
+	<select id="countPresvTermChng" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZBISCLSSCHNG A
+		WHERE A.BIS_CLSS_ID > '0' AND A.CHNG_ITEM_CD = '05'
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="bisClssId">
+				A.BIS_CLSS_ID = #bisClssId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>				
+	</select>	
+		
+	<!-- 
+		SELECT
+	 -->
+	<select id="findPresvTermChng" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultMap="stnd-taskhist-result">
+		SELECT '' BIS_CLSS_ID
+		, '' CHNG_ITEM_NM
+		, A.CHNG_DTIME			
+		, '' CHNG_BEF_VAL
+		, A.CHNG_AFT_VAL
+		, (SELECT CHNG_AFT_VAL FROM TB_ZZBISCLSSCHNG  WHERE CHNG_ITEM_CD = '06' AND CHNG_DTIME = A.CHNG_DTIME) PRESV_TERM_FIX_RSN
+		FROM TB_ZZBISCLSSCHNG A
+		WHERE A.BIS_CLSS_ID > '0' AND A.CHNG_ITEM_CD = '05'
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="bisClssId">
+				A.BIS_CLSS_ID = #bisClssId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+		ORDER BY A.BIS_CLSS_ID, A.CHNG_DTIME		
+	</select>
+	
+	<resultMap id="stnd-bisclssworkhist-result" class="rms.stnd.clssmng.domain.TaskHist" >
+		<result property="rnum"				column="rnum"/>
+		<result property="workDtime"		column="work_dtime"/>
+		<result property="workTypeCd"		column="work_type_cd"/>
+		<result property="workTypeNm" 		column="work_type_nm"/>
+		<result property="presvTermCd" 		column="presv_term_cd"/>
+		<result property="presvTermNm"		column="presv_term_nm"/>
+		<result property="presvTermFixYmd" 	column="presv_term_fix_ymd"/>
+		<result property="presvTermFixRsn"	column="presv_term_fix_rsn"/>
+	</resultMap>
+	<select id="findBisClssWorkHist" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultMap="stnd-bisclssworkhist-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnums
+				, CC.*
+
+FROM (
+		SELECT ROWNUM AS rnum
+			,E.WORK_DTIME
+	       ,E.WORK_TYPE_CD
+	       ,E.PRESV_TERM_CD
+	       ,E.PRESV_TERM_FIX_YMD
+	       ,E.PRESV_TERM_FIX_RSN
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST20' AND Z.com_cd=E.work_type_cd) AS work_type_nm
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		FROM (
+		    SELECT D.work_dtime, D.work_type_cd, D.presv_term_cd, D.presv_term_fix_ymd, D.presv_term_fix_rsn 
+		    FROM (
+		        SELECT B.rnum
+		            , B.work_dtime
+		            , B.work_type_cd
+		            , B.presv_term_cd
+		            , B.presv_term_fix_ymd
+		            , B.presv_term_fix_rsn
+		            , (CASE WHEN (C.work_type_cd IS NULL AND B.work_type_cd IS NULL) THEN 0 WHEN C.work_type_cd=B.work_type_cd THEN 0 ELSE 1 END) AS chk1
+		            , (CASE WHEN (C.presv_term_cd IS NULL AND B.presv_term_cd IS NULL) THEN 0 WHEN C.presv_term_cd=B.presv_term_cd THEN 0 ELSE 1 END) AS chk2
+		            , (CASE WHEN (C.presv_term_fix_ymd IS NULL AND B.presv_term_fix_ymd IS NULL) THEN 0 WHEN C.presv_term_fix_ymd=B.presv_term_fix_ymd THEN 0 ELSE 1 END) AS chk3
+		            , (CASE WHEN (C.presv_term_fix_rsn IS NULL AND B.presv_term_fix_rsn IS NULL) THEN 0 WHEN C.presv_term_fix_rsn=B.presv_term_fix_rsn THEN 0 ELSE 1 END) AS chk4
+		        FROM (
+		                SELECT ROWNUM-1 AS rnum
+		                    , A.*
+		                FROM ( 
+		                    SELECT *
+		                    FROM  TB_ZZBISCLSSHIST
+		                    WHERE bis_clss_id = #bisClssId:VARCHAR#
+							<isNotEmpty prepend="AND" property="workTypeCd">
+								WORK_TYPE_CD = #workTypeCd:VARCHAR#
+							</isNotEmpty>
+		                    ORDER BY work_dtime, bis_clss_id,  bis_clss_hist_no
+		                ) A
+		            ) B
+		            , (
+		                SELECT ROWNUM AS rnum
+		                    , A.*
+		                FROM ( 
+		                    SELECT *
+		                    FROM  TB_ZZBISCLSSHIST
+		                    WHERE bis_clss_id = #bisClssId:VARCHAR#
+							<isNotEmpty prepend="AND" property="workTypeCd">
+								WORK_TYPE_CD = #workTypeCd:VARCHAR#
+							</isNotEmpty>
+		                    ORDER BY bis_clss_id, work_dtime, bis_clss_hist_no
+		                ) A
+		            ) C
+		        WHERE B.rnum = C.rnum(+)
+		    ) D 
+		    WHERE (chk1+chk2+chk3+chk4) > 0
+		    ORDER BY D.rnum
+		) E
+					) CC
+						WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+					) B
+					WHERE B.rnums <![CDATA[>=]]> #pagedStart:NUMBER#
+		
+	</select>
+	<select id="countBisClssWorkHist" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultClass="long">
+	    SELECT COUNT(1) 
+	    FROM (
+	        SELECT B.rnum
+	            , B.work_dtime
+	            , B.work_type_cd
+	            , B.presv_term_cd
+	            , B.presv_term_fix_ymd
+	            , B.presv_term_fix_rsn
+	            , (CASE WHEN (C.work_type_cd IS NULL AND B.work_type_cd IS NULL) THEN 0 WHEN C.work_type_cd=B.work_type_cd THEN 0 ELSE 1 END) AS chk1
+	            , (CASE WHEN (C.presv_term_cd IS NULL AND B.presv_term_cd IS NULL) THEN 0 WHEN C.presv_term_cd=B.presv_term_cd THEN 0 ELSE 1 END) AS chk2
+	            , (CASE WHEN (C.presv_term_fix_ymd IS NULL AND B.presv_term_fix_ymd IS NULL) THEN 0 WHEN C.presv_term_fix_ymd=B.presv_term_fix_ymd THEN 0 ELSE 1 END) AS chk3
+	            , (CASE WHEN (C.presv_term_fix_rsn IS NULL AND B.presv_term_fix_rsn IS NULL) THEN 0 WHEN C.presv_term_fix_rsn=B.presv_term_fix_rsn THEN 0 ELSE 1 END) AS chk4
+	        FROM (
+	                SELECT ROWNUM-1 AS rnum
+	                    , A.*
+	                FROM ( 
+	                    SELECT *
+	                    FROM  TB_ZZBISCLSSHIST
+	                    WHERE bis_clss_id = #bisClssId:VARCHAR#
+						<isNotEmpty prepend="AND" property="workTypeCd">
+							WORK_TYPE_CD = #workTypeCd:VARCHAR#
+						</isNotEmpty>
+	                    ORDER BY bis_clss_id, work_dtime, bis_clss_hist_no
+	                ) A
+	            ) B
+	            , (
+	                SELECT ROWNUM AS rnum
+	                    , A.*
+	                FROM ( 
+	                    SELECT *
+	                    FROM  TB_ZZBISCLSSHIST
+	                    WHERE bis_clss_id = #bisClssId:VARCHAR#
+						<isNotEmpty prepend="AND" property="workTypeCd">
+							WORK_TYPE_CD = #workTypeCd:VARCHAR#
+						</isNotEmpty>
+	                    ORDER BY bis_clss_id, work_dtime, bis_clss_hist_no
+	                ) A
+	            ) C
+	        WHERE B.rnum = C.rnum(+)
+	    ) D 
+	    WHERE (chk1+chk2+chk3+chk4) > 0
+	</select>
+	
+	
+	<resultMap id="findBisClssHist-result" class="rms.stnd.clssmng.domain.TaskChng" >
+		<result property="rnum"							column="rnum"/>
+		<result property="workDtime"					column="work_dtime"/>
+		<result property="chngCnt"						column="chng_cnt"/>
+		<result property="chngFirst"					column="chng_first"/>
+		<result property="bisClssNmBef"					column="bis_clss_nm_bef"/>
+		<result property="bisClssNmAft"					column="bis_clss_nm_aft"/>
+		<result property="upperBisClssIdBef"			column="upper_bis_clss_id_bef"/>
+		<result property="upperBisClssIdAft"			column="upper_bis_clss_id_aft"/>
+		<result property="taskDescrBef"					column="task_descr_bef"/>
+		<result property="taskDescrAft"					column="task_descr_aft"/>
+		<result property="bisTypeBef"					column="bis_type_bef"/>
+		<result property="bisTypeAft"					column="bis_type_aft"/>
+		<result property="bisTypeNmBef"					column="bis_type_nm_bef"/>
+		<result property="bisTypeNmAft"					column="bis_type_nm_aft"/>
+		<result property="presvTermCdBef"				column="presv_term_cd_bef"/>
+		<result property="presvTermCdAft"				column="presv_term_cd_aft"/>
+		<result property="presvTermNmBef"				column="presv_term_nm_bef"/>
+		<result property="presvTermNmAft"				column="presv_term_nm_aft"/>
+		<result property="presvTermFixRsnBef"			column="presv_term_fix_rsn_bef"/>
+		<result property="presvTermFixRsnAft"			column="presv_term_fix_rsn_aft"/>
+		<result property="recordCenterConfmFlagBef"		column="record_center_confm_flag_bef"/>
+		<result property="recordCenterConfmFlagAft"		column="record_center_confm_flag_aft"/>
+		<result property="deptInfoBef"					column="dept_info_bef"/>
+		<result property="deptInfoAft"					column="dept_info_aft"/>
+		<result property="deptListBef"					column="dept_list_bef"/>
+		<result property="deptListAft"					column="dept_list_aft"/>
+		<result property="startDtimeBef"				column="start_dtime_bef"/>
+		<result property="startDtimeAft"				column="start_dtime_aft"/>
+		<result property="closeDtimeBef"				column="close_dtime_bef"/>
+		<result property="closeDtimeAft"				column="close_dtime_aft"/>
+	</resultMap>
+	<select id="findBisClssHist" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultMap="findBisClssHist-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT D.*
+			, NVL((chk1+chk2+chk3+chk4+chk5+chk6+chk7+chk8),0) AS chng_cnt 
+            , (CASE WHEN chk1=1 THEN 1 WHEN chk2=1 THEN 2 WHEN chk3=1 THEN 3 WHEN chk4=1 THEN 4 WHEN chk5=1 THEN 5 WHEN chk6=1 THEN 6 WHEN chk7=1 THEN 7 WHEN chk8=1 THEN 8 ELSE 0 END) AS chng_first
+		FROM (
+			SELECT B.rrrnum
+				, B.work_dtime
+			    , C.bis_clss_nm AS bis_clss_nm_bef
+			    , B.bis_clss_nm AS bis_clss_nm_aft
+			    , C.upper_bis_clss_id AS upper_bis_clss_id_bef
+			    , B.upper_bis_clss_id AS upper_bis_clss_id_aft
+			    , C.task_descr AS task_descr_bef
+			    , B.task_descr AS task_descr_aft
+			    , C.bis_type AS bis_type_bef
+			    , B.bis_type AS bis_type_aft
+			    , NVL((SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'ZZ03' AND Z.com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm_bef			    
+			    , NVL((SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'ZZ03' AND Z.com_cd = REPLACE(B.BIS_TYPE,'B','')),REPLACE(B.BIS_TYPE,'B','')) bis_type_nm_aft
+			    , C.presv_term_cd AS presv_term_cd_bef
+			    , B.presv_term_cd AS presv_term_cd_aft
+			    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=C.presv_term_cd) AS presv_term_nm_bef
+			    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=B.presv_term_cd) AS presv_term_nm_aft
+			    , C.presv_term_fix_rsn AS presv_term_fix_rsn_bef
+			    , B.presv_term_fix_rsn AS presv_term_fix_rsn_aft
+                , C.record_center_confm_flag AS record_center_confm_flag_bef
+                , B.record_center_confm_flag AS record_center_confm_flag_aft
+                , C.dept_info AS dept_info_bef
+                , B.dept_info AS dept_info_aft
+                , C.dept_list AS dept_list_bef
+                , B.dept_list AS dept_list_aft
+			    , C.start_dtime AS start_dtime_bef
+			    , B.start_dtime AS start_dtime_aft
+			    , C.close_dtime AS close_dtime_bef
+			    , B.close_dtime AS close_dtime_aft
+                , (CASE WHEN (C.bis_clss_nm IS NULL AND B.bis_clss_nm IS NULL) THEN 0 WHEN C.bis_clss_nm=B.bis_clss_nm THEN 0 ELSE 1 END) AS chk1
+                , (CASE WHEN (C.upper_bis_clss_id IS NULL AND B.upper_bis_clss_id IS NULL) THEN 0 WHEN C.upper_bis_clss_id=B.upper_bis_clss_id THEN 0 ELSE 1 END) AS chk2
+                , (CASE WHEN (C.task_descr IS NULL AND B.task_descr IS NULL) THEN 0 WHEN C.task_descr=B.task_descr THEN 0 ELSE 1 END) AS chk3
+                , (CASE WHEN (C.bis_type IS NULL AND B.bis_type IS NULL) THEN 0 WHEN C.bis_type=B.bis_type THEN 0 ELSE 1 END) AS chk4
+                , (CASE WHEN (C.presv_term_cd IS NULL AND B.presv_term_cd IS NULL) THEN 0 WHEN C.presv_term_cd=B.presv_term_cd THEN 0 ELSE 1 END) AS chk5
+                , (CASE WHEN (C.presv_term_fix_rsn IS NULL AND B.presv_term_fix_rsn IS NULL) THEN 0 WHEN C.presv_term_fix_rsn=B.presv_term_fix_rsn THEN 0 ELSE 1 END) AS chk6
+                , (CASE WHEN (C.record_center_confm_flag IS NULL AND B.record_center_confm_flag IS NULL) THEN 0 WHEN C.record_center_confm_flag=B.record_center_confm_flag THEN 0 ELSE 1 END) AS chk7
+                , (CASE WHEN (C.dept_list IS NULL AND B.dept_list IS NULL) THEN 0 WHEN 
+                <!--cubrid
+                DBMS_LOB.COMPARE(C.dept_list, B.dept_list) = 0 
+                -->
+                C.dept_list = B.dept_list
+                THEN 0 ELSE 1 END) AS chk8
+                , (CASE WHEN (C.start_dtime IS NULL AND B.start_dtime IS NULL) THEN 0 WHEN C.start_dtime=B.start_dtime THEN 0 ELSE 1 END) AS chk9
+                , (CASE WHEN (C.close_dtime IS NULL AND B.close_dtime IS NULL) THEN 0 WHEN C.close_dtime=B.close_dtime THEN 0 ELSE 1 END) AS chk10
+			FROM (
+			        SELECT ROWNUM-1 AS rrrnum
+			            , A.*
+			        FROM ( 
+			            SELECT *
+			            FROM  TB_ZZBISCLSSHIST
+			            WHERE bis_clss_id = #bisClssId:VARCHAR#
+			            AND   work_type_cd = '0'
+			            ORDER BY work_dtime, bis_clss_id, start_dtime,  bis_clss_hist_no
+			        ) A
+			    ) B
+			    , (
+			        SELECT ROWNUM AS rrrnum
+			        	, A.*
+			        FROM ( 
+			            SELECT *
+			            FROM  TB_ZZBISCLSSHIST
+			            WHERE bis_clss_id = #bisClssId:VARCHAR#
+			            AND   work_type_cd = '0'
+			            ORDER BY work_dtime, bis_clss_id, start_dtime,  bis_clss_hist_no
+			        ) A
+			    ) C
+			WHERE B.rrrnum = C.rrrnum(+)
+			AND   B.rrrnum > 0
+		) D
+		ORDER BY D.rrrnum
+		) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<select id="countBisClssHist" parameterClass="rms.stnd.clssmng.domain.TaskHist" resultClass="long">
+		SELECT (CASE WHEN CNT>0 THEN CNT-1 ELSE 0 END) AS CNT
+        FROM (
+            SELECT COUNT(1) AS CNT
+            FROM  TB_ZZBISCLSSHIST
+            WHERE bis_clss_id = #bisClssId:VARCHAR#
+            AND   work_type_cd = '0'
+        )
+	</select>
+</sqlMap>

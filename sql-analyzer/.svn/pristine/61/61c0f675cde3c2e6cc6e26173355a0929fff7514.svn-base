@@ -1,0 +1,179 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : findPresvTermHist
+
+		SELECT A.BIS_CLSS_ID		, A.CREAT_ORG_PRESV_TERM_CD		, (SELECT COM_CD_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.CREAT_ORG_PRESV_TERM_CD) CREAT_ORG_PRESV_TERM_NM		, A.CREAT_ORG_OPIN		, A.CREAT_ORG_FIXYMD		, A.RECORD_CENTER_PRESV_TERM_CD		, (SELECT COM_CD_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM		, A.RECORD_CENTER_OPIN		, A.RECORD_CENTER_CHECK_YMD		, A.NARS_PRESV_TERM_CD		, (SELECT COM_CD_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM		, A.NARS_OPIN		, A.NARS_CHECK_YMD		FROM TB_ZZPRESVTERMHIST A		WHERE A.BIS_CLSS_ID = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updatePresvTermHist
+
+	  UPDATE TB_ZZPRESVTERMHIST	  SET RECORD_CENTER_PRESV_TERM_CD = (SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	  	, RECORD_CENTER_CHECK_YMD = '1'	  	, RECORD_CENTER_OPIN = '1'	  WHERE BIS_CLSS_ID = '1'	                          ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updateNarPresvTermHist
+
+	  UPDATE TB_ZZPRESVTERMHIST	  SET NARS_PRESV_TERM_CD = (SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	    , NARS_CHECK_YMD = '1'	  	, NARS_OPIN = DECODE('1', '', RECORD_CENTER_OPIN, '1' )	  WHERE BIS_CLSS_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updateUnchangeNarPresvTermHist
+
+	  UPDATE TB_ZZPRESVTERMHIST	  SET NARS_PRESV_TERM_CD = (SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	    , NARS_CHECK_YMD = '1'	  	, NARS_OPIN = DECODE('1', '', RECORD_CENTER_OPIN, '1' )	  WHERE BIS_CLSS_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updatePresvStatereg
+
+	  UPDATE TB_ZZBISCLSS 	  SET  PRESV_TERM_CD=(SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	      ,PRESV_TERM_FIX_YMD='1'	      ,PRESV_TERM_FIX_RSN='1'	      ,PRESV_TERM_STATE = '1'	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 	                             FROM TB_ZZBISCLSS	                            WHERE BIS_CLSS_ID='1')	      ,PRESV_TERM_FILE_CREAT_STATE='0'	  WHERE BIS_CLSS_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : checkUpdateRecordCenterOpin
+
+		SELECT count(1)		  FROM TB_ZZBISCLSS		 WHERE BIS_CLSS_ID='1'		   AND PRESV_TERM_STATE IN (1,2);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : checkChangeRecordCenterOpin
+
+		SELECT count(1)		  FROM TB_ZZPRESVTERMHIST		 WHERE BIS_CLSS_ID='1'		   AND RECORD_CENTER_PRESV_TERM_CD IN ( SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')		   AND RECORD_CENTER_OPIN = '1'		   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updateBisClssPresvTermInfo
+
+	  UPDATE TB_ZZBISCLSS 	  SET  PRESV_TERM_CD=(SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	      ,PRESV_TERM_FIX_YMD='1'	      ,PRESV_TERM_FIX_RSN='1'	      ,RECORD_CENTER_CONFM_FLAG='1'	      ,PRESV_TERM_STATE = '1'	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 	                                 FROM TB_ZZBISCLSS	                                WHERE BIS_CLSS_ID='1')	      ,PRESV_TERM_FILE_CREAT_STATE='0'	      ,FUNSH_FLAG='1'	      ,FUNSH_RSN='1'	      ,FUNSH_TERM='1'	      ,OPEN_DETL_STND='1'	      ,READ_RANGE_DETL_STND='1'	      ,WRITE_FLAG='1'	        	      ,TASK_DESCR='1'	        	  WHERE BIS_CLSS_ID = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updateTaskDescr
+
+	  UPDATE TB_ZZBISCLSS 	  SET TASK_DESCR='1'	  WHERE BIS_CLSS_ID = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : findPresvTermCount
+
+	    SELECT MAX(START_DTIME) MAX_DTIME,MIN(START_DTIME) MIN_DTIME,COUNT(1) COUNT_FILE	    FROM TB_ZZBISCLSS 	    WHERE LEVL='6'	    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : findPresvTermReqRecvRsltList
+
+		SELECT A.PRESV_TERM_MEDI_REQ_YYYY, 			   A.SEND_FILE_DATA_DIV,		       			   A.REP_ORG_CD, 		       			   A.LIST_LINE_NO, 		                      A.PRESV_TERM_RECV_ERROR_CONT 		        FROM  TB_ZZPRESVRECVRSLT A 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : countPresvTermReqRecvRsltList
+
+		SELECT COUNT(1)		FROM  TB_ZZPRESVRECVRSLT A 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : findPresvTermReqList
+
+		SELECT REP_ORG_CD,			   PRESV_TERM_MEDI_REQ_YYYY, 		       SEND_FILE_DATA_DIV, 		       LIST_LINE_NO, 		       PRESV_TERM_RECV_ERROR_CONT,		       RECV_FILE_DTIME, 		       REG_DTIME 		FROM  TB_ZZPRESVRECVRSLT 		ORDER BY RECV_FILE_DTIME	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : insert
+-- Query Id : creatPresvTermReqFileInfo
+
+	INSERT INTO TB_ZZPRESVRECVRSLT (PRESV_TERM_MEDI_REQ_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,									PRESV_TERM_RECV_ERROR_CONT,REG_DTIME,RECV_FILE_DTIME)			VALUES('1','1','1','1',			       '1','1','1'			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : insert
+-- Query Id : creatBisClssHistInfo
+
+		INSERT INTO TB_ZZBISCLSSHIST		(			BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL			, SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG			, LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN			, RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME		)		(	       SELECT BIS_CLSS_ID,	              (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 	                 FROM TB_ZZBISCLSSHIST 	               WHERE BIS_CLSS_ID='1') BIS_CLSS_HIST_NO,	               BIS_CLSS_NM,	               UPPER_BIS_CLSS_ID,	               LEVL,	               SORT_SNO,	               BIS_TYPE,START_DTIME,	               CLOSE_DTIME,	               DEL_FLAG,	               LAW_BASIS,	              (SELECT COM_CD 	                  FROM TB_ZZCOMCD 	                 WHERE COM_TYPE_CD='RD07'	                   AND COM_CD='1'	               UNION	               SELECT COM_CD	                 FROM TB_ZZCOMCD	                WHERE COM_TYPE_CD='RD07'	                  AND COM_CD_NM='1') PRESV_TERM_CD,	               PRESV_TERM_HANDL_STATE,	               '1' PRESV_TERM_FIX_YMD,	               '1' PRESV_TERM_FIX_RSN,	               '1' RECORD_CENTER_CONFM_FLAG,                   TASK_DESCR,                                      TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') WORK_DTIME,                   '1' WORK_TYPE_CD,                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') LINK_DTIME            FROM TB_ZZBISCLSS           WHERE BIS_CLSS_ID='1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : checkConfmReq
+
+		SELECT count(1)		  FROM TB_ZZBISCLSS		 WHERE BIS_CLSS_ID='1'		   AND ((PRESV_TERM_HANDL_STATE = 0           AND PRESV_TERM_FILE_CREAT_STATE = 1           AND PRESV_TERM_STATE = 3)           OR PRESV_TERM_STATE =4)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : checkBisClssHist
+
+		SELECT count(1)		  FROM TB_ZZBISCLSSHIST		 WHERE BIS_CLSS_ID='1'		   		   AND PRESV_TERM_CD =(SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	        		   AND PRESV_TERM_FIX_RSN='1'           AND WORK_TYPE_CD='4';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updateBisClssPresvTermNarsInfo
+
+	  UPDATE TB_ZZBISCLSS 	  SET    	       PRESV_TERM_CD=(SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	      ,PRESV_TERM_FIX_YMD='1'	      ,PRESV_TERM_FIX_RSN='1'	      ,RECORD_CENTER_CONFM_FLAG='1'	      ,PRESV_TERM_STATE = '4'	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 	                                 FROM TB_ZZBISCLSS	                                WHERE BIS_CLSS_ID='1')	      ,PRESV_TERM_FILE_CREAT_STATE='1'	          	      ,TASK_DESCR='1'	        	  WHERE BIS_CLSS_ID = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : checkChangeNarsOpin
+
+		SELECT count(1)		  FROM TB_ZZPRESVTERMHIST		 WHERE BIS_CLSS_ID='1'		   AND (		   (RECORD_CENTER_PRESV_TERM_CD IN ( SELECT COM_CD 	                                           FROM TB_ZZCOMCD 	                                          WHERE COM_TYPE_CD='RD07'	                                            AND COM_CD='1'	                                          UNION	                                         SELECT COM_CD	                                           FROM TB_ZZCOMCD	                                          WHERE COM_TYPE_CD='RD07'	                                            AND COM_CD_NM='1')		    AND RECORD_CENTER_OPIN = '1')		   OR		   (NARS_PRESV_TERM_CD IN ( SELECT COM_CD 	                                       FROM TB_ZZCOMCD 	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD='1'	                                     UNION	                                     SELECT COM_CD	                                       FROM TB_ZZCOMCD	                                      WHERE COM_TYPE_CD='RD07'	                                        AND COM_CD_NM='1')	        AND NARS_OPIN = '1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : findBisClssHistRcOpin
+
+		SELECT A.presv_term_cd AS record_center_presv_term_cd, A.presv_term_fix_rsn AS record_center_opin		FROM  TB_ZZBISCLSSHIST A		WHERE A.bis_clss_id = '1'		AND   A.work_type_cd = '3'		AND   A.work_dtime = (SELECT MAX(B.work_dtime) FROM TB_ZZBISCLSSHIST B WHERE B.bis_clss_id=A.bis_clss_id AND B.work_type_cd = '3')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updateBisClssNaOpin
+
+		UPDATE TB_ZZBISCLSS		SET   presv_term_cd = '1'			, presv_term_file_creat_state = '1'			, presv_term_fix_ymd = '1'			, presv_term_fix_rsn = '1'			, presv_term_handl_state = '1'			, presv_term_state = '4'			, resubmit_flag = '0'		WHERE bis_clss_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : insert
+-- Query Id : createBisClssHistNaOpin
+
+		INSERT INTO TB_ZZBISCLSSHIST 		(		    BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL		    , SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG		    , LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN		    , RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME		)		(			SELECT  A.BIS_CLSS_ID			    , (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 FROM TB_ZZBISCLSSHIST B WHERE B.BIS_CLSS_ID=A.BIS_CLSS_ID) BIS_CLSS_HIST_NO			    , A.BIS_CLSS_NM			    , A.UPPER_BIS_CLSS_ID			    , A.LEVL			    , A.SORT_SNO			    , A.BIS_TYPE			    , A.START_DTIME			    , A.CLOSE_DTIME			    , A.DEL_FLAG			    , A.LAW_BASIS			    , '1' AS PRESV_TERM_CD			    , '1' AS PRESV_TERM_HANDL_STATE			    , '1' AS PRESV_TERM_FIX_YMD			    , '1' AS PRESV_TERM_FIX_RSN			    , '1' AS RECORD_CENTER_CONFM_FLAG			    , A.TASK_DESCR			    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') AS WORK_DTIME			    , '4' WORK_TYPE_CD			    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') AS LINK_DTIME			FROM TB_ZZBISCLSS A			WHERE A.BIS_CLSS_ID = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : update
+-- Query Id : updatePresvTermHistNaOpin
+
+		UPDATE TB_ZZPRESVTERMHIST		SET   NARS_PRESV_TERM_CD = '1'		    , NARS_OPIN = '1'		    , NARS_CHECK_YMD = '1'		WHERE BIS_CLSS_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : findTaskMonitorPagedList
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS num				, C.*			FROM (		SELECT X.RNUM		      ,X.FILE_NM		      ,X.ERECORD_FILE_CNT		      ,X.SVC_REQ_TME		      ,X.SVC_HANDL_FIN_TME		      ,X.SUCC_FAIL_FLAG		      ,Y.ERROR_CD		      ,Y.ERROR_MSG		      ,Y.ERROR_DETL_CONT		FROM   (SELECT ROW_NUMBER() OVER (ORDER BY B.SEND_LIST_LOG_SNO DESC, A.LOG_SNO) AS RNUM		              ,A.LOG_SNO		              ,A.FILE_NM		              ,A.ERECORD_FILE_CNT		              ,SUBSTR(A.SVC_REQ_TME, 1, 19) AS SVC_REQ_TME		              ,SUBSTR(A.SVC_HANDL_FIN_TME, 1, 19) AS SVC_HANDL_FIN_TME		              ,A.SUCC_FAIL_FLAG		        FROM   TB_STLOGMONITOR A		              ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM		                      ,MIN(BA.LOG_SNO) AS SEND_LIST_LOG_SNO		                FROM   TB_STLOGMONITOR BA		                WHERE  BA.FILE_NM LIKE '________UNITBS_REQ_' || '1' || '%'		                GROUP BY BA.SEND_LIST_FILE_NM		                ) B		        WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM		        AND    A.SVC_DIV = 'T'		        ) X		      ,(SELECT YA.LOG_SNO		              ,YB.ERROR_CD		              ,YB.ERROR_MSG		              ,YB.ERROR_DETL_CONT		        FROM   (SELECT B.LOG_SNO		                      ,MIN(A.ERROR_LOG_SNO) AS ERROR_LOG_SNO		                FROM   TB_STERRORLOG A		                      ,(SELECT BA.LOG_SNO		                              ,BA.FILE_NM		                              ,BA.LOG_CREAT_TME		                        FROM   TB_STLOGMONITOR BA		                              ,(SELECT DISTINCT BBA.SEND_LIST_FILE_NM		                                FROM   TB_STLOGMONITOR BBA		                                WHERE  BBA.FILE_NM LIKE '________UNITBS_REQ_' || '1' || '%'		                                 		                                ) BB		                        WHERE  BA.SEND_LIST_FILE_NM = BB.SEND_LIST_FILE_NM		                        AND    BA.SUCC_FAIL_FLAG = 'F'		                        AND    BA.SVC_DIV = 'T'		                         		                        ) B		                WHERE   SUBSTR(A.FILE_NM, DECODE(INSTR(A.FILE_NM, '/', -1), 0, 0, INSTR(A.FILE_NM, '/', -1)+1)) = B.FILE_NM		                AND     A.LOG_CREAT_TME <= B.LOG_CREAT_TME		                GROUP BY LOG_SNO) YA		               ,TB_STERRORLOG YB		        WHERE  YA.ERROR_LOG_SNO = YB.ERROR_LOG_SNO) Y		WHERE  X.LOG_SNO = Y.LOG_SNO(+)		ORDER BY RNUM					) C						WHERE ROWNUM <= '1'					) B					WHERE B.num >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml
+-- Query    : select
+-- Query Id : countTaskMonitorPagedList
+
+		SELECT COUNT(*) AS CNT		FROM   TB_STLOGMONITOR A		      ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM		        FROM   TB_STLOGMONITOR BA		        WHERE  BA.FILE_NM LIKE '________UNITBS_REQ_' || '1' || '%'		        		       ) B		WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM		AND    A.SVC_DIV = 'T';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\clssmng\PresvTermHist.xml

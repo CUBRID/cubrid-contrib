@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="loginout">
+	
+	<!-- 
+		SSO 로그인 - user_id 로 사용자정보를 찾는다.(SELECT)
+	 -->
+	<resultMap id="findCommonServiceLoginUser-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userPwd" 			column="USER_PWD"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="workFlag" 		column="WORK_FLAG"/>
+		<result property="regDtime" 		column="REG_DTIME"/>
+		<result property="deptNm" 			column="DEPT_NM"/>
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+	</resultMap>
+	<select id="findCommonServiceLoginUser" parameterClass="rms.common.loginout.domain.User" resultMap="findCommonServiceLoginUser-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.user_div
+			 , A.record_center_id
+			 , A.user_pwd
+			 , A.dept_cd
+			 , A.work_flag
+			 , A.reg_dtime
+			 , B.dept_nm
+			 , B.org_cd
+			 , C.org_nm
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		   , TB_STORG C
+		WHERE A.use_flag = '1'
+		AND   A.login_user_id = #loginUserId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.dept_cd = B.dept_cd(+)
+		AND   B.record_center_id = C.record_center_id(+)
+		AND   B.org_cd = C.org_cd(+)
+		AND   A.SSO_FLAG in ('2', '3')
+	</select>
+	
+	<!-- 
+		SSO 로그인 - SSO_KEY 로 사용자정보를 조회한다.
+	 -->
+	<resultMap id="findSsoServiceLoginUser-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userPwd" 			column="USER_PWD"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="workFlag" 		column="WORK_FLAG"/>
+		<result property="regDtime" 		column="REG_DTIME"/>
+		<result property="deptNm" 			column="DEPT_NM"/>
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+	</resultMap>
+	<select id="findSsoServiceLoginUser" parameterClass="rms.common.loginout.domain.StUser" resultMap="findSsoServiceLoginUser-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.user_div
+		     , A.record_center_id
+		     , A.user_pwd
+		     , A.dept_cd
+		     , A.work_flag
+		     , A.reg_dtime
+			 , B.dept_nm
+			 , B.org_cd
+		     , C.org_nm
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		   , TB_STORG C
+		WHERE A.sso_flag IN ('2', '3')
+		AND   A.sso_key = #ssoKey:VARCHAR#
+		AND   A.use_flag = '1'
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.dept_cd = B.dept_cd(+)
+		AND   B.record_center_id = C.record_center_id(+)
+		AND   B.org_cd = C.org_cd(+)
+	</select>
+	
+</sqlMap>

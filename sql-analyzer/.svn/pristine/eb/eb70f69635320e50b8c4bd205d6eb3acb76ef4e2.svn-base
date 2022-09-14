@@ -1,0 +1,26 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+
+findUnitInqPagedList
+Semantic: before ' ,'yyyy-mm-dd'),'yyyymmdd') 		  AND 			B.CREAT_STND_YMD <= to_...'
+Invalid format. select A.RECORD_CENTER_ID, A.UNIT_CD, A.ORG_CD, B.UNIT_NM, B...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : findUnitInqPagedList
+
+		SELECT A.RECORD_CENTER_ID		    , A.UNIT_CD		    , A.ORG_CD		    , B.UNIT_NM		    , B.CREAT_STND_YMD		    , (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD07' AND Z.COM_CD=DECODE(B.PRESV_TERM_CD, '20', '25', B.PRESV_TERM_CD)) AS PRESV_TERM_CD		    , (CASE WHEN A.USE_FLAG='1' THEN '»ç¿ë' WHEN A.USE_FLAG='0' THEN 'ÆóÁö' ELSE '' END) AS USE_FLAG		    , B.SML_CD		    , (SELECT Z.ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.ORG_CD) AS ORG_NM		    , B.LRG_NM||(CASE WHEN B.MID_NM IS NULL THEN '' ELSE '>'||B.MID_NM END)||(CASE WHEN B.SML_NM IS NULL THEN '' ELSE '>'||B.SML_NM END) AS CLSS_PATH_NM		FROM  TB_ZZORGUNIT A		    , TB_ZZUNIT B		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.UNIT_CD = B.UNIT_CD		AND ROWNUM BETWEEN '1' AND '1'		 AND 			A.RECORD_CENTER_ID = '1'    		  AND 			A.ORG_CD = '1'    		  AND 			A.UNIT_CD = '1'		  AND 			A.USE_FLAG = '1'		  AND 			B.CREAT_STND_YMD >= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		  AND 			B.CREAT_STND_YMD <= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		 ;
+
+countUnitInqList
+Semantic: before ' ,'yyyy-mm-dd'),'yyyymmdd') 		  AND 			B.CREAT_STND_YMD <= to_...'
+Invalid format. select count(*) from TB_ZZORGUNIT A, TB_ZZUNIT B where A.REC...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : countUnitInqList
+
+		SELECT COUNT(1)		FROM  TB_ZZORGUNIT A		    , TB_ZZUNIT B		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.UNIT_CD = B.UNIT_CD		 AND 			A.RECORD_CENTER_ID = '1'    		  AND 			A.ORG_CD = '1'    		  AND 			A.UNIT_CD = '1'		  AND 			A.USE_FLAG = '1'		  AND 			B.CREAT_STND_YMD >= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		  AND 			B.CREAT_STND_YMD <= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		 ;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml

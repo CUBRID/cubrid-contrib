@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.clssmng">
+
+	<resultMap id="stnd-presvtermhist-result" class="rms.stnd.clssmng.domain.PresvTermHist" >
+		<result property="bisClssId"				column="BIS_CLSS_ID"/>
+		<result property="creatOrgPresvTermCd"		column="CREAT_ORG_PRESV_TERM_CD"/>
+		<result property="creatOrgPresvTermNm"		column="CREAT_ORG_PRESV_TERM_NM"/>
+		<result property="creatOrgOpin" 			column="CREAT_ORG_OPIN"/>		
+		<result property="creatOrgFixYmd" 			column="CREAT_ORG_FIXYMD"/>	
+		<result property="recordCenterPresvTermCd" 	column="RECORD_CENTER_PRESV_TERM_CD"/>
+		<result property="recordCenterPresvTermNm" 	column="RECORD_CENTER_PRESV_TERM_NM"/>	
+		<result property="recordCenterOpin" 		column="RECORD_CENTER_OPIN"/>	
+		<result property="recordCenterCheckYmd" 	column="RECORD_CENTER_CHECK_YMD"/>	
+		<result property="narsPresvTermCd"			column="NARS_PRESV_TERM_CD"/>
+		<result property="narsPresvTermNm"			column="NARS_PRESV_TERM_NM"/>
+		<result property="narsOpin"					column="NARS_OPIN"/>
+		<result property="narsCheckYmd"				column="NARS_CHECK_YMD"/>
+	</resultMap>
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findPresvTermHist" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermhist-result">
+		SELECT A.BIS_CLSS_ID
+		, A.CREAT_ORG_PRESV_TERM_CD
+		, (SELECT COM_CD_NM
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.CREAT_ORG_PRESV_TERM_CD) CREAT_ORG_PRESV_TERM_NM
+		, A.CREAT_ORG_OPIN
+		, A.CREAT_ORG_FIXYMD
+		, A.RECORD_CENTER_PRESV_TERM_CD
+		, (SELECT COM_CD_NM
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM
+		, A.RECORD_CENTER_OPIN
+		, A.RECORD_CENTER_CHECK_YMD
+		, A.NARS_PRESV_TERM_CD
+		, (SELECT COM_CD_NM
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM
+		, A.NARS_OPIN
+		, A.NARS_CHECK_YMD
+		FROM TB_ZZPRESVTERMHIST A
+		WHERE A.BIS_CLSS_ID = #bisClssId:VARCHAR#	
+	</select>	
+				
+	<!-- 
+		UPDATE(기록관검토시 TB_ZZPRESVTERMHIST에 등록)
+	 -->	
+	<update id="updatePresvTermHist" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZPRESVTERMHIST
+	  SET RECORD_CENTER_PRESV_TERM_CD = (SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#recordCenterPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#recordCenterPresvTermCd:VARCHAR#)
+	  	, RECORD_CENTER_CHECK_YMD = #recordCenterCheckYmd:VARCHAR#
+	  	, RECORD_CENTER_OPIN = #recordCenterOpin:VARCHAR#
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	                          
+	</update>
+	
+	<!-- 기록관확정 조정 시 확정 정보 업데이트 -->
+	<update id="updateNarPresvTermHist" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZPRESVTERMHIST
+	  SET NARS_PRESV_TERM_CD = (SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#narsPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#narsPresvTermCd:VARCHAR#)
+	    , NARS_CHECK_YMD = #narsCheckYmd:VARCHAR#
+	  	, NARS_OPIN = DECODE(#narsOpin:VARCHAR#, '', RECORD_CENTER_OPIN, #narsOpin:VARCHAR# )
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	</update>
+	
+	<!-- 기록관확정 미조정 시 확정 정보 업데이트 -->
+	<update id="updateUnchangeNarPresvTermHist" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZPRESVTERMHIST
+	  SET NARS_PRESV_TERM_CD = (SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#narsPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#narsPresvTermCd:VARCHAR#)
+	    , NARS_CHECK_YMD = #narsCheckYmd:VARCHAR#
+	  	, NARS_OPIN = DECODE(#narsOpin:VARCHAR#, '', RECORD_CENTER_OPIN, #narsOpin:VARCHAR# )
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	</update>
+	
+	<update id="updatePresvStatereg" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZBISCLSS 
+	  SET  PRESV_TERM_CD=(SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#narsPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#narsPresvTermCd:VARCHAR#)
+	      ,PRESV_TERM_FIX_YMD=#narsCheckYmd:VARCHAR#
+	      ,PRESV_TERM_FIX_RSN=#narsOpin:VARCHAR#
+	      ,PRESV_TERM_STATE = #presvTermState:VARCHAR#
+	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 
+	                             FROM TB_ZZBISCLSS
+	                            WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#)
+	      ,PRESV_TERM_FILE_CREAT_STATE='0'
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	</update>
+	<!-- 기록관검토 Update 대상확인 -->
+	<select id="checkUpdateRecordCenterOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZBISCLSS
+		 WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+		   AND PRESV_TERM_STATE IN (1,2)
+		  
+			
+	</select>
+	
+	<!-- 기록관검토 내용 변경 확인 -->
+	<select id="checkChangeRecordCenterOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZPRESVTERMHIST
+		 WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+		   AND RECORD_CENTER_PRESV_TERM_CD IN ( SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#recordCenterPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#recordCenterPresvTermCd:VARCHAR#)
+		   AND RECORD_CENTER_OPIN = #recordCenterOpin:VARCHAR#
+		   
+			
+	</select>
+	<!-- 기록관검토 시 TB_ZZBISCLSS에 보존기간 정보 및 상태 UPDATE -->
+	<update id="updateBisClssPresvTermInfo" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZBISCLSS 
+	  SET  PRESV_TERM_CD=(SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#recordCenterPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#recordCenterPresvTermCd:VARCHAR#)
+	      ,PRESV_TERM_FIX_YMD=#recordCenterCheckYmd:VARCHAR#
+	      ,PRESV_TERM_FIX_RSN=#recordCenterOpin:VARCHAR#
+	      ,RECORD_CENTER_CONFM_FLAG=#recordCenterConfmFlag:VARCHAR#
+	      ,PRESV_TERM_STATE = #presvTermState:VARCHAR#
+	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 
+	                                 FROM TB_ZZBISCLSS
+	                                WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#)
+	      ,PRESV_TERM_FILE_CREAT_STATE='0'
+	      ,FUNSH_FLAG=#funshFlag:VARCHAR#
+	      ,FUNSH_RSN=#funshRsn:VARCHAR#
+	      ,FUNSH_TERM=#funshTerm:VARCHAR#
+	      ,OPEN_DETL_STND=#openDetlStnd:VARCHAR#
+	      ,READ_RANGE_DETL_STND=#readRangeDetlStnd:VARCHAR#
+	      ,WRITE_FLAG=#writeFlag:VARCHAR#
+	      <dynamic>
+	      <isNotEmpty property="taskDescr">
+	      ,TASK_DESCR=#taskDescr:VARCHAR#
+	      </isNotEmpty>
+	      </dynamic>
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	 </update>
+	 
+	 <!-- 기록관검토 시 TB_ZZBISCLSS에 단위과제 설명  UPDATE -->
+	<update id="updateTaskDescr" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZBISCLSS 
+	  SET TASK_DESCR=#taskDescr:VARCHAR#
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	 </update>
+	 
+	<!-- 기록원 재조정 신청대상 단위과제 갯수 조회(기록관 검토가 완료된 파일)-->
+	<resultMap id="stnd-presvtermcount-result" class="rms.stnd.clssmng.domain.PresvTermHist" >
+		<result property="maxDTime"		column="MAX_DTIME"/>
+		<result property="minDTime"		column="MIN_DTIME"/>
+		<result property="countFile"	column="COUNT_FILE"/>
+	</resultMap>
+	
+	<select id="findPresvTermCount" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermcount-result">
+	    SELECT MAX(START_DTIME) MAX_DTIME,MIN(START_DTIME) MIN_DTIME,COUNT(1) COUNT_FILE
+	    FROM TB_ZZBISCLSS 
+	    WHERE LEVL='6'
+	    <dynamic>
+	        <isNotEmpty property="hwakjongFlag">    
+	            <isEqual prepend="AND" property="hwakjongFlag" compareValue="1">
+	                PRESV_TERM_STATE=4
+	            </isEqual>
+	            <isEqual prepend="AND" property="hwakjongFlag" compareValue="0">            
+	                PRESV_TERM_STATE IN (2,3)
+	            </isEqual>                
+	        </isNotEmpty>
+	    </dynamic>
+	</select>
+	<!-- 
+	<select id="findPresvTermCount" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermcount-result">
+		SELECT MAX(START_DTIME) MAX_DTIME,MIN(START_DTIME) MIN_DTIME,COUNT(1) COUNT_FILE
+		FROM (
+		      SELECT DISTINCT B.BIS_CLSS_ID,A.START_DTIME
+		        FROM TB_ZZBISCLSS A, TB_ZZBISORG B, TB_ZZPRESVTERMHIST C
+		       WHERE A.PRESV_TERM_STATE = '3' AND A.PRESV_TERM_FILE_CREAT_STATE='0'
+			     AND A.BIS_CLSS_ID=B.BIS_CLSS_ID
+		         AND A.BIS_CLSS_ID=C.BIS_CLSS_ID
+		         AND A.LEVL='6' 
+		         AND B.ORG_CD in (SELECT ORG_CD FROM TB_STORG WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#))
+	</select>
+	 -->
+	<resultMap id="stnd-presvtermrecvlist-result" class="rms.stnd.clssmng.domain.PresvTermHist" >
+<!-- 		<result property="recordCenterNm"			column="RECORD_CENTER_NM"/>  -->
+		<result property="presvTermMediReqYyyy"		column="PRESV_TERM_MEDI_REQ_YYYY"/>
+		<result property="repOrgCd"		            column="REP_ORG_CD"/>
+		<result property="listLineNo" 			    column="LIST_LINE_NO"/>		
+		<result property="presvTermRecvErrorCont" 	column="PRESV_TERM_RECV_ERROR_CONT"/>	
+	
+	</resultMap>	
+	<!-- 
+	<select id="findPresvTermReqRecvRsltList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermrecvlist-result">
+		SELECT B.RECORD_CENTER_NM, 		       
+			   A.PRESV_TERM_MEDI_REQ_YYYY, 
+			   A.SEND_FILE_DATA_DIV,		       
+			   A.REP_ORG_CD, 		       
+			   A.LIST_LINE_NO, 		       
+               A.PRESV_TERM_RECV_ERROR_CONT 		
+        FROM  TB_ZZPRESVRECVRSLT A, TB_STRECORDCENTER B 		
+        WHERE A.REP_ORG_CD = (SELECT RECORD_CENTER_CD FROM TB_STRECORDCENTER WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#) 
+			  AND A.REP_ORG_CD=B.RECORD_CENTER_CD
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+				A.PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>
+	 -->
+	 <select id="findPresvTermReqRecvRsltList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermrecvlist-result">
+		SELECT A.PRESV_TERM_MEDI_REQ_YYYY, 
+			   A.SEND_FILE_DATA_DIV,		       
+			   A.REP_ORG_CD, 		       
+			   A.LIST_LINE_NO, 		       
+               A.PRESV_TERM_RECV_ERROR_CONT 		
+        FROM  TB_ZZPRESVRECVRSLT A 		
+        <dynamic>			
+			<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+				A.PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>	
+	<select id="countPresvTermReqRecvRsltList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="int">
+		SELECT COUNT(1)
+		FROM  TB_ZZPRESVRECVRSLT A 		
+       <dynamic>			
+			<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+				A.PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>	
+	<resultMap id="stnd-presvtermReq-result" class="rms.stnd.clssmng.domain.PresvTermHist" >
+		<result property="sendFileDataDiv"		column="SEND_FILE_DATA_DIV"/>
+		<result property="presvTermMediReqYyyy"		column="PRESV_TERM_MEDI_REQ_YYYY"/>
+		<result property="repOrgCd"		            column="REP_ORG_CD"/>
+		<result property="listLineNo" 			    column="LIST_LINE_NO"/>		
+		<result property="presvTermRecvErrorCont" 	column="PRESV_TERM_RECV_ERROR_CONT"/>	
+	    <result property="recvFileDtime" 	        column="RECV_FILE_DTIME"/>	
+	    <result property="regDtime" 	            column="REG_DTIME"/>	
+	</resultMap>
+	<select id="findPresvTermReqList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermReq-result">
+		SELECT REP_ORG_CD,
+			   PRESV_TERM_MEDI_REQ_YYYY, 
+		       SEND_FILE_DATA_DIV, 
+		       LIST_LINE_NO, 
+		       PRESV_TERM_RECV_ERROR_CONT,
+		       RECV_FILE_DTIME, 
+		       REG_DTIME 
+		FROM  TB_ZZPRESVRECVRSLT 
+		ORDER BY RECV_FILE_DTIME
+	</select>
+	<insert id="creatPresvTermReqFileInfo" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	INSERT INTO TB_ZZPRESVRECVRSLT (PRESV_TERM_MEDI_REQ_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,
+									PRESV_TERM_RECV_ERROR_CONT,REG_DTIME,RECV_FILE_DTIME)
+			VALUES(#presvTermMediReqYyyy:VARCHAR#,#repOrgCd:VARCHAR#,#sendFileDataDiv:VARCHAR#,#listLineNo:VARCHAR#,
+			       #presvTermRecvErrorCont:VARCHAR#,#regDtime:VARCHAR#,#recvFileDtime:VARCHAR#
+			)
+	</insert>
+	
+	<!-- 보존기간 관련 작업이력 등록 -->
+	<insert id="creatBisClssHistInfo" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+		INSERT INTO TB_ZZBISCLSSHIST
+		(
+			BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL
+			, SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG
+			, LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN
+			, RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME
+		)
+		(
+	       SELECT BIS_CLSS_ID,
+	              (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 
+	                 FROM TB_ZZBISCLSSHIST 
+	               WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#) BIS_CLSS_HIST_NO,
+	               BIS_CLSS_NM,
+	               UPPER_BIS_CLSS_ID,
+	               LEVL,
+	               SORT_SNO,
+	               BIS_TYPE,START_DTIME,
+	               CLOSE_DTIME,
+	               DEL_FLAG,
+	               LAW_BASIS,
+	              (SELECT COM_CD 
+	                  FROM TB_ZZCOMCD 
+	                 WHERE COM_TYPE_CD='RD07'
+	                   AND COM_CD=#recordCenterPresvTermCd:VARCHAR#
+	               UNION
+	               SELECT COM_CD
+	                 FROM TB_ZZCOMCD
+	                WHERE COM_TYPE_CD='RD07'
+	                  AND COM_CD_NM=#recordCenterPresvTermCd:VARCHAR#) PRESV_TERM_CD,
+	               PRESV_TERM_HANDL_STATE,
+	               #recordCenterCheckYmd:VARCHAR# PRESV_TERM_FIX_YMD,
+	               #recordCenterOpin:VARCHAR# PRESV_TERM_FIX_RSN,
+	               '1' RECORD_CENTER_CONFM_FLAG,
+                   TASK_DESCR,
+                   <!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') WORK_DTIME,-->
+                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') WORK_DTIME,
+                   #workTypeCd:VARCHAR# WORK_TYPE_CD,
+                   <!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') LINK_DTIME-->
+                   TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') LINK_DTIME
+            FROM TB_ZZBISCLSS
+           WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+		)
+	 </insert>
+	<!-- 기록관확정 대상확인 -->
+	<select id="checkConfmReq" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZBISCLSS
+		 WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+		   AND ((PRESV_TERM_HANDL_STATE = 0
+           AND PRESV_TERM_FILE_CREAT_STATE = 1
+           AND PRESV_TERM_STATE = 3)
+           OR PRESV_TERM_STATE =4)
+	</select>
+	<select id="checkBisClssHist" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZBISCLSSHIST
+		 WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+		 <dynamic>
+	      <isNotEmpty property="narsPresvTermCd">
+		   AND PRESV_TERM_CD =(SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#narsPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#narsPresvTermCd:VARCHAR#)
+	      </isNotEmpty>
+	      </dynamic>
+		   AND PRESV_TERM_FIX_RSN=#narsOpin:VARCHAR#
+           AND WORK_TYPE_CD='4'
+	</select>
+	<!-- 기록관확정 업데이트 -->
+	<update id="updateBisClssPresvTermNarsInfo" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+	  UPDATE TB_ZZBISCLSS 
+	  SET  
+	      <dynamic>
+	      <!-- 조정 -->
+	       <isEqual property="rsltDivCd" compareValue="01">
+	       PRESV_TERM_CD=(SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#recordCenterPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#recordCenterPresvTermCd:VARCHAR#)
+	      ,PRESV_TERM_FIX_YMD=#recordCenterCheckYmd:VARCHAR#
+	      ,PRESV_TERM_FIX_RSN=#recordCenterOpin:VARCHAR#
+	      ,RECORD_CENTER_CONFM_FLAG=#recordCenterConfmFlag:VARCHAR#
+	      ,PRESV_TERM_STATE = '4'
+	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 
+	                                 FROM TB_ZZBISCLSS
+	                                WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#)
+	      ,PRESV_TERM_FILE_CREAT_STATE=#presvTermFileCreatState:VARCHAR#
+	      <!-- 미조정 -->
+	      </isEqual>
+	      <isEqual property="rsltDivCd" compareValue="02">
+	      PRESV_TERM_STATE = '4'
+	      ,PRESV_TERM_HANDL_STATE=(SELECT DECODE(NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0),0,1,NVL(PRESV_TERM_HANDL_STATE,0)+NVL(PRESV_TERM_FILE_CREAT_STATE,0)) 
+	                                 FROM TB_ZZBISCLSS
+	                                WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#)
+	      ,PRESV_TERM_FILE_CREAT_STATE=#presvTermFileCreatState:VARCHAR#
+	      </isEqual>
+	      </dynamic>
+	      <dynamic>
+	      <isNotEmpty property="taskDescr">
+	      ,TASK_DESCR=#taskDescr:VARCHAR#
+	      </isNotEmpty>
+	      </dynamic>
+	  WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	 </update>
+	 <!-- 기록관확정 내용 변경 확인 -->
+	<select id="checkChangeNarsOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZPRESVTERMHIST
+		 WHERE BIS_CLSS_ID=#bisClssId:VARCHAR#
+		   AND (
+		   (RECORD_CENTER_PRESV_TERM_CD IN ( SELECT COM_CD 
+	                                           FROM TB_ZZCOMCD 
+	                                          WHERE COM_TYPE_CD='RD07'
+	                                            AND COM_CD=#recordCenterPresvTermCd:VARCHAR#
+	                                          UNION
+	                                         SELECT COM_CD
+	                                           FROM TB_ZZCOMCD
+	                                          WHERE COM_TYPE_CD='RD07'
+	                                            AND COM_CD_NM=#recordCenterPresvTermCd:VARCHAR#)
+		    AND RECORD_CENTER_OPIN = #recordCenterOpin:VARCHAR#)
+		   OR
+		   (NARS_PRESV_TERM_CD IN ( SELECT COM_CD 
+	                                       FROM TB_ZZCOMCD 
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD=#narsPresvTermCd:VARCHAR#
+	                                     UNION
+	                                     SELECT COM_CD
+	                                       FROM TB_ZZCOMCD
+	                                      WHERE COM_TYPE_CD='RD07'
+	                                        AND COM_CD_NM=#narsPresvTermCd:VARCHAR#)
+	        AND NARS_OPIN = #narsOpin:VARCHAR#))
+	</select>
+	
+	<!--
+		기록관확정 : 기록관의견 최종값 조회 
+	 -->
+	<resultMap id="findBisClssHistRcOpin-result" class="rms.stnd.clssmng.domain.PresvTermHist" >
+		<result property="recordCenterPresvTermCd"		column="record_center_presv_term_cd"/>
+		<result property="recordCenterOpin"				column="record_center_opin"/>
+	</resultMap>
+	<select id="findBisClssHistRcOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="findBisClssHistRcOpin-result">
+		SELECT A.presv_term_cd AS record_center_presv_term_cd, A.presv_term_fix_rsn AS record_center_opin
+		FROM  TB_ZZBISCLSSHIST A
+		WHERE A.bis_clss_id = #bisClssId:VARCHAR#
+		AND   A.work_type_cd = '3'
+		AND   A.work_dtime = (SELECT MAX(B.work_dtime) FROM TB_ZZBISCLSSHIST B WHERE B.bis_clss_id=A.bis_clss_id AND B.work_type_cd = '3')
+	</select>
+	
+	<!--
+		기록관확정 : 단위과제
+	 -->
+	<update id="updateBisClssNaOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+		UPDATE TB_ZZBISCLSS
+		SET   presv_term_cd = #narsPresvTermCd:VARCHAR#
+			, presv_term_file_creat_state = #presvTermFileCreatState:VARCHAR#
+			, presv_term_fix_ymd = #narsCheckYmd:VARCHAR#
+			, presv_term_fix_rsn = #narsOpin:VARCHAR#
+			, presv_term_handl_state = '1'
+			, presv_term_state = '4'
+			, resubmit_flag = '0'
+		WHERE bis_clss_id = #bisClssId:VARCHAR#
+	</update>
+	
+	<!--
+		기록관확정 : 단위과제이력
+	 -->
+	<insert id="createBisClssHistNaOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+		INSERT INTO TB_ZZBISCLSSHIST 
+		(
+		    BIS_CLSS_ID, BIS_CLSS_HIST_NO, BIS_CLSS_NM, UPPER_BIS_CLSS_ID, LEVL
+		    , SORT_SNO, BIS_TYPE, START_DTIME, CLOSE_DTIME, DEL_FLAG
+		    , LAW_BASIS, PRESV_TERM_CD, PRESV_TERM_HANDL_STATE, PRESV_TERM_FIX_YMD, PRESV_TERM_FIX_RSN
+		    , RECORD_CENTER_CONFM_FLAG, TASK_DESCR, WORK_DTIME, WORK_TYPE_CD, LINK_DTIME
+		)
+		(
+			SELECT  A.BIS_CLSS_ID
+			    , (SELECT NVL(MAX(BIS_CLSS_HIST_NO),0)+1 FROM TB_ZZBISCLSSHIST B WHERE B.BIS_CLSS_ID=A.BIS_CLSS_ID) BIS_CLSS_HIST_NO
+			    , A.BIS_CLSS_NM
+			    , A.UPPER_BIS_CLSS_ID
+			    , A.LEVL
+			    , A.SORT_SNO
+			    , A.BIS_TYPE
+			    , A.START_DTIME
+			    , A.CLOSE_DTIME
+			    , A.DEL_FLAG
+			    , A.LAW_BASIS
+			    , #narsPresvTermCd:VARCHAR# AS PRESV_TERM_CD
+			    , '1' AS PRESV_TERM_HANDL_STATE
+			    , #narsCheckYmd:VARCHAR# AS PRESV_TERM_FIX_YMD
+			    , #narsOpin:VARCHAR# AS PRESV_TERM_FIX_RSN
+			    , '1' AS RECORD_CENTER_CONFM_FLAG
+			    , A.TASK_DESCR
+			    <!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS WORK_DTIME-->
+			    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') AS WORK_DTIME
+			    , '4' WORK_TYPE_CD
+			    <!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS LINK_DTIME-->
+			    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') AS LINK_DTIME
+			FROM TB_ZZBISCLSS A
+			WHERE A.BIS_CLSS_ID = #bisClssId:VARCHAR#
+		)
+	</insert>
+	
+	<!--
+		기록관확정 : 보존기간이력
+	 -->
+	<update id="updatePresvTermHistNaOpin" parameterClass="rms.stnd.clssmng.domain.PresvTermHist">
+		UPDATE TB_ZZPRESVTERMHIST
+		SET   NARS_PRESV_TERM_CD = #narsPresvTermCd:VARCHAR#
+		    , NARS_OPIN = #narsOpin:VARCHAR#
+		    , NARS_CHECK_YMD = #narsCheckYmd:VARCHAR#
+		WHERE BIS_CLSS_ID = #bisClssId:VARCHAR#
+	</update>
+	
+	<resultMap id="findTaskMonitorPagedList-result" class="rms.stnd.clssmng.domain.TaskMonitor" >
+		<result property="rnum" 							column="RNUM"/>
+		<result property="fileNm" 							column="FILE_NM"/>
+		<result property="erecordFileCnt" 					column="ERECORD_FILE_CNT"/>
+		<result property="svcReqTme" 						column="SVC_REQ_TME"/>
+		<result property="svcHandlFinTme" 					column="SVC_HANDL_FIN_TME"/>
+		<result property="succFailFlag" 					column="SUCC_FAIL_FLAG"/>
+		<result property="errorCd" 							column="ERROR_CD"/>
+		<result property="errorMsg" 						column="ERROR_MSG"/>
+		<result property="errorDetlCont" 					column="ERROR_DETL_CONT"/>
+	</resultMap>
+	<!-- 
+		단위과제모니터링
+	 -->
+	<select id="findTaskMonitorPagedList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist"  resultMap="findTaskMonitorPagedList-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS num
+				, C.*
+			FROM (
+		SELECT X.RNUM
+		      ,X.FILE_NM
+		      ,X.ERECORD_FILE_CNT
+		      ,X.SVC_REQ_TME
+		      ,X.SVC_HANDL_FIN_TME
+		      ,X.SUCC_FAIL_FLAG
+		      ,Y.ERROR_CD
+		      ,Y.ERROR_MSG
+		      ,Y.ERROR_DETL_CONT
+		FROM   (SELECT ROW_NUMBER() OVER (ORDER BY B.SEND_LIST_LOG_SNO DESC, A.LOG_SNO) AS RNUM
+		              ,A.LOG_SNO
+		              ,A.FILE_NM
+		              ,A.ERECORD_FILE_CNT
+		              ,SUBSTR(A.SVC_REQ_TME, 1, 19) AS SVC_REQ_TME
+		              ,SUBSTR(A.SVC_HANDL_FIN_TME, 1, 19) AS SVC_HANDL_FIN_TME
+		              ,A.SUCC_FAIL_FLAG
+		        FROM   TB_STLOGMONITOR A
+		              ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM
+		                      ,MIN(BA.LOG_SNO) AS SEND_LIST_LOG_SNO
+		                FROM   TB_STLOGMONITOR BA
+		                WHERE  BA.FILE_NM LIKE '________UNITBS_REQ_' || #presvTermMediReqYyyy:VARCHAR# || '%'
+		                <!-- AND    BA.LOG_JOB_DIV = '2' -->
+		                GROUP BY BA.SEND_LIST_FILE_NM
+		                ) B
+		        WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM
+		        AND    A.SVC_DIV = 'T'
+		        <!-- AND    A.LOG_JOB_DIV = '2'  -->
+		        ) X
+		      ,(SELECT YA.LOG_SNO
+		              ,YB.ERROR_CD
+		              ,YB.ERROR_MSG
+		              ,YB.ERROR_DETL_CONT
+		        FROM   (SELECT B.LOG_SNO
+		                      ,MIN(A.ERROR_LOG_SNO) AS ERROR_LOG_SNO
+		                FROM   TB_STERRORLOG A
+		                      ,(SELECT BA.LOG_SNO
+		                              ,BA.FILE_NM
+		                              ,BA.LOG_CREAT_TME
+		                        FROM   TB_STLOGMONITOR BA
+		                              ,(SELECT DISTINCT BBA.SEND_LIST_FILE_NM
+		                                FROM   TB_STLOGMONITOR BBA
+		                                WHERE  BBA.FILE_NM LIKE '________UNITBS_REQ_' || #presvTermMediReqYyyy:VARCHAR# || '%'
+		                                <!-- AND    BBA.LOG_JOB_DIV = '2' --> 
+		                                ) BB
+		                        WHERE  BA.SEND_LIST_FILE_NM = BB.SEND_LIST_FILE_NM
+		                        AND    BA.SUCC_FAIL_FLAG = 'F'
+		                        AND    BA.SVC_DIV = 'T'
+		                        <!-- AND    BA.LOG_JOB_DIV = '2' --> 
+		                        ) B
+		                WHERE   SUBSTR(A.FILE_NM, DECODE(INSTR(A.FILE_NM, '/', -1), 0, 0, INSTR(A.FILE_NM, '/', -1)+1)) = B.FILE_NM
+		                AND     A.LOG_CREAT_TME <![CDATA[<=]]> B.LOG_CREAT_TME
+		                GROUP BY LOG_SNO) YA
+		               ,TB_STERRORLOG YB
+		        WHERE  YA.ERROR_LOG_SNO = YB.ERROR_LOG_SNO) Y
+		WHERE  X.LOG_SNO = Y.LOG_SNO(+)
+		ORDER BY RNUM
+					) C
+						WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+					) B
+					WHERE B.num <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+
+	<!-- 
+		단위과제모니터링카운트
+	 -->
+	<select id="countTaskMonitorPagedList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist"  resultClass="long">
+		SELECT COUNT(*) AS CNT
+		FROM   TB_STLOGMONITOR A
+		      ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM
+		        FROM   TB_STLOGMONITOR BA
+		        WHERE  BA.FILE_NM LIKE '________UNITBS_REQ_' || #presvTermMediReqYyyy:VARCHAR# || '%'
+		       <!--  AND    BA.LOG_JOB_DIV = '2' --> 
+		       ) B
+		WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM
+		AND    A.SVC_DIV = 'T'
+		<!-- AND    A.LOG_JOB_DIV = '2' -->
+	</select>
+</sqlMap>

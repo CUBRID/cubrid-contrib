@@ -1,0 +1,179 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : countMuseumRegtPagedList
+
+		SELECT COUNT(*)        FROM TB_ADARCHIVALOBJ        WHERE RECORD_CENTER_ID = '1'         AND              CLSS = '1'          AND             SHAPE = '1'          AND 			MATERIAL = '1'		  AND 			DST_FLAG = '1'		  AND 			CREAT_REG_DTIME >= '1'		  AND 			END_YMD <= '1' 		  AND 			ADMNATNLHIST_NM LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumRegtPagedList
+
+	SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (        SELECT             A.RECORD_CENTER_ID,            A.ADMNATNL_ID,            A.ADMNATNL_RELNO,            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD01' AND COM_CD = A.CLSS) AS CLSS,            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD02' AND COM_CD = A.SHAPE) AS SHAPE,             ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD03' AND COM_CD = A.MATERIAL) AS MATERIAL,                        A.ADMNATNLHIST_NM,            A.CREAT_REG_DTIME,            A.END_YMD,            A.ADM_PROG_STATE,            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'GV06' AND COM_CD = A.DST_FLAG) AS DST_FLAG,            A.DST_FLAG AS DIST_FLAG_CD,            A.CRNT_HAND_CNT,            A.TRANSF_HANDL_STATE,            A.MGR_ORG_CD,            A.PRESERV_PLACE        FROM TB_ADARCHIVALOBJ A        WHERE A.RECORD_CENTER_ID = '1' AND             SUBSTR(A.ADMNATNL_ID, 1,7) = '1'          AND 		 	A.CLSS = '1'		  AND 			A.SHAPE = '1'		  AND 			A.MATERIAL = '1'		  AND 			A.DST_FLAG = '1'		  AND 			A.CREAT_REG_DTIME >= '1'		  AND 			A.END_YMD <= '1' 		  AND 			A.ADMNATNLHIST_NM LIKE '1'		 		ORDER BY RECORD_CENTER_ID, ADMNATNL_ID DESC		 ) B        WHERE ROWNUM <= '1'    ) C    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : countMuseumTransPagedList
+
+		SELECT COUNT(1)		FROM  TB_ADARCHIVALOBJ		WHERE RECORD_CENTER_ID = '1'		AND   DST_FLAG != '1' AND             SUBSTR(A.ADMNATNL_ID, 1,7) = '1'          AND 			CLSS = '1'		  AND 			SHAPE = '1'		  AND 			MATERIAL = '1'  AND 			TRANSF_HANDL_STATE = '1'		  AND 			CREAT_REG_DTIME >= '1'		  AND 			END_YMD <= '1' 		  AND 			ADMNATNLHIST_NM LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumTransPagedList
+
+	SELECT C.*	    FROM (	        SELECT ROWNUM AS rnum	            , B.*	        FROM (	        SELECT 	            A.RECORD_CENTER_ID,	            A.ADMNATNL_ID,	            A.ADMNATNL_RELNO,	            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD01' AND COM_CD = A.CLSS) AS CLSS,	            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD02' AND COM_CD = A.SHAPE) AS SHAPE, 	            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD03' AND COM_CD = A.MATERIAL) AS MATERIAL,            	            A.ADMNATNLHIST_NM,	            A.CREAT_REG_DTIME,	            A.END_YMD,	            A.ADM_PROG_STATE,	            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'GV06' AND COM_CD = A.DST_FLAG) AS DST_FLAG,	            A.DST_FLAG AS DIST_FLAG_CD,	            A.CRNT_HAND_CNT,	            ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'AD04' AND COM_CD = NVL(A.TRANSF_HANDL_STATE, '01')) AS TRANSF_HANDL_STATE,	            NVL(TRANSF_HANDL_STATE, '01') AS TRANSF_HANDL_STATE_CD	        FROM TB_ADARCHIVALOBJ A	        WHERE RECORD_CENTER_ID = '1'	        AND DST_FLAG != '1' AND 			 	A.CLSS = '1'			  AND 				A.SHAPE = '1'			  AND 				A.MATERIAL = '1'			  AND 				A.TRANSF_HANDL_STATE = '1'			  AND 				A.CREAT_REG_DTIME >= '1'			  AND 				A.END_YMD <= '1' 			  AND 				A.ADMNATNLHIST_NM LIKE '1'			 			ORDER BY RECORD_CENTER_ID, ADMNATNL_ID DESC				) B	        WHERE ROWNUM <= '1'	    ) C	    WHERE C.rnum >= '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumAdmnatnlId
+
+ 		SELECT 			LPAD (NVL (MAX (SUBSTR (admnatnl_id, 12)), 0) + 1, 6, 0) museum_seq 		FROM TB_ADARCHIVALOBJ B 		WHERE     SUBSTR (B.admnatnl_id, 0, 7) = '1' 	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumRegStakrmIdList
+
+            SELECT RECORD_CENTER_ID, STAKRM_ID, STAKRM_NM, KEEP_BOOKSF_CNT, REMK            FROM TB_SRSTAKRM            WHERE RECORD_CENTER_ID = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumRegbooksfIdList
+
+            SELECT RECORD_CENTER_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_NM            FROM TB_SRBOOKSF            WHERE RECORD_CENTER_ID = '1'            AND STAKRM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumlIdCheck
+
+			SELECT COUNT(1) AS IDCHECK			FROM TB_ADARCHIVALOBJ			WHERE RECORD_CENTER_ID = '1'			AND ADMNATNL_ID = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : insert
+-- Query Id : createMuseumRegist
+
+	    INSERT INTO TB_ADARCHIVALOBJ (			RECORD_CENTER_ID, ADMNATNL_ID, ADMNATNL_RELNO, CLSS, SHAPE, MATERIAL, ADMNATNLHIST_NM, SUMRY, CREAT_ORG_CD, CREAT_YYYY, 			CREAT_REG_DTIME, END_YMD, OBTAIN_YMD, SIZE_NM, SIZE_DIV, QTY, OBTAIN_CIRCUMSTANC, REMK, ADM_PROG_STATE, OPEN_DIV_CD, OPEN_GRADE, PART_OPEN_RSN, CR_REPORT_YMD, 			TRANSF_HANDL_STATE, TRANSF_YMD, DONOR, PRESERV_PLACE, FIT_FLAG, FUNSH_RSN, FIT_END_YMD, FRST_HAND_CNT, CRNT_HAND_CNT, STAKRM_ID, BOOKSF_ID, MGR_ORG_CD, REG_DTIME	    ) VALUES (			'1', '1', '1', '1', '1', '1', '1', '1', '1', SUBSTR(REPLACE('1', '-', ''),1,4), 			REPLACE('1', '-', ''), REPLACE('1', '-', ''), REPLACE('1', '-', ''), '1', '1', '1', '1', '1', '1', 			'1', '1', '1', '1', '01', '1', '1', '1', '1', '1', REPLACE('1', '-', ''),			                        '1', '1', '1', '1', '1', TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')	     );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : insert
+-- Query Id : createMuseumUpload
+
+            INSERT INTO TB_ADARCHIVALOBJIMG ( RECORD_CENTER_ID, ADMNATNL_ID, IMG_SEQ, IMGFILE_NM, IMGFILE_PATH, STORE_FILE_NM)            VALUES ( '1', '1',              '1',             '1', '1', '1')     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findUpdateMuseumReg
+
+		    SELECT 		        A.RECORD_CENTER_ID,		        A.ADMNATNL_ID,		        A.ADMNATNL_RELNO,		        A.CLSS,		        A.SHAPE,		        A.MATERIAL,		        A.ADMNATNLHIST_NM,		        A.SUMRY,		        A.CREAT_ORG_CD,		        A.CREAT_YYYY,		        A.CREAT_REG_DTIME,                SUBSTR(A.CREAT_REG_DTIME,1,8) CREAT_REG_DTIME1,		        A.END_YMD,		        A.OBTAIN_YMD,		        A.SIZE_NM,		        A.SIZE_DIV,		        A.QTY,		        A.OBTAIN_CIRCUMSTANC,		        A.REMK,		        A.ADM_PROG_STATE,		        A.OPEN_DIV_CD,		        A.OPEN_GRADE,			    SUBSTR(A.OPEN_GRADE,1,1) OPEN_GRADE1,			    SUBSTR(A.OPEN_GRADE,2,1) OPEN_GRADE2,			    SUBSTR(A.OPEN_GRADE,3,1) OPEN_GRADE3,			    SUBSTR(A.OPEN_GRADE,4,1) OPEN_GRADE4,			    SUBSTR(A.OPEN_GRADE,5,1) OPEN_GRADE5,			    SUBSTR(A.OPEN_GRADE,6,1) OPEN_GRADE6,			    SUBSTR(A.OPEN_GRADE,7,1) OPEN_GRADE7,			    SUBSTR(A.OPEN_GRADE,8,1) OPEN_GRADE8,    		        		        A.PART_OPEN_RSN,		        A.CR_REPORT_YMD,		        A.TRANSF_HANDL_STATE,		        A.TRANSF_YMD,		        A.DONOR,		        A.PRESERV_PLACE,		        A.FIT_FLAG,		        A.FUNSH_RSN,		        A.FIT_END_YMD,		        A.FRST_HAND_CNT,		        A.CRNT_HAND_CNT,		        A.STAKRM_ID,		        A.BOOKSF_ID,		        A.MGR_ORG_CD,                B.ORG_NM,                B.ORG_CD,                (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = A.MGR_ORG_CD AND RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS MGR_ORG_NM                		    FROM TB_ADARCHIVALOBJ A,                 TB_STORG B		    WHERE A.RECORD_CENTER_ID = '1'		    AND   A.ADMNATNL_ID = '1'            AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID            AND   A.CREAT_ORG_CD = B.ORG_CD;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMuseumAttachFileList
+
+		SELECT 			RECORD_CENTER_ID,			ADMNATNL_ID,			IMG_SEQ,			IMGFILE_NM,			IMGFILE_PATH,			STORE_FILE_NM		FROM TB_ADARCHIVALOBJIMG		WHERE RECORD_CENTER_ID = '1'		AND ADMNATNL_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumRegist
+
+		    UPDATE TB_ADARCHIVALOBJ            SET  ADMNATNL_RELNO = '1',                 CLSS = '1',                 SHAPE = '1',                 MATERIAL = '1',                 ADMNATNLHIST_NM = '1',                 SUMRY = '1',                 CREAT_ORG_CD = '1',                 CREAT_YYYY = SUBSTR(REPLACE('1', '-', ''),1,4),                                  CREAT_REG_DTIME = '1',                 END_YMD = '1',                 OBTAIN_YMD = '1',                                  SIZE_NM = '1',                 SIZE_DIV = '1',                              QTY = '1',                 OBTAIN_CIRCUMSTANC = '1',                 REMK = '1',                 OPEN_DIV_CD = '1',                 OPEN_GRADE = '1',                 PART_OPEN_RSN = '1',                 CR_REPORT_YMD = '1',                 TRANSF_YMD = '1',                 DONOR = '1',                 PRESERV_PLACE = '1',                                  FIT_FLAG = '1',                 FUNSH_RSN = '1',                                  FIT_END_YMD = '1',                                  FRST_HAND_CNT = '1',                 CRNT_HAND_CNT = '1',                 STAKRM_ID = '1',                 BOOKSF_ID = '1',                 MGR_ORG_CD = '1'                                          WHERE RECORD_CENTER_ID = '1'            AND ADMNATNL_ID = '1'         		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : delete
+-- Query Id : deleteMuseumAttachFile
+
+		DELETE FROM TB_ADARCHIVALOBJIMG		WHERE RECORD_CENTER_ID = '1'		AND ADMNATNL_ID = '1'		AND IMG_SEQ = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findMaxMuseumFileReq
+
+		SELECT 			NVL (MAX (TO_NUMBER (IMG_SEQ)), '0') + 1 AS IMG_SEQ		FROM TB_ADARCHIVALOBJIMG		WHERE record_center_id = '1'		AND ADMNATNL_ID = '1'			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findRevrslInfoMuseumRegist
+
+	    SELECT RECORD_CENTER_ID, ADMNATNL_ID, FRST_HAND_CNT, CRNT_HAND_CNT	    FROM TB_ADARCHIVALOBJ	    WHERE RECORD_CENTER_ID ='1' 	    AND ADMNATNL_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : select
+-- Query Id : findDetailMuseumRevers
+
+		    SELECT 		        RECORD_CENTER_ID,		        ADMNATNL_ID,		        ADARCHIVAL_DST_REQ,		        ADARCHIVAL_DST_RSN,		        		        TO_CHAR(TO_DATE(DST_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') DST_YMD,		        DST_CNT		            		    FROM TB_ADARCHIVAL_DST		    WHERE RECORD_CENTER_ID = '1'		    AND ADMNATNL_ID = '1'		    ORDER BY TO_NUMBER(ADARCHIVAL_DST_REQ) DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : insert
+-- Query Id : createMuseumRevrsl
+
+			INSERT INTO TB_ADARCHIVAL_DST ( RECORD_CENTER_ID, ADMNATNL_ID, ADARCHIVAL_DST_REQ, ADARCHIVAL_DST_RSN, DST_YMD, DST_CNT)			                        VALUES ( '1', '1',  (SELECT NVL(MAX(TO_NUMBER(ADARCHIVAL_DST_REQ)), '0') + 1 FROM TB_ADARCHIVAL_DST WHERE RECORD_CENTER_ID = '1' AND ADMNATNL_ID = '1'), '1', TO_CHAR(sys_datetime,'YYYYMMDD'), '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumRevrsl
+
+			UPDATE TB_ADARCHIVALOBJ			SET CRNT_HAND_CNT = '1'			WHERE RECORD_CENTER_ID = '1' 			AND ADMNATNL_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : insert
+-- Query Id : createMuseumDisuse
+
+			INSERT INTO TB_ADARCHIVALOBJDISUSE ( RECORD_CENTER_ID, ADMNATNL_ID, DISUSE_RSN, CREAT_ORG_OPIN, SPC_OPIN, EVAL_DISCU_OPIN, DISUSE_YMD )						VALUES ( '1', '1', '1', '1', '1', '1', TO_CHAR(sys_datetime,'YYYYMMDD'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumDisuseDsfFlag
+
+			UPDATE TB_ADARCHIVALOBJ			SET DST_FLAG = '1',			CRNT_HAND_CNT = 0			WHERE RECORD_CENTER_ID = '1' 			AND ADMNATNL_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumTransSeltn
+
+		UPDATE TB_ADARCHIVALOBJ		SET   TRANSF_HANDL_STATE = '02'		WHERE RECORD_CENTER_ID = '1'		AND   ADMNATNL_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumTransCancel
+
+		UPDATE TB_ADARCHIVALOBJ		SET   TRANSF_HANDL_STATE = '01'		WHERE RECORD_CENTER_ID = '1'		AND   ADMNATNL_ID = '1'		AND   TRANSF_HANDL_STATE = '02'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumTransProc
+
+		UPDATE TB_ADARCHIVALOBJ		SET TRANSF_HANDL_STATE = '03'		WHERE RECORD_CENTER_ID = '1'		AND ADMNATNL_ID = '1'		AND TRANSF_HANDL_STATE = '02'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml
+-- Query    : update
+-- Query Id : updateMuseumTransProcCancel
+
+		UPDATE TB_ADARCHIVALOBJ		SET   TRANSF_HANDL_STATE = '02'		WHERE RECORD_CENTER_ID = '1'		AND   ADMNATNL_ID = '1'		AND   TRANSF_HANDL_STATE = '03'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\museum\Museum.xml

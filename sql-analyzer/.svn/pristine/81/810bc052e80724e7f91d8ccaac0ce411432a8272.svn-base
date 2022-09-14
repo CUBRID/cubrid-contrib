@@ -1,0 +1,172 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
+
+public class SqlMapXMLParser {
+	public final static String SQLMAP_PATH = "rmsCubrid_daemon"; // "rmsCubrid_daemon_source"; // "rmsCubrid_daemon";
+	public final static String LOG_PATH = "log";
+	public final static String RESULT_PATH = "result";
+	public final static String QUERY_ERROR_FILTER = ".*The\\p{Space}constraint\\p{Space}of\\p{Space}the\\p{Space}foreign\\p{Space}key.*"
+			+ "|.*restricted\\p{Space}by\\p{Space}the\\p{Space}foreign\\p{Space}key.*"
+			+ "|.*one\\p{Space}or\\p{Space}more\\p{Space}unique\\p{Space}constraint\\p{Space}violations.*"
+			+ "|.*SQL\\p{Space}statement\\p{Space}violated\\p{Space}NOT\\p{Space}NULL\\p{Space}constraint.*";
+
+	public final static String QUERY_ERROR_FOREIGNKEY = ".*The\\p{Space}constraint\\p{Space}of\\p{Space}the\\p{Space}foreign\\p{Space}key.*|.*restricted\\p{Space}by\\p{Space}the\\p{Space}foreign\\p{Space}key.*";
+	public final static String QUERY_ERROR_UNIQUE = "|.*one\\p{Space}or\\p{Space}more\\p{Space}unique\\p{Space}constraint\\p{Space}violations.*";
+	public final static String QUERY_ERROR_NOTNULL = "|.*SQL\\p{Space}statement\\p{Space}violated\\p{Space}NOT\\p{Space}NULL\\p{Space}constraint.*";
+	public final static String QUERY_ERROR_FORMAT = ".*Invalid\\p{Space}format.*";
+	public final static String TODATE_ERROR_FORMAT = ".*YYYYMMDDHH24MISS.*";
+	
+	/*
+	 * QUERY_ERROR_FILTER 제외 메시지 목록
+	 * 
+	 * The constraint of the foreign key
+	 * restricted by the foreign key
+	 * one or more unique constraint violations
+	 * SQL statement violated NOT NULL
+	 */
+
+	public final static int SET_OPTIMIZATION_LEVEL_2 = 0; // SET OPTIMIZATION
+															// level 2 Toggle
+	public final static int QUERY_ERROR_FILTER_ON = 0; // Query Error Filter
+														// Toggle
+
+	public static SAXParser saxParser = null;
+	public static DBConnection dbconn = null;
+
+	public static String filePath = null;
+	public static String filename = null;
+	public static BufferedWriter resultFileOut = null;
+
+	public static void main(String[] args) {
+		dbconn = new DBConnection();
+
+		/*
+		 * File log = new File(LOG_PATH); if (!(log.exists())) { log.mkdir(); }
+		 * 
+		 * File result = new File(RESULT_PATH); if (!(result.exists())) {
+		 * result.mkdir(); }
+		 */
+
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		factory.setNamespaceAware(true);
+		factory.setValidating(false);
+
+		try {
+			saxParser = factory.newSAXParser();
+		} catch (ParserConfigurationException | SAXException e) {
+			e.printStackTrace();
+		}
+
+		openDirectory(SQLMAP_PATH);
+
+		System.out.println("Total Count : " + dbconn.getTotalCnt());
+		System.out.println("Total Success Count : " + dbconn.getTotalSuccessCnt());
+		System.out.println("Total Error Count : " + dbconn.getTotalErrorCnt());
+		System.out.println("Total Others Count : " + dbconn.getTotalOthersCnt());
+		System.out.println("Total Foreign Key Error : " + dbconn.getTotalForeignKeyCnt());
+		System.out.println("Total Unique Error : " + dbconn.getTotalUniqueCnt());
+		System.out.println("Total Not Null Error : " + dbconn.getTotalNotNullCnt());
+		System.out.println("Total Invalid Format Error : " + dbconn.getTotalFormatCnt());
+		System.out.println("Total General Error : " + dbconn.getTotalGeneralCnt());
+		System.out.println("Total IO Error : " + dbconn.getTotalIOCnt());
+		System.out.println("Total Unknown Class Error : " + dbconn);
+		System.out.println("Total toDate Error : " + dbconn.getToDateErrorTotalCnt());
+
+		System.out.println("### The End ###");
+
+		dbconn.allClose();
+	}
+
+	public static void openDirectory(String source) {
+		File dirFile = new File(source);
+
+		if (dirFile.isDirectory()) {
+			File[] fileList = dirFile.listFiles();
+			for (int i = 0; i < fileList.length; i++) {
+				File tempFile = fileList[i];
+				if (tempFile.isFile() && tempFile.getName().matches(".*.xml")) {
+					filePath = tempFile.getAbsolutePath();
+					filename = tempFile.getName();
+
+					try {
+						resultFileOut = new BufferedWriter(new FileWriter(filePath + "_result.txt"));
+						resultFileOut.write("-- File Open : " + filePath + System.getProperty("line.separator"));
+						resultFileOut.flush();
+						// System.out.println("Read : " + filename);
+					} catch (IOException e) {
+						System.out.println(filePath + "_result.txt 열기 실패");
+						e.printStackTrace();
+					}
+
+					SqlXmlHandler sqlXmlHandler = new SqlXmlHandler();
+
+					try {
+						saxParser.parse(filePath, sqlXmlHandler);
+						resultFileOut.append(System.getProperty("line.separator"));
+						resultFileOut.append(System.getProperty("line.separator"));
+						resultFileOut.append("-- File Close : " + filePath + System.getProperty("line.separator"));
+						resultFileOut.flush();
+					} catch (SAXException | IOException e) {
+						e.printStackTrace();
+					}
+				} else if (tempFile.isDirectory()) {
+					try {
+						openDirectory(tempFile.getCanonicalPath().toString());
+						// System.out.println(tempFile.getCanonicalPath().toString());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				
+
+			}
+		} else if (dirFile.isFile()) {
+
+			File tempFile = dirFile;
+			if (tempFile.getName().matches(".*.xml")) {
+				System.out.println("xml 파일입니다.");
+				
+				filePath = tempFile.getAbsolutePath();
+				filename = tempFile.getName();
+
+				try {
+					resultFileOut = new BufferedWriter(new FileWriter(filePath + "_result.txt"));
+					resultFileOut.write("-- File Open : " + filePath + System.getProperty("line.separator"));
+					resultFileOut.flush();
+				} catch (IOException e) {
+					System.out.println(filePath + "_result.txt 열기 실패");
+					e.printStackTrace();
+				}
+
+				SqlXmlHandler sqlXmlHandler = new SqlXmlHandler();
+
+				try {
+					saxParser.parse(filePath, sqlXmlHandler);
+					resultFileOut.append(System.getProperty("line.separator"));
+					resultFileOut.append(System.getProperty("line.separator"));
+					resultFileOut.append("-- File Close : " + filePath + System.getProperty("line.separator"));
+					resultFileOut.flush();
+				} catch (SAXException | IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+
+		}
+	}
+
+}

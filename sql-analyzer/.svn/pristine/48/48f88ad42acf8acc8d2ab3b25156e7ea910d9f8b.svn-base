@@ -1,0 +1,15 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+
+findRevalRsltRegPagedList
+Semantic: before ' 			) G			WHERE ROWNUM <= '1'		) H		WHERE H.rnum >= '1'	;'
+Reference to folder_id is ambiguous. select H.* from  H where H.rnum>='1'[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml
+-- Query    : select
+-- Query Id : findRevalRsltRegPagedList
+
+        SELECT H.*        FROM (        	SELECT ROWNUM AS rnum        		, G.*        	FROM (		          						SELECT A.folder_id							, A.clss_id							, A.clss_nm							, A.title							, A.creat_yyyy							, A.presv_term_cd							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm							, (CASE A.CLSS_DIV_CD WHEN '1' THEN (SELECT D.COM_CD_NM 							                      	 			 FROM TB_ZZBISCLSS C,TB_ZZCOMCD D							                      				 WHERE D.COM_TYPE_CD = 'RD07'							                        			 AND D.COM_CD = C.PRESV_TERM_CD							                        			 AND C.BIS_CLSS_ID = A.CLSS_ID)							      				  WHEN '2' THEN (SELECT D.COM_CD_NM							                       				 FROM TB_ZZUNIT E,TB_ZZCOMCD D							                      				 WHERE D.COM_TYPE_CD ='RD57'							                        			 AND E.RECORD_CENTER_ID= '1'							                        			 AND D.COM_CD = E.PRESV_TERM_CD							                        			 AND E.UNIT_CD = A.CLSS_ID							                        			 AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID)							  END) BIS_TERM_NM							, B.refix_aft_presv_term refix_aft_presv_term_cd							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=B.refix_aft_presv_term) refix_aft_presv_term							, B.reval_seq							, decode(B.refix_aft_presv_term,'','미등록','등록') reval_state_nm						    , B.org_cd						    , (SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id = '1' AND C.org_cd = B.org_cd) org_nm						    , (SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id = '1' AND C.org_cd = B.org_cd) org_abbr_nm									FROM TB_RDFOLDER A						    , TB_DFREVALHIST B						WHERE A.record_center_id = B.record_center_id						AND A.FOLDER_KEEP_STATE_CD IN ('01','04')						AND A.folder_id = B.folder_id						AND A.record_center_id = '1'						AND nvl(A.disuse_eval_prog_flag,'0') = '0'						AND nvl(A.reval_prog_flag,'1') = '1'						AND (B.reval_prog_state_cd = '7' and B.eval_discu_no is null) AND 							(A.clss_div_cd = '1' AND A.clss_id = '1')						  AND 							(A.title LIKE '1' OR A.sub_title LIKE '1' OR A.corct_title LIKE '1')						  AND 							A.creat_yyyy BETWEEN '1' AND '1'						  AND 							A.presv_term_cd = '1'						  AND 							A.org_cd = '1'						   				ORDER BY folder_id			) G			WHERE ROWNUM <= '1'		) H		WHERE H.rnum >= '1'	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\reval\RevalRslt.xml

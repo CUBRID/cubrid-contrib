@@ -1,0 +1,277 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfChoicePagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT coll_div_cd					, coll_div_nm					, org_cd					, org_nm					, org_abbr_nm					, clss_div_cd					, clss_id					, clss_nm					, folder_id					, title					, creat_yyyy					, status_cd					, status_nm					, transf_hope_yyyy					, transf_rsn					, remk					, recv_transf_div_cd					, transf_list_id					, folder_key					, ho_no					, ho_no_cnt				FROM (					SELECT '3' AS coll_div_cd						, 'RMS철' AS coll_div_nm						, a.org_cd						, c.org_nm						, c.org_abbr_nm						, a.clss_div_cd						, a.clss_id						, a.clss_nm						, a.folder_id						, a.title						, a.creat_yyyy						, NVL(b.transf_div_cd,'2') AS status_cd						, NVL((SELECT c.com_cd_nm FROM tb_zzcomcd c WHERE c.com_type_cd = 'DF04' AND c.com_cd = b.transf_div_cd),'정기이관') AS status_nm						, b.transf_hope_yyyy						, b.transf_rsn, b.remk						, b.recv_transf_div_cd						, b.transf_list_id						, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key						, A.ho_no						,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt					FROM    TB_RDFOLDER a, TB_DFRECVTRANSFLIST b, TB_STORG c					WHERE  	a.folder_id = b.folder_id(+)					AND		a.record_center_id = b.record_center_id(+)					AND		a.org_cd = c.org_cd					AND		a.record_center_id = c.record_center_id					AND		a.record_center_id = '1'					AND		a.transf_state_cd IS NULL					AND	    a.folder_keep_state_cd NOT IN ('02','03','05')					AND 	a.NEO_TRANS_STATE = '4'					AND 	NVL(b.recv_transf_div_cd,'0') <> '5'					AND 	(a.expt_transf_yyyy <= '1' 					AND 	TO_NUMBER(a.presv_term_cd) >= 20)					 AND 						a.creat_sys_cd = '1'					  AND 						a.creat_yyyy BETWEEN  '1' AND  '1'					  AND 						(a.title LIKE '1' OR a.sub_title LIKE '1' OR a.corct_title LIKE '1')					  AND  							b.transf_div_cd IS NULL						  					UNION ALL					SELECT	a.coll_div_cd						, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF08' AND c.com_cd = a.coll_div_cd) AS coll_div_nm						, a.org_cd						, c.org_nm						, c.org_abbr_nm						, a.clss_div_cd						, a.clss_id						, (SELECT c.bis_clss_nm FROM TB_ZZBISCLSS c WHERE c.bis_clss_id = a.clss_id) AS clss_nm						, a.transf_list_id AS folder_id						, a.title						, a.creat_yyyy						, a.transf_div_cd AS status_cd						, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF04' AND c.com_cd = a.transf_div_cd) AS status_nm						, a.transf_hope_yyyy						, a.transf_rsn						, a.remk						, a.recv_transf_div_cd						, a.transf_list_id						, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key						,A.ho_no						,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt					FROM   	TB_DFRECVTRANSFLIST a, TB_STORG c					WHERE	a.org_cd = c.org_cd					AND  	a.record_center_id = c.record_center_id					AND    	a.record_center_id = '1'					AND    	a.transf_yyyy = '1'					AND 	a.recv_transf_div_cd = '5'					AND    	a.transf_grp_sno IN (SELECT transf_grp_sno 												 FROM TB_DFTRANSFWORK WHERE record_center_id = '1'												 AND		transf_yyyy = '1'												 AND		transf_handl_state = '1'												 AND    	transf_list_choice_fin_ymd IS NULL)					 AND 						a.title LIKE '1'					  AND 						a.transf_div_cd = '1'					  AND 						a.creat_sys_cd = '1'  AND 					    a.creat_yyyy BETWEEN  '1' AND  '1'					 				)				 WHERE  						org_cd = '1'					  AND 						org_cd = '1'					  AND 						(clss_div_cd = '1' AND clss_id = '1')					  AND 						coll_div_cd = '1'					   					ORDER BY org_nm				 			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : countTransfChoicePagedList
+
+ 		SELECT COUNT(1)		FROM (			SELECT coll_div_cd				, coll_div_nm				, org_cd				, org_nm				, org_abbr_nm				, clss_div_cd				, clss_id				, clss_nm				, folder_id				, title				, creat_yyyy				, status_cd				, status_nm				, transf_hope_yyyy				, transf_rsn				, remk				, recv_transf_div_cd				, transf_list_id				, folder_key				, ho_no				, ho_no_cnt			FROM (				SELECT '3' AS coll_div_cd					, 'RMS철' AS coll_div_nm					, a.org_cd					, c.org_nm					, c.org_abbr_nm					, a.clss_div_cd					, a.clss_id					, a.clss_nm					, a.folder_id					, a.title					, a.creat_yyyy					, NVL(b.transf_div_cd,'2') AS status_cd					, NVL((SELECT c.com_cd_nm FROM tb_zzcomcd c WHERE c.com_type_cd = 'DF04' AND c.com_cd = b.transf_div_cd),'정기이관') AS status_nm					, b.transf_hope_yyyy					, b.transf_rsn, b.remk					, b.recv_transf_div_cd					, b.transf_list_id					, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key					, A.ho_no					,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt				FROM    TB_RDFOLDER a, TB_DFRECVTRANSFLIST b, TB_STORG c				WHERE  	a.folder_id = b.folder_id(+)				AND		a.record_center_id = b.record_center_id(+)				AND		a.org_cd = c.org_cd				AND		a.record_center_id = c.record_center_id				AND		a.record_center_id = '1'				AND		a.transf_state_cd IS NULL				AND	    a.folder_keep_state_cd NOT IN ('02','03','05')				AND     a.NEO_TRANS_STATE = '4'				AND 	NVL(b.recv_transf_div_cd,'0') <> '5'			  	AND 	(a.expt_transf_yyyy <= '1' 			  	AND 	TO_NUMBER(a.presv_term_cd) >= 20)				 AND 					a.creat_sys_cd = '1'				  AND 					a.creat_yyyy BETWEEN  '1' AND  '1'				  AND 					(a.title LIKE '1' OR a.sub_title LIKE '1' OR a.corct_title LIKE '1')				  AND  						b.transf_div_cd IS NULL					  				UNION ALL				SELECT	a.coll_div_cd					, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF08' AND c.com_cd = a.coll_div_cd) AS coll_div_nm					, a.org_cd					, c.org_nm					, c.org_abbr_nm					, a.clss_div_cd					, a.clss_id					, (SELECT c.bis_clss_nm FROM TB_ZZBISCLSS c WHERE c.bis_clss_id = a.clss_id) AS clss_nm					, a.transf_list_id AS folder_id					, a.title					, a.creat_yyyy					, a.transf_div_cd AS status_cd					, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF04' AND c.com_cd = a.transf_div_cd) AS status_nm					, a.transf_hope_yyyy					, a.transf_rsn					, a.remk					, a.recv_transf_div_cd					, a.transf_list_id					, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key					, A.ho_no					,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt				FROM   	TB_DFRECVTRANSFLIST a, TB_STORG c				WHERE	a.org_cd = c.org_cd				AND  	a.record_center_id = c.record_center_id				AND    	a.record_center_id = '1'				AND    	a.transf_yyyy = '1'				AND 	a.recv_transf_div_cd = '5'				AND    	a.transf_grp_sno IN (SELECT transf_grp_sno 											 FROM TB_DFTRANSFWORK WHERE record_center_id = '1'											 AND		transf_yyyy = '1'											 AND		transf_handl_state = '1'											 AND    	transf_list_choice_fin_ymd IS NULL)				 AND 					a.title LIKE '1'				  AND 					a.transf_div_cd = '1'				  AND 					a.creat_sys_cd = '1'				  AND 				    a.creat_yyyy BETWEEN  '1' AND  '1'				 			)			 WHERE  					org_cd = '1'				  AND 					org_cd = '1'				  AND 					(clss_div_cd = '1' AND clss_id = '1')				  AND 					coll_div_cd = '1'				  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfEarlyPagedList
+
+		SELECT F.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (				SELECT	A.FOLDER_ID					, A.TITLE					, C.ORG_NM					, C.ORG_ABBR_NM					, A.CLSS_NM					, A.CREAT_YYYY					, A.RECORD_REG_CNT					, A.PRESV_TERM_CD					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) PRESV_TERM_NM					, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM					, B.COLL_DIV_CD					, DECODE(B.TRANSF_DIV_CD,'3','선정','미선정') AS TRANSF_DIV_NM					, B.TRANSF_HOPE_YYYY					, B.TRANSF_RSN					, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key					, A.ho_no					, (SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = A.CREAT_SYS_CD AND ORG_CD = A.ORG_CD AND CLSS_ID = A.CLSS_ID AND CREAT_YYYY = A.CREAT_YYYY AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) ho_no_cnt				FROM  	TB_RDFOLDER A, TB_DFRECVTRANSFLIST B, TB_STORG C				WHERE 	A.FOLDER_ID = B.FOLDER_ID(+)				AND	  	A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)					AND   	A.RECORD_CENTER_ID = '1'				AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID				AND   	A.ORG_CD = C.ORG_CD				AND	  	A.TRANSF_STATE_CD IS NULL				AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')				AND   	(					(A.EXPT_TRANSF_YYYY  >  '1' AND TO_NUMBER(A.PRESV_TERM_CD)  >=  20)					OR (A.DAMG_HANDL_CD = '2') OR  							(TO_NUMBER(A.PRESV_TERM_CD)  <  20)						  				)				 AND 					A.ORG_CD = '1'				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')				  AND 					A.CREAT_YYYY BETWEEN '1' AND '1'				  AND  						A.DAMG_HANDL_CD = '2'					  				ORDER BY A.title, A.folder_id			) E			WHERE ROWNUM <= '1'		) F		WHERE F.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : countTransfEarlyPagedList
+
+		SELECT	COUNT(1)		FROM  	TB_RDFOLDER A, TB_DFRECVTRANSFLIST B, TB_STORG C		WHERE 	A.FOLDER_ID = B.FOLDER_ID(+)		AND	  	A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)			AND   	A.RECORD_CENTER_ID = '1'		AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		AND   	A.ORG_CD = C.ORG_CD		AND	  	A.TRANSF_STATE_CD IS NULL		AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')		AND   	(			(A.EXPT_TRANSF_YYYY  >  '1' AND TO_NUMBER(A.PRESV_TERM_CD)  >=  20)			OR (A.DAMG_HANDL_CD = '2') OR  					(TO_NUMBER(A.PRESV_TERM_CD)  <  25)				  		)		 AND 			A.ORG_CD = '1'		  AND 			(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')		  AND 			(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		  AND 			A.CREAT_YYYY BETWEEN '1' AND '1'		  AND  				A.DAMG_HANDL_CD = '2'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfRjctPagedList
+
+		SELECT F.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (			   SELECT A.FOLDER_ID					,(SELECT MAX(TRANSF_LIST_ID)                       FROM TB_DFRECVTRANSFLIST                       WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                       AND FOLDER_ID = A.FOLDER_ID) AS TRANSF_LIST_ID									, A.TITLE					, C.ORG_NM					, C.ORG_ABBR_NM					, A.CLSS_NM					, A.CREAT_YYYY					, A.RECORD_REG_CNT					, A.PRESV_TERM_CD					,(SELECT C.COM_CD_NM 					  FROM TB_ZZCOMCD C 					  WHERE C.COM_TYPE_CD = 'RD07' 					  AND C.COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) AS PRESV_TERM_NM					,(SELECT D.COM_CD_NM 					  FROM TB_ZZBISCLSS C, TB_ZZCOMCD D 					  WHERE D.COM_TYPE_CD = 'RD07' 					  AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD)  					  AND C.BIS_CLSS_ID = A.CLSS_ID) AS BIS_TERM_NM					,(A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS FOLDER_KEY					, A.HO_NO					,(SELECT COUNT(HO_NO) 					  FROM TB_RDFOLDER 					  WHERE CREAT_SYS_CD = A.CREAT_SYS_CD 					  AND ORG_CD = A.ORG_CD 					  AND CLSS_ID = A.CLSS_ID 					  AND CREAT_YYYY = A.CREAT_YYYY 					  AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS HO_NO_CNT                    ,(SELECT DECODE(CONFM_TRANSF_DIV_CD, '', '선정', '미선정')                       FROM TB_DFRECVTRANSFLIST                       WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                       AND FOLDER_ID = A.FOLDER_ID                       AND TRANSF_LIST_ID =                        (SELECT MAX(TRANSF_LIST_ID)                       FROM TB_DFRECVTRANSFLIST                      WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                      AND FOLDER_ID = A.FOLDER_ID) ) AS TRANSF_DIV_NM                    ,(SELECT COLL_DIV_CD                          FROM TB_DFRECVTRANSFLIST                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                           AND TRANSF_YYYY = A.LST_TRANF_YYYY                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO                           AND FOLDER_ID = A.FOLDER_ID) AS COLL_DIV_CD                    ,(SELECT TRANSF_DIV_CD                          FROM TB_DFRECVTRANSFLIST                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                           AND TRANSF_YYYY = A.LST_TRANF_YYYY                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO                           AND FOLDER_ID = A.FOLDER_ID) AS TRANSF_DIV_CD                                               ,(SELECT KEEP_FLAG                          FROM TB_DFRECVTRANSFLIST                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                           AND TRANSF_YYYY = A.LST_TRANF_YYYY                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO                           AND FOLDER_ID = A.FOLDER_ID) AS KEEP_FLAG                     ,(SELECT RECV_TRANSF_DIV_CD                          FROM TB_DFRECVTRANSFLIST                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID                           AND TRANSF_YYYY = A.LST_TRANF_YYYY                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO                           AND FOLDER_ID = A.FOLDER_ID) AS RECV_TRANSF_DIV_CD  					, A.LST_TRANF_STATE					, A.LST_TRANF_YYYY					, A.LST_TRANF_GRP_SNO				FROM  	TB_RDFOLDER A, TB_STORG C				WHERE 	A.RECORD_CENTER_ID = '1'				AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID				AND   	A.ORG_CD = C.ORG_CD				AND	  	A.TRANSF_STATE_CD = '4'				AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')   				AND 	A.LST_TRANF_STATE = '02' AND 					A.ORG_CD = '1'				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')				  AND 					A.CREAT_YYYY BETWEEN '1' AND '1'				  AND  						A.DAMG_HANDL_CD = '2'					  				ORDER BY A.title, A.folder_id			) E			WHERE ROWNUM <= '1'		) F		WHERE F.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : countTransfRjctPagedList
+
+		SELECT	COUNT(1)		FROM  	TB_RDFOLDER A, TB_STORG C		WHERE 	A.RECORD_CENTER_ID = '1'		AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		AND   	A.ORG_CD = C.ORG_CD		AND	  	A.TRANSF_STATE_CD = '4'		AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')   		AND 	A.LST_TRANF_STATE = '02' AND 			A.ORG_CD = '1'		  AND 			(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')		  AND 			(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')  AND 			A.CREAT_YYYY BETWEEN '1' AND '1'		  AND  				A.DAMG_HANDL_CD = '2'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfWriteSum
+
+		SELECT '' AS org_cd			, '계' AS org_nm			, COUNT(a.org_cd) AS transf_total			, NVL(SUM(DECODE(a.transf_div_cd,'1',1,'2',1,0)),0) AS transf_cnt1			, NVL(SUM(DECODE(a.transf_div_cd,'3',1,0)),0) AS transf_cnt2			, NVL(SUM(DECODE(a.transf_div_cd,'4',1,0)),0) AS transf_cnt3			, NVL(SUM(DECODE(a.transf_div_cd,'5',1,0)),0) AS transf_cnt4		FROM (			SELECT org_cd				, transf_div_cd			FROM TB_DFRECVTRANSFLIST			WHERE record_center_id = '1'			AND transf_yyyy = '1'			AND transf_grp_sno IN (SELECT transf_grp_sno								   FROM tb_dftransfwork								   WHERE record_center_id = '1'								   AND transf_yyyy = '1'								   AND transf_handl_state = '1'								   AND transf_list_choice_fin_ymd IS NULL)			 AND 				org_cd = '1'			 		) a, TB_STORG b		WHERE b.record_center_id = '1'		AND a.org_cd = b.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfWritePagedList
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT a.org_cd					, MAX(b.org_nm) AS org_nm					, COUNT(a.org_cd) AS transf_total					, NVL(SUM(DECODE(a.transf_div_cd,'1',1,'2',1,0)),0) AS transf_cnt1					, NVL(SUM(DECODE(a.transf_div_cd,'3',1,0)),0) AS transf_cnt2					, NVL(SUM(DECODE(a.transf_div_cd,'4',1,0)),0) AS transf_cnt3					, NVL(SUM(DECODE(a.transf_div_cd,'5',1,0)),0) AS transf_cnt4				FROM (					SELECT org_cd						, transf_div_cd					FROM 	TB_DFRECVTRANSFLIST					WHERE 	record_center_id = '1'					AND 	transf_yyyy = '1'					AND		transf_grp_sno IN (SELECT transf_grp_sno											   FROM tb_dftransfwork											   WHERE record_center_id = '1'											   AND transf_yyyy = '1'											   AND transf_handl_state = '1'											   AND transf_list_choice_fin_ymd IS NULL) AND 						org_cd = '1'					 				) a, TB_STORG b				WHERE b.record_center_id = '1'				AND	  a.org_cd = b.org_cd				GROUP BY a.org_cd				ORDER BY a.org_cd			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : countTransfWritePagedList
+
+		SELECT COUNT(1)		FROM (			SELECT a.org_cd			FROM (				SELECT org_cd					, transf_div_cd				FROM 	TB_DFRECVTRANSFLIST				WHERE 	record_center_id = '1'				AND 	transf_yyyy = '1'				AND		transf_grp_sno IN (SELECT transf_grp_sno										   FROM tb_dftransfwork										   WHERE record_center_id = '1'										   AND transf_yyyy = '1'										   AND transf_handl_state = '1'										   AND transf_list_choice_fin_ymd IS NULL)				 AND 						org_cd = '1'				 			) a, TB_STORG b		WHERE b.record_center_id = '1'		AND	a.org_cd = b.org_cd		GROUP BY a.org_cd	)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfFileWrite
+
+		SELECT F.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (				SELECT FOLDER_ID					, TITLE					, CLSS_NM					, CREAT_YYYY					, RECORD_REG_CNT					, PRESV_TERM_CD					, PRESV_TERM_NM					, BIS_TERM_NM					, TRANSF_DIV_CD					, TRANSF_DIV_NM				FROM (					SELECT A.FOLDER_ID						, A.TITLE						, DECODE(A.CLSS_DIV_CD,'1',(SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID),'2',(SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.UNIT_CD = A.CLSS_ID),'') CLSS_NM						, A.CREAT_YYYY, TO_CHAR(A.RECORD_CNT) RECORD_REG_CNT						, A.PRESV_TERM_CD						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM						, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM						, A.TRANSF_DIV_CD						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.TRANSF_DIV_CD) TRANSF_DIV_NM					FROM TB_DFRECVTRANSFLIST A					WHERE RECORD_CENTER_ID = '1' 					AND	TRANSF_YYYY = '1'					AND TRANSF_GRP_SNO = (						SELECT TRANSF_GRP_SNO 						FROM TB_DFTRANSFWORK						WHERE RECORD_CENTER_ID = '1' 						AND TRANSF_YYYY = '1'						AND TRANSF_HANDL_STATE = '1'						AND TRANSF_LIST_CHOICE_FIN_YMD IS NULL					)						AND TRANSF_LIST_ID NOT IN (						SELECT TRANSF_LIST_ID 						FROM TB_DFRECVTRANSFLIST 						WHERE RECORD_CENTER_ID = '1'						AND	TRANSF_YYYY = '1'						AND COLL_DIV_CD IN ('1', '2') AND KEEP_FLAG = '1'					)					AND ORG_CD = '1'					AND	TRANSF_DIV_CD <> '2'					 AND  							(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')						  AND 							(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')						  AND 							A.TITLE LIKE '1' 						  AND 							A.TRANSF_DIV_CD = '1'						  				)				ORDER BY title, folder_id			) E			WHERE ROWNUM <= '1'		) F		WHERE F.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : countTransfFileWrite
+
+		SELECT COUNT(*)		FROM ( 			SELECT A.FOLDER_ID			FROM TB_DFRECVTRANSFLIST A			WHERE RECORD_CENTER_ID = '1' 			AND	TRANSF_YYYY = '1'			AND TRANSF_GRP_SNO = (				SELECT TRANSF_GRP_SNO 				FROM TB_DFTRANSFWORK				WHERE RECORD_CENTER_ID = '1' 				AND TRANSF_YYYY = '1'				AND TRANSF_HANDL_STATE = '1'				AND TRANSF_LIST_CHOICE_FIN_YMD IS NULL			)				AND TRANSF_LIST_ID NOT IN (				SELECT TRANSF_LIST_ID 				FROM TB_DFRECVTRANSFLIST 				WHERE RECORD_CENTER_ID = '1'				AND	TRANSF_YYYY = '1'				AND COLL_DIV_CD IN ('1', '2') AND KEEP_FLAG = '1'			)			AND ORG_CD = '1'			AND	TRANSF_DIV_CD <> '2'			 AND  					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					A.TITLE LIKE '1' 				  AND 					A.TRANSF_DIV_CD = '1'				  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfWriteInfrmFile
+
+ 		SELECT record_center_id 			, transf_infrm_creat_yyyy 			, MAX(transf_infrm_file_nm) AS transf_infrm_file_full_nm 			, MAX(transf_infrm_end_file_nm) AS transf_infrm_end_file_full_nm 			, SUBSTR(MAX(transf_infrm_file_nm),(INSTR(MAX(transf_infrm_file_nm),'/',-1))+1) AS transf_infrm_file_nm 			, DECODE(MAX(transf_infrm_flag),'1','통보(온라인)','2','통보(오프라인)','0','미통보') AS transf_infrm_flag_nm 			, MAX(transf_infrm_dtime) AS transf_infrm_dtime						FROM (			SELECT record_center_id				, transf_infrm_creat_yyyy				, DECODE(transf_infrm_file_type,'TRANS_PLAN_REQ',transf_infrm_file_nm) AS transf_infrm_file_nm				, DECODE(transf_infrm_file_type,'TRANS_PLAN_REQ_END',transf_infrm_file_nm) AS transf_infrm_end_file_nm				, transf_infrm_flag				, transf_infrm_dtime			FROM TB_DFTRANSFINFRMFILE			WHERE record_center_id = '1'			AND	transf_infrm_creat_yyyy = '1'			AND	transf_infrm_type = '1'			AND	transf_infrm_sno = 1			AND	transf_infrm_file_type Like 'TRANS_PLAN_REQ%'			AND transf_grp_sno = (				SELECT MAX(transf_grp_sno)				FROM TB_DFTRANSFINFRMFILE				WHERE record_center_id = '1'				AND	transf_infrm_creat_yyyy = '1'				AND	transf_infrm_type = '1'				AND	transf_infrm_sno = 1				AND	transf_infrm_file_type Like 'TRANS_PLAN_REQ%'			)		)		GROUP BY record_center_id, transf_infrm_creat_yyyy		ORDER BY record_center_id, transf_infrm_creat_yyyy;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfFolder
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.ORG_CD					, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = '1' AND C.ORG_CD=A.ORG_CD) ORG_NM					, A.CLSS_ID					, A.CLSS_NM					, A.FOLDER_ID					, A.TITLE					, A.CREAT_YYYY					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD=A.PRESV_TERM_CD) PRESV_TERM_NM				FROM TB_RDFOLDER A				WHERE A.RECORD_CENTER_ID = '1'				AND A.TRANSF_STATE_CD IS NULL				AND (A.EXPT_TRANSF_YYYY <= '1'				AND TO_NUMBER(A.PRESV_TERM_CD) >= 20)				 AND 					A.ORG_CD = '1'				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')				 				ORDER BY A.title, A.folder_id			) B			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : countTransfFolder
+
+		SELECT COUNT(1)		FROM TB_RDFOLDER A		WHERE A.RECORD_CENTER_ID = '1'		AND A.TRANSF_STATE_CD IS NULL		AND (A.EXPT_TRANSF_YYYY <= '1'		AND TO_NUMBER(A.PRESV_TERM_CD) >= 20)		 AND 			A.ORG_CD = '1'		  AND 			(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')		  AND 			(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfGroupId
+
+		SELECT RECORD_CENTER_ID			, TRANSF_GRP_SNO		FROM TB_DFTRANSFWORK		WHERE RECORD_CENTER_ID = '1'		AND	TRANSF_YYYY = '1'		AND TRANSF_HANDL_STATE = '1'		AND TRANSF_LIST_CHOICE_FIN_YMD IS NULL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfFolderRmsInfo
+
+		SELECT TRANSF_LIST_ID		FROM TB_DFRECVTRANSFLIST 		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND	FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfChoiceFolderInfo
+
+		SELECT org_cd			, clss_div_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no			, record_reg_cnt		FROM TB_RDFOLDER		WHERE folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransPlanReqInfrmFileList
+
+		SELECT a.folder_id			, b.creat_sys_cd AS af_creat_sys_cd			, b.org_cd AS af_org_cd			, b.clss_id AS af_clss_id			, b.creat_yyyy AS af_creat_yyyy			, b.folder_reg_seq AS af_folder_reg_seq			, (CASE WHEN b.HO_NO != '001' THEN b.HO_NO			        WHEN (SELECT COUNT(1) FROM TB_RDFOLDER F WHERE F.RECORD_CENTER_ID=b.RECORD_CENTER_ID AND F.CREAT_SYS_CD=b.CREAT_SYS_CD AND F.ORG_CD=b.ORG_CD AND F.CLSS_ID=b.CLSS_ID AND F.CREAT_YYYY=b.CREAT_YYYY AND F.FOLDER_REG_SEQ=b.FOLDER_REG_SEQ) > 1 THEN b.HO_NO			   ELSE '' END) AS af_ho_no			, (SELECT count(ho_no) FROM TB_RDFOLDER WHERE creat_sys_cd=b.CREAT_SYS_CD AND org_cd=b.org_cd AND clss_id=b.clss_id AND creat_yyyy=b.creat_yyyy and folder_reg_seq=b.folder_reg_seq) af_ho_no_cnt			, b.title AS af_title			, b.folder_type_div_cd AS af_folder_type_div_cd			, substr(b.folder_close_dtime, 0, 4) AS af_close_yyyy			, b.presv_term_cd AS af_presv_term_cd			, LPAD(b.folder_size,13,'0') AS af_folder_size			, a.transf_div_cd			, a.transf_rsn			, a.transf_hope_yyyy			, a.coll_div_cd AS bf_coll_div_cd			, a.creat_sys_cd AS bf_creat_sys_cd			, a.org_cd AS bf_org_cd			, a.clss_id AS bf_clss_id			, a.creat_yyyy AS bf_creat_yyyy			, a.folder_reg_seq AS bf_folder_reg_seq			, (CASE WHEN a.HO_NO != '001' THEN a.HO_NO					WHEN (SELECT COUNT(1) FROM TB_RDFOLDER F WHERE F.RECORD_CENTER_ID=a.RECORD_CENTER_ID AND F.CREAT_SYS_CD=a.CREAT_SYS_CD AND F.ORG_CD=a.ORG_CD AND F.CLSS_ID=a.CLSS_ID AND F.CREAT_YYYY=a.CREAT_YYYY AND F.FOLDER_REG_SEQ=a.FOLDER_REG_SEQ) > 1 THEN A.HO_NO			   ELSE '' END) AS bf_ho_no			, (SELECT count(ho_no) FROM TB_DFRECVTRANSFLIST WHERE creat_sys_cd=a.CREAT_SYS_CD AND org_cd=a.org_cd AND clss_id=a.clss_id AND creat_yyyy=a.creat_yyyy and folder_reg_seq=a.folder_reg_seq) bf_ho_no_cnt 		FROM TB_DFRECVTRANSFLIST a			, TB_RDFOLDER b			, (				SELECT record_center_id					, transf_yyyy					, transf_grp_sno 				FROM TB_DFTRANSFWORK				WHERE record_center_id = '1' 				AND	transf_yyyy = '1'				AND	transf_handl_state = '1'				AND transf_list_choice_fin_ymd IS NULL			) c		WHERE a.folder_id = b.folder_id(+)		AND	a.record_center_id = '1' 		AND	a.transf_yyyy = '1'		AND	a.record_center_id = c.record_center_id		AND a.transf_yyyy = c.transf_yyyy		AND a.transf_grp_sno = c.transf_grp_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfInfrmFileList
+
+		SELECT transf_infrm_file_nm		FROM (			SELECT 1 AS gubun				, transf_infrm_file_nm			FROM TB_DFTRANSFINFRMFILE			WHERE record_center_id = '1'			AND	transf_infrm_creat_yyyy = '1'			AND transf_grp_sno = '1'			AND	transf_infrm_file_type LIKE 'TRANS_PLAN_REQ%'			AND	transf_infrm_file_nm NOT LIKE '%_END%'			UNION ALL			SELECT 2 AS gubun				, transf_infrm_file_nm			FROM TB_DFTRANSFINFRMFILE			WHERE record_center_id = '1'			AND	transf_infrm_creat_yyyy = '1'			AND transf_grp_sno = '1'			AND	transf_infrm_file_type LIKE 'TRANS_PLAN_REQ%'			AND	transf_infrm_file_nm LIKE '%_END%'		)		ORDER BY gubun	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : insert
+-- Query Id : createTransfGroup
+
+		INSERT INTO TB_DFTRANSFWORK (RECORD_CENTER_ID			, TRANSF_YYYY			, TRANSF_GRP_SNO			, TRANSF_HANDL_STATE			, TRANSF_LIST_RECV_YMD		) VALUES ('1'			, '1'			, (SELECT NVL(MAX(TRANSF_GRP_SNO), 0) + 1 MAX_SNO FROM TB_DFRECVTRANSFLIST WHERE RECORD_CENTER_ID = '1' AND TRANSF_YYYY = '1')			, '1'			, to_char(sysdate, 'YYYYMMDD')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : update
+-- Query Id : updateTransfChoiceList
+
+		UPDATE TB_DFRECVTRANSFLIST		SET TRANSF_DIV_CD = '1'			, TRANSF_RSN = '1'			, TRANSF_HOPE_YYYY = '1'			, RM_ORG_CD = '1'			, RM_CLSS_DIV_CD = '1'			, RM_CLSS_ID = '1'			, RM_CREAT_YYYY = '1'			, RM_FOLDER_REG_SEQ = '1'			, RM_HO_NO = '1'			, FOLDER_ID = '1'			, REMK = '1'			, keep_flag = '1'			, record_cnt = '1'		WHERE RECORD_CENTER_ID = '1'		AND TRANSF_YYYY = '1'		AND	TRANSF_LIST_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfDelayList
+
+	  DELETE FROM TB_DFRECVTRANSFLIST	  	  WHERE	RECORD_CENTER_ID = '1' 	  AND TRANSF_YYYY = '1'	  AND TRANSF_GRP_SNO = '1'	  AND FOLDER_ID = '1'	  AND COLL_DIV_CD = '3';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfEarlyList
+
+		DELETE FROM TB_DFRECVTRANSFLIST	  		WHERE RECORD_CENTER_ID = '1' AND TRANSF_YYYY = '1'		AND	TRANSF_GRP_SNO = '1'		AND	FOLDER_ID = '1'		AND	TRANSF_DIV_CD = '3'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfEarlyHist
+
+	  DELETE FROM TB_DFTRANSFHIST	  	  WHERE RECORD_CENTER_ID = '1' 	  AND TRANSF_YYYY = '1'	  AND TRANSF_GRP_SNO = '1'	  AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfRjctList
+
+		DELETE FROM TB_DFRECVTRANSFLIST	  		WHERE RECORD_CENTER_ID = '1' AND TRANSF_YYYY = '1'		AND	TRANSF_GRP_SNO = '1'		AND	FOLDER_ID = '1'		AND	TRANSF_LIST_ID = '1'  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfRjctHist
+
+	  DELETE FROM TB_DFTRANSFHIST	  	  WHERE RECORD_CENTER_ID = '1' 	  AND TRANSF_YYYY = '1'	  AND TRANSF_GRP_SNO = '1'	  AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfList
+
+	  DELETE FROM TB_DFRECVTRANSFLIST	  	  WHERE	RECORD_CENTER_ID = '1' 	  AND TRANSF_YYYY = '1'	  AND TRANSF_GRP_SNO = '1'	  AND FOLDER_ID = '1'	  AND COLL_DIV_CD = '3'	  AND TRANSF_DIV_CD IN ('1','4')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfHist
+
+	  DELETE FROM TB_DFTRANSFHIST	  	  WHERE RECORD_CENTER_ID = '1' 	  AND TRANSF_YYYY = '1'	  AND TRANSF_GRP_SNO = '1'	  AND FOLDER_ID = '1'	  AND TRANSF_DIV_CD IN ('1','4');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : insert
+-- Query Id : createTransfEarlyList
+
+		INSERT INTO	TB_DFRECVTRANSFLIST (record_center_id			, transf_yyyy			, transf_list_id			, transf_grp_sno			, coll_div_cd			, org_cd			, clss_div_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no			, title			, presv_term_cd			, folder_type_div_cd			, record_cnt			, transf_div_cd			, transf_rsn			, transf_hope_yyyy			, folder_id			, keep_flag			, recv_transf_div_cd			, creat_sys_cd			, close_yyyy			, open_div_cd			, transf_start_ymd		) SELECT '1'			, '1'			, (SELECT LPAD(NVL(MAX(transf_list_id),0)+1,10,'0') max_id FROM TB_DFRECVTRANSFLIST WHERE record_center_id = '1' AND transf_yyyy = '1')			, '1'			, '1'			, org_cd			, clss_div_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no, title			, presv_term_cd			, folder_type_div_cd			, record_reg_cnt			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, creat_sys_cd			, close_yyyy			, open_div_cd			, TO_CHAR(SYSDATE, 'YYYYMMDD')		FROM (			SELECT org_cd				, clss_div_cd				, clss_id				, creat_yyyy				, folder_reg_seq				, ho_no				, title				, presv_term_cd				, folder_type_div_cd				, NVL(TO_NUMBER(record_reg_cnt),0) AS record_reg_cnt				, creat_sys_cd				, SUBSTR(folder_close_dtime, 0, 4) AS close_yyyy				, open_div_cd 			FROM TB_RDFOLDER		    WHERE record_center_id = '1'		    AND folder_id = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : insert
+-- Query Id : createTransfEarlyHist
+
+		INSERT INTO TB_DFTRANSFHIST (record_center_id			, folder_id			, transf_yyyy			, transf_grp_sno			, transf_div_cd			, transf_rsn			, transf_hope_yyyy			, work_user_id			, work_dtime		) VALUES ('1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : insert
+-- Query Id : createTransfRjctList
+
+		INSERT INTO	TB_DFRECVTRANSFLIST (record_center_id			, transf_yyyy			, transf_list_id			, transf_grp_sno			, coll_div_cd			, org_cd			, clss_div_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no			, title			, presv_term_cd			, folder_type_div_cd			, record_cnt			, transf_div_cd			, transf_rsn			, transf_hope_yyyy			, folder_id			, keep_flag			, recv_transf_div_cd			, creat_sys_cd			, close_yyyy			, open_div_cd			, transf_start_ymd		) SELECT '1'			, '1'			, (SELECT LPAD(NVL(MAX(transf_list_id),0)+1,10,'0') max_id FROM TB_DFRECVTRANSFLIST WHERE record_center_id = '1' AND transf_yyyy = '1')			, '1'			, '1'			, org_cd			, clss_div_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no, title			, presv_term_cd			, folder_type_div_cd			, record_reg_cnt			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, creat_sys_cd			, close_yyyy			, open_div_cd                        , TO_CHAR(sys_datetime, 'YYYYMMDD')		FROM (			SELECT org_cd				, clss_div_cd				, clss_id				, creat_yyyy				, folder_reg_seq				, ho_no				, title				, presv_term_cd				, folder_type_div_cd				, NVL(TO_NUMBER(record_reg_cnt),0) AS record_reg_cnt				, creat_sys_cd				, SUBSTR(folder_close_dtime, 0, 4) AS close_yyyy				, open_div_cd 			FROM TB_RDFOLDER		    WHERE record_center_id = '1'		    AND folder_id = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : insert
+-- Query Id : createTransfRjctHist
+
+		INSERT INTO TB_DFTRANSFHIST (record_center_id			, folder_id			, transf_yyyy			, transf_grp_sno			, transf_div_cd			, transf_rsn			, transf_hope_yyyy			, work_user_id			, work_dtime		) VALUES ('1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : delete
+-- Query Id : deleteTransfInfrmFileInfo
+
+		DELETE FROM TB_DFTRANSFINFRMFILE		WHERE record_center_id = '1'		AND	transf_infrm_creat_yyyy = '1'		AND	transf_grp_sno < '1'		AND TRANSF_INFRM_FLAG = '1'		AND	transf_infrm_file_type IN ('TRANS_PLAN_REQ', 'TRANS_PLAN_REQ_END')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : insert
+-- Query Id : creatTransfInfrmFileInfo
+
+		INSERT INTO TB_DFTRANSFINFRMFILE (record_center_id			, transf_infrm_creat_yyyy			, transf_infrm_sno			, transf_infrm_file_nm			, reg_dtime			, transf_infrm_file_type			, transf_infrm_dtime			, transf_infrm_flag			, transf_infrm_type			, transf_grp_sno		) VALUES ('1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'			, ''			, '0'			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : update
+-- Query Id : updateTransfInfrmFolderEnd
+
+		UPDATE TB_RDFOLDER		SET transf_state_cd = '2'		WHERE folder_id IN (			SELECT a.folder_id			FROM TB_DFRECVTRANSFLIST a, TB_RDFOLDER b			WHERE a.folder_id = b.folder_id			AND	a.record_center_id = '1' 			AND	a.transf_yyyy = '1'			AND a.transf_grp_sno IN (				SELECT transf_grp_sno 				FROM TB_DFTRANSFWORK				WHERE record_center_id = '1' 				AND	transf_yyyy = '1'				AND	transf_handl_state = '1'				AND transf_list_choice_fin_ymd IS NULL			)		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : update
+-- Query Id : updateTransfInfrmFlagRecvList
+
+		UPDATE TB_DFRECVTRANSFLIST 		SET transf_aprov_req_infrm_flag = '1'			, transf_aprov_req_infrm_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE record_center_id = '1' 		AND	transf_yyyy = '1'		AND	transf_grp_sno IN (			SELECT transf_grp_sno 		  	FROM TB_DFTRANSFWORK			WHERE record_center_id = '1' 			AND	transf_yyyy = '1'			AND	transf_handl_state = '1'			AND transf_list_choice_fin_ymd IS NULL		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : update
+-- Query Id : updateTransfInfrmFlagWorkList
+
+		UPDATE TB_DFTRANSFWORK		SET transf_list_choice_fin_ymd = TO_CHAR(SYSDATE, 'YYYYMMDD')		WHERE record_center_id = '1'		AND transf_yyyy = '1'        AND transf_handl_state = '1'        AND transf_list_choice_fin_ymd IS NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : update
+-- Query Id : updateTransfInfrmFlagFileList
+
+		UPDATE TB_DFTRANSFINFRMFILE 		SET transf_infrm_flag =  '1'			, transf_infrm_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE record_center_id = '1'		AND	transf_infrm_creat_yyyy = '1'		AND transf_infrm_type = '1'		AND	transf_grp_sno = '1'		AND	transf_infrm_file_type LIKE 'TRANS_PLAN_REQ%';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml
+-- Query    : select
+-- Query Id : findTransfGrpSnoMax
+
+		SELECT NVL(MAX(transf_grp_sno),0)		FROM  TB_DFTRANSFWORK		WHERE record_center_id = '1'		AND   transf_yyyy = '1'		AND   transf_list_choice_fin_ymd IS NOT NULL	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfListWrite.xml

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace">
+
+	<resultMap id="accs-traceDataDoc-result" class="rms.accs.trace.domain.TraceDataDoc" >
+		<result property="traceYyyy" 	    column="TRACE_YYYY"         />
+		<result property="traceFileNm" 		column="TRACE_FILE_NM"      />
+		<result property="orignFileId" 		column="ORIGN_FILE_ID"      />
+		<result property="traceDocTypeNm" 	column="TRACE_DOC_TYPE_NM"  />
+	</resultMap>
+	<!-- 
+		감사추적 감사추적데이터문서화 목록을 조회한다.
+	 -->
+	<select id="findTraceDataDocList" parameterClass="rms.accs.trace.domain.TraceDataDoc" resultMap="accs-traceDataDoc-result">	
+		SELECT AA.TRACE_YYYY
+		   , AA.TRACE_FILE_NM
+		   , AA.ORIGN_FILE_ID
+		   , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ18' AND TB_ZZCOMCD.COM_CD = AA.TRACE_DOC_TYPE_CD) TRACE_DOC_TYPE_NM
+		FROM (
+			SELECT Z.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, Y.*
+				FROM (		
+					SELECT TRACE_YYYY
+					   , TRACE_FILE_NM
+					   , ORIGN_FILE_ID
+					   , TRACE_DOC_TYPE_CD
+			        FROM   TB_ZZTRACEDOCHIST
+					WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					<dynamic>
+						<isNotEmpty prepend="AND" property="fromYyyy">
+							<isNotEmpty property="toYyyy">
+								(TRACE_YYYY BETWEEN #fromYyyy:VARCHAR# AND #toYyyy:VARCHAR#)
+							</isNotEmpty>
+							<isEmpty property="toYyyy">
+								TRACE_YYYY <![CDATA[>=]]> #fromYyyy:VARCHAR#
+							</isEmpty>
+						</isNotEmpty>
+						<isEmpty prepend="AND" property="fromYyyy">
+							<isNotEmpty property="toYyyy">
+								TRACE_YYYY <![CDATA[<=]]> #toYyyy:VARCHAR#
+							</isNotEmpty>
+						</isEmpty>	
+						<isNotEmpty prepend="AND" property="traceDocTypeCd">
+							TRACE_DOC_TYPE_CD = #traceDocTypeCd:VARCHAR#
+						</isNotEmpty>	
+					</dynamic>
+					ORDER BY TRACE_YYYY DESC
+				) Y
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) Z
+			WHERE z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) AA
+		ORDER BY AA.rnum
+	</select>
+	<!-- 
+		COUNT - 감사추적 감사추적데이터문서화 목록을 조회한다.
+	 -->
+	<select id="countTraceDataDocList" parameterClass="rms.accs.trace.domain.TraceDataDoc" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM   TB_ZZTRACEDOCHIST
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>	
+            <isNotEmpty prepend="AND" property="fromYyyy">
+				<isNotEmpty property="toYyyy">
+					(TRACE_YYYY BETWEEN #fromYyyy:VARCHAR# AND #toYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="toYyyy">
+					TRACE_YYYY <![CDATA[>=]]> #fromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="fromYyyy">
+				<isNotEmpty property="toYyyy">
+					TRACE_YYYY <![CDATA[<=]]> #toYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>	
+			<isNotEmpty prepend="AND" property="traceDocTypeCd">
+				TRACE_DOC_TYPE_CD = #traceDocTypeCd:VARCHAR#
+			</isNotEmpty>	
+		</dynamic>
+	</select>
+	
+		<!-- 문서화  대상 데이터 count -->
+    <select id="countTrace" parameterClass="rms.accs.trace.domain.TraceDataDoc" resultClass="int">
+		SELECT COUNT(1)
+		FROM   TB_ZZTRACE
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	    AND    DOC_FLAG = '0'
+        AND    <![CDATA[
+                   TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+               ]]>
+	</select>
+		
+	<!-- 문서화 저장 -->
+	<insert id="createTraceDataDoc" parameterClass="rms.accs.trace.domain.TraceDataDoc">
+		INSERT INTO TB_ZZTRACEDOCHIST(RECORD_CENTER_ID, TRACE_DOC_SEQ, TRACE_YYYY, TRACE_DOC_TYPE_CD, TRACE_FILE_NM, WORK_DTIME, WORK_USER_ID, ORIGN_FILE_ID) 
+		VALUES (#recordCenterId#, (SELECT LPAD(NVL(MAX(TRACE_DOC_SEQ), 0)+1,19,'0')  FROM TB_ZZTRACEDOCHIST WHERE RECORD_CENTER_ID = #recordCenterId#), #traceYyyy#, #traceDocTypeCd#, #traceFileNm#
+		<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #workUserId#, #orignFileId#)-->
+		,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), #workUserId#, #orignFileId#)
+	</insert>
+	
+	<!-- 문서화 UPDATE -->	
+	<update id="updateTrace" parameterClass="rms.accs.trace.domain.TraceDataDoc">
+	  UPDATE TB_ZZTRACE
+	  SET    DOC_FLAG = '1'
+	  WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  AND    DOC_FLAG = '0'
+      <![CDATA[
+      AND    TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+      ]]>
+	</update>
+	
+		<resultMap id="accs-traceDataDocAdjst-result" class="rms.accs.trace.domain.TraceDataDoc" >
+	    <result property="workTypeCd" 		column="WORK_TYPE_CD"       />
+		<result property="workTypeNm" 		column="WORK_TYPE_NM"       />
+	</resultMap>
+	
+	<!-- 데이터정리 팝업 리스트 -->	
+	<select id="countTraceDataDocAdjst" parameterClass="rms.accs.trace.domain.TraceDataDoc" resultClass="long">
+	SELECT COUNT(*) FROM
+	(
+	    SELECT WORK_TYPE_CD
+	           ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = WORK_TYPE_CD ) WORK_TYPE_NM
+	    FROM   TB_ZZTRACE 
+	    WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	    AND    DOC_FLAG = '1'
+        <dynamic>	
+            <isNotEmpty prepend="AND" property="fromYyyy">
+                (SUBSTR(TRACE_YMD,1,4) BETWEEN #fromYyyy:VARCHAR# AND #toYyyy:VARCHAR#)
+			</isNotEmpty>	
+            <isEqual prepend="AND" property="traceDocTypeCd" compareValue="1">
+                USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE USER_DIV = '3')
+ 	        </isEqual>
+ 	        <isEqual prepend="AND" property="traceDocTypeCd" compareValue="2">
+                USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE USER_DIV = '1')
+ 	        </isEqual>
+ 	        <isEqual prepend="AND" property="traceDocTypeCd" compareValue="3">
+                TRGT_DIV_CD = '1'
+ 	        </isEqual>
+ 	        <isEqual prepend="AND" property="traceDocTypeCd" compareValue="4">
+                TRGT_DIV_CD = '2'
+ 	        </isEqual>
+        </dynamic>
+	    GROUP BY WORK_TYPE_CD
+		ORDER BY WORK_TYPE_CD
+		)
+	</select>
+	
+	<!-- 데이터정리 팝업 리스트 -->	
+	<select id="findTraceDataDocAdjst" parameterClass="rms.accs.trace.domain.TraceDataDoc" resultMap="accs-traceDataDocAdjst-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+	    SELECT WORK_TYPE_CD
+	           ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = WORK_TYPE_CD ) WORK_TYPE_NM
+	    FROM   TB_ZZTRACE 
+	    WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	    AND    DOC_FLAG = '1'
+        <dynamic>	
+            <isNotEmpty prepend="AND" property="fromYyyy">
+                (SUBSTR(TRACE_YMD,1,4) BETWEEN #fromYyyy:VARCHAR# AND #toYyyy:VARCHAR#)
+			</isNotEmpty>	
+            <isEqual prepend="AND" property="traceDocTypeCd" compareValue="1">
+                USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE USER_DIV = '3')
+ 	        </isEqual>
+ 	        <isEqual prepend="AND" property="traceDocTypeCd" compareValue="2">
+                USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE USER_DIV = '1')
+ 	        </isEqual>
+ 	        <isEqual prepend="AND" property="traceDocTypeCd" compareValue="3">
+                TRGT_DIV_CD = '1'
+ 	        </isEqual>
+ 	        <isEqual prepend="AND" property="traceDocTypeCd" compareValue="4">
+                TRGT_DIV_CD = '2'
+ 	        </isEqual>
+        </dynamic>
+	    GROUP BY WORK_TYPE_CD
+		ORDER BY WORK_TYPE_CD
+					) C
+						WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+					) B
+					WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 추적 삭제 -->	
+	<delete id="deleteTrace" parameterClass="rms.accs.trace.domain.TraceDataDoc">
+		DELETE 
+		FROM   TB_ZZTRACE  
+		WHERE  DOC_FLAG = '1'
+		AND    WORK_TYPE_CD = #workTypeCd:VARCHAR#
+		AND    SUBSTR(TRACE_YMD,1,4) BETWEEN #fromYyyy:VARCHAR# AND #toYyyy:VARCHAR#
+		AND	   RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</delete>	
+</sqlMap>

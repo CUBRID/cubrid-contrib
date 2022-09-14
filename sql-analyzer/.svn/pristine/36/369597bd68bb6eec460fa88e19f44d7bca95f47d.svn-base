@@ -1,0 +1,249 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC002
+
+		SELECT USER_ID,		       USER_NM,		       DEPT_CD,		       POS,		       RANK		  FROM TB_STUSER		 WHERE LOGIN_USER_ID = '1'		  AND DEPT_CD = '1'		  AND USE_FLAG = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC003
+
+		SELECT COM_TYPE_CD, COM_CD, COM_CD_NM  			FROM TB_ZZCOMCD 		WHERE USE_FLAG = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC004
+
+		SELECT B.STAKRM_ID,		       A.STAKRM_NM,		       B.BOOKSF_ID,		       B.BOOKSF_NM,		       TO_CHAR(SHELF_C_CNT) AS SHELF_C_CNT,		       TO_CHAR(SHELF_R_CNT) AS SHELF_R_CNT		  FROM    TB_SRSTAKRM A		       INNER JOIN		          TB_SRBOOKSF B		       ON A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		          AND A.STAKRM_ID = B.STAKRM_ID		 WHERE A.RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID		                               FROM TB_STUSER		                              WHERE USER_ID = '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC005_01
+
+		SELECT (SELECT NVL(MAX(SNO),0) + 1 FROM TB_SRBOOKSFARNG WHERE ARNG_YYYY = SUBSTR('1',0,4) AND RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = '1')) AS SNO		,	SUBSTR('1',0,4) || LPAD((SELECT NVL(MAX(SNO),0) + 1 FROM TB_SRBOOKSFARNG WHERE ARNG_YYYY = SUBSTR('1',0,4) AND RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = '1')),6,'0') AS BOOKSF_ARNG_ID		,	(SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = '1') AS RECORD_CENTER_ID		FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC005_02
+
+		INSERT INTO TB_SRBOOKSFARNG (RECORD_CENTER_ID,		                             BOOKSF_ARNG_ID,		                             ARNG_YYYY,		                             SNO,		                             ARNG_YMD, 		                             WORK_USER_ID,		                             WORK_DTIME,		                             PLAN_YMD, 		                             FIN_FLAG)	     VALUES (		     	'1'			,	'1' 			,	SUBSTR('1',0,4) 			,	'1'			,	'1'			,	'1'			,	(SELECT TO_CHAR (sys_datetime, 'YYYYMMDDHHMMSS') FROM DUAL)			,	'1'			,	'1'			);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC005_03
+
+		INSERT INTO TB_SRBOOKSFARNGDETL (RECORD_CENTER_ID,		                                 BOOKSF_ARNG_ID,		                                 FOLDER_ID,		                                 STAKRM_ID,		                                 BOOKSF_ID,		                                 BOOKSF_SHELF_CNO,		                                 BOOKSF_SHELF_RNO)		     VALUES (					(SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = '1')				,	'1'				,	(SELECT FOLDER_ID FROM TB_RFTABPUB WHERE RECORD_CENTER_ID = '1' AND TAG_ID = '1')				,	'1'				,	'1'				,	'1'				,	'1'			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC005_04
+
+		UPDATE TB_RDFOLDER		   SET BOOKSF_ARNG_FLAG = '1'		 WHERE FOLDER_ID IN		          (SELECT B.FOLDER_ID		             FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B		            WHERE     A.BOOKSF_ARNG_ID = B.BOOKSF_ARNG_ID		                  AND A.BOOKSF_ARNG_ID = '1'		                  AND A.RECORD_CENTER_ID = '1'		                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID)		       AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC006_01
+
+		SELECT A.RECORD_CENTER_ID AS RECORD_CENTER_ID,		           A.BOOKSF_ARNG_ID AS BOOKSF_ARNG_ID,		           B.FOLDER_ID AS FOLDER_ID,		           B.TAG_ID AS TAG_ID		      FROM    TB_SRBOOKSFARNGDETL A		           INNER JOIN		              TB_RFTABPUB B		           ON A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		              AND A.FOLDER_ID = B.FOLDER_ID		     WHERE B.TAG_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC006_02
+
+		UPDATE TB_SRBOOKSFARNGDETL		   SET STAKRM_ID = '1',		       BOOKSF_ID = '1',		       BOOKSF_SHELF_CNO = '1',		       BOOKSF_SHELF_RNO = '1'		 WHERE     RECORD_CENTER_ID = '1'		       AND BOOKSF_ARNG_ID = '1'		       AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC007
+
+		SELECT DISTINCT (A.CNTCHK_ID) AS CNTCHK_ID,                A.PLAN_YMD AS PLAN_YMD,                C.USER_NM AS USER_NM,				A.CHECK_STATE_CD AS CHECK_STATE_CD		  FROM TB_SRCNTCHK A		       INNER JOIN TB_STUSER C		          ON A.WORK_USER_ID = C.USER_ID		             AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		 WHERE     A.RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = '1')		       AND A.WORK_USER_ID = '1'		       AND A.CHECK_STATE_CD != '2'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC008
+
+		SELECT A.STAKRM_MNG_NO AS STAKRM_MNG_NO,		       A.TITLE AS TITLE,		       A.CREAT_YYYY AS CREAT_YYYY,		       A.PRESV_TERM_CD AS PRESV_TERM_CD,		       (   D.STAKRM_ID		        || '-'		        || D.BOOKSF_ID		        || '-'		        || D.BOOKSF_SHELF_CNO		        || '-'		        || D.BOOKSF_SHELF_RNO)		          AS ARNG_INFO,		       C.DEFCT_FLAG AS DEFCT_FLAG,		       C.HANDL_RSLT_CONT AS HANDL_RSLT_CONT,		       C.CHECK_YMD AS CHECK_YMD,		       E.TAG_ID AS TAG_ID		  FROM TB_RDFOLDER A,		       TB_SRCNTCHK B,		       TB_SRCNTCHKDETL C,		       TB_SRBOOKSFARNGDETL D,		       TB_RFTABPUB E		 WHERE	   B.CNTCHK_ID = C.CNTCHK_ID		       AND C.FOLDER_ID = D.FOLDER_ID		       AND C.FOLDER_ID = A.FOLDER_ID		       AND C.FOLDER_ID = E.FOLDER_ID		       AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		       AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID		       AND C.RECORD_CENTER_ID = B.RECORD_CENTER_ID		       AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		       AND C.RECORD_CENTER_ID = E.RECORD_CENTER_ID		       AND B.CNTCHK_ID = '1'		       AND C.RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC009
+
+		UPDATE TB_SRCNTCHKDETL		   SET DEFCT_FLAG = '1'		   	, HANDL_RSLT_CONT = '1'		   	, CHECK_YMD = '1'		 WHERE     CNTCHK_ID = '1'		       AND RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID  FROM TB_STUSER WHERE USER_ID = '1')		       AND FOLDER_ID = (SELECT FOLDER_ID FROM TB_RFTABPUB WHERE TAG_ID = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC009_01
+
+ 		SELECT COUNT (*)		  FROM TB_SRCNTCHKDETL		 WHERE     CNTCHK_ID = '1' 			   AND RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID  FROM TB_STUSER WHERE USER_ID = '1')			   AND DEFCT_FLAG IS NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC009_02
+
+		UPDATE TB_SRCNTCHK		   SET CHECK_STATE_CD = '1'		   	, CHECK_YMD = '1'		 WHERE 		CNTCHK_ID = '1' 		 		AND RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID  FROM TB_STUSER WHERE USER_ID = '1')		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC010
+
+		UPDATE TB_SRCNTCHK		   SET CHECK_STATE_CD = '2'		   	, CHECK_YMD = '1'		 WHERE 		CNTCHK_ID = '1' 		 		AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC010_01
+
+		UPDATE TB_RDFOLDER		   SET LAST_CHECK_YYYY = '1'		 WHERE FOLDER_ID IN		          (SELECT FOLDER_ID		             FROM TB_SRCNTCHKDETL		            WHERE 		CNTCHK_ID = '1' 		            		AND RECORD_CENTER_ID = '1')		       AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC010_02
+
+		SELECT RECORD_CENTER_ID, STAKRM_ID, BOOKSF_ID		  FROM TB_SRCNTCHKDETL		 WHERE 		RECORD_CENTER_ID = '1'		 		AND CNTCHK_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC010_03
+
+		UPDATE TB_SRBOOKSF		   SET LAST_CHECK_YYYY = '1'		 WHERE     STAKRM_ID = '1'		       AND BOOKSF_ID = '1'		       AND RECORD_CENTER_ID = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC010_04
+
+ 		SELECT COUNT (*)		  FROM TB_SRCNTCHKDETL		 WHERE     CNTCHK_ID = '1' 			   AND RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID  FROM TB_STUSER WHERE USER_ID = '1')			   AND DEFCT_FLAG IS NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC011_01
+
+		SELECT NVL (MAX (OUT_SNO), 0) + 1 AS OUT_SNO				, '1' || LPAD (NVL (MAX (OUT_SNO), 0) + 1, 6, '0') AS OUT_ID		  FROM TB_SROUT		 WHERE 		OUT_YYYY = '1' 		 		AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC011_02
+
+		SELECT USER_NM AS OUT_USER_NM,		       POS AS OUT_USER_POS_RANK_NM,		       B.DEPT_ABBR_NM AS OUT_USER_ORG_NM		  FROM TB_STUSER A, TB_STDEPT B		 WHERE     A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		       AND A.DEPT_CD = B.DEPT_CD		       AND A.USER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC011_03
+
+		INSERT INTO TB_SROUT (RECORD_CENTER_ID,	                      OUT_ID,	                      OUT_YYYY,	                      OUT_SNO,	                      OUT_YMD,	                      OUT_TYPE_CD,	                      RETRN_EXPT_YMD,	                      OUT_USER_NM,	                      OUT_USER_ORG_NM,	                      OUT_USER_POS_RANK_NM,	                      OUT_FOLDER_CNT,	                      OUT_RSN,	                      WORK_USER_ID)	     VALUES ('1' 	     		, '1'	     		, '1'	     		, '1'	     		, '1'	            , '1'	            , '1'	            , '1'	            , '1'	            , '1'	            , '1'	            , '1'	            , '1'	            )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC011_04
+
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID,		                              USER_ID,		                              TRGT_ID,		                              REMK)		     VALUES ('1'		             , '1'		             , (SELECT FOLDER_ID FROM TB_RFTABPUB WHERE RECORD_CENTER_ID = '1' AND TAG_ID = '1')		             , 'CARRYOUT'		            )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC011_05
+
+		INSERT INTO TB_SRINOUTFOLDER (RECORD_CENTER_ID,	                              OUT_ID,	                              FOLDER_ID,	                              IN_FLAG,	                              REG_DTIME)	     VALUES ('1'	             , '1'	             , (SELECT FOLDER_ID FROM TB_RFTABPUB WHERE RECORD_CENTER_ID = '1' AND TAG_ID = '1')	             , '0'	             , (SELECT TO_CHAR(sys_datetime,'YYYYMMDDHHMMSS') FROM DUAL)				)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC011_06
+
+		UPDATE TB_RDFOLDER		   SET OUT_FLAG = '1'		 WHERE FOLDER_ID = (SELECT FOLDER_ID FROM TB_RFTABPUB WHERE RECORD_CENTER_ID = '1' AND TAG_ID = '1')		       AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC012_01
+
+		SELECT NVL (MAX (IN_SNO), 0) + 1 AS IN_SNO				, '1' || LPAD (NVL (MAX (IN_SNO), 0) + 1, 6, '0') AS IN_ID		  FROM TB_SRIN		 WHERE 		IN_YYYY = '1' 		 		AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC012_02
+
+		SELECT USER_NM AS IN_USER_NM,		       POS AS IN_USER_POS_RANK_NM,		       B.DEPT_ABBR_NM AS IN_USER_ORG_NM		  FROM TB_STUSER A, TB_STDEPT B		 WHERE     A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		       AND A.DEPT_CD = B.DEPT_CD		       AND A.USER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC012_03
+
+		INSERT INTO TB_SRIN (RECORD_CENTER_ID,		                     IN_ID,		                     IN_YYYY,		                     IN_SNO,		                     IN_YMD,		                     IN_USER_NM,		                     IN_USER_ORG_NM,		                     IN_USER_POS_RANK_NM,		                     IN_FOLDER_CNT,		                     IN_RSN,		                     WORK_USER_ID)		     VALUES ('1'		             , '1'		             , '1'		             , '1'		             , '1'		             , '1'		             , '1'		             , '1'		             , '1'		             , '1'		             , '1'		             )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : insert
+-- Query Id : WC012_04
+
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID,		                              USER_ID,		                              TRGT_ID,		                              REMK)		     VALUES ('1'		             , '1'		             , (SELECT FOLDER_ID FROM TB_RFTABPUB WHERE RECORD_CENTER_ID = '1' AND TAG_ID = '1')		             , 'CARRYIN'		            )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC012_05
+
+		UPDATE TB_SRINOUTFOLDER		   SET IN_FLAG = '1', IN_ID = '1'		 WHERE IN_FLAG = '0'		       AND FOLDER_ID IN		              (SELECT TRGT_ID		                 FROM TB_ZZREQLISTTEMP		                WHERE     USER_ID = '1'		                      AND RECORD_CENTER_ID = '1'		                      AND REMK = 'CARRYIN')		       AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : update
+-- Query Id : WC012_06
+
+		UPDATE TB_RDFOLDER		   SET OUT_FLAG = '0'		 WHERE FOLDER_ID = (SELECT FOLDER_ID FROM TB_RFTABPUB WHERE RECORD_CENTER_ID = '1' AND TAG_ID = '1')		       AND RECORD_CENTER_ID = '1'		       ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC013
+
+		SELECT STAKRM_MNG_NO,		       TITLE,		       '1' AS TAG_ID,		       CASE		          WHEN NVL (OUT_FLAG, '0') = '1' THEN '1'		          ELSE '0'		       END		          AS MOVE_FLAG		  FROM TB_RDFOLDER		 WHERE FOLDER_ID = (SELECT FOLDER_ID		                      FROM TB_RFTABPUB		                     WHERE TAG_ID = '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : getRecordCenterId
+
+		SELECT RECORD_CENTER_ID  FROM TB_STUSER WHERE USER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC014
+
+		SELECT DISTINCT CREAT_YYYY,		       STAKRM_MNG_NO,		       TITLE,		       C.TAG_ID AS TAG_ID,		       (   B.STAKRM_ID		        || '-'		        || B.BOOKSF_ID		        || '-'		        || B.BOOKSF_SHELF_CNO		        || '-'		        || B.BOOKSF_SHELF_RNO)		          AS ARNG_INFO		  FROM TB_RDFOLDER A		       LEFT OUTER JOIN TB_SRBOOKSFARNGDETL B		          ON A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		             AND A.FOLDER_ID = B.FOLDER_ID		       INNER JOIN TB_RFTABPUB C		          ON A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		             AND A.FOLDER_ID = C.FOLDER_ID		 WHERE A.RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID		                               FROM TB_STUSER		                              WHERE USER_ID = '1')		       AND A.TITLE LIKE '%' || '1' || '%'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml
+-- Query    : select
+-- Query Id : WC015
+
+		SELECT DISTINCT CREAT_YYYY,		       STAKRM_MNG_NO,		       TITLE,		       '1' AS TAG_ID,		       (   B.STAKRM_ID		        || '-'		        || B.BOOKSF_ID		        || '-'		        || B.BOOKSF_SHELF_CNO		        || '-'		        || B.BOOKSF_SHELF_RNO)		          AS ARNG_INFO		  FROM    TB_RDFOLDER A		       INNER JOIN		          TB_SRBOOKSFARNGDETL B		       ON A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		          AND A.FOLDER_ID = B.FOLDER_ID		 WHERE A.RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID		                               FROM TB_STUSER		                              WHERE USER_ID = '1')		       AND A.FOLDER_ID = (SELECT FOLDER_ID		                            FROM TB_RFTABPUB		                           WHERE TAG_ID = '1')	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\WD00.xml

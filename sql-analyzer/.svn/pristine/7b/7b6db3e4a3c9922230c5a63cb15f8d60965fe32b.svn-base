@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="EUC-KR"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %5p [%c] %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.StringMatchFilter">
+			<param name="StringToMatch" value="Result" />
+			<param name="AcceptOnMatch" value="false" />
+		</filter>
+	</appender>
+
+	<appender name="dbwrap" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="EUC-KR" />
+		<param name="file" value="/software/rms_daemon/rmsUserSyncNeis/logs/dbwrap.log" />
+
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="receive" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="EUC-KR" />
+		<param name="file" value="/software/rms_daemon/rmsUserSyncNeis/logs/receive.log" />
+
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>	
+	
+	<appender name="sync" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="EUC-KR" />
+		<param name="file" value="/software/rms_daemon/rmsUserSyncNeis/logs/sync.log" />
+
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="com.ibatis.apache.orgmon.jdbc.logging" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="dbwrap" />
+	</logger>
+	
+	<logger name="com.ibatis.apache.orgmon.jdbc.logging.PreparedStatementLogProxy" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="dbwrap" />
+	</logger>
+	
+	<logger name="com.ibatis.apache.orgmon.jdbc.logging.ResultSetLogProxy" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="dbwrap" />
+	</logger>
+	
+	<logger name="java.sql.PreparedStatement" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="dbwrap" />
+	</logger>
+	
+	<logger name="rms.receive" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="receive" />
+	</logger>	
+	
+	<logger name="rms.sync" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="sync" />
+	</logger>
+
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="console" />
+	</root>
+ 
+</log4j:configuration>

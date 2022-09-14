@@ -1,0 +1,45 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+
+createMultiRecordCenter
+Invalid format.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenter
+
+		INSERT INTO TB_STRECORDCENTER		(record_center_id, record_center_cd, record_center_nm, reg_dtime, remk, rep_org_nm)		VALUES(( SELECT LPAD(NVL(SUBSTR(MAX(record_center_id),6),0)+1, 7, '0')				 FROM TB_STRECORDCENTER)		       , '1'		       , '1'		       , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		       , '1'		       , '1' )	;
+
+createMultiRecordCenterSetGrantGrp
+Invalid format.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetGrantGrp
+
+		INSERT INTO TB_STGRANTGRP (record_center_id, grant_grp_cd, grant_grp_nm, grant_grp_descr, use_flag, work_user_id, work_dtime)		(		SELECT '1', '001', '심의위원그룹', '폐기 및 재평가 심의위원 그룹', '1', '0000000000', TO_CHAR (SYSDATE, 'YYYYMMDDHH24MISS') FROM DUAL		UNION 		SELECT '1', '002', '공개심의위원', '공개 심의위원', '1', '0000000000', TO_CHAR (SYSDATE, 'YYYYMMDDHH24MISS') FROM DUAL		);
+
+updateMultiRecordCenterSetUnitOrg
+Semantic: before ' )	;'
+Only one column can be specified in the select list when the subquery is not introduced with EXISTS. update TB_ZZORGUNIT TB_ZZORGUNIT set TB_ZZORGUNIT.record_cen...[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetUnitOrg
+
+		UPDATE TB_ZZORGUNIT		SET   record_center_id = '1'		WHERE record_center_id = '1'		AND   (org_cd, unit_cd) IN				(SELECT DISTINCT org_cd, unit_cd				 FROM TB_ZZORGUNIT				 WHERE record_center_id = '1'				 AND   org_cd IN				          (SELECT org_cd				           FROM TB_STORG				           WHERE record_center_id = '1'				           START WITH org_cd = '1'				                 AND  record_center_id = '1'				           CONNECT BY PRIOR org_cd = upper_org_cd				                      AND   record_center_id = '1'))	;
+
+createRecordCenterSet
+The constraint of the foreign key 'tb_stconfig_fk01' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createRecordCenterSet
+
+		INSERT INTO TB_STCONFIG (			record_center_id, noml_mng_no_rule, spcl_mng_no_rule, handl_org_cd, link_server_ip	  	   ,link_server_port, link_server_user_id, link_server_pwd, link_server_class, link_server_lang	  	   ,presv_box_id_rule		) VALUES (			'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1' 		)    	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\sys\confset\ConfSet.xml

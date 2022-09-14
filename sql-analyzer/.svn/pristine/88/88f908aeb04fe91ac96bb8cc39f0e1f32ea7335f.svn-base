@@ -1,0 +1,1308 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="take.prod">
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) resultMap
+	-->
+	<resultMap id="findProdRecv-result" class="rms.take.prod.domain.ProdRecv" >
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="crReportOrgCd" 		column="CR_REPORT_ORG_CD"/>
+		<result property="crReportOrgNm" 		column="CR_REPORT_ORG_NM"/>
+		<result property="crReportSno" 			column="CR_REPORT_SNO"/>
+		<result property="crReportOrgAbbrNm" 	column="CR_REPORT_ORG_ABBR_NM"/>
+		<result property="crReportYyyy" 		column="CR_REPORT_YYYY"/>
+		<result property="stateDivCd" 			column="STATE_DIV_CD"/>
+		<result property="stateDivCdNm" 		column="STATE_DIV_CD_NM"/>
+		<result property="recvFolderCnt" 		column="RECV_FOLDER_CNT"/>
+		<result property="recvRecordCnt" 		column="RECV_RECORD_CNT"/>
+		<result property="errorRecvFolderCnt" 	column="ERROR_RECV_FOLDER_CNT"/>
+		<result property="errorRecvRecordCnt" 	column="ERROR_RECV_RECORD_CNT"/>
+		<result property="sucesRecvFolderCnt" 	column="SUCESS_RECV_FOLDER_CNT"/>
+		<result property="sucesRecvRecordCnt" 	column="SUCESS_RECV_RECORD_CNT"/>
+		<result property="rjctFolderCnt" 		column="RJCT_FOLDER_CNT"/>
+		<result property="rjctRecordCnt" 		column="RJCT_RECORD_CNT"/>
+		<result property="finFolderCnt" 		column="FIN_FOLDER_CNT"/>
+		<result property="finRecordCnt" 		column="FIN_RECORD_CNT"/>
+		<result property="recvFinStateCd" 		column="recv_fin_state_cd"/>
+		<result property="recvFinStateCdNm" 	column="recv_fin_state_cd_nm"/>
+	</resultMap>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 검수처리 기록물철조회 resultMap
+	-->
+	<resultMap id="findProdRecvFolder-result" class="rms.take.prod.domain.ProdRecvFolder" >
+		<result property="folderRecvSeq" 	column="FOLDER_RECV_SEQ"/>
+		<result property="clssId" 			column="CLSS_ID"/>
+		<result property="clssNm" 			column="CLSS_NM"/>
+		<result property="title" 			column="TITLE"/>
+		<result property="creatYyyy" 		column="CREAT_YYYY"/>
+		<result property="presvTermCdNm" 	column="PRESV_TERM_CD_NM"/>
+		<result property="erecordFlagNm" 	column="ERECORD_FLAG_NM"/>
+		<result property="errorFlagNm" 		column="ERROR_FLAG_NM"/>
+		<result property="examRsltCdNm" 	column="EXAM_RSLT_CD_NM"/>
+		<result property="examRsltCd" 		column="EXAM_RSLT_CD"/>
+	</resultMap>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 검수처리 기록물철조회 resultMap
+	-->
+	<resultMap id="findProdCheckFolderCheckedList-result" class="rms.take.prod.domain.ProdRecvFolder" >
+		<result property="folderRecvSeq" 			column="FOLDER_RECV_SEQ"/>
+		<result property="title" 					column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="errorFlagNm" 				column="ERROR_FLAG_NM"/>
+		<result property="recordCnt" 				column="RECORD_CNT"/>
+		<result property="examRsltCdNm" 			column="EXAM_RSLT_CD_NM"/>		
+		<result property="examCont" 				column="EXAM_CONT"/>
+	</resultMap>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 검수처리 기록물건조회 resultMap
+	-->
+	<resultMap id="findProdCheckFolderCheckedRecord-result" class="rms.take.prod.domain.ProdRecvRecord" >
+		<result property="folderRecvSeq" 			column="FOLDER_RECV_SEQ"/>
+		<result property="recordRecvSeq" 			column="RECORD_RECV_SEQ"/>
+		<result property="title" 					column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="errorFlagNm" 				column="ERROR_FLAG_NM"/>
+		<result property="examRsltCdNm" 			column="EXAM_RSLT_CD_NM"/>		
+		<result property="examCont" 				column="EXAM_CONT"/>
+	</resultMap>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 반려처리 기록물철조회 resultMap
+	-->
+	<resultMap id="findProdRecvReturnFolder-result" class="rms.take.prod.domain.ProdRecvFolder" >
+		<result property="folderRecvSeq" 			column="FOLDER_RECV_SEQ"/>
+		<result property="title" 					column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="errorFlagNm" 				column="ERROR_FLAG_NM"/>
+		<result property="recordCnt" 				column="RECORD_CNT"/>
+		<result property="examRsltCdNm" 			column="EXAM_RSLT_CD_NM"/>		
+		<result property="examCont" 				column="EXAM_CONT"/>
+		<result property="rjctCont" 				column="RJCT_CONT"/>
+	</resultMap>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 반려처리 기록물건조회 resultMap
+	-->
+	<resultMap id="findProdRecvReturnRecord-result" class="rms.take.prod.domain.ProdRecvRecord" >
+		<result property="folderRecvSeq" 			column="FOLDER_RECV_SEQ"/>
+		<result property="recordRecvSeq" 			column="RECORD_RECV_SEQ"/>
+		<result property="title" 					column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="errorFlagNm" 				column="ERROR_FLAG_NM"/>
+		<result property="examRsltCdNm" 			column="EXAM_RSLT_CD_NM"/>		
+		<result property="examCont" 				column="EXAM_CONT"/>
+	</resultMap>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 반려통보내역조회 resultMap
+	-->
+	<resultMap id="findProdRecvRjctInfrm-result" class="rms.take.prod.domain.ProdRecvRjctInfrm" >
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="crReportYyyy" 		column="CR_REPORT_YYYY"/>
+		<result property="crReportOrgCd" 		column="CR_REPORT_ORG_CD"/>
+		<result property="creatSysCd" 			column="CREAT_SYS_CD"/>
+		<result property="crReportSno" 			column="CR_REPORT_SNO"/>
+		<result property="stateDivCd" 			column="STATE_DIV_CD"/>
+		<result property="rjctYmd" 				column="RJCT_YMD"/>
+		<result property="rjctRsn" 				column="RJCT_RSN"/>
+		<result property="rjctInfrmXml" 		column="INFRM_FILE_NM"/>
+	</resultMap>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT) 인수통보내역조회 resultMap
+	-->
+	<resultMap id="findProdRecvTakeInfrm-result" class="rms.take.prod.domain.ProdRecvTakeInfrm" >
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="crReportYyyy" 		column="CR_REPORT_YYYY"/>
+		<result property="crReportOrgCd" 		column="CR_REPORT_ORG_CD"/>
+		<result property="creatSysCd" 			column="CREAT_SYS_CD"/>
+		<result property="crReportSno" 			column="CR_REPORT_SNO"/>
+		<result property="stateDivCd" 			column="STATE_DIV_CD"/>
+		<result property="takeUserNm" 			column="TAKE_USER_NM"/>
+		<result property="takovrUserNm" 		column="TAKOVR_USER_NM"/>
+		<result property="takeYmd" 				column="TAKE_YMD"/>
+		<result property="takeInfrmXml" 		column="INFRM_FILE_NM"/>
+	</resultMap>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템 접수현황 resultMap
+	-->
+	<resultMap id="findProdRecvState-result" class="rms.take.prod.domain.ProdRecv" >
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="crReportOrgCd" 		column="CR_REPORT_ORG_CD"/>
+		<result property="crReportOrgNm" 		column="CR_REPORT_ORG_NM"/>
+		<result property="crReportSno" 			column="CR_REPORT_SNO"/>
+		<result property="crReportOrgAbbrNm" 	column="CR_REPORT_ORG_ABBR_NM"/>
+		<result property="crReportYyyy" 		column="CR_REPORT_YYYY"/>
+		<result property="stateDivCd" 			column="STATE_DIV_CD"/>
+		<result property="stateDivCdNm" 		column="STATE_DIV_CD_NM"/>
+		<result property="recvFolderCnt" 		column="RECV_FOLDER_CNT"/>
+		<result property="recvRecordCnt" 		column="RECV_RECORD_CNT"/>
+		<result property="recvYmd" 				column="RECV_YMD"/>
+		<result property="takeYmd" 				column="TAKE_YMD"/>
+	</resultMap>
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(CUT-COUNT)
+	 -->
+	<select id="countProdRecvPagedCutList" parameterClass="rms.take.prod.domain.ProdRecv" resultClass="long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT A.record_center_id, B.cr_report_yyyy, A.org_cd AS cr_report_org_cd, B.creat_sys_cd, B.cr_report_sno
+				 , B.state_div_cd, B.recv_fin_state_cd, A.org_nm, A.org_abbr_nm
+			FROM  TB_STORG A
+			, ( SELECT * FROM TB_CRREPORT
+			    WHERE record_center_id = #recordCenterId:VARCHAR#
+				AND   cr_report_yyyy = #crReportYyyy:VARCHAR#
+				<isNotEmpty prepend="AND" property="crReportOrgCd">
+					cr_report_org_cd = #crReportOrgCd:VARCHAR#
+				</isNotEmpty>
+				AND   creat_sys_cd = '02' ) B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<isNotEmpty prepend="AND" property="crReportOrgCd">
+				A.org_cd = #crReportOrgCd:VARCHAR#
+			</isNotEmpty>
+		    <isNotEmpty prepend="AND" property="closeFlag">
+				A.close_flag = #closeFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="examStateDivCd">
+				B.state_div_cd = #examStateDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="recvFinStateCd">
+				NVL(B.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+			</isNotEmpty>
+			AND   A.record_center_id = B.record_center_id(+)
+			AND   A.org_cd = B.cr_report_org_cd(+)
+		) C
+	</select>
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(CUT-SELECT)
+	 -->
+	<select id="findProdRecvPagedCutList" parameterClass="rms.take.prod.domain.ProdRecv" resultMap="findProdRecv-result">
+		SELECT TA.record_center_id, TA.cr_report_yyyy, TA.cr_report_org_cd, TA.creat_sys_cd, TA.cr_report_sno
+			, TA.state_div_cd
+			, NVL((SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='TK08' AND Z.com_cd=TA.state_div_cd),'미접수') AS state_div_cd_nm
+			, TA.recv_fin_state_cd
+			, DECODE(TA.recv_fin_state_cd,'1','접수중','2','접수실패','3','접수완료','미접수') recv_fin_state_cd_nm
+			, TA.org_nm AS cr_report_org_nm, TA.org_abbr_nm AS cr_report_org_abbr_nm
+			, NVL(TB.recv_folder_cnt,0) recv_folder_cnt
+			, NVL(TB.recv_record_cnt,0) recv_record_cnt
+			, NVL(TB.error_recv_folder_cnt,0) error_recv_folder_cnt
+			, NVL(TB.sucess_recv_folder_cnt,0) sucess_recv_folder_cnt
+			, NVL(TB.rjct_folder_cnt,0) rjct_folder_cnt
+			, NVL(TB.fin_folder_cnt,0) fin_folder_cnt
+			, NVL(TB.error_recv_record_cnt,0) error_recv_record_cnt
+			, NVL(TB.sucess_recv_record_cnt,0) sucess_recv_record_cnt
+			, NVL(TB.rjct_record_cnt,0) rjct_record_cnt
+			, NVL(TB.fin_record_cnt,0) fin_record_cnt
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.record_center_id, B.cr_report_yyyy, A.org_cd AS cr_report_org_cd, B.creat_sys_cd, B.cr_report_sno
+						 , B.state_div_cd, B.recv_fin_state_cd, A.org_nm, A.org_abbr_nm
+					FROM  TB_STORG A
+					, ( SELECT * FROM TB_CRREPORT
+					    WHERE record_center_id = #recordCenterId:VARCHAR#
+						AND   cr_report_yyyy = #crReportYyyy:VARCHAR#
+						<isNotEmpty prepend="AND" property="crReportOrgCd">
+							cr_report_org_cd = #crReportOrgCd:VARCHAR#
+						</isNotEmpty>
+						AND   creat_sys_cd = '02' ) B
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty prepend="AND" property="crReportOrgCd">
+						A.org_cd = #crReportOrgCd:VARCHAR#
+					</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="closeFlag">
+						A.close_flag = #closeFlag:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="examStateDivCd">
+						B.state_div_cd = #examStateDivCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="recvFinStateCd">
+						NVL(B.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+					</isNotEmpty>
+					AND   A.record_center_id = B.record_center_id(+)
+					AND   A.org_cd = B.cr_report_org_cd(+)
+					ORDER BY A.record_center_id, A.org_cd
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+			ORDER BY D.rnum
+		) TA
+		, ( SELECT H.record_center_id, H.cr_report_yyyy, H.cr_report_org_cd, H.creat_sys_cd, H.cr_report_sno
+				, COUNT(1) recv_folder_cnt
+				, NVL(SUM(H.record_cnt),0) recv_record_cnt
+				, NVL(SUM(H.error_recv_folder_cnt),0) error_recv_folder_cnt
+				, NVL(SUM(H.sucess_recv_folder_cnt),0) sucess_recv_folder_cnt
+				, NVL(SUM(H.rjct_folder_cnt),0) rjct_folder_cnt
+				, NVL(SUM(H.fin_folder_cnt),0) fin_folder_cnt
+				, NVL(SUM(H.error_recv_record_cnt),0) error_recv_record_cnt
+				, NVL(SUM(H.sucess_recv_record_cnt),0) sucess_recv_record_cnt
+				, NVL(SUM(H.rjct_record_cnt),0) rjct_record_cnt
+				, NVL(SUM(H.fin_record_cnt),0) fin_record_cnt
+			FROM (
+				SELECT G.record_center_id, G.cr_report_yyyy, G.cr_report_org_cd, G.creat_sys_cd, G.cr_report_sno, G.folder_recv_seq
+					, G.record_cnt 
+					, DECODE(G.exam_rslt_cd,'2',1,0) error_recv_folder_cnt
+					, DECODE(G.exam_rslt_cd,'1',1,0) sucess_recv_folder_cnt
+					, DECODE(G.rjct_flag,'1',1,0) rjct_folder_cnt
+					, DECODE(G.take_fin_flag,'1',1,0) fin_folder_cnt
+					, DECODE(G.exam_rslt_cd,'2',G.record_cnt,0) error_recv_record_cnt
+					, DECODE(G.exam_rslt_cd,'1',G.record_cnt,0) sucess_recv_record_cnt
+					, DECODE(G.rjct_flag,'1',G.record_cnt,0) rjct_record_cnt
+					, DECODE(G.take_fin_flag,'1',G.record_cnt,0) fin_record_cnt
+				FROM (
+					SELECT E.record_center_id, E.cr_report_yyyy, E.cr_report_org_cd, E.creat_sys_cd, E.cr_report_sno, E.folder_recv_seq
+						, E.exam_rslt_cd, E.rjct_flag, E.take_fin_flag
+						, ( SELECT COUNT(1)
+							FROM  TB_CRRECORD F
+							WHERE F.record_center_id=E.record_center_id
+							AND   F.folder_recv_seq=E.folder_recv_seq ) record_cnt
+					FROM  TB_CRFOLDER E 
+					<!--curid WHERE (E.record_center_id, E.cr_report_yyyy, E.cr_report_org_cd, E.creat_sys_cd, E.cr_report_sno)-->
+					WHERE
+					EXISTS (
+						<!--cubrid SELECT D.record_center_id, D.cr_report_yyyy, D.cr_report_org_cd, D.creat_sys_cd, D.cr_report_sno-->
+						SELECT 1
+						FROM (
+							SELECT ROWNUM AS rnum
+								, C.*
+							FROM (
+								SELECT A.record_center_id, B.cr_report_yyyy, A.org_cd AS cr_report_org_cd, B.creat_sys_cd, B.cr_report_sno
+								FROM  TB_STORG A
+								, ( SELECT * FROM TB_CRREPORT
+								    WHERE record_center_id = #recordCenterId:VARCHAR#
+									AND   cr_report_yyyy = #crReportYyyy:VARCHAR#
+									<isNotEmpty prepend="AND" property="crReportOrgCd">
+										cr_report_org_cd = #crReportOrgCd:VARCHAR#
+									</isNotEmpty>
+									AND   creat_sys_cd = '02' ) B
+								WHERE A.record_center_id = #recordCenterId:VARCHAR#
+								<isNotEmpty prepend="AND" property="crReportOrgCd">
+									A.org_cd = #crReportOrgCd:VARCHAR#
+								</isNotEmpty>
+							    <isNotEmpty prepend="AND" property="closeFlag">
+									A.close_flag = #closeFlag:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="examStateDivCd">
+									B.state_div_cd = #examStateDivCd:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="recvFinStateCd">
+									NVL(B.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+								</isNotEmpty>
+								AND   A.record_center_id = B.record_center_id(+)
+								AND   A.org_cd = B.cr_report_org_cd(+)
+								ORDER BY A.record_center_id, A.org_cd
+							) C
+							WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+						) D
+						WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+                                                <!--cubrid-->
+						AND D.record_center_id = E.record_center_id
+						AND D.cr_report_yyyy = E.cr_report_yyyy
+						AND D.cr_report_org_cd = E.cr_report_org_cd
+						AND D.creat_sys_cd = E.creat_sys_cd
+						AND D.cr_report_sno = E.cr_report_sno
+					)
+				) G
+			) H
+			GROUP BY H.record_center_id, H.cr_report_yyyy, H.cr_report_org_cd, H.creat_sys_cd, H.cr_report_sno
+		) TB
+		WHERE TA.record_center_id=TB.record_center_id(+)
+		AND   TA.cr_report_org_cd=TB.cr_report_org_cd(+)
+	</select>
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT count)
+	 -->
+	<select id="countProdRecvPagedList" parameterClass="rms.take.prod.domain.ProdRecv" resultClass="long">
+		SELECT	COUNT(1)
+		FROM 		TB_STORG a,
+						(
+						SELECT	a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, 
+				   						a.cr_report_sno, MAX(a.state_div_cd) AS state_div_cd,
+				   						MAX(a.recv_fin_state_cd) AS recv_fin_state_cd,
+				   						COUNT(b.folder_recv_seq) AS recv_folder_cnt, 
+				   						SUM(b.recv_record_cnt) AS recv_record_cnt, 
+				   						SUM(DECODE(b.exam_rslt_cd,'2',1,0)) AS error_recv_folder_cnt,
+				   						SUM(b.error_recv_record_cnt) AS error_recv_record_cnt,
+				   						SUM(DECODE(b.exam_rslt_cd,'1',1,0)) AS sucess_recv_folder_cnt,
+				   						SUM(b.sucess_recv_record_cnt) AS sucess_recv_record_cnt,
+			  	   						SUM(DECODE(b.rjct_flag,'1',1,0)) AS rjct_folder_cnt,
+				   						SUM(b.rjct_record_cnt) AS rjct_record_cnt,
+				   						SUM(DECODE(b.take_fin_flag,'1',1,0)) AS fin_folder_cnt,
+				   						SUM(b.fin_record_cnt) AS fin_record_cnt
+						FROM   	TB_CRREPORT a,
+										(
+										SELECT	a.record_center_id,
+						   								a.cr_report_yyyy, a.cr_report_org_cd, 
+												   		a.cr_report_sno, a.folder_recv_seq, 
+												   		MAX(a.exam_rslt_cd) AS exam_rslt_cd, 
+												  	 	MAX(a.error_flag) AS error_flag, 
+												  	 	MAX(a.rjct_flag) AS rjct_flag,
+												   		MAX(a.take_fin_flag) AS take_fin_flag,
+												   		SUM(DECODE(b.record_recv_seq,null,0,1)) AS recv_record_cnt,
+												   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.exam_rslt_cd,'2',1,0))) AS error_recv_record_cnt,
+												   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.exam_rslt_cd,'1',1,0))) AS sucess_recv_record_cnt,
+												   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.rjct_flag,'1',1,0))) AS rjct_record_cnt,
+												   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.take_fin_flag,'1',1,0))) AS fin_record_cnt
+										FROM 		TB_CRFOLDER a, TB_CRRECORD b
+										WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+										AND 			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+										<isNotEmpty prepend="AND" property="crReportOrgCd">
+														a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+										</isNotEmpty>
+										AND 			a.creat_sys_cd = '02'
+										AND			a.record_center_id = b.record_center_id(+)
+										AND			a.folder_recv_seq = b.folder_recv_seq(+)
+										GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno, a.folder_recv_seq
+										) b
+						WHERE	  	a.record_center_id = #recordCenterId:VARCHAR#
+						AND		  	a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+						<isNotEmpty prepend="AND" property="crReportOrgCd">
+										a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+						</isNotEmpty>
+						AND		  a.creat_sys_cd = '02'
+						AND		  a.record_center_id = b.record_center_id(+)
+						AND		  a.cr_report_yyyy = b.cr_report_yyyy(+)
+						AND		  a.cr_report_org_cd = b.cr_report_org_cd(+)
+						AND		  a.cr_report_sno = b.cr_report_sno(+)
+						GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno
+						) b,
+						(SELECT	com_cd, com_cd_nm
+						FROM 		TB_ZZCOMCD
+						WHERE 	com_type_cd = 'TK08'
+						) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND		b.cr_report_yyyy(+) = #crReportYyyy:VARCHAR#
+		<isNotEmpty prepend="AND" property="crReportOrgCd">
+				a.org_cd = #crReportOrgCd:VARCHAR#
+		</isNotEmpty>
+	    <isNotEmpty prepend="AND" property="closeFlag">
+				a.close_flag = #closeFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="examStateDivCd">
+				b.state_div_cd = #examStateDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="recvFinStateCd">
+				NVL(b.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+		</isNotEmpty>
+		AND	  	a.record_center_id = b.record_center_id(+)
+		AND	  	a.org_cd = b.cr_report_org_cd(+)
+		AND	  	b.state_div_cd = c.com_cd(+)
+		ORDER BY a.record_center_id, a.org_cd, b.cr_report_sno	
+	</select>
+
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(SELECT)
+	 -->
+	<select id="findProdRecvPagedList" parameterClass="rms.take.prod.domain.ProdRecv" resultMap="findProdRecv-result">
+		SELECT	a.record_center_id,  a.org_cd AS cr_report_org_cd,  
+			a.org_nm AS cr_report_org_nm,  b.cr_report_sno,
+			a.org_abbr_nm AS cr_report_org_abbr_nm,
+   			b.cr_report_yyyy, b.state_div_cd, 
+   			NVL(c.com_cd_nm,'미접수') AS state_div_cd_nm,
+   			NVL(b.recv_folder_cnt,'0') AS recv_folder_cnt, 
+   			NVL(b.recv_record_cnt,'0') AS recv_record_cnt,
+   			NVL(b.error_recv_folder_cnt,'0') AS error_recv_folder_cnt, 
+   			NVL(b.error_recv_record_cnt,'0') AS error_recv_record_cnt,
+   			NVL(b.sucess_recv_folder_cnt,'0') AS sucess_recv_folder_cnt, 
+   			NVL(b.sucess_recv_record_cnt,'0') AS sucess_recv_record_cnt,
+   			NVL(b.rjct_folder_cnt,'0') AS rjct_folder_cnt, 
+   			NVL(b.rjct_record_cnt,'0') AS rjct_record_cnt,
+   			NVL(b.fin_folder_cnt,'0') AS fin_folder_cnt, 
+   			NVL(b.fin_record_cnt,'0') AS fin_record_cnt,
+			NVL(b.recv_fin_state_cd,'0') recv_fin_state_cd,
+			DECODE(b.recv_fin_state_cd,'1','접수중','2','접수실패','3','접수완료','미접수') recv_fin_state_cd_nm
+		FROM 		TB_STORG a,
+			(
+			SELECT	a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, 
+				a.cr_report_sno, MAX(a.state_div_cd) AS state_div_cd,
+				MAX (a.recv_fin_state_cd) AS recv_fin_state_cd,
+				COUNT(b.folder_recv_seq) AS recv_folder_cnt, 
+				SUM(b.recv_record_cnt) AS recv_record_cnt, 
+				SUM(DECODE(b.exam_rslt_cd,'2',1,0)) AS error_recv_folder_cnt,
+				SUM(b.error_recv_record_cnt) AS error_recv_record_cnt,
+				SUM(DECODE(b.exam_rslt_cd,'1',1,0)) AS sucess_recv_folder_cnt,
+				SUM(b.sucess_recv_record_cnt) AS sucess_recv_record_cnt,
+				SUM(DECODE(b.rjct_flag,'1',1,0)) AS rjct_folder_cnt,
+				SUM(b.rjct_record_cnt) AS rjct_record_cnt,
+				SUM(DECODE(b.take_fin_flag,'1',1,0)) AS fin_folder_cnt,
+				SUM(b.fin_record_cnt) AS fin_record_cnt
+			FROM   	TB_CRREPORT a,
+				(
+				SELECT	a.record_center_id,
+					a.cr_report_yyyy, a.cr_report_org_cd, 
+			   		a.cr_report_sno, a.folder_recv_seq, 
+			   		MAX(a.exam_rslt_cd) AS exam_rslt_cd, 
+			  	 	MAX(a.error_flag) AS error_flag, 
+			  	 	MAX(a.rjct_flag) AS rjct_flag,
+			   		MAX(a.take_fin_flag) AS take_fin_flag,
+			   		SUM(DECODE(b.record_recv_seq,null,0,1)) AS recv_record_cnt,
+			   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.exam_rslt_cd,'2',1,0))) AS error_recv_record_cnt,
+			   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.exam_rslt_cd,'1',1,0))) AS sucess_recv_record_cnt,
+			   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.rjct_flag,'1',1,0))) AS rjct_record_cnt,
+			   		SUM(DECODE(b.record_recv_seq,null,0,DECODE(a.take_fin_flag,'1',1,0))) AS fin_record_cnt
+				FROM 		TB_CRFOLDER a, TB_CRRECORD b
+				WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+				AND 			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+				<isNotEmpty prepend="AND" property="crReportOrgCd">
+								a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+				</isNotEmpty>
+				AND 			a.creat_sys_cd = '02'
+				AND			a.record_center_id = b.record_center_id(+)
+				AND			a.folder_recv_seq = b.folder_recv_seq(+)
+				GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno, a.folder_recv_seq
+				) b
+			WHERE	  	a.record_center_id = #recordCenterId:VARCHAR#
+			AND		  	a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+			<isNotEmpty prepend="AND" property="crReportOrgCd">
+							a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+			</isNotEmpty>
+			AND		  a.creat_sys_cd = '02'
+			AND		  a.record_center_id = b.record_center_id(+)
+			AND		  a.cr_report_yyyy = b.cr_report_yyyy(+)
+			AND		  a.cr_report_org_cd = b.cr_report_org_cd(+)
+			AND		  a.cr_report_sno = b.cr_report_sno(+)
+			GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno
+			) b,
+			(SELECT	com_cd, com_cd_nm
+			FROM 		TB_ZZCOMCD
+			WHERE 	com_type_cd = 'TK08'
+			) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND		b.cr_report_yyyy(+) = #crReportYyyy:VARCHAR#
+		<isNotEmpty prepend="AND" property="crReportOrgCd">
+				a.org_cd = #crReportOrgCd:VARCHAR#
+		</isNotEmpty>
+	    <isNotEmpty prepend="AND" property="closeFlag">
+				a.close_flag = #closeFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="examStateDivCd">
+				b.state_div_cd = #examStateDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="recvFinStateCd">
+				NVL(b.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+		</isNotEmpty>
+		AND	  	a.record_center_id = b.record_center_id(+)
+		AND	  	a.org_cd = b.cr_report_org_cd(+)
+		AND	  	b.state_div_cd = c.com_cd(+)
+		ORDER BY a.record_center_id, a.org_cd, b.cr_report_sno
+	</select>
+
+
+
+	<!--  기록물인수>연계인수>생산현황>전자문서시스템생산접수 검수처리 대상 기록물철 조회 (SELECT count)-->
+	<select id="countProdRecvFolderPagedList" parameterClass="rms.take.prod.domain.ProdRecvFolder" resultClass="long">
+		SELECT  	count(*)
+		FROM 		TB_CRFOLDER a
+		WHERE		a.record_center_id = #recordCenterId:VARCHAR#
+		AND			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND			a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND			a.creat_sys_cd = #creatSysCd:VARCHAR#
+		AND			a.cr_report_sno = #crReportSno:NUMBER#
+		<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+						(a.exam_rslt_cd is null 
+		OR			a.exam_rslt_cd = '0')
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="1">
+						a.exam_rslt_cd = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="2">
+						a.exam_rslt_cd = '2'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="3">
+						a.rjct_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="4">
+						a.take_fin_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="0">
+						a.error_flag = 'N'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="1">
+						a.error_flag = 'Y'
+		</isEqual>
+		<isNotEmpty prepend="AND" property="erecordFlag">
+						a.erecord_flag = #erecordFlag:VARCHAR#
+		</isNotEmpty>
+	</select>
+
+
+	<!--  기록물인수>연계인수>생산현황>전자문서시스템생산접수 검수처리 대상 기록물철 조회 (SELECT)-->
+	<select id="findProdRecvFolderPagedList" parameterClass="rms.take.prod.domain.ProdRecvFolder" resultMap="findProdRecvFolder-result">
+		SELECT  	a.folder_recv_seq, a.clss_id,
+						a.clss_nm,	a.title,
+						a.creat_yyyy,
+						d.com_cd_nm AS presv_term_cd_nm,
+						e.com_cd_nm AS erecord_flag_nm,
+						DECODE(a.error_flag,'Y','X','N','O','O') AS error_flag_nm,
+						DECODE(a.rjct_flag,'1','반려',DECODE(a.take_fin_flag,'1','인수',DECODE((c.com_cd_nm),null,'미검수',c.com_cd_nm))) AS exam_rslt_cd_nm,
+						a.exam_rslt_cd
+		FROM 		TB_CRFOLDER a,
+						(SELECT	com_cd, com_cd_nm
+						FROM 		TB_ZZCOMCD
+						WHERE 	com_type_cd = 'TK03'
+						) c,
+						(SELECT	com_cd, com_cd_nm
+						FROM 		TB_ZZCOMCD
+						WHERE 	com_type_cd = 'RD07'
+						) d,
+						(SELECT	com_cd, com_cd_nm
+						FROM 		TB_ZZCOMCD
+						WHERE 	com_type_cd = 'RD23'
+						) e
+		WHERE		a.record_center_id = #recordCenterId:VARCHAR#
+		AND			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND			a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND			a.creat_sys_cd = #creatSysCd:VARCHAR#
+		AND			a.cr_report_sno = #crReportSno:NUMBER#
+		<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+						(a.exam_rslt_cd is null 
+		OR			a.exam_rslt_cd = '0')
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="1">
+						a.exam_rslt_cd = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="2">
+						a.exam_rslt_cd = '2'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="3">
+						a.rjct_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="4">
+						a.take_fin_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="0">
+						a.error_flag = 'N'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="1">
+						a.error_flag = 'Y'
+		</isEqual>
+		<isNotEmpty prepend="AND" property="erecordFlag">
+						a.erecord_flag = #erecordFlag:VARCHAR#
+		</isNotEmpty>
+		AND			a.exam_rslt_cd = c.com_cd(+)
+		AND			DECODE(a.presv_term_cd, '20', '25', a.presv_term_cd) = d.com_cd(+)
+		AND			a.erecord_flag = e.com_cd(+)
+		ORDER BY a.folder_recv_seq
+	</select>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(검수팝업-철목록) (SELECT)
+	 -->
+	<select id="findProdCheckFolderCheckedList" parameterClass="rms.take.prod.domain.ProdRecvFolderListParam" resultMap="findProdCheckFolderCheckedList-result">
+		SELECT C.*
+	    FROM (
+	        SELECT ROWNUM AS rnum
+	            , B.*
+	        FROM (
+			 		SELECT	a.folder_recv_seq, MAX(a.title) AS title, MAX(a.creat_yyyy) AS creat_yyyy, 
+					   				DECODE(MAX(a.error_flag),'Y','X','N','O','O') AS error_flag_nm,
+					  	 			COUNT(b.record_recv_seq) AS record_cnt,
+					   				DECODE(MAX(a.rjct_flag),'1','반려',DECODE(MAX(a.take_fin_flag),'1','인수',DECODE(MAX(c.com_cd_nm),null,'미검수',MAX(c.com_cd_nm)))) AS exam_rslt_cd_nm,
+					   				MAX(a.exam_cont) AS exam_cont
+					FROM		TB_CRFOLDER a, TB_CRRECORD b,
+					 				(SELECT	com_cd, com_cd_nm
+					 				FROM 		TB_ZZCOMCD
+					 				WHERE 	com_type_cd = 'TK03'
+					 				) c
+					WHERE		a.record_center_id =  #recordCenterId:VARCHAR#
+					<dynamic>
+						<iterate prepend="AND a.folder_recv_seq IN" property="folderRecvSeqList" open="(" close=")" conjunction=",">
+								#folderRecvSeqList[]:VARCHAR#
+						</iterate>
+					</dynamic>					
+					AND	  		a.record_center_id = b.record_center_id(+)
+					AND	  		a.folder_recv_seq = b.folder_recv_seq (+)
+					AND	 		a.exam_rslt_cd = c.com_cd(+)
+					GROUP BY a.record_center_id, a.folder_recv_seq
+					ORDER BY a.record_center_id, a.folder_recv_seq	        
+				) B
+			        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			 ) C
+			 WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<select id="countProdCheckFolderCheckedList" parameterClass="rms.take.prod.domain.ProdRecvFolderListParam" resultClass="long">
+		SELECT COUNT(*)
+		FROM  (
+		 		SELECT	a.folder_recv_seq, MAX(a.title) AS title, MAX(a.creat_yyyy) AS creat_yyyy, 
+				   				DECODE(MAX(a.error_flag),'Y','X','N','O','O') AS error_flag_nm,
+				  	 			COUNT(b.record_recv_seq) AS record_cnt,
+				   				DECODE(MAX(a.rjct_flag),'1','반려',DECODE(MAX(a.take_fin_flag),'1','인수',DECODE(MAX(c.com_cd_nm),null,'미검수',MAX(c.com_cd_nm)))) AS exam_rslt_cd_nm,
+				   				MAX(a.exam_cont) AS exam_cont
+				FROM		TB_CRFOLDER a, TB_CRRECORD b,
+				 				(SELECT	com_cd, com_cd_nm
+				 				FROM 		TB_ZZCOMCD
+				 				WHERE 	com_type_cd = 'TK03'
+				 				) c
+				WHERE		a.record_center_id =  #recordCenterId:VARCHAR#
+				<dynamic>
+					<iterate prepend="AND a.folder_recv_seq IN" property="folderRecvSeqList" open="(" close=")" conjunction=",">
+							#folderRecvSeqList[]:VARCHAR#
+					</iterate>
+				</dynamic>					
+				AND	  		a.record_center_id = b.record_center_id(+)
+				AND	  		a.folder_recv_seq = b.folder_recv_seq (+)
+				AND	 		a.exam_rslt_cd = c.com_cd(+)
+				GROUP BY a.record_center_id, a.folder_recv_seq
+				ORDER BY a.record_center_id, a.folder_recv_seq
+		)
+	</select>
+	
+
+	<!--기록물인수>연계인수>생산현황>전자문서시스템생산접수 검수처리(기록물건 목록 SELECT count)-->
+	<select id="countProdCheckFolderCheckedRecordPagedList" parameterClass="rms.take.prod.domain.ProdRecvRecord" resultClass="long">
+		SELECT	count(b.record_recv_seq) 
+		FROM  		TB_CRFOLDER a, TB_CRRECORD b,
+			  			(SELECT	com_cd, com_cd_nm
+		 				FROM 		TB_ZZCOMCD
+		 				WHERE 	com_type_cd = 'TK03'
+		 				) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND	  		a.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		AND	  		a.record_center_id = b.record_center_id
+		AND	  		a.folder_recv_seq = b.folder_recv_seq
+		AND	 		b.exam_rslt_cd = c.com_cd(+)
+	</select>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(검수팝업-건목록) (SELECT)
+	 -->
+	<select id="findProdCheckFolderCheckedRecordPagedList" parameterClass="rms.take.prod.domain.ProdRecvRecord" resultMap="findProdCheckFolderCheckedRecord-result">
+		SELECT	a.folder_recv_seq, b.record_recv_seq, b.title, b.creat_yyyy, 
+		   				DECODE(b.error_flag,'Y','X','N','O','O') AS error_flag_nm,
+		   				DECODE(c.com_cd_nm,null,'미검수',c.com_cd_nm) AS exam_rslt_cd_nm,
+		   				b.exam_cont AS exam_cont
+		FROM  		TB_CRFOLDER a, TB_CRRECORD b,
+			  			(SELECT	com_cd, com_cd_nm
+		 				FROM 		TB_ZZCOMCD
+		 				WHERE 	com_type_cd = 'TK03'
+		 				) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND	  		a.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		AND	  		a.record_center_id = b.record_center_id
+		AND	  		a.folder_recv_seq = b.folder_recv_seq
+		AND	 		b.exam_rslt_cd = c.com_cd(+)
+	</select>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(검수팝업-철검수결과저장-정상) (UPDATE)
+	 -->	
+	<update id="updateProdCheckFolderNormal" parameterClass="rms.take.prod.domain.ProdRecvFolder">
+		UPDATE	TB_CRFOLDER
+		SET   		exam_rslt_cd = '1', 
+						exam_cont = #examCont:VARCHAR#
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		folder_recv_seq = #updateFolderRecvSeq:VARCHAR#
+	</update>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리=> 기록물철별 검수처리시 접수내역별 미검수 기록물철이 있는지 체크(SELECT)
+	 -->
+	<select id="findProdCheckFolderEndCheck" parameterClass="rms.take.prod.domain.ProdRecvFolder" resultClass="int">
+		SELECT	count(1)
+		FROM  		TB_CRFOLDER a,
+						(
+						SELECT	record_center_id, cr_report_yyyy, cr_report_org_cd, cr_report_sno 
+						FROM 		TB_CRFOLDER
+						WHERE 	record_center_id = #recordCenterId:VARCHAR#
+						AND	  		folder_recv_seq = #updateFolderRecvSeq:VARCHAR#
+						AND	  		creat_sys_cd = '02'
+						) b
+		WHERE		a.record_center_id = b.record_center_id
+		AND			a.cr_report_yyyy = b.cr_report_yyyy
+		AND	  		a.cr_report_org_cd = b.cr_report_org_cd
+		AND	  		a.cr_report_sno = b.cr_report_sno
+		AND	  		a.exam_rslt_cd = '0'
+	</select>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리 =>접수내역별 검수완료처리 (UPDATE)
+	 -->	
+	<update id="updateProdCheckFolderEnd" parameterClass="rms.take.prod.domain.ProdRecvFolder">
+		UPDATE	TB_CRREPORT 		
+		SET	   	state_div_cd = '06' 		
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND		cr_report_sno = #crReportSno:NUMBER#
+	</update>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(검수팝업-건검수결과저장-정상) (UPDATE)
+	 -->	
+	<update id="updateProdCheckRecordNormal" parameterClass="rms.take.prod.domain.ProdRecvRecord">
+		UPDATE	TB_CRRECORD
+		SET  	 	exam_rslt_cd = '1',
+			 			exam_cont = #examCont:VARCHAR#
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		record_recv_seq = #updateRecordRecvSeq:VARCHAR#
+	</update>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(검수팝업-철검수결과저장-오류) (UPDATE)
+	 -->	
+	<update id="updateProdCheckFolderAbnormal" parameterClass="rms.take.prod.domain.ProdRecvFolder">
+		UPDATE	TB_CRFOLDER
+		SET   		exam_rslt_cd = '2',
+						exam_cont = #examCont:VARCHAR#
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		folder_recv_seq = #updateFolderRecvSeq:VARCHAR#
+	</update>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(검수팝업-건검수결과저장-오류) (UPDATE)
+	 -->	
+	<update id="updateProdCheckRecordAbnormal" parameterClass="rms.take.prod.domain.ProdRecvRecord">
+		UPDATE	TB_CRRECORD
+		SET   		exam_rslt_cd = '2',
+						exam_cont = #examCont:VARCHAR#
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		record_recv_seq = #updateRecordRecvSeq:VARCHAR#
+	</update>
+
+
+	<!-- 
+		기록물인수>연계인수>생산현황>검수처리(철목록-일괄검수) (UPDATE)
+	 -->	
+	<update id="updateProdCheckFolderBatch" parameterClass="rms.take.prod.domain.ProdRecvFolder">
+		UPDATE	TB_CRFOLDER
+		SET   		exam_rslt_cd = DECODE(exam_rslt_cd,'0',DECODE(error_flag,'Y','2','N','1'),exam_rslt_cd)
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   		creat_sys_cd = #creatSysCd:VARCHAR#
+		AND   		cr_report_sno = #crReportSno:NUMBER#
+		<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+						(exam_rslt_cd is null 
+		OR			exam_rslt_cd = '0')
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="1">
+						exam_rslt_cd = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="2">
+						exam_rslt_cd = '2'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="3">
+						rjct_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="4">
+						take_fin_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="0">
+						error_flag = 'N'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="1">
+						error_flag = 'Y'
+		</isEqual>
+		<isNotEmpty prepend="AND" property="erecordFlag">
+						erecord_flag = #erecordFlag:VARCHAR#
+		</isNotEmpty>
+	</update>
+
+
+	<!-- 기록물인수>연계인수>생산현황>처리과별 반려통보처리 조회 (SELECT) -->
+	<select id="findProdRecvRjctInfrm" parameterClass="rms.take.prod.domain.ProdRecvRjctInfrm" resultMap="findProdRecvRjctInfrm-result">
+		SELECT	record_center_id, cr_report_yyyy, cr_report_org_cd, 
+						creat_sys_cd, cr_report_sno,  state_div_cd, rjct_ymd, 
+						rjct_rsn, infrm_file_nm
+		FROM		TB_CRREPORT
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND			cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 			cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			cr_report_sno = #crReportSno:NUMBER#
+	</select>
+
+	
+	<!-- 기록물인수>연계인수>생산현황>처리과별 인수통보처리 조회 (SELECT) -->
+	<select id="findProdRecvTakeInfrm" parameterClass="rms.take.prod.domain.ProdRecv" resultMap="findProdRecvTakeInfrm-result">
+		SELECT	record_center_id, cr_report_yyyy, cr_report_org_cd, 
+						creat_sys_cd, cr_report_sno,  state_div_cd, 
+						take_user_nm, takovr_user_nm, take_ymd,
+						infrm_file_nm
+		FROM		TB_CRREPORT
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND			cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND 			cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			cr_report_sno = #crReportSno:NUMBER#
+	</select>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>인수처리(철목록-인수) (UPDATE)
+	 -->	
+	<update id="updateProdCheckFolderTake" parameterClass="rms.take.prod.domain.ProdRecvFolderListParam">
+		UPDATE	TB_CRFOLDER
+		SET   		take_fin_flag = DECODE(exam_rslt_cd,'1','1',0)
+		WHERE 	record_center_id = #.recordCenterId:VARCHAR#
+		AND		exam_rslt_cd IN ('1','2')
+		AND		rjct_flag = '0'
+		AND		take_fin_flag = '0'
+		<dynamic>
+		 	<iterate prepend="AND folder_recv_seq IN" property="folderRecvSeqList" open="(" close=")" conjunction=",">
+				#folderRecvSeqList[]:VARCHAR#
+			</iterate>
+		</dynamic>
+	</update>
+
+	<!-- 
+		기록물인수>연계인수>생산현황>인수처리(철목록-일괄인수) (UPDATE)
+	 -->	
+	<update id="updateProdCheckFolderTakeBatch" parameterClass="rms.take.prod.domain.ProdRecvFolder">
+		UPDATE	TB_CRFOLDER
+		SET   		take_fin_flag = DECODE(exam_rslt_cd,'1','1',0)
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		cr_report_yyyy = #crReportYyyy:VARCHAR#
+		AND   		cr_report_org_cd = #crReportOrgCd:VARCHAR#
+		AND   		creat_sys_cd = #creatSysCd:VARCHAR#
+		AND   		cr_report_sno = #crReportSno:NUMBER#
+		<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+			(exam_rslt_cd is null OR exam_rslt_cd = '0')
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="1">
+						exam_rslt_cd = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="2">
+						exam_rslt_cd = '2'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="3">
+						rjct_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="examRsltCd" compareValue="4">
+						take_fin_flag = '1'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="0">
+						error_flag = 'N'
+		</isEqual>
+		<isEqual prepend="AND" property="errorFlag" compareValue="1">
+						error_flag = 'Y'
+		</isEqual>
+		<isNotEmpty prepend="AND" property="erecordFlag">
+						erecord_flag = #erecordFlag:VARCHAR#
+		</isNotEmpty>
+	</update>
+
+	<!-- 기록물인수>연계인수>생산현황>전자문서시스템생산접수 반려처리(기록물철별 UPDATE)-->	
+  	<update id="updateProdFolderReturn" parameterClass="rms.take.prod.domain.ProdRecvFolder">
+		UPDATE 	TB_CRFOLDER
+		SET   		rjct_flag = '1',
+			 			rjct_cont = #rjctCont:VARCHAR#
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		folder_recv_seq = #updateFolderRecvSeq:VARCHAR#
+	</update>
+	
+
+
+	<!--기록물인수>연계인수>생산현황>전자문서시스템생산접수 반려처리(기록물건 목록 SELECT count)-->
+	<select id="countProdRecvRecordReturn" parameterClass="rms.take.prod.domain.ProdRecvRecord" resultClass="long">
+		SELECT	count(b.record_recv_seq) 
+		FROM  		TB_CRFOLDER a, TB_CRRECORD b,
+			  			(SELECT	com_cd, com_cd_nm
+		 				FROM 		TB_ZZCOMCD
+		 				WHERE 	com_type_cd = 'TK03'
+		 				) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND	  		a.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		AND	  		a.record_center_id = b.record_center_id
+		AND	  		a.folder_recv_seq = b.folder_recv_seq
+		AND	 		a.exam_rslt_cd = c.com_cd(+)
+	</select>
+
+	
+	<!--기록물인수>연계인수>생산현황>전자문서시스템생산접수 반려처리(기록물건 목록 SELECT)-->
+	<select id="findProdRecvRecordReturn" parameterClass="rms.take.prod.domain.ProdRecvRecord" resultMap="findProdRecvReturnRecord-result">
+	SELECT E.*
+  	FROM (
+	  	SELECT ROWNUM AS rnum, D.*
+		    FROM (
+		SELECT	a.folder_recv_seq, b.record_recv_seq, b.title, b.creat_yyyy, 
+		   				DECODE(b.error_flag,'Y','X','N','O','O') AS error_flag_nm,
+		   				DECODE(c.com_cd_nm,null,'미검수',c.com_cd_nm) AS exam_rslt_cd_nm,
+		   				b.exam_cont AS exam_cont
+		FROM  		TB_CRFOLDER a, TB_CRRECORD b,
+			  			(SELECT	com_cd, com_cd_nm
+		 				FROM 		TB_ZZCOMCD
+		 				WHERE 	com_type_cd = 'TK03'
+		 				) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND	  		a.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		AND	  		a.record_center_id = b.record_center_id
+		AND	  		a.folder_recv_seq = b.folder_recv_seq
+		AND	 		a.exam_rslt_cd = c.com_cd(+)
+		 ) D 
+		    WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	     ) E
+         WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템접수현황(SELECT count)
+	 -->
+	<select id="countProdRecvStatePagedList" parameterClass="rms.take.prod.domain.ProdRecv" resultClass="long">		
+		SELECT	count(1)
+		FROM 		TB_STORG a,
+						(
+						SELECT	a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno, 
+				   						MAX(a.state_div_cd) AS state_div_cd,
+				   						COUNT(b.folder_recv_seq) AS recv_folder_cnt,
+				   						SUM(b.recv_record_cnt) AS recv_record_cnt,
+				   						MAX(a.reg_dtime) AS recv_ymd, MAX(a.take_ymd) AS take_ymd
+						FROM  		TB_CRREPORT a,
+				  						(SELECT	a.record_center_id,
+						  								a.cr_report_yyyy, a.cr_report_org_cd, 
+			   			  								a.cr_report_sno, a.folder_recv_seq, 
+						  								COUNT(b.record_recv_seq) AS recv_record_cnt
+										FROM  		TB_CRFOLDER a, TB_CRRECORD b
+										WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+										AND 			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+										<isNotEmpty prepend="AND" property="crReportOrgCd">
+														a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+										</isNotEmpty>				
+										AND 			a.creat_sys_cd = '02'
+										AND			a.record_center_id = b.record_center_id
+										AND			a.folder_recv_seq = b.folder_recv_seq
+										GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno, a.folder_recv_seq
+										) b
+						WHERE		a.record_center_id = #recordCenterId:VARCHAR#
+						AND 			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+						<isNotEmpty prepend="AND" property="crReportOrgCd">
+						 				a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+						 </isNotEmpty>				
+						AND			a.creat_sys_cd = '02'
+						AND		  	a.record_center_id = b.record_center_id
+						AND		  	a.cr_report_yyyy = b.cr_report_yyyy
+						AND		  	a.cr_report_org_cd = b.cr_report_org_cd
+						AND		  	a.cr_report_sno = b.cr_report_sno
+						GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno
+						) b,
+						(SELECT	com_cd, com_cd_nm
+						FROM 		TB_ZZCOMCD
+						WHERE 	com_type_cd = 'TK08'
+						) c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND			b.cr_report_yyyy(+) = #crReportYyyy:VARCHAR#
+		<isNotEmpty prepend="AND" property="crReportOrgCd">
+						a.org_cd = #crReportOrgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="examStateDivCd">	
+			<isEqual prepend="AND" property="examStateDivCd" compareValue="01">
+						b.state_div_cd is null
+			</isEqual>
+			<isNotEqual prepend="AND" property="examStateDivCd" compareValue="01">
+						b.state_div_cd = #examStateDivCd:VARCHAR#
+			</isNotEqual>
+		</isNotEmpty>
+		AND	  		a.record_center_id = b.record_center_id(+)
+		AND	  		a.org_cd = b.cr_report_org_cd(+)
+		AND	  		b.state_div_cd = c.com_cd(+)
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템접수현황(SELECT)
+	 -->
+	<select id="findProdRecvStatePagedList" parameterClass="rms.take.prod.domain.ProdRecv" resultMap="findProdRecvState-result">
+	SELECT E.*
+  	FROM (
+	  	SELECT ROWNUM AS rnum, D.*
+		    FROM (
+				SELECT	a.record_center_id,  a.org_cd AS cr_report_org_cd,  
+						a.org_nm AS cr_report_org_nm,  b.cr_report_sno,
+						a.org_abbr_nm AS cr_report_org_abbr_nm,
+						b.cr_report_yyyy, b.state_div_cd, 
+						NVL(c.com_cd_nm,'미접수') AS state_div_cd_nm,
+						NVL(b.recv_folder_cnt,'0') AS recv_folder_cnt, 
+						NVL(b.recv_record_cnt,'0') AS recv_record_cnt,
+						SUBSTR(b.recv_ymd,1,8) as recv_ymd,
+						b.take_ymd 
+				FROM 		TB_STORG a,
+								(
+								SELECT	a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno, 
+						   						MAX(a.state_div_cd) AS state_div_cd,
+						   						COUNT(b.folder_recv_seq) AS recv_folder_cnt,
+						   						SUM(b.recv_record_cnt) AS recv_record_cnt,
+						   						MAX(a.reg_dtime) AS recv_ymd, MAX(a.take_ymd) AS take_ymd
+								FROM  		TB_CRREPORT a,
+						  						(SELECT	a.record_center_id,
+								  								a.cr_report_yyyy, a.cr_report_org_cd, 
+					   			  								a.cr_report_sno, a.folder_recv_seq, 
+								  								COUNT(b.record_recv_seq) AS recv_record_cnt
+												FROM  		TB_CRFOLDER a, TB_CRRECORD b
+												WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+												AND 			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+												<isNotEmpty prepend="AND" property="crReportOrgCd">
+																a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+												</isNotEmpty>				
+												AND 			a.creat_sys_cd = '02'
+												AND			a.record_center_id = b.record_center_id
+												AND			a.folder_recv_seq = b.folder_recv_seq
+												GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno, a.folder_recv_seq
+												) b
+								WHERE		a.record_center_id = #recordCenterId:VARCHAR#
+								AND 			a.cr_report_yyyy = #crReportYyyy:VARCHAR#
+								<isNotEmpty prepend="AND" property="crReportOrgCd">
+								 				a.cr_report_org_cd = #crReportOrgCd:VARCHAR#
+								 </isNotEmpty>				
+								AND			a.creat_sys_cd = '02'
+								AND		  	a.record_center_id = b.record_center_id
+								AND		  	a.cr_report_yyyy = b.cr_report_yyyy
+								AND		  	a.cr_report_org_cd = b.cr_report_org_cd
+								AND		  	a.cr_report_sno = b.cr_report_sno
+								GROUP BY a.record_center_id, a.cr_report_yyyy, a.cr_report_org_cd, a.cr_report_sno
+								) b,
+								(SELECT	com_cd, com_cd_nm
+								FROM 		TB_ZZCOMCD
+								WHERE 	com_type_cd = 'TK08'
+								) c
+				WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+				AND			b.cr_report_yyyy(+) = #crReportYyyy:VARCHAR#
+				<isNotEmpty prepend="AND" property="crReportOrgCd">
+								a.org_cd = #crReportOrgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="examStateDivCd">	
+					<isEqual prepend="AND" property="examStateDivCd" compareValue="01">
+								b.state_div_cd is null
+					</isEqual>
+					<isNotEqual prepend="AND" property="examStateDivCd" compareValue="01">
+								b.state_div_cd = #examStateDivCd:VARCHAR#
+					</isNotEqual>
+				</isNotEmpty>
+				AND	  		a.record_center_id = b.record_center_id(+)
+				AND	  		a.org_cd = b.cr_report_org_cd(+)
+				AND	  		b.state_div_cd = c.com_cd(+)
+				ORDER BY a.record_center_id, a.org_cd, b.cr_report_sno		    
+		    ) D 
+		    WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	     ) E
+         WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<resultMap id="findExcelProdRecv-result" class="rms.take.prod.domain.ProdRecv" >
+		<result property="crReportOrgNm" 		column="CR_REPORT_ORG_NM"/>
+		<result property="stateDivCdNm" 		column="STATE_DIV_CD_NM"/>
+		<result property="recvFolderCnt" 		column="RECV_FOLDER_CNT"/>
+		<result property="sucesRecvFolderCnt" 	column="SUCESS_RECV_FOLDER_CNT"/>
+		<result property="errorRecvFolderCnt" 	column="ERROR_RECV_FOLDER_CNT"/>
+		<result property="rjctFolderCnt" 		column="RJCT_FOLDER_CNT"/>
+		<result property="finFolderCnt" 		column="FIN_FOLDER_CNT"/>
+	</resultMap>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황>전자문서시스템생산접수(CUT-SELECT)
+		엑셀저장
+	 -->
+	<select id="findExcelProdRecvPagedCutList" parameterClass="rms.take.prod.domain.ProdRecv" resultMap="findExcelProdRecv-result">
+		SELECT TA.org_nm || '(' || TA.cr_report_org_cd || ')' AS cr_report_org_nm
+			, NVL((SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='TK08' AND Z.com_cd=TA.state_div_cd),'미접수') AS state_div_cd_nm
+			, NVL(TB.recv_folder_cnt,0) || '(' || NVL(TB.recv_record_cnt,0) || ')' AS  recv_folder_cnt
+			, NVL(TB.sucess_recv_folder_cnt,0) || '(' || NVL(TB.sucess_recv_record_cnt,0) || ')' AS sucess_recv_folder_cnt
+			, NVL(TB.error_recv_folder_cnt,0) || '(' || NVL(TB.error_recv_record_cnt,0) || ')' AS error_recv_folder_cnt
+			, NVL(TB.rjct_folder_cnt,0) || '(' || NVL(TB.rjct_record_cnt,0) || ')' AS rjct_folder_cnt
+			, NVL(TB.fin_folder_cnt,0) || '(' || NVL(TB.fin_record_cnt,0) || ')' AS fin_folder_cnt
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.record_center_id, B.cr_report_yyyy, A.org_cd AS cr_report_org_cd, B.creat_sys_cd, B.cr_report_sno
+						 , B.state_div_cd, B.recv_fin_state_cd, A.org_nm, A.org_abbr_nm
+					FROM  TB_STORG A
+					, ( SELECT * FROM TB_CRREPORT
+					    WHERE record_center_id = #recordCenterId:VARCHAR#
+						AND   cr_report_yyyy = #crReportYyyy:VARCHAR#
+						<isNotEmpty prepend="AND" property="crReportOrgCd">
+							cr_report_org_cd = #crReportOrgCd:VARCHAR#
+						</isNotEmpty>
+						AND   creat_sys_cd = '02' ) B
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty prepend="AND" property="crReportOrgCd">
+						A.org_cd = #crReportOrgCd:VARCHAR#
+					</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="closeFlag">
+						A.close_flag = #closeFlag:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="examStateDivCd">
+						B.state_div_cd = #examStateDivCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="recvFinStateCd">
+						NVL(B.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+					</isNotEmpty>
+					AND   A.record_center_id = B.record_center_id(+)
+					AND   A.org_cd = B.cr_report_org_cd(+)
+					ORDER BY A.record_center_id, A.org_cd
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+			ORDER BY D.rnum
+		) TA
+		, ( SELECT H.record_center_id, H.cr_report_yyyy, H.cr_report_org_cd, H.creat_sys_cd, H.cr_report_sno
+				, COUNT(1) recv_folder_cnt
+				, NVL(SUM(H.record_cnt),0) recv_record_cnt
+				, NVL(SUM(H.error_recv_folder_cnt),0) error_recv_folder_cnt
+				, NVL(SUM(H.sucess_recv_folder_cnt),0) sucess_recv_folder_cnt
+				, NVL(SUM(H.rjct_folder_cnt),0) rjct_folder_cnt
+				, NVL(SUM(H.fin_folder_cnt),0) fin_folder_cnt
+				, NVL(SUM(H.error_recv_record_cnt),0) error_recv_record_cnt
+				, NVL(SUM(H.sucess_recv_record_cnt),0) sucess_recv_record_cnt
+				, NVL(SUM(H.rjct_record_cnt),0) rjct_record_cnt
+				, NVL(SUM(H.fin_record_cnt),0) fin_record_cnt
+			FROM (
+				SELECT G.record_center_id, G.cr_report_yyyy, G.cr_report_org_cd, G.creat_sys_cd, G.cr_report_sno, G.folder_recv_seq
+					, G.record_cnt 
+					, DECODE(G.exam_rslt_cd,'2',1,0) error_recv_folder_cnt
+					, DECODE(G.exam_rslt_cd,'1',1,0) sucess_recv_folder_cnt
+					, DECODE(G.rjct_flag,'1',1,0) rjct_folder_cnt
+					, DECODE(G.take_fin_flag,'1',1,0) fin_folder_cnt
+					, DECODE(G.exam_rslt_cd,'2',G.record_cnt,0) error_recv_record_cnt
+					, DECODE(G.exam_rslt_cd,'1',G.record_cnt,0) sucess_recv_record_cnt
+					, DECODE(G.rjct_flag,'1',G.record_cnt,0) rjct_record_cnt
+					, DECODE(G.take_fin_flag,'1',G.record_cnt,0) fin_record_cnt
+				FROM (
+					SELECT E.record_center_id, E.cr_report_yyyy, E.cr_report_org_cd, E.creat_sys_cd, E.cr_report_sno, E.folder_recv_seq
+						, E.exam_rslt_cd, E.rjct_flag, E.take_fin_flag
+						, ( SELECT COUNT(1)
+							FROM  TB_CRRECORD F
+							WHERE F.record_center_id=E.record_center_id
+							AND   F.folder_recv_seq=E.folder_recv_seq ) record_cnt
+					FROM  TB_CRFOLDER E 
+					<!--cubrid WHERE (E.record_center_id, E.cr_report_yyyy, E.cr_report_org_cd, E.creat_sys_cd, E.cr_report_sno)-->
+					WHERE
+					EXISTS (
+						<!--cubrid SELECT D.record_center_id, D.cr_report_yyyy, D.cr_report_org_cd, D.creat_sys_cd, D.cr_report_sno-->
+						SELECT 1
+						FROM (
+							SELECT ROWNUM AS rnum
+								, C.*
+							FROM (
+								SELECT A.record_center_id, B.cr_report_yyyy, A.org_cd AS cr_report_org_cd, B.creat_sys_cd, B.cr_report_sno
+								FROM  TB_STORG A
+								, ( SELECT * FROM TB_CRREPORT
+								    WHERE record_center_id = #recordCenterId:VARCHAR#
+									AND   cr_report_yyyy = #crReportYyyy:VARCHAR#
+									<isNotEmpty prepend="AND" property="crReportOrgCd">
+										cr_report_org_cd = #crReportOrgCd:VARCHAR#
+									</isNotEmpty>
+									AND   creat_sys_cd = '02' ) B
+								WHERE A.record_center_id = #recordCenterId:VARCHAR#
+								<isNotEmpty prepend="AND" property="crReportOrgCd">
+									A.org_cd = #crReportOrgCd:VARCHAR#
+								</isNotEmpty>
+							    <isNotEmpty prepend="AND" property="closeFlag">
+									A.close_flag = #closeFlag:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="examStateDivCd">
+									B.state_div_cd = #examStateDivCd:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="recvFinStateCd">
+									NVL(B.recv_fin_state_cd,'0') = #recvFinStateCd:VARCHAR#
+								</isNotEmpty>
+								AND   A.record_center_id = B.record_center_id(+)
+								AND   A.org_cd = B.cr_report_org_cd(+)
+								ORDER BY A.record_center_id, A.org_cd
+							) C
+							WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+						) D
+						WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+                                                <!--cubrid-->
+						AND D.record_center_id = E.record_center_id
+						AND D.cr_report_yyyy = E.cr_report_yyyy
+						AND D.cr_report_org_cd = E.cr_report_org_cd
+						AND D.creat_sys_cd = E.creat_sys_cd
+						AND D.cr_report_sno = E.cr_report_sno
+					)
+				) G
+			) H
+			GROUP BY H.record_center_id, H.cr_report_yyyy, H.cr_report_org_cd, H.creat_sys_cd, H.cr_report_sno
+		) TB
+		WHERE TA.record_center_id=TB.record_center_id(+)
+		AND   TA.cr_report_org_cd=TB.cr_report_org_cd(+)
+	</select>
+	
+	<select id="countProdRecvFolderReturn" parameterClass="rms.take.prod.domain.ProdRecvFolderListParam" resultClass="long">
+		SELECT COUNT(*) FROM
+		(
+			SELECT	a.folder_recv_seq, MAX(a.title) AS title, MAX(a.creat_yyyy) AS creat_yyyy, 
+			   				DECODE(MAX(a.error_flag),'Y','X','N','O','O') AS error_flag_nm,
+			  	 			COUNT(b.record_recv_seq) AS record_cnt,
+			   				DECODE(MAX(a.rjct_flag),'1','반려',DECODE(MAX(a.take_fin_flag),'1','인수',DECODE(MAX(c.com_cd_nm),null,'미검수',MAX(c.com_cd_nm)))) AS exam_rslt_cd_nm,
+			   				MAX(a.exam_cont) AS exam_cont, MAX(a.rjct_cont) AS rjct_cont
+			FROM		TB_CRFOLDER a, TB_CRRECORD b,
+			 				(SELECT	com_cd, com_cd_nm
+			 				FROM 		TB_ZZCOMCD
+			 				WHERE 	com_type_cd = 'TK03'
+			 				) c
+			WHERE		a.record_center_id =  #recordCenterId:VARCHAR#
+			 <dynamic>
+				<iterate prepend="AND a.folder_recv_seq IN" property="folderRecvSeqList" open="(" close=")" conjunction=",">
+				#folderRecvSeqList[]:VARCHAR#
+			</iterate>
+			</dynamic>				
+			AND	  		a.record_center_id = b.record_center_id(+)
+			AND	  		a.folder_recv_seq = b.folder_recv_seq(+)
+			AND	 		a.exam_rslt_cd = c.com_cd(+)
+			GROUP BY a.record_center_id, a.folder_recv_seq
+		)
+	</select>
+	
+	<!--기록물인수>연계인수>생산현황>전자문서시스템생산접수 반려처리(기록물철 목록 SELECT)-->
+	<select id="findProdRecvFolderReturn" parameterClass="rms.take.prod.domain.ProdRecvFolderListParam" resultMap="findProdRecvReturnFolder-result">
+	SELECT E.*
+  	FROM (
+	  	SELECT ROWNUM AS rnum, D.*
+		    FROM (
+ 		SELECT	a.folder_recv_seq, MAX(a.title) AS title, MAX(a.creat_yyyy) AS creat_yyyy, 
+		   				DECODE(MAX(a.error_flag),'Y','X','N','O','O') AS error_flag_nm,
+		  	 			COUNT(b.record_recv_seq) AS record_cnt,
+		   				DECODE(MAX(a.rjct_flag),'1','반려',DECODE(MAX(a.take_fin_flag),'1','인수',DECODE(MAX(c.com_cd_nm),null,'미검수',MAX(c.com_cd_nm)))) AS exam_rslt_cd_nm,
+		   				MAX(a.exam_cont) AS exam_cont, MAX(a.rjct_cont) AS rjct_cont
+		FROM		TB_CRFOLDER a, TB_CRRECORD b,
+		 				(SELECT	com_cd, com_cd_nm
+		 				FROM 		TB_ZZCOMCD
+		 				WHERE 	com_type_cd = 'TK03'
+		 				) c
+		WHERE		a.record_center_id =  #recordCenterId:VARCHAR#
+		 <dynamic>
+			<iterate prepend="AND a.folder_recv_seq IN" property="folderRecvSeqList" open="(" close=")" conjunction=",">
+				#folderRecvSeqList[]:VARCHAR#
+			</iterate>
+		</dynamic>				
+		AND	  		a.record_center_id = b.record_center_id(+)
+		AND	  		a.folder_recv_seq = b.folder_recv_seq(+)
+		AND	 		a.exam_rslt_cd = c.com_cd(+)
+		GROUP BY a.record_center_id, a.folder_recv_seq
+		ORDER BY a.record_center_id, a.folder_recv_seq
+		) D 
+		    WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	     ) E
+         WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+</sqlMap>

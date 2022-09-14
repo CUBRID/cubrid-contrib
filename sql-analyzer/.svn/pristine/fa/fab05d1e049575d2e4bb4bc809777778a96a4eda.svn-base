@@ -1,0 +1,18 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\MuseumSrch.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\MuseumSrch.xml
+-- Query    : select
+-- Query Id : countDetailsMuseumPagedList
+
+		SELECT COUNT(1)		FROM  TB_ADARCHIVALOBJ A		WHERE A.record_center_id = '1'		 AND 			A.clss = '1'		  AND 			A.shape = '1'		  AND 			A.material = '1'		  AND 			A.dst_flag = '1'		  AND 			A.creat_reg_dtime >= '1'		  AND 			A.end_ymd <= '1' 		  AND A.admnatnlhist_nm LIKE  ('1' AND '1' AND '1')   AND 			A.admnatnlhist_nm LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\MuseumSrch.xml
+-- Query    : select
+-- Query Id : findDetailsMuseumPagedList
+
+		SELECT E.record_center_id			, E.admnatnl_id			, E.admnatnl_relno			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD01' AND Z.com_cd=E.clss) AS clss			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD02' AND Z.com_cd=E.shape) AS shape			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD03' AND Z.com_cd=E.material) AS material			, E.admnatnlhist_nm			, E.creat_reg_dtime			, E.end_ymd			, E.adm_prog_state			, ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'GV06' AND COM_CD = E.dst_flag) AS dst_flag			, E.dst_flag AS dist_flag_cd			, E.crnt_hand_cnt		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.*					FROM  TB_ADARCHIVALOBJ A					WHERE A.record_center_id = '1' AND 						A.clss = '1'					  AND 						A.shape = '1'					  AND 						A.material = '1'					  AND 						A.dst_flag = '1'					  AND 						A.creat_reg_dtime >= '1'					  AND 						A.end_ymd <= '1' 					  AND A.admnatnlhist_nm LIKE  ('1' AND '1' AND '1')   AND 						A.admnatnlhist_nm LIKE '1'					 					ORDER BY A.record_center_id, A.admnatnl_id DESC				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\MuseumSrch.xml

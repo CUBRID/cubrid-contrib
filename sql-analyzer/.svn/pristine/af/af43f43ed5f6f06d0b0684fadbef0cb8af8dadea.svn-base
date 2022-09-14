@@ -1,0 +1,24 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+
+createUnitChngHist
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_zzunitchnghist_record_center_id_unit_cd_chng_seq(B+tree: 4|654|3310) ON CLASS tb_zzunitchnghist(CLASS_OID: 0|570|45). key: {'1', '1', '000009'}(OID: 3|1190|44).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : insert
+-- Query Id : createUnitChngHist
+
+		INSERT INTO TB_ZZUNITCHNGHIST (   	   					       RECORD_CENTER_ID							 , UNIT_CD							 , CHNG_SEQ							 , CHNG_YMD							 , CHNG_ITEM_CD							 , CHNG_BEF_VAL							 , CHNG_AFT_VAL							 , CHNG_RSN							  )                        VALUES ( 					           '1'							 , '1'							 , LPAD((SELECT NVL(MAX(CHNG_SEQ),0)+1 							           FROM TB_ZZUNITCHNGHIST									  WHERE UNIT_CD = '1'									    AND RECORD_CENTER_ID = '1'), 6, '0')							 , TO_CHAR(SYSDATE,'YYYYMMDD')    						 , '04'							 , (SELECT PRESV_TERM_CD 							      FROM TB_ZZUNIT 							     WHERE UNIT_CD = '1'								   AND RECORD_CENTER_ID = '1')							 , '1'    						 , '1'							 );
+
+creatOrgUnitWorkHist
+The constraint of the foreign key 'tb_zzorgunitworkhist_fk01' is invalid, due to value '{'1', '1', '1'}'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : insert
+-- Query Id : creatOrgUnitWorkHist
+
+		INSERT INTO TB_ZZORGUNITWORKHIST (		 			 					   RECORD_CENTER_ID										 , ORG_CD										 , UNIT_CD										 , WORK_TYPE_CD										 , WORK_DTIME										 ) 								  VALUES ( '1'								         , '1'										 , '1'										 , '2'										 										 , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')										 );
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %5p [%c] %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.StringMatchFilter">
+			<param name="StringToMatch" value="Result" />
+			<param name="AcceptOnMatch" value="false" />
+		</filter>
+	</appender>
+
+	<!-- log all logs to a separate log file every day -->
+	<appender name="server" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="UTF-8" />
+		<param name="file" value="/software_oracle/rms_daemon/RmsRfidServer/logs/server.log" />
+
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+	
+	<logger name="rms.rfid.middleware.transfer" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="console" />
+	</logger>
+	<logger name="rms.rfid.middleware.work" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="server" />
+		<appender-ref ref="console" />
+	</logger>
+	
+	<logger name="rms.rfid.middleware.transfer.client" additivity="false">
+		<level value="ERROR" />
+		<appender-ref ref="console" />
+	</logger>
+	
+	<logger name="rms.rfid.middleware.transfer.test.server" additivity="false">
+		<level value="ERROR" />
+		<appender-ref ref="console" />
+	</logger>
+		
+	<logger name="jdbc.sqlonly" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="console" />
+	</logger>
+	<logger name="jdbc.sqltiming" additivity="false">
+		<level value="ERROR" />
+		<appender-ref ref="console" />
+	</logger>	
+	<root>
+		<level value="ERROR" />
+		<appender-ref ref="console" />
+	</root>
+</log4j:configuration>
+
+<!-- 
+
+log4j 설정파일을 class 폴더 밑에 두던가
+아래와 같이 실행 시에 옵션을 주어서 위치를 지정한다.
+-Dlog4j.configuration=file:///dev/workspace/RmsRfidServer/conf/log4j.xml
+
+ -->

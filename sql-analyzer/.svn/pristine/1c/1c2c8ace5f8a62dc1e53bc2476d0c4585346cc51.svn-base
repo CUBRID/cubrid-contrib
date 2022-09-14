@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.recordmng">
+
+	
+	<!-- 
+		기록물관리_조직이력관리
+		: 조직이력관리 화면의 목록을 조회한다.	
+	 -->
+	<resultMap id="findOrgChngHistMngList-result" class="rms.sys.recordmng.domain.OrgChngHistMng">
+		<result property="orgCd"				column="org_cd"/>
+		<result property="orgNm"				column="org_nm"/>
+		<result property="applyStartYmd"		column="apply_start_ymd"/>
+		<result property="applyCloseYmd"		column="apply_close_ymd"/>
+	</resultMap>
+	<select id="countOrgChngHistMngList" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM tb_storg A
+        WHERE record_center_id = #recordCenterId:VARCHAR#
+        <dynamic>
+        <isNotEmpty prepend="AND" property="orgCd">
+            org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgNm">
+            org_nm LIKE #orgNm:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty property="closeFlag">
+            <isNotEqual prepend="AND" property="closeFlag" compareValue="3">
+                close_flag = #closeFlag:VARCHAR#
+            </isNotEqual>
+        </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findOrgChngHistMngList" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng" resultMap="findOrgChngHistMngList-result">
+		SELECT E.org_cd, E.org_nm, E.apply_start_ymd, E.apply_close_ymd
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.*
+		            FROM tb_storg A
+		            WHERE record_center_id = #recordCenterId:VARCHAR#
+		            <dynamic>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                org_cd = #orgCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgNm">
+		                org_nm LIKE #orgNm:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty property="closeFlag">
+		                <isNotEqual prepend="AND" property="closeFlag" compareValue="3">
+		                    close_flag = #closeFlag:VARCHAR#
+		                </isNotEqual>
+		            </isNotEmpty>
+		            </dynamic>
+		            ORDER BY close_flag asc, org_cd
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		)E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	<!-- 
+		기록물관리_조직이력관리
+		: 변경후 조직코드목록을 조회한다.
+	 -->
+	<resultMap id="findChngAftOrgCdList-result" class="rms.sys.recordmng.domain.OrgChngHistMng">
+		<result property="chngAftOrgCd"			 column="chng_aft_org_cd"/>
+		<result property="chngAftOrgNm"			 column="chng_aft_org_nm"/>
+	</resultMap>
+	<select id="findChngAftOrgCdList" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng" resultMap="findChngAftOrgCdList-result">
+		select chng_aft_org_cd, chng_aft_org_nm
+		from tb_storghist
+		where chng_bef_org_cd = #orgCd:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록물관리_조직이력관리
+		: 조직변경이력 등록전 이미 등록된 이력을 삭제한다. (재등록을 위함)
+	 -->
+	<delete id="deleteOrgChngHist" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng">
+		DELETE	tb_storghist WHERE	chng_bef_org_cd = #chngBefOrgCd:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물관리_조직이력관리
+		: 조직변경이력을 등록한다.
+	 -->
+	<insert id="createOrgChngHist" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng">
+		INSERT INTO TB_STORGHIST (
+			CHNG_BEF_ORG_CD, CHNG_AFT_ORG_CD, CHNG_BEF_ORG_NM, CHNG_AFT_ORG_NM, REG_DTIME
+		)
+		VALUES (
+			#chngBefOrgCd:VARCHAR#,			
+			#chngAftOrgCd:VARCHAR#,
+			(SELECT org_abbr_nm FROM tb_storg WHERE record_center_id = #recordCenterId:VARCHAR# AND org_cd = #chngBefOrgCd:VARCHAR#),
+			(SELECT org_abbr_nm FROM tb_storg WHERE record_center_id = #recordCenterId:VARCHAR# AND org_cd = #chngAftOrgCd:VARCHAR#),
+			to_char(SYSDATE, 'YYYYMMDD')
+		)
+	</insert>
+	
+	<!-- 
+		기록물관리_조직이력관리
+		: 조직이력 목록을 조회한다.
+	 -->
+	<resultMap id="findDetailOrgHist-result" class="rms.sys.recordmng.domain.OrgChngHistMng">
+		<result property="chk"			 		column="chk"/>
+		<result property="level"			 	column="lev"/>
+		<result property="chngBefOrgCd"			 column="chng_bef_org_cd"/>
+		<result property="chngBefOrgNm"			 column="chng_bef_org_nm"/>
+		<result property="chngAftOrgCd"			 column="chng_aft_org_cd"/>
+		<result property="chngAftOrgNm"			 column="chng_aft_org_nm"/>
+		<result property="regDtime"			 	column="reg_dtime"/>
+	</resultMap>
+	<select id="countDetailOrgHist" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			(
+				SELECT * FROM (
+				SELECT    'DN' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime
+				FROM    tb_storghist            
+				START WITH chng_aft_org_cd = #chngBefOrgCd:VARCHAR#
+				CONNECT BY prior chng_bef_org_cd = chng_aft_org_cd
+				ORDER BY lev DESC)
+			) 
+			UNION ALL
+			(
+				SELECT * FROM (
+				SELECT    'UP' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime
+				FROM    tb_storghist
+				START WITH chng_bef_org_cd = #chngBefOrgCd:VARCHAR#
+				CONNECT BY chng_bef_org_cd = prior chng_aft_org_cd
+				ORDER BY lev)
+			)
+		)
+	</select>
+	<select id="findDetailOrgHist" parameterClass="rms.sys.recordmng.domain.OrgChngHistMng" resultMap="findDetailOrgHist-result">
+		(
+			SELECT * FROM (
+			SELECT    'DN' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime
+			FROM    tb_storghist            
+			START WITH chng_aft_org_cd = #chngBefOrgCd:VARCHAR#
+			CONNECT BY prior chng_bef_org_cd = chng_aft_org_cd
+			ORDER BY lev DESC)
+		) 
+		UNION ALL
+		(
+			SELECT * FROM (
+			SELECT    'UP' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime
+			FROM    tb_storghist
+			START WITH chng_bef_org_cd = #chngBefOrgCd:VARCHAR#
+			CONNECT BY chng_bef_org_cd = prior chng_aft_org_cd
+			ORDER BY lev)
+		)
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.unitMng">
+<resultMap id="clssReg-result" class="rms.stnd.unitMng.domain.ClssReg">
+		<result property="clssCd"			column="CLSS_CD"></result>
+		<result property="upperClssCd"		column="UPPER_CLSS_CD"></result>
+		<result property="clssNm"			column="CLSS_NM"></result>
+		<result property="levl"				column="LEVL"></result>
+		<result property="sortSno"			column="SORT_SNO"></result>
+		<result property="clssDescr"		column="CLSS_DESCR"></result>
+		<result property="regDtime"			column="REG_DTIME"></result>
+		<result property="clssPathNm"		column="CLSS_PATH_NM"></result>
+		<result property="upperClssNm"		column="UPPER_CLSS_NM"></result>
+		<result property="underClssFlag"		column="UNDER_CLSS_FLAG"></result>
+	</resultMap>
+	<resultMap id="excelclssReg-result" class="rms.stnd.unitMng.domain.ClssReg">
+		<result property="clssCd"			column="CLSS_CD"></result>
+		<result property="upperClssCd"		column="UPPER_CLSS_CD"></result>
+		<result property="clssNm"			column="CLSS_NM"></result>
+		<result property="levl"				column="LEVL"></result>
+		<result property="sortSno"			column="SORT_SNO"></result>
+		<result property="clssDescr"		column="CLSS_DESCR"></result>
+		<result property="regDtime"			column="REG_DTIME"></result>
+	</resultMap>
+	
+	<select id="findBisClssRegInfo" parameterClass="rms.stnd.unitMng.domain.ClssReg" resultMap="clssReg-result">
+		SELECT 	A.CLSS_CD,
+				A.UPPER_CLSS_CD,
+				A.CLSS_NM,
+				A.LEVL,
+				A.SORT_SNO,
+				A.CLSS_DESCR,
+				A.REG_DTIME,
+				(SELECT E.CLSS_PATH_NM FROM (SELECT D.CLSS_CD, substr(SYS_CONNECT_BY_PATH(CLSS_NM,'>'),2,length(SYS_CONNECT_BY_PATH(CLSS_NM,'>'))) CLSS_PATH_NM 
+				FROM TB_ZZCLSS D 
+				START WITH D.CLSS_CD = '00000000' 
+				CONNECT BY PRIOR D.CLSS_CD = D.UPPER_CLSS_CD) E
+				WHERE E.CLSS_CD = #clssCd:VARCHAR#) CLSS_PATH_NM,
+				(SELECT COUNT(1) FROM TB_ZZCLSS F WHERE F.UPPER_CLSS_CD=#clssCd:VARCHAR#) UNDER_CLSS_FLAG,
+				(SELECT C.CLSS_NM FROM TB_ZZCLSS C WHERE C.CLSS_CD=A.UPPER_CLSS_CD) UPPER_CLSS_NM
+		FROM 	TB_ZZCLSS A
+		WHERE 	A.CLSS_CD = #clssCd:VARCHAR#
+	</select>
+	
+	
+	<insert id="createClssDetl" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		INSERT INTO TB_ZZCLSS
+			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO,CLSS_DESCR,REG_DTIME)
+		VALUES
+		(concat(#clssCd:VARCHAR#, LPAD(TB_ZZCLSS_SQ01.NEXTVAL,6,'0')),#upperClssCd:VARCHAR#,#clssNm:VARCHAR#,
+			(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD=#upperClssCd:VARCHAR#),(SELECT NVL(MAX(SORT_SNO)+1,1) FROM TB_ZZCLSS),
+			replace(replace(#clssDescr:VARCHAR#, chr(10), ' '), chr(13), ' '),
+			<!--cubgrid TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	
+	<update id="updateClssMngDetl" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		UPDATE 	TB_ZZCLSS A
+		SET		A.UPPER_CLSS_CD = #upperClssCd:VARCHAR#,
+				A.CLSS_NM = #clssNm:VARCHAR#,
+				A.LEVL = (SELECT B.LEVL+1 FROM TB_ZZCLSS B WHERE B.CLSS_CD=#upperClssCd:VARCHAR#),
+				A.CLSS_DESCR = replace(replace(#clssDescr:VARCHAR#, chr(10), ' '), chr(13), ' ')
+		WHERE 	A.CLSS_CD=#clssCd:VARCHAR#
+	</update>
+	
+	
+	<update id="updateClssMngDetlSno" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		UPDATE 	TB_ZZCLSS A
+		SET		A.LEVL = (A.LEVL + 1 + (SELECT B.LEVL-#levl:VARCHAR# FROM TB_ZZCLSS B WHERE B.CLSS_CD=#upperClssCd:VARCHAR#))
+		WHERE 	A.CLSS_CD IN(SELECT C.CLSS_CD FROM TB_ZZCLSS C 
+							START WITH C.UPPER_CLSS_CD = #clssCd:VARCHAR# 
+							CONNECT BY PRIOR C.CLSS_CD=C.UPPER_CLSS_CD)
+	</update>
+	
+	<delete id="deleteClssMngDetlMain" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		DELETE 	TB_ZZCLSS
+		WHERE 	CLSS_CD = #clssCd:VARCHAR# 
+	</delete>
+	
+	
+	<select id="findBisClssRegFolderPagedList" parameterClass="rms.stnd.unitMng.domain.ClssReg" resultMap="excelclssReg-result">
+		SELECT 	A.CLSS_CD,
+				A.UPPER_CLSS_CD,
+				A.CLSS_NM,
+				A.LEVL,
+				A.SORT_SNO,
+				A.CLSS_DESCR,
+				A.REG_DTIME
+		FROM TB_ZZCLSS A ORDER BY A.CLSS_CD,A.LEVL
+	</select>
+	
+	
+	<insert id="createBisClssRegApply" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		INSERT INTO TB_ZZCLSS
+			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO,CLSS_DESCR,REG_DTIME)
+		VALUES
+		(
+			concat(#clssCd:VARCHAR#, LPAD(TB_ZZCLSS_SQ01.NEXTVAL,6,'0')),
+			#upperClssCd:VARCHAR#,
+			#clssNm:VARCHAR#,
+			(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD=#upperClssCd:VARCHAR#),
+			(SELECT NVL(MAX(SORT_SNO)+1,1) FROM TB_ZZCLSS),
+			#clssDescr:VARCHAR#,
+			<!--cubrid TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+			
+		)
+	</insert>
+	<select id="countUpperClssCd" parameterClass="rms.stnd.unitMng.domain.ClssReg" resultClass="int">
+		SELECT COUNT(1) 
+		FROM   TB_ZZCLSS
+		WHERE  CLSS_CD = #upperClssCd:VARCHAR#  
+	</select>
+	
+	<select id="countBisClssRegNewApplyInfo" parameterClass="rms.stnd.unitMng.domain.ClssReg" resultClass="int">
+		SELECT COUNT(1) 
+		  FROM TB_ZZCLSS
+		 WHERE CLSS_CD = #clssCd:VARCHAR#
+	</select>
+	
+	<update id="updateBisClssRegNewApplyInfo" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		UPDATE TB_ZZCLSS
+		<!--cubrid set REG_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		set REG_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		<dynamic>
+			<isNotEmpty prepend="," property="upperClssCd">
+				UPPER_CLSS_CD=#upperClssCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="clssNm">
+				CLSS_NM=#clssNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="upperClssCd">
+				LEVL=(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD=#upperClssCd:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="sortSno">
+				SORT_SNO = #sortSno:VARCHAR# 
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="clssDescr">
+				CLSS_DESCR=#clssDescr:VARCHAR#
+			</isNotEmpty>
+		</dynamic>   
+		   
+		   
+		 WHERE CLSS_CD = #clssCd:VARCHAR#
+	</update>    
+	
+	<insert id="createBisClssRegNewApply" parameterClass="rms.stnd.unitMng.domain.ClssReg">
+		INSERT INTO TB_ZZCLSS
+			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO
+			<dynamic>
+			<isNotEmpty prepend="," property="clssDescr">
+			CLSS_DESCR
+			</isNotEmpty>
+			,REG_DTIME)
+		VALUES
+			(#clssCd:VARCHAR#
+			,#upperClssCd:VARCHAR#
+			,#clssNm:VARCHAR#
+			,(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD=#upperClssCd:VARCHAR#)
+			,#sortSno:VARCHAR#
+			<isNotEmpty prepend="," property="clssDescr">
+				#clssDescr:VARCHAR#
+			</isNotEmpty>
+			</dynamic>
+			<!--cubrid ,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+
+
+</sqlMap>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SyncDept">
+
+	<resultMap id="ReadDeptSyncData-result" class="rms.common.domain.StDeptSync">
+		<result property="orgCd" column="ORG_CD" />
+		<result property="orgNm" column="ORG_NM" />
+		<result property="orgAbbrNm" column="ORG_ABBR_NM" />
+		<result property="fullOrgNm" column="FULL_ORG_NM" />
+		<result property="hupperOrgCd" column="HUPPER_ORG_CD" />
+		<result property="upperOrgCd" column="UPPER_ORG_CD" />
+		<result property="levl" column="LEVL" />
+		<result property="orgSeq" column="ORG_SEQ" />
+		<result property="closeFlag" column="CLOSE_FLAG" />
+		<result property="applyStartYmd" column="APPLY_START_YMD" />
+		<result property="applyCloseYmd" column="APPLY_CLOSE_YMD" />
+	</resultMap>
+	
+	<select id="selectDeptSyncData" resultMap="ReadDeptSyncData-result">
+		SELECT ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD,LEVL,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD
+		FROM TB_STORG_SYNC
+	</select>
+
+	<delete id="deleteDeptSyncData">
+		DELETE FROM TB_STORG_SYNC
+	</delete>
+
+	<select id="selectRecordCenterId" parameterClass="java.lang.String" resultClass="java.lang.String">
+		SELECT RECORD_CENTER_ID
+		FROM TB_STORG
+		WHERE ORG_CD = #ORG_CD:VARCHAR#
+	</select>	
+
+	<insert id="insertDeptSyncData" parameterClass="rms.receive.domain.StDeptSync">
+		INSERT INTO TB_STORG_SYNC 
+		(ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD
+		,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD,LEVL)
+		VALUES (
+			#orgCd:VARCHAR#
+			,#orgNm:VARCHAR#
+			,#orgAbbrNm:VARCHAR#
+			,#fullOrgNm:VARCHAR#
+			,#hupperOrgCd:VARCHAR#
+			,#upperOrgCd:VARCHAR#
+			,#orgSeq:VARCHAR#
+			,#closeFlag:VARCHAR#
+			,#applyStartYmd:VARCHAR#
+			,#applyCloseYmd:VARCHAR#
+			,'5'
+		)
+	</insert>
+	
+	<select id="checkStorg" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM TB_STORG
+		WHERE ORG_CD = #ORG_CD:VARCHAR#
+	</select>
+	
+	<insert id="insertStorg" parameterClass="rms.sync.domain.StDept">
+		INSERT INTO TB_STORG (
+			RECORD_CENTER_ID,ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD
+			,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD, LEVL
+		)
+		VALUES (
+			#recordCenterId:VARCHAR#
+			,#orgCd:VARCHAR#
+			,#orgNm:VARCHAR#
+			,#orgAbbrNm:VARCHAR#
+			,#fullOrgNm:VARCHAR#
+			,#hupperOrgCd:VARCHAR#
+			,#upperOrgCd:VARCHAR#
+			,#orgSeq:NUMBER#
+			,#closeFlag:VARCHAR#
+			,#applyStartYmd:VARCHAR#
+			,#applyCloseYmd:VARCHAR#	
+			,'5'	  
+		)
+	</insert>
+	
+	<insert id="insertStdept" parameterClass="rms.sync.domain.StDept">
+		INSERT INTO TB_STDEPT (
+			DEPT_CD,RECORD_CENTER_ID,ORG_CD,DEPT_NM,DEPT_ABBR_NM,HUPPER_DEPT_CD,UPPER_DEPT_CD
+			,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD, LEVL
+		)
+		VALUES (
+			#orgCd:VARCHAR#
+			,#recordCenterId:VARCHAR#
+			,#orgCd:VARCHAR#
+			,#orgNm:VARCHAR#
+			,#orgAbbrNm:VARCHAR#
+			,#hupperOrgCd:VARCHAR#
+			,#upperOrgCd:VARCHAR#
+			,#orgSeq:NUMBER#
+			,#closeFlag:VARCHAR#
+			,#applyStartYmd:VARCHAR#
+			,#applyCloseYmd:VARCHAR#		
+			,'5'
+		)
+	</insert>
+	
+	<update id="updateStorg" parameterClass="rms.sync.domain.StDept">
+		UPDATE TB_STORG
+		SET CLOSE_FLAG = #closeFlag:VARCHAR#
+			, APPLY_START_YMD = #applyStartYmd:VARCHAR#
+			, APPLY_CLOSE_YMD = #applyCloseYmd:VARCHAR#
+		WHERE ORG_CD = #orgCd:VARCHAR#
+	</update>
+	
+	<update id="updateStdept" parameterClass="rms.sync.domain.StDept">
+		UPDATE TB_STDEPT
+		SET CLOSE_FLAG = #closeFlag:VARCHAR#
+			, APPLY_START_YMD = #applyStartYmd:VARCHAR#
+			, APPLY_CLOSE_YMD = #applyCloseYmd:VARCHAR#
+		WHERE DEPT_CD = #orgCd:VARCHAR#	
+	</update>  
+	
+
+	<update id="updateOrgLevel">
+		UPDATE TB_STORG A
+        SET A.LEVL =(SELECT COUNT(1) FROM TB_STORG B START WITH B.ORG_CD = A.ORG_CD CONNECT BY PRIOR B.UPPER_ORG_CD=B.ORG_CD and prior B.RECORD_CENTER_ID = B.RECORD_CENTER_ID)
+	</update>
+	
+	<update id="updateDeptLevel">
+		UPDATE TB_STDEPT A
+        SET A.LEVL =(SELECT COUNT(1) FROM TB_STDEPT B START WITH B.DEPT_CD = A.DEPT_CD CONNECT BY PRIOR B.UPPER_DEPT_CD=B.DEPT_CD)
+	</update>
+	
+	<insert id="insertZzOrgUnit">
+        <!--cubrid insert-->
+		INSERT INTO TB_ZZORGUNIT
+		      (record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag,COM_UNIT_FLAG)
+		(
+			SELECT *
+			FROM 
+			(
+				SELECT DISTINCT A.record_center_id, B.org_cd, A.unit_cd, '0', A.reg_dtime, DECODE(A.state_cd,'2','0','1'),'1'
+				FROM TB_ZZUNIT A
+				   , TB_STORG B
+				WHERE A.record_center_id = B.record_center_id
+				AND   (A.unit_cd LIKE 'ZZ%' OR A.COM_UNIT_FLAG='1') 
+			) C
+			
+			<!-- cubrid
+			WHERE (C.record_center_id||C.org_cd||C.unit_cd)
+				NOT IN (SELECT record_center_id||org_cd||unit_cd FROM TB_ZZORGUNIT)
+			-->
+			
+			<!-- cubrid start -->		
+			WHERE NOT EXISTS (
+				SELECT 1
+				FROM TB_ZZORGUNIT
+				WHERE record_center_id = C.record_center_id AND org_cd = C.org_cd AND unit_cd = C.unit_cd
+			)
+			<!-- cubrid end -->
+			
+			AND   C.org_cd NOT IN (SELECT record_center_cd FROM TB_STRECORDCENTER)
+		)
+	</insert>
+	
+
+</sqlMap>
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,67 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : select
+-- Query Id : findTransfRecvPagedList
+
+		SELECT	F.transf_list_id			, F.coll_div_cd			, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF08' AND c.com_cd = F.coll_div_cd) coll_div_nm			, F.org_nm			, F.org_abbr_nm			, (SELECT c.bis_clss_nm FROM TB_ZZBISCLSS c WHERE c.bis_clss_id = F.clss_id) clss_nm			, F.title			, F.creat_yyyy			, F.record_cnt			, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'RD07' AND c.com_cd = F.presv_term_cd) presv_term_nm			, DECODE(F.keep_flag, '0', '미보유', '보유') keep_flag_nm			, F.folder_id		FROM (			SELECT E.*			FROM (				SELECT ROWNUM AS rnum					, D.*				FROM (					SELECT	a.transf_list_id						, a.coll_div_cd						, b.org_nm						, b.org_abbr_nm						, a.clss_id						, a.title						, a.creat_yyyy						, a.record_cnt						, a.presv_term_cd						, a.keep_flag						, a.folder_id					FROM  	TB_DFRECVTRANSFLIST a,					      	TB_STORG b					WHERE 	a.org_cd = b.org_cd					AND   	a.record_center_id = b.record_center_id					AND   	a.record_center_id = '1'					AND   	a.transf_yyyy = '1'					AND   	a.transf_grp_sno IN (SELECT transf_grp_sno 												FROM   	TB_DFTRANSFWORK												WHERE  	record_center_id = '1'												AND	   	transf_yyyy = '1'												AND	   	transf_handl_state = '1'												AND    	transf_list_choice_fin_ymd IS NULL)					AND	  	a.coll_div_cd IN ('1', '2') AND 								a.org_cd = '1'					  AND 								(a.clss_div_cd = '1' AND a.clss_id = '1')					  AND 								a.title like '1' 					  AND  								a.keep_flag = '0'						  					ORDER BY a.title, a.folder_id				) D				WHERE ROWNUM <= '1'			) E			WHERE E.rnum >= '1'		) F;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : select
+-- Query Id : countTransfRecvPagedList
+
+		SELECT	COUNT(1)		FROM 	TB_DFRECVTRANSFLIST a,		     	TB_STORG b		WHERE 	a.org_cd = b.org_cd		AND  	a.record_center_id = b.record_center_id		AND  	a.record_center_id = '1'		AND  	a.transf_yyyy = '1'		AND  	a.transf_grp_sno IN (SELECT	transf_grp_sno 									 FROM  	TB_DFTRANSFWORK									 WHERE  	record_center_id = '1'									 AND	   	transf_yyyy = '1'									 AND	   	transf_handl_state = '1'									 AND    	transf_list_choice_fin_ymd IS NULL)		AND	 	a.coll_div_cd IN ('1', '2') AND 					a.org_cd = '1'		  AND 					(a.clss_div_cd = '1' AND a.clss_id = '1')		  AND 					a.title LIKE '1' 		  AND  					a.keep_flag = '0'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : select
+-- Query Id : findTransfPlanGroupId
+
+		SELECT TO_CHAR(transf_grp_sno) AS transf_grp_sno		FROM TB_DFTRANSFWORK 		WHERE record_center_id = '1'		AND	transf_yyyy = '1' 		AND transf_handl_state = '1'		AND transf_list_choice_fin_ymd IS NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : select
+-- Query Id : findTransfRecvFileFolder
+
+		SELECT folder_id, record_reg_cnt		FROM TB_RDFOLDER		WHERE record_center_id = '1'		AND creat_sys_cd = '1'		AND	org_cd = '1'		AND	clss_id = '1'		AND	creat_yyyy = '1'		AND folder_reg_seq = '1' AND 			ho_no = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : select
+-- Query Id : findTransfPlanExistCheck
+
+		SELECT transf_list_id		FROM TB_DFRECVTRANSFLIST		WHERE record_center_id = '1'		AND transf_yyyy = '1'		AND creat_sys_cd = '1'		AND	org_cd = '1'		AND	clss_id = '1'		AND	creat_yyyy = '1'		AND folder_reg_seq = '1'		 AND 			ho_no = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : select
+-- Query Id : findRecordCenterId
+
+		SELECT MAX(record_center_id) AS record_center_id		FROM TB_STRECORDCENTER		WHERE record_center_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : insert
+-- Query Id : createTransfRecvPlanFile
+
+		INSERT INTO TB_DFRECVTRANSFLIST (record_center_id			, transf_yyyy			, transf_list_id			, transf_grp_sno			, coll_div_cd			, creat_sys_cd			, org_cd			, clss_div_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no			, title			, folder_type_div_cd			, close_yyyy			, presv_term_cd			, open_div_cd			, transf_start_ymd			, transf_end_ymd			, transf_div_cd			, folder_id			, keep_flag			, reg_dtime			, recv_transf_div_cd			, record_cnt			, neo_trans_state			, record_neo_trans_state		) VALUES ('1'			, '1'			, (SELECT LPAD(NVL(MAX(transf_list_id),0)+1,10,'0') max_id FROM TB_DFRECVTRANSFLIST WHERE record_center_id = '1' AND transf_yyyy = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'			, '1'			, '0'			, '0'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : update
+-- Query Id : updateTransfRecvPlanFile
+
+		UPDATE TB_DFRECVTRANSFLIST		SET coll_div_cd = '1'			, transf_start_ymd = '1'			, transf_end_ymd = '1'		WHERE record_center_id = '1'		AND	transf_yyyy = '1'		AND transf_list_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml
+-- Query    : insert
+-- Query Id : createTransfPlanGroup
+
+		INSERT INTO TB_DFTRANSFWORK (record_center_id			, transf_yyyy			, transf_grp_sno			, transf_handl_state			, transf_list_recv_ymd		) VALUES ('1'			, '1'			, (SELECT NVL(MAX(transf_grp_sno),0)+1 FROM TB_DFTRANSFWORK WHERE record_center_id='1' AND transf_yyyy='1')			, '1'			, to_char(sysdate, 'YYYYMMDD')		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfReqListRecv.xml

@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.rmsstate">
+
+	<!-- 
+		시설장비_전산장비
+		: 전산장비 목록을 조회한다.
+	 -->
+	<resultMap id="findCompuEquipPagedList-result" class="rms.sys.rmsstate.domain.RmsEquip">
+		<result property="sno" 				column="SNO"/>
+		<result property="equipNm" 			column="EQUIP_NM"/>
+		<result property="goodsNm" 			column="GOODS_NM"/>
+		<result property="goodsCnt" 		column="GOODS_CNT"/>
+		<result property="introYmd" 		column="INTRO_YMD"/>
+		<result property="remk" 			column="REMK"/>
+		<result property="recordCenterCd" 	column="RECORD_CENTER_CD"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+	</resultMap>
+	<select id="countCompuEquipPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_STCOMPUEQUIP A, TB_STRECORDCENTER B
+        WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	</select>
+	<select id="findCompuEquipPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultMap="findCompuEquipPagedList-result">
+		SELECT E.sno
+		      ,E.equip_nm
+		      ,E.goods_nm
+		      ,E.goods_cnt
+		      ,E.intro_ymd
+		      ,E.remk
+		      ,E.record_center_cd
+		      ,E.record_center_id
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.*, B.record_center_cd
+		            FROM TB_STCOMPUEQUIP A, TB_STRECORDCENTER B
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            ORDER BY A.sno
+		            ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		시설장비_전산장비
+		: 전산장비를 등록한다.
+	 -->
+	<insert id="createCompuEquip" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		INSERT INTO TB_STCOMPUEQUIP(
+			record_center_id, sno, equip_nm, goods_nm, goods_cnt, intro_ymd, remk
+		) VALUES (
+			#recordCenterId#, (SELECT NVL(MAX(sno),0) + 1 FROM TB_STCOMPUEQUIP WHERE record_center_id = #recordCenterId:VARCHAR#), #equipNm#, #goodsNm#, #goodsCnt#, #introYmd#, #remk#
+		)
+	</insert>
+	
+	<!-- 
+		시설장비_전산장비
+		: 전산장비를 수정한다.
+	 -->
+	<update id="updateCompuEquip" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		UPDATE TB_STCOMPUEQUIP
+		SET   equip_nm  = #equipNm:VARCHAR#
+		     ,goods_nm  = #goodsNm:VARCHAR#
+		     ,goods_cnt = #goodsCnt:VARCHAR#
+		     ,intro_ymd = #introYmd:VARCHAR#
+		     ,remk  = #remk:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   sno = #sno:VARCHAR#
+	</update>
+	
+	<!-- 
+		시설장비_전산장비
+		: 전산장비를 삭제한다.
+	 -->
+	<delete id="deleteCompuEquip" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		DELETE FROM TB_STCOMPUEQUIP WHERE record_center_id = #recordCenterId:VARCHAR# AND sno = #sno:VARCHAR#
+	</delete>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설 목록을 조회한다.
+	 -->
+	<resultMap id="findPresvFacPagedList-result" class="rms.sys.rmsstate.domain.RmsEquip">
+		<result property="sno" 				column="SNO"/>
+		<result property="stakrmNm" 		column="STAKRM_NM"/>
+		<result property="stakrmLoc" 		column="STAKRM_LOC"/>
+		<result property="stakrmLocNm" 		column="STAKRM_LOC_NM"/>
+		<result property="area" 			column="AREA"/>
+		<result property="stakrmTypeNm" 	column="STAKRM_TYPE_NM"/>
+		<result property="stakrmTypeCd" 	column="STAKRM_TYPE_CD"/>
+		<result property="useRate" 			column="USE_RATE"/>
+		<result property="remk" 			column="REMK"/>
+		<result property="infoFileId" 		column="INFO_FILE_ID"/>
+	</resultMap>
+	<select id="countPresvFacPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STSTAKRMINFO A, TB_ZZCOMCD B
+		WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+		AND (A.stakrm_type_cd = B.COM_CD and B.COM_TYPE_CD = 'ST17')
+	</select>
+	<select id="findPresvFacPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultMap="findPresvFacPagedList-result">
+		SELECT E.sno
+		      ,E.stakrm_nm
+		      ,E.com_cd_nm AS stakrm_type_nm
+		      ,E.com_cd AS stakrm_type_cd
+		      ,E.area
+		      ,E.use_rate
+		      ,E.remk
+		      ,E.info_file_id
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST19' AND Z.com_cd = E.stakrm_loc) AS stakrm_loc_nm
+		      ,E.stakrm_loc
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*  
+		        FROM (
+		            SELECT A.*, B.*
+		            FROM TB_STSTAKRMINFO A, TB_ZZCOMCD B
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+		            AND (A.stakrm_type_cd = B.COM_CD and B.COM_TYPE_CD = 'ST17')
+		            ORDER BY A.sno
+		        ) C
+		   		WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설을 등록한다.
+	 -->
+	<insert id="createPresvFac" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		INSERT INTO TB_STSTAKRMINFO (
+			record_center_id, sno, stakrm_nm, stakrm_loc, area, stakrm_Type_Cd, use_Rate, remk, info_file_id
+		) VALUES (
+			 #recordCenterId#
+			,(SELECT NVL(MAX(sno),0) + 1 FROM TB_STSTAKRMINFO WHERE record_center_id = #recordCenterId:VARCHAR#)
+		    ,#stakrmNm#
+		    ,#stakrmLoc#
+		    ,#area#
+		    ,#stakrmTypeCd#
+		    ,#useRate#
+		    ,#remk#
+		    ,#infoFileId#)
+	</insert>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설수정시 정보파일이 있는지 조회한다.
+	 -->
+	<select id="findPresvFacInfoFile" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultClass="java.lang.String">
+		SELECT INFO_FILE_ID FROM TB_STSTAKRMINFO
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND SNO = #sno:NUMBER#
+	</select>
+	 
+	<!-- 
+		시설장비_보존시설
+		: 보존시설을 수정한다.
+	 -->
+	<update id="updatePresvFac" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		UPDATE TB_STSTAKRMINFO
+		SET   stakrm_nm =  #stakrmNm:VARCHAR# 
+		     ,stakrm_loc = #stakrmLoc:VARCHAR#
+		     ,area = #area:VARCHAR#
+		     ,stakrm_type_cd = #stakrmTypeCd:VARCAHR#
+		     ,use_rate = #useRate:VARCAHR#
+		     ,remk = #remk:VARCHAR#
+		     <dynamic>
+		     	<isNotEmpty property="infoFileId">
+		     		,info_file_id = #infoFileId:VARCHAR#
+		     	</isNotEmpty>
+		     </dynamic>
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND sno = #sno:VARCHAR#		
+	</update>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설을 삭제한다.	
+	 -->
+	<delete id="deletePresvFac" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		DELETE FROM TB_STSTAKRMINFO WHERE record_center_id = #recordCenterId:VARCHAR# AND sno = #sno:VARCHAR#
+	</delete>
+	
+	<!-- 
+		시설장비_보존장비
+		: 보존장비 목록을 조회한다.
+	 -->
+	<resultMap id="findPresvEquipPagedList-result" class="rms.sys.rmsstate.domain.RmsEquip">
+		<result property="recordCenterId" 			column="RECORD_CENTER_ID"/>
+		<result property="sno" 						column="SNO"/>
+		<result property="equipType" 				column="EQUIP_TYPE"/>
+		<result property="goodsNm" 			        column="GOODS_NM"/>
+		<result property="goodsCnt" 				column="GOODS_CNT"/>
+		<result property="introYmd" 				column="INTRO_YMD"/>
+		<result property="remk" 					column="REMK"/>
+		<result property="equipClssCd" 				column="EQUIP_CLSS_CD"/>
+		<result property="equipClssNm" 				column="EQUIP_CLSS_NM"/>
+	</resultMap>
+	<select id="countPresvEquipPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultClass="java.lang.Long">
+		SELECT  COUNT(1)
+        FROM TB_STPRESVEQUIP A
+        WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	<select id="findPresvEquipPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultMap="findPresvEquipPagedList-result">
+		SELECT E.record_center_id
+	          ,E.sno
+	          ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST13' AND Z.com_cd = E.equip_clss_cd) AS equip_clss_nm
+	          ,E.equip_clss_cd
+	          ,E.equip_type
+	          ,E.goods_nm
+	          ,E.goods_cnt
+	          ,E.intro_ymd
+	          ,E.remk
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT  A.*
+		            FROM TB_STPRESVEQUIP A
+		            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            ORDER BY A.sno
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D 
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설을 등록한다.
+	 -->
+	<insert id="createPresvEquip" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		INSERT INTO TB_STPRESVEQUIP (
+			RECORD_CENTER_ID, SNO, EQUIP_CLSS_CD, EQUIP_TYPE, GOODS_NM, GOODS_CNT, INTRO_YMD,REMK
+		) VALUES (
+			 #recordCenterId:VARCHAR#
+			,(SELECT DECODE((MAX(TO_NUMBER(SNO))),null,0,(MAX(TO_NUMBER(SNO))))+1 FROM TB_STPRESVEQUIP)
+			,#equipClssCd:VARCHAR#
+			,#equipType:VARCHAR#
+			,#goodsNm:VARCHAR#
+			,#goodsCnt:VARCHAR#
+			,#introYmd:VARCHAR#
+			,#remk:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설을 수정한다.
+	 -->
+	<update id="updatePresvEquip" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		UPDATE TB_STPRESVEQUIP
+	 	SET    EQUIP_CLSS_CD = #equipClssCd:VARCHAR#
+	 		  ,EQUIP_TYPE = #equipType:VARCHAR#
+	 		  ,GOODS_NM = #goodsNm:VARCHAR#
+	 		  ,GOODS_CNT = #goodsCnt:VARCHAR#
+	 		  ,INTRO_YMD = #introYmd:VARCHAR#
+	 		  ,REMK =  #remk:VARCHAR#
+	  	WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	  	AND    SNO = #sno:VARCHAR#
+	</update>
+	
+	<!-- 
+		시설장비_보존시설
+		: 보존시설을 삭제한다.
+	 -->
+	<delete id="deletePresvEquip" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		DELETE TB_STPRESVEQUIP WHERE record_center_id = #recordCenterId:VARCHAR# AND sno = #sno:VARCHAR#
+	</delete>
+	
+	<!-- 
+		시설장비_기록물및 서고소독
+		: 기록물및 서고소독 목록을 조회한다.
+	 -->
+	<resultMap id="findDisInfecPagedList-result" class="rms.sys.rmsstate.domain.RmsEquip">
+		<result property="recordCenterId" 			column="RECORD_CENTER_ID"/>
+		<result property="sno" 						column="SNO"/>
+		<result property="disinfYmd" 				column="DISINF_YMD"/>
+		<result property="drugNm" 					column="DRUG_NM"/>
+		<result property="disinfUserNm" 			column="DISINF_USER_NM"/>
+		<result property="remk" 					column="REMK"/>
+		<result property="disinfTarget" 			column="DISINF_TARGET"/>
+		<result property="disinfTrgtCd" 			column="DISINF_TRGT_CD"/>
+	</resultMap>
+	<select id="countDisInfecPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultClass="java.lang.Long">
+		SELECT COUNT(1)  
+        FROM TB_STDISINF A, TB_ZZCOMCD B
+        WHERE B.com_type_cd='ST14' 
+        AND B.com_cd=A.disinf_trgt_cd
+        AND A.record_center_id = #recordCenterId:VARCHAR#
+	</select>
+	<select id="findDisInfecPagedList" parameterClass="rms.sys.rmsstate.domain.RmsEquip" resultMap="findDisInfecPagedList-result">
+		SELECT E.record_center_id
+		      ,E.sno
+		      ,E.disinf_ymd
+		      ,E.com_cd_nm AS disinf_target
+		      ,E.disinf_trgt_cd
+		      ,E.drug_nm
+		      ,E.disinf_user_nm
+		      ,E.remk
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.*, B.*  
+		            FROM TB_STDISINF A, TB_ZZCOMCD B
+		            WHERE B.com_type_cd ='ST14' 
+		            AND B.com_cd = A.disinf_trgt_cd
+		            AND A.record_center_id = #recordCenterId:VARCHAR#
+		            ORDER BY A.sno
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		시설장비_기록물및서고소독
+		: 기록물및서고소독 등록한다.
+	 -->
+	<insert id="createDisInfec" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		INSERT INTO TB_STDISINF (
+			RECORD_CENTER_ID, SNO, DISINF_YMD, DISINF_TRGT_CD, DRUG_NM, DISINF_USER_NM, REMK
+		) VALUES (
+			 #recordCenterId:VARCHAR#
+			,(SELECT DECODE((MAX(TO_NUMBER(SNO))),null,0,(MAX(TO_NUMBER(SNO))))+1 FROM TB_STDISINF WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+			,#disinfYmd:VARCHAR#
+			,#disinfTrgtCd:VARCHAR#
+			,#drugNm:VARCHAR#
+			,#disinfUserNm:VARCHAR#
+			,#remk:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		시설장비_기록물및서고소독
+		: 기록물및서고소독 수정한다.
+	 -->
+	<update id="updateDisInfec" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		UPDATE TB_STDISINF
+	  	SET  DISINF_YMD = #disinfYmd:VARCHAR#
+	  		,DISINF_TRGT_CD = #disinfTrgtCd:VARCHAR#
+	  		,DRUG_NM = #drugNm:VARCHAR#
+	  		,DISINF_USER_NM = #disinfUserNm:VARCHAR#
+	  		,REMK =  #remk:VARCHAR#
+	  	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	  	AND   SNO = #sno:VARCHAR#
+	</update>
+	
+	<!-- 
+		시설장비_기록물및서고소독
+		: 기록물및서고소독 삭제한다.
+	 -->
+	<delete id="deleteDisInfec" parameterClass="rms.sys.rmsstate.domain.RmsEquip">
+		DELETE FROM TB_STDISINF WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND SNO = #sno:VARCHAR# 
+	</delete>
+	
+</sqlMap>

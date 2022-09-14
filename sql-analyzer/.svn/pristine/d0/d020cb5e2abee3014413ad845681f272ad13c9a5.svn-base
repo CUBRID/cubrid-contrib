@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : select
+-- Query Id : findBisClssRegInfo
+
+		SELECT 	A.CLSS_CD,				A.UPPER_CLSS_CD,				A.CLSS_NM,				A.LEVL,				A.SORT_SNO,				A.CLSS_DESCR,				A.REG_DTIME,				(SELECT E.CLSS_PATH_NM FROM (SELECT D.CLSS_CD, substr(SYS_CONNECT_BY_PATH(CLSS_NM,'>'),2,length(SYS_CONNECT_BY_PATH(CLSS_NM,'>'))) CLSS_PATH_NM 				FROM TB_ZZCLSS D 				START WITH D.CLSS_CD = '00000000' 				CONNECT BY PRIOR D.CLSS_CD = D.UPPER_CLSS_CD) E				WHERE E.CLSS_CD = '1') CLSS_PATH_NM,				(SELECT COUNT(1) FROM TB_ZZCLSS F WHERE F.UPPER_CLSS_CD='1') UNDER_CLSS_FLAG,				(SELECT C.CLSS_NM FROM TB_ZZCLSS C WHERE C.CLSS_CD=A.UPPER_CLSS_CD) UPPER_CLSS_NM		FROM 	TB_ZZCLSS A		WHERE 	A.CLSS_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : insert
+-- Query Id : createClssDetl
+
+		INSERT INTO TB_ZZCLSS			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO,CLSS_DESCR,REG_DTIME)		VALUES		(concat('1', LPAD(TB_ZZCLSS_SQ01.NEXTVAL,6,'0')),'1','1',			(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD='1'),(SELECT NVL(MAX(SORT_SNO)+1,1) FROM TB_ZZCLSS),			replace(replace('1', chr(10), ' '), chr(13), ' '),			TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : update
+-- Query Id : updateClssMngDetl
+
+		UPDATE 	TB_ZZCLSS A		SET		A.UPPER_CLSS_CD = '1',				A.CLSS_NM = '1',				A.LEVL = (SELECT B.LEVL+1 FROM TB_ZZCLSS B WHERE B.CLSS_CD='1'),				A.CLSS_DESCR = replace(replace('1', chr(10), ' '), chr(13), ' ')		WHERE 	A.CLSS_CD='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : update
+-- Query Id : updateClssMngDetlSno
+
+		UPDATE 	TB_ZZCLSS A		SET		A.LEVL = (A.LEVL + 1 + (SELECT B.LEVL-'1' FROM TB_ZZCLSS B WHERE B.CLSS_CD='1'))		WHERE 	A.CLSS_CD IN(SELECT C.CLSS_CD FROM TB_ZZCLSS C 							START WITH C.UPPER_CLSS_CD = '1' 							CONNECT BY PRIOR C.CLSS_CD=C.UPPER_CLSS_CD)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : delete
+-- Query Id : deleteClssMngDetlMain
+
+		DELETE 	TB_ZZCLSS		WHERE 	CLSS_CD = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : select
+-- Query Id : findBisClssRegFolderPagedList
+
+		SELECT 	A.CLSS_CD,				A.UPPER_CLSS_CD,				A.CLSS_NM,				A.LEVL,				A.SORT_SNO,				A.CLSS_DESCR,				A.REG_DTIME		FROM TB_ZZCLSS A ORDER BY A.CLSS_CD,A.LEVL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : insert
+-- Query Id : createBisClssRegApply
+
+		INSERT INTO TB_ZZCLSS			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO,CLSS_DESCR,REG_DTIME)		VALUES		(			concat('1', LPAD(TB_ZZCLSS_SQ01.NEXTVAL,6,'0')),			'1',			'1',			(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD='1'),			(SELECT NVL(MAX(SORT_SNO)+1,1) FROM TB_ZZCLSS),			'1',			TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')					)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : select
+-- Query Id : countUpperClssCd
+
+		SELECT COUNT(1) 		FROM   TB_ZZCLSS		WHERE  CLSS_CD = '1'  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : select
+-- Query Id : countBisClssRegNewApplyInfo
+
+		SELECT COUNT(1) 		  FROM TB_ZZCLSS		 WHERE CLSS_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : update
+-- Query Id : updateBisClssRegNewApplyInfo
+
+		UPDATE TB_ZZCLSS				set REG_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')				   		 WHERE CLSS_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : insert
+-- Query Id : createBisClssRegNewApply
+
+		INSERT INTO TB_ZZCLSS			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO 			,REG_DTIME)		VALUES			('1'			,'1'			,'1'			,(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD='1')			,'1'			 , 				'1'			  			,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		);
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml

@@ -1,0 +1,18 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\stat\OpenCurState.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\stat\OpenCurState.xml
+-- Query    : select
+-- Query Id : findOpenCurStateOpenDivTotal
+
+		SELECT '' AS org_cd			, 'ÃÑ°è' AS org_nm			, 'ÃÑ°è' AS org_abbr_nm			, NVL(SUM((CASE WHEN A.open_div_cd IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total			, NVL(SUM((CASE WHEN A.open_div_cd='1' THEN 1 ELSE 0 END)),0) AS sum_open			, NVL(SUM((CASE WHEN A.open_div_cd='2' THEN 1 ELSE 0 END)),0) AS sum_half			, NVL(SUM((CASE WHEN A.open_div_cd='3' THEN 1 ELSE 0 END)),0) AS sum_close			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,1,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_a			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,2,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_b			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,3,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_c			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,4,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_d			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,5,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_e			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,6,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_f			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,7,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_g			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,8,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_h		FROM  TB_RDRECORD A		WHERE A.record_center_id = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\stat\OpenCurState.xml
+-- Query    : select
+-- Query Id : findOpenCurStateOpenDivList
+
+		SELECT B.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_abbr_nm			, B.total			, B.sum_open			, B.sum_half			, B.sum_close			, B.sum_a			, B.sum_b			, B.sum_c			, B.sum_d			, B.sum_e			, B.sum_f			, B.sum_g			, B.sum_h		FROM (			SELECT A.record_center_id				, A.org_cd				, NVL(SUM((CASE WHEN A.open_div_cd IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total				, NVL(SUM((CASE WHEN A.open_div_cd='1' THEN 1 ELSE 0 END)),0) AS sum_open				, NVL(SUM((CASE WHEN A.open_div_cd='2' THEN 1 ELSE 0 END)),0) AS sum_half				, NVL(SUM((CASE WHEN A.open_div_cd='3' THEN 1 ELSE 0 END)),0) AS sum_close				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,1,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_a				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,2,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_b				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,3,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_c				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,4,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_d				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,5,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_e				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,6,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_f				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,7,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_g				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,8,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_h			FROM  TB_RDRECORD A			WHERE A.record_center_id = '1'			GROUP BY A.record_center_id, A.org_cd		) B		ORDER BY org_nm	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\stat\OpenCurState.xml

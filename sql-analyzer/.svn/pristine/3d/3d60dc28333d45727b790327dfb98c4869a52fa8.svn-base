@@ -1,0 +1,3002 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="take.regTake">
+
+	<resultMap id="regTakeRegFolder-result" class="rms.take.regTake.domain.TkFolder">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="title" 					column="title"/>
+		<result property="subTitle" 				column="sub_title"/>
+		<result property="clssDivCd"                column="clss_div_cd"/>
+		<result property="clssId" 					column="clss_id"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="folderTypeDivCd" 			column="folder_type_div_cd"/>
+		<result property="sumry" 					column="sumry"	jdbcType="CLOB"	javaType="java.lang.String"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="hoNo" 					column="ho_no"/> 
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="takeOrgCd" 				column="take_org_cd"/>
+		<result property="oldFolderCreatOrgNm" 		column="old_folder_creat_org_nm"/>
+		<result property="oldFolderClssNo" 			column="old_folder_clss_no"/>
+		<result property="groupPresvTermCd" 		column="group_presv_term_cd"/>
+		<result property="presvTermCd" 				column="presv_term_cd"/>
+		<result property="presvTermFixRsn" 			column="presv_term_fix_rsn"/>
+		<result property="operReadRangeCd" 			column="oper_read_range_cd"/>
+		<result property="readCnt" 					column="read_cnt"/>
+		<result property="creatUserId" 				column="creat_user_id"/>
+		<result property="creatUserNm" 				column="creat_user_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserPosRankNm" 		column="creat_user_pos_rank_nm"/>
+		<result property="creatDtime" 				column="creat_dtime"/>
+	</resultMap>
+
+	<!-- 기록물철 조회 -->
+	<select id="findRegTakeRegFolder" parameterClass="rms.take.regTake.domain.TkFolder" resultMap="regTakeRegFolder-result">
+		SELECT A.record_center_id
+		     , A.folder_take_seq
+		     , A.title
+		     , A.sub_title
+		     , A.clss_div_cd
+		     , A.clss_id
+		     , A.clss_nm
+		     , A.creat_yyyy
+		     , A.folder_type_div_cd
+		     , A.sumry
+		     , A.org_cd
+		     , B.org_nm
+		     , A.take_org_cd
+		     , A.old_folder_creat_org_nm
+		     , A.old_folder_clss_no
+		     , A.group_presv_term_cd
+		     , A.presv_term_cd
+		     , A.presv_term_fix_rsn
+		     , A.oper_read_range_cd
+		     , A.read_cnt
+		     , A.creat_user_id
+		     , A.creat_user_nm
+		     , A.creat_user_org_cd
+		     , (SELECT B.org_nm
+						   FROM TB_STORG B
+						   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+						   AND   B.org_cd=A.creat_user_org_cd) creat_user_org_nm
+		     , A.creat_user_pos_rank_nm
+		     , SUBSTR(A.creat_dtime,0,8) creat_dtime
+		     , A.ho_no
+		FROM  TB_TKFOLDER A
+		    , TB_STORG B
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_take_seq = #folderTakeSeq:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.org_cd = B.org_cd
+	</select>
+
+	<resultMap id="regTakeRegFolderList-result" class="rms.take.regTake.domain.RegTakeRegFolder">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserOrgAbbrNm" 		column="creat_user_org_abbr_nm"/>
+		<result property="clssId" 					column="clss_id"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="title" 					column="title"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="presvTermCd" 				column="presv_term_cd"/>
+		<result property="presvTermNm" 				column="presv_term_nm"/>
+		<result property="recordRegCnt" 			column="record_reg_cnt"/>
+		<result property="examRsltCd" 				column="exam_rslt_cd"/>
+		<result property="examRsltNm" 				column="exam_rslt_nm"/>
+		<result property="hoNo" 					column="ho_no"/>
+		<result property="hoNoCnt" 					column="ho_no_cnt"/>
+		<result property="recordCount" 				column="record_count"/>
+	</resultMap>
+	
+	<!-- 
+		기록물철 목록 조회
+	 -->
+	<select id="findRegTakeRegFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegFolder" resultMap="regTakeRegFolderList-result">
+		SELECT C.*
+	    FROM (
+	        SELECT ROWNUM AS rnum
+	            , B.*
+	        FROM (
+				SELECT A.record_center_id
+				    , A.folder_take_seq
+				    , A.org_cd
+					, (SELECT B.org_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.org_cd) org_nm
+					, (SELECT B.org_abbr_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.org_cd) org_abbr_nm
+					, A.creat_user_org_cd
+					, (SELECT B.org_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.creat_user_org_cd) creat_user_org_nm
+					, (SELECT B.org_abbr_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.creat_user_org_cd) creat_user_org_abbr_nm
+					, A.clss_id
+					, A.clss_nm
+					, (CASE WHEN (A.ho_No != '1' AND (select count(*)
+                          from tb_tkfolder e
+                         where e.record_center_id = a.record_center_id
+                           and e.creat_sys_cd = a.creat_sys_cd
+                           and e.org_cd = a.org_cd
+                           and e.clss_id = a.clss_id
+                           and e.creat_yyyy = a.creat_yyyy
+                           and e.folder_reg_seq = a.folder_reg_seq) != '1')
+                            THEN A.title || ' (' || A.ho_No || ')'
+                            ELSE A.title
+                       END) AS title
+					, A.creat_yyyy
+					, A.presv_term_cd
+					, (SELECT C.com_cd_nm
+					   FROM TB_ZZCOMCD C
+					   WHERE C.com_type_cd = 'RD07'
+					   AND C.com_cd=DECODE(A.presv_term_cd, '20', '25', A.presv_term_cd)) presv_term_nm
+					, TO_CHAR(TO_NUMBER(NVL(A.record_reg_cnt,'0'))) record_reg_cnt
+					, A.exam_rslt_cd
+					, DECODE(A.exam_rslt_cd,'2','검수오류',DECODE(A.reg_fin_flag,'1','등록완료','등록중')) exam_rslt_nm
+					, A.ho_no
+					, (select count(*)
+                            from tb_tkfolder e
+                            where e.record_center_id = a.record_center_id
+                            and e.creat_sys_cd = a.creat_sys_cd
+                            and e.org_cd = a.org_cd
+                            and e.clss_id = a.clss_id
+                            and e.creat_yyyy = a.creat_yyyy
+                            and e.folder_reg_seq = a.folder_reg_seq
+                            ) as ho_no_cnt
+                    , (SELECT COUNT(1) 
+                       FROM TB_TKRECORD B 
+                       WHERE B.record_center_id = A.record_center_id 
+                       AND B.folder_take_seq = A.folder_take_seq) record_count                    
+				FROM TB_TKFOLDER A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.creat_sys_cd = '03' 
+				AND   A.take_fin_flag = '0'
+				AND   A.exam_rslt_cd IN ('0', '2')
+		        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+		            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		        </isNotEmpty>
+				<isNotEmpty prepend="AND" property="regYmdF">
+					A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+				</isNotEmpty>
+		        <isNotEmpty prepend="AND" property="orgCd">
+		            A.org_cd = #orgCd:VARCHAR#
+		        </isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyF">
+					A.creat_yyyy BETWEEN NVL(#creatYyyyF:VARCHAR#,'0001') AND NVL(#creatYyyyT:VARCHAR#,'9999')
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+				    (A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+		        <isNotEmpty property="presvTermCd">
+			        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD IN ('20','25')
+		            </isEqual>
+			        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		            </isNotEqual>		            
+		        </isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty property="examRsltCd">
+					<isEqual prepend="AND" property="examRsltCd" compareValue="FIN">
+						(A.reg_fin_flag = '1' AND A.exam_rslt_cd = '0')
+					</isEqual>
+					<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+						(A.reg_fin_flag = '0' AND A.exam_rslt_cd = '0')
+					</isEqual>
+					<isEqual prepend="AND" property="examRsltCd" compareValue="2">
+						A.exam_rslt_cd = '2'
+					</isEqual>
+				</isNotEmpty>
+				<isEmpty property="order">
+					ORDER BY A.record_center_id, A.reg_dtime DESC
+				</isEmpty>
+				<isEqual property="order" compareValue="0">
+					ORDER BY A.record_center_id, A.reg_dtime DESC
+				</isEqual>				
+				<isEqual property="order" compareValue="1">
+					ORDER BY A.record_center_id, A.clss_nm
+				</isEqual>
+				<isEqual property="order" compareValue="2">
+					ORDER BY A.record_center_id, A.creat_yyyy DESC
+				</isEqual>
+				<isEqual property="order" compareValue="3">
+					ORDER BY A.record_center_id, A.title
+				</isEqual>												
+		        <!-- ORDER BY A.record_center_id, org_nm, A.clss_nm, A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no -->
+			) B
+	        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	    ) C
+	    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		기록물철 목록 조회 (카운트)
+	 -->
+	<select id="countRegTakeRegFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_TKFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = '03'
+		AND   A.take_fin_flag = '0'
+		AND   A.exam_rslt_cd IN ('0', '2')
+        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="regYmdF">
+			A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			A.creat_yyyy BETWEEN NVL(#creatYyyyF:VARCHAR#,'0001') AND NVL(#creatYyyyT:VARCHAR#,'9999')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+		    (A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="presvTermCd">
+            A.presv_term_cd = #presvTermCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty property="examRsltCd">
+			<isEqual prepend="AND" property="examRsltCd" compareValue="FIN">
+				(A.reg_fin_flag = '1' AND A.exam_rslt_cd = '0')
+			</isEqual>
+			<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+				(A.reg_fin_flag = '0' AND A.exam_rslt_cd = '0')
+			</isEqual>
+			<isEqual prepend="AND" property="examRsltCd" compareValue="2">
+				A.exam_rslt_cd = '2'
+			</isEqual>
+		</isNotEmpty>
+	</select>
+	
+	<!-- 기록물철 인수일련번호 조회 -->
+	<select id="findRegTakeRegFolderTakeSeq" resultClass="string">
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKFOLDER_SQ01.nextval), 15, '0') FROM DUAL
+	</select>
+	
+	<!-- 기록물철 등록 -->
+	<insert id="createRegTakeRegFolder" parameterClass="rms.take.regTake.domain.TkFolder">
+		INSERT INTO TB_TKFOLDER
+		(
+			record_center_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy
+			, take_sno, clss_nm, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt
+			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, error_flag
+			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime
+			, folder_close_dtime, virus_flag, erecord_flag
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#, #folderTakeSeq:VARCHAR#, #creatSysCd:VARCHAR#, #orgCd:VARCHAR#, #clssDivCd:VARCHAR#
+			, #clssId:VARCHAR#, #creatYyyy:VARCHAR#, #folderRegSeq:VARCHAR#, #hoNo:VARCHAR#, TO_CHAR(SYSDATE,'YYYY')
+			, #takeSno:VARCHAR#, (SELECT bis_clss_nm FROM TB_ZZBISCLSS WHERE bis_clss_id = #clssId:VARCHAR# UNION SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND UNIT_CD = #clssId:VARCHAR# )
+			, #title:VARCHAR#, #subTitle:VARCHAR#, #folderTypeDivCd:VARCHAR#
+			, #folderDetlTypeCd:VARCHAR#, #sumry:CLOB#, #folderSize:VARCHAR#, #recordTotPageCnt:VARCHAR#, #recordRegCnt:VARCHAR#
+			, #efileCnt:VARCHAR#, #oldFolderCreatOrgNm:VARCHAR#, #oldFolderClssNo:VARCHAR#, #presvTermCd:VARCHAR#, #presvTermFixRsn:VARCHAR#
+			, #operReadRangeCd:VARCHAR#, #readCnt:VARCHAR#, #newDivCd:VARCHAR#, #presvMethodCd:VARCHAR#, #presvAreaCd:VARCHAR#
+			, #creatUserId:VARCHAR#, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#
+			<!--cubrid , #creatDtime:VARCHAR#||'090000', TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), #orgCd:VARCHAR#, #groupPresvTermCd:VARCHAR#, #errorFlag:VARCHAR#-->
+                        , #creatDtime:VARCHAR#||'090000', TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), #orgCd:VARCHAR#, #groupPresvTermCd:VARCHAR#, #errorFlag:VARCHAR#
+			, #examRsltCd:VARCHAR#, #rjctFlag:VARCHAR#, #takeFinFlag:VARCHAR#, #takeTypeCd:VARCHAR#, #creatYyyy:VARCHAR#||'0101000000'
+			, #creatYyyy:VARCHAR#||'1231000000', #virusFlag:VARCHAR#, #erecordFlag:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 권호수 추가 -->
+	<insert id="createRegTakeHonoAddFolder"  parameterClass="rms.take.regTake.domain.TkFolder">
+		INSERT INTO TB_TKFOLDER
+		(
+			record_center_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy
+			, take_sno, clss_nm, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt
+			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, error_flag
+			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime
+			, folder_close_dtime, virus_flag, erecord_flag
+		)
+		SELECT record_center_id, #folderTakeSeq:VARCHAR#, creat_sys_cd, take_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, 
+			(	SELECT LPAD(MAX(HO_NO)+1, 3, '0') 
+				FROM TB_TKFOLDER 
+				WHERE RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ IN (
+					SELECT RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ 
+					FROM TB_TKFOLDER  
+					WHERE FOLDER_TAKE_SEQ = #oldFolderTakeSeq:VARCHAR# )
+			)
+			, take_yyyy
+			, take_sno, clss_nm, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, '0', '0', '0'
+			, '0', old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			<!--cubrid, creat_dtime, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), org_cd, group_presv_term_cd, error_flag-->
+                        , creat_dtime, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), org_cd, group_presv_term_cd, error_flag
+			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime
+			, folder_close_dtime, virus_flag, erecord_flag
+			FROM TB_TKFOLDER 
+			WHERE FOLDER_TAKE_SEQ = #oldFolderTakeSeq:VARCHAR#
+	</insert>
+	
+	<!-- 행위자정보 등록 -->
+	<insert id="createRegTakeRegFolderCreat" parameterClass="rms.take.regTake.domain.TkFolderCreat">
+		INSERT INTO TB_TKFOLDERCREAT
+		(
+			record_center_id
+			, folder_take_seq
+			, agent_sno
+			, agent_type_cd
+			, agent_id
+			, agent_nm
+			, agent_org_cd
+			, agent_org_nm
+			, agent_pos_rank_nm
+			, opin
+			, duty_type_cd
+			, duty_act_dtime
+			, reg_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, #folderTakeSeq:VARCHAR#
+			, (SELECT NVL(MAX(agent_sno),0)+1 agent_sno  
+			   FROM TB_TKFOLDERCREAT
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   folder_take_seq = #folderTakeSeq:VARCHAR#)
+			, #agentTypeCd:VARCHAR#
+			, #agentId:VARCHAR#
+			, #agentNm:VARCHAR#
+			, #agentOrgCd:VARCHAR#
+			, #agentOrgNm:VARCHAR#
+			, #agentPosRankNm:VARCHAR#
+			, #opin:CLOB#
+			, #dutyTypeCd:VARCHAR#
+			, #dutyActDtime:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 행위자 정보 삭제 -->
+	<delete id="deleteRegTakeRegFolderCreat" parameterClass="rms.take.regTake.domain.TkFolder">
+		DELETE TB_TKFOLDERCREAT
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    folder_take_seq = #folderTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 기록물철 삭제 -->
+	<delete id="deleteRegTakeRegFolder" parameterClass="rms.take.regTake.domain.TkFolder">
+		DELETE TB_TKFOLDER
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 기록물철 수정 -->
+	<update id="updateRegTakeRegFolder" parameterClass="rms.take.regTake.domain.TkFolder">
+		UPDATE TB_TKFOLDER
+		SET   title = #title:VARCHAR#
+		    , sub_title = #subTitle:VARCHAR#
+		    , clss_div_cd = #clssDivCd:VARCHAR#
+		    , clss_id = #clssId:VARCHAR#
+		    , clss_nm = (SELECT bis_clss_nm FROM TB_ZZBISCLSS WHERE bis_clss_id = #clssId:VARCHAR# UNION SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND UNIT_CD = #clssId:VARCHAR# )
+		    , creat_yyyy = #creatYyyy:VARCHAR#
+		    , folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+		    , sumry = #sumry:CLOB#
+		    , org_cd = #orgCd:VARCHAR#
+		    , take_org_cd = #orgCd:VARCHAR#
+		    , old_folder_creat_org_nm = #oldFolderCreatOrgNm:VARCHAR#
+		    , old_folder_clss_no = #oldFolderClssNo:VARCHAR#
+		    , group_presv_term_cd = #groupPresvTermCd:VARCHAR#
+		    , presv_term_cd = #presvTermCd:VARCHAR#
+		    , presv_term_fix_rsn = #presvTermFixRsn:VARCHAR#
+		    , oper_read_range_cd = #operReadRangeCd:VARCHAR#
+		    , read_cnt = #readCnt:VARCHAR#
+		    , creat_user_id = #creatUserId:VARCHAR#
+		    , creat_user_nm = #creatUserNm:VARCHAR#
+		    , creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		    , creat_user_org_nm = #creatUserOrgNm:VARCHAR#
+		    , creat_user_pos_rank_nm = #creatUserPosRankNm:VARCHAR#
+		    , creat_dtime = #creatDtime:VARCHAR#||'090000'
+		    <!--cubrid , reg_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		    , reg_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		    , reg_fin_flag = '0'
+		    , exam_rslt_cd = '0'
+		    , folder_start_dtime = #creatYyyy:VARCHAR#||'0101000000'
+			, folder_close_dtime = #creatYyyy:VARCHAR#||'1231000000'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+	
+	<resultMap id="regTakeRegRecordList-result" class="rms.take.regTake.domain.RegTakeRegRecord">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="recordTakeSeq" 			column="record_take_seq"/>
+		<result property="recordTakeSeqNm" 			column="record_take_seq_nm"/>
+		<result property="title" 					column="title"/>
+	</resultMap>
+	
+	<!-- 기록물건 목록 조회 -->
+	<select id="findRegTakeRegRecordPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegRecord" resultMap="regTakeRegRecordList-result">
+	SELECT C.*
+	    FROM (
+	        SELECT ROWNUM AS rnum
+	            , B.*
+	        FROM (
+		SELECT record_center_id
+		     , folder_take_seq
+		     , record_take_seq
+		     , SUBSTR(record_take_seq,0,4)||'-'||SUBSTR(record_take_seq,5) record_take_seq_nm
+		     , title
+		FROM TB_TKRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+        <isNotEmpty prepend="AND" property="recordTakeSeq">
+              record_take_seq = #recordTakeSeq:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="title">
+              title LIKE #title:VARCHAR#
+        </isNotEmpty>
+        ORDER BY record_center_id, record_sno, record_take_seq
+        ) B
+	        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	    ) C
+	    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 기록물건 목록 조회 -->
+	<select id="countRegTakeRegRecordPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegRecord" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_TKRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+        <isNotEmpty prepend="AND" property="recordTakeSeq">
+              record_take_seq = #recordTakeSeq:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="title">
+              title LIKE #title:VARCHAR#
+        </isNotEmpty>
+	</select>
+	
+	<resultMap id="regTakeRegRecord-result" class="rms.take.regTake.domain.TkRecord">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="recordTakeSeq" 			column="record_take_seq"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="creatSysCd" 				column="creat_sys_cd"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="creatRegDtime" 			column="creat_reg_dtime"/>
+		<result property="creatRegNo" 				column="creat_reg_no"/>
+		<result property="dtchRegNo" 				column="dtch_reg_no"/>
+		<result property="title" 					column="title"/>
+		<result property="subTitle" 				column="sub_title"/>
+		<result property="recordRegDivCd" 			column="record_reg_div_cd"/>
+		<result property="recordRegDivNm" 			column="record_reg_div_nm"/>
+		<result property="recordSumry" 				column="record_sumry"	jdbcType="CLOB"	javaType="java.lang.String"/>
+		<result property="recordSize" 				column="record_size"/>
+		<result property="attachCnt" 				column="attach_cnt"/>
+		<result property="recordPageCnt" 			column="record_page_cnt"/>
+		<result property="dutyChrgrNm" 				column="duty_chrgr_nm"/>
+		<result property="erecordFlag" 				column="erecord_flag"/>
+		<result property="oldRecordPresvTerm" 		column="old_record_presv_term"/>
+		<result property="oldRecordPresvTermNm"		column="old_record_presv_term_nm"/>
+		<result property="oldRecordDocno" 			column="old_record_docno"/>
+		<result property="oldRecordCreatOrgNm" 		column="old_record_creat_org_nm"/>
+		<result property="openDivCd" 				column="open_div_cd"/>
+		<result property="openDivNm" 				column="open_div_nm"/>
+		<result property="openGrade" 				column="open_grade"/>
+		<result property="openGrade1" 				column="open_grade1"/>
+		<result property="openGrade2" 				column="open_grade2"/>
+		<result property="openGrade3" 				column="open_grade3"/>
+		<result property="openGrade4" 				column="open_grade4"/>
+		<result property="openGrade5" 				column="open_grade5"/>
+		<result property="openGrade6" 				column="open_grade6"/>
+		<result property="openGrade7" 				column="open_grade7"/>
+		<result property="openGrade8" 				column="open_grade8"/>
+		<result property="partOpenRsn" 				column="part_open_rsn"/>
+		<result property="openLimitPart" 			column="open_limit_part"/>
+		<result property="recver" 					column="recver"/>
+		<result property="sender" 					column="sender"/>
+		<result property="creatUserId" 				column="creat_user_id"/>
+		<result property="creatUserNm" 				column="creat_user_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserPosRankNm" 		column="creat_user_pos_rank_nm"/>
+		<result property="creatDtime" 				column="creat_dtime"/>
+		<result property="secretClss" 				column="secret_clss"/>
+		<result property="secretClssNm" 			column="secret_clss_nm"/>
+		<result property="secretTerm" 				column="secret_term"/>
+		<result property="operReadRangeCd" 			column="oper_read_range_cd"/>
+		<result property="operReadRangeNm" 			column="oper_read_range_nm"/>
+		<result property="audvisRecordType" 		column="audvis_record_type"/>
+		<result property="picYmd" 					column="pic_ymd"/>
+		<result property="picArea" 					column="pic_area"/>
+		<result property="mainUserNm" 				column="main_user_nm"/>
+		<result property="keywd" 					column="keywd"/>
+		<result property="recordClssCd" 			column="record_clss_cd"/>
+		<result property="recordClssNm" 			column="record_clss_nm"/>
+		<result property="subComTypeCd" 			column="sub_com_type_cd"/>
+	</resultMap>
+	
+	<!-- 기록물건 내용 조회 -->
+	<select id="findRegTakeRegRecord" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="regTakeRegRecord-result">
+		SELECT A.record_center_id
+		     , A.record_take_seq
+		     , A.folder_take_seq
+		     , A.creat_sys_cd
+		     , A.org_cd
+		     , A.creat_yyyy
+		     , SUBSTR(A.creat_reg_dtime,1,8) creat_reg_dtime
+		     , A.creat_reg_no
+		     , A.dtch_reg_no
+		     , A.title
+		     , A.sub_title
+		     , A.record_reg_div_cd
+		     , C.com_cd_nm record_reg_div_nm
+		     , A.record_sumry
+		     , A.record_size
+		     , A.attach_cnt
+		     , A.record_page_cnt
+		     , A.duty_chrgr_nm
+		     , A.erecord_flag
+		     , A.old_record_presv_term
+		     , D.com_cd_nm old_record_presv_term_nm
+		     , A.old_record_docno
+		     , A.old_record_creat_org_nm
+		     , A.open_div_cd
+		     , E.com_cd_nm open_div_nm
+		     , A.open_grade
+		     , SUBSTR(A.open_grade,1,1) open_grade1
+		     , SUBSTR(A.open_grade,2,1) open_grade2
+		     , SUBSTR(A.open_grade,3,1) open_grade3
+		     , SUBSTR(A.open_grade,4,1) open_grade4
+		     , SUBSTR(A.open_grade,5,1) open_grade5
+		     , SUBSTR(A.open_grade,6,1) open_grade6
+		     , SUBSTR(A.open_grade,7,1) open_grade7
+		     , SUBSTR(A.open_grade,8,1) open_grade8
+		     , A.part_open_rsn
+		     , A.open_limit_part
+		     , A.recver
+		     , A.sender
+		     , A.creat_user_id
+		     , A.creat_user_nm
+		     , A.creat_user_org_cd
+		     , A.creat_user_org_nm
+		     , A.creat_user_pos_rank_nm
+		     , SUBSTR(A.creat_dtime,1,8) creat_dtime
+		     , A.secret_clss
+		     , G.com_cd_nm secret_clss_nm
+		     , A.secret_term
+		     , A.oper_read_range_cd
+		     , F.com_cd_nm oper_read_range_nm
+		     , A.audvis_record_type
+		     , A.pic_ymd
+		     , A.pic_area
+		     , A.main_user_nm
+		     , B.spcl_list1 keywd
+			 , A.record_clss_cd
+		     , DECODE(C.sub_com_type_cd,'','',(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = C.sub_com_type_cd AND com_cd = A.record_clss_cd)) record_clss_nm
+		     , C.sub_com_type_cd
+		FROM TB_TKRECORD A
+			, (SELECT record_center_id, record_take_seq, spcl_list1
+			   FROM TB_TKSPCLLIST
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #updateRecordTakeSeq:VARCHAR#
+			   AND   spcl_list_loc = '2'
+			   AND   seq = '1') B
+			, (SELECT com_cd, com_cd_nm, sub_com_type_cd
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD02') C
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD07') D
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD05') E
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD53') F
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD11') G
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #updateRecordTakeSeq:VARCHAR#
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.record_take_seq = B.record_take_seq(+)
+		AND   A.record_reg_div_cd = C.com_cd(+)
+		AND   A.old_record_presv_term = D.com_cd(+)
+		AND   A.open_div_cd = E.com_cd(+)
+		AND   A.oper_read_range_cd = F.com_cd(+)
+		AND   A.secret_clss = G.com_cd(+)
+	</select>
+	
+	<resultMap id="RecordClssTypeList-result" class="rms.common.detail.domain.RecordClssType">
+		<result property="recordClssNm" 			column="record_clss_nm"/>
+		<result property="recordClssCd" 			column="record_clss_cd"/>
+	</resultMap>
+
+	<!-- 세부유형 코드 가져오기 -->
+	<select id="findRecordClssType" parameterClass="rms.common.detail.domain.RecordClssType" resultClass="string">
+		SELECT sub_com_type_cd
+		  FROM TB_ZZCOMCD 
+		 WHERE COM_TYPE_CD = #comTypeCd:VARCHAR# 
+		   AND COM_CD = #recordRegDivCd:VARCHAR#
+	</select>
+	
+	<!-- 세부유형 코드 가져오기 -->
+	<select id="findRecordClssTypeList" parameterClass="rms.common.detail.domain.RecordClssType" resultMap="RecordClssTypeList-result">
+		SELECT com_cd AS record_clss_cd, com_cd_nm AS record_clss_nm
+		  FROM TB_ZZCOMCD
+		 WHERE COM_TYPE_CD = #subComTypeCd:VARCHAR# 
+		   <!-- AND USE_FLAG = '1'  -->
+	</select>
+
+	<!-- 기록물건 등록 일련번호 조회 -->		
+	<select id="findRegTakeRegRecordTakeSeq" resultClass="string">
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKRECORD_SQ01.nextval), 15, '0') FROM DUAL
+	</select>
+	
+	<!-- 기록물건 등록 -->
+	<insert id="createRegTakeRegRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+		INSERT INTO TB_TKRECORD
+		(
+			record_center_id, record_take_seq, folder_take_seq, creat_sys_cd, org_cd
+			, creat_yyyy, creat_reg_dtime, title, sub_title, record_reg_div_cd
+			, record_detl_type_cd, record_size, record_page_cnt, duty_chrgr_nm, erecord_flag
+			, old_record_presv_term, open_div_cd, open_grade, part_open_rsn, open_limit_part
+			, recver, sender, folder_clss_no, spcl_record_type, orign_copy_flag
+			, new_div_cd, chng_flag, rjct_flag, doc_no, creat_sys_record_id
+			, error_flag, take_fin_flag, reg_dtime, record_sumry, creat_reg_no
+			, dtch_reg_no, exam_rslt_cd, attach_cnt, record_sno, creat_user_id
+			, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm, creat_dtime
+			, secret_clss, secret_term, oper_read_range_cd, audvis_record_type, pic_ymd
+			, pic_area, main_user_nm, old_record_docno, old_record_creat_org_nm, record_clss_cd
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#, #recordTakeSeq:VARCHAR#, #folderTakeSeq:VARCHAR#, #creatSysCd:VARCHAR#
+			, (SELECT org_cd FROM TB_TKFOLDER 
+			   WHERE record_center_id=#recordCenterId:VARCHAR# 
+			   AND   folder_take_seq=#folderTakeSeq:VARCHAR#)
+			, SUBSTR(#creatRegDtime:VARCHAR#,1,4), (#creatRegDtime:VARCHAR#||'090000'), #title:VARCHAR#, #subTitle:VARCHAR#, #recordRegDivCd:VARCHAR#
+			, #recordDetlTypeCd:VARCHAR#, #recordSize#, #recordPageCnt:VARCHAR#, #dutyChrgrNm:VARCHAR#, #erecordFlag:VARCHAR#
+			, #oldRecordPresvTerm:VARCHAR#, #openDivCd:VARCHAR#, #openGrade:VARCHAR#, #partOpenRsn:VARCHAR#, #openLimitPart:VARCHAR#
+			, #recver:VARCHAR#, #sender:VARCHAR#
+			, (SELECT org_cd||clss_id||creat_yyyy||folder_reg_seq||ho_no FROM TB_TKFOLDER 
+			   WHERE record_center_id=#recordCenterId:VARCHAR# 
+			   AND   folder_take_seq=#folderTakeSeq:VARCHAR#)
+			, #spclRecordType:VARCHAR#, #orignCopyFlag:VARCHAR#
+			, #newDivCd:VARCHAR#, #chngFlag:VARCHAR#, #rjctFlag:VARCHAR#, #docNo:VARCHAR#, #creatSysRecordId:VARCHAR#
+			<!--cubrid , #errorFlag:VARCHAR#, #takeFinFlag:VARCHAR#, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), #recordSumry:CLOB#, #creatRegNo:VARCHAR#-->
+                        , #errorFlag:VARCHAR#, #takeFinFlag:VARCHAR#, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), #recordSumry:CLOB#, #creatRegNo:VARCHAR#
+			, #dtchRegNo:VARCHAR#, #examRsltCd:VARCHAR#, #attachCnt#, #recordSno#, #creatUserId:VARCHAR#
+			, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#, #creatDtime:VARCHAR#||'090000'
+			, #secretClss:VARCHAR#, #secretTerm:VARCHAR#, #operReadRangeCd:VARCHAR#, #audvisRecordType:VARCHAR#, #picYmd:VARCHAR#
+			, #picArea:VARCHAR#, #mainUserNm:VARCHAR#, #oldRecordDocno:VARCHAR#, #oldRecordCreatOrgNm:VARCHAR#, #recordClssCd:VARCHAR#
+		)
+	</insert>	
+	
+	<!-- 검색어 등록 -->
+	<insert id="createRegTakeRegRecordKeywd" parameterClass="rms.take.regTake.domain.TkRecord">
+		INSERT INTO TB_TKSPCLLIST
+		(
+			record_center_id
+			, spcl_list_take_seq
+			, record_take_seq
+			, spcl_list_loc
+			, seq
+			, spcl_list1
+			, reg_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, LPAD((TB_TKSPCLLIST_SQ01.nextval), 15, '0')
+			, #updateRecordTakeSeq:VARCHAR#
+			, '2'
+			, '1'
+			, #keywd:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 행위자정보 등록 -->
+	<insert id="createRegTakeRegRecordCreat" parameterClass="rms.take.regTake.domain.TkRecordCreat">
+		INSERT INTO TB_TKRECORDCREAT
+		(
+			record_center_id
+			, record_take_seq
+			, agent_sno
+			, agent_type_cd
+			, agent_id
+			, agent_nm
+			, agent_org_cd
+			, agent_org_nm
+			, agent_pos_rank_nm
+			, req_state_val
+			, opin_dtime
+			, handl_rslt
+			, opin
+			, duty_type_cd
+			, duty_act_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, #recordTakeSeq:VARCHAR#
+			, (SELECT NVL(MAX(agent_sno),0)+1 agent_sno
+			   FROM TB_TKRECORDCREAT
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #recordTakeSeq:VARCHAR#)
+			, #agentTypeCd:VARCHAR#
+			, #agentId:VARCHAR#
+			, #agentNm:VARCHAR#
+			, #agentOrgCd:VARCHAR#
+			, #agentOrgNm:VARCHAR#
+			, #agentPosRankNm:VARCHAR#
+			, #reqStateVal:VARCHAR#
+			, #opinDtime:VARCHAR#
+			, #handlRslt:VARCHAR#
+			, #opin:CLOB#
+			, #dutyTypeCd:VARCHAR#
+			, #dutyActDtime:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (insert 기록물건 등록/수정-본문/첨부파일 추가)
+	 -->
+	<insert id="createRegTakeRegRecordAttachFile" parameterClass="rms.take.regTake.domain.TkAttachFile">
+		INSERT INTO TB_TKATTACHFILE
+		(
+			record_center_id
+			, record_take_seq
+			, reg_seq
+			, org_cd
+			, creat_yyyy
+			, creat_reg_no
+			, attach_file_seq
+			, attach_file_page_cnt
+			, doc_type_cd
+			, doc_type_sno
+			, file_nm
+			, file_size
+			, ver
+			, attach_file_path
+			, virus_flag
+			, reg_dtime
+		)
+		(
+		SELECT #recordCenterId:VARCHAR#
+			, #recordTakeSeq:VARCHAR#
+			, (SELECT NVL(MAX(reg_seq),0)+1 reg_seq
+			   FROM TB_TKATTACHFILE
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #recordTakeSeq:VARCHAR#)
+			, org_cd
+			, creat_yyyy
+			, creat_reg_no
+			, #attachFileSeq:VARCHAR#
+			, #attachFilePageCnt:VARCHAR#
+			, #docTypeCd:VARCHAR#
+			, (SELECT NVL(MAX(doc_type_sno),0)+1 doc_type_sno
+			   FROM TB_TKATTACHFILE
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #recordTakeSeq:VARCHAR#
+			   AND   doc_type_cd = #docTypeCd:VARCHAR#)
+			, #fileNm:VARCHAR#
+			, #fileSize:VARCHAR#
+			, #ver:VARCHAR#
+			, #attachFilePath:VARCHAR#
+			, #virusFlag:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		FROM TB_TKRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (delete 기록물건 수정-첨부파일 삭제)
+	 -->
+	<delete id="deleteRegTakeRegRecordAttachFile" parameterClass="rms.take.regTake.domain.TkAttachFile">
+		DELETE	TB_TKATTACHFILE
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND	record_take_seq	=	#recordTakeSeq:VARCHAR#
+		AND	attach_file_type = #attachFileType:VARCHAR#
+		AND	reg_seq	=	#regSeq:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (delete 기록물건 삭제-첨부파일 전체 삭제)
+	 -->
+	<delete id="deleteRegTakeRegRecordAttachFileAll" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_TKATTACHFILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (update 기록물건수정)
+	 -->
+	<update id="updateRegTakeRegRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_TKRECORD
+		SET   creat_yyyy = SUBSTR(#creatRegDtime:VARCHAR#,1,4)
+		    , creat_reg_dtime = (#creatRegDtime:VARCHAR#||'090000')
+		    , title = #title:VARCHAR#
+		    , sub_title = #subTitle:VARCHAR#
+		    , record_reg_div_cd = #recordRegDivCd:VARCHAR#
+		    , record_detl_type_cd = #recordDetlTypeCd:VARCHAR#
+		    , record_page_cnt = #recordPageCnt:VARCHAR#
+		    , duty_chrgr_nm = #dutyChrgrNm:VARCHAR#
+		    , erecord_flag = #erecordFlag:VARCHAR#
+		    , old_record_presv_term = #oldRecordPresvTerm:VARCHAR#
+		    , old_record_docno = #oldRecordDocno:VARCHAR#
+		    , old_record_creat_org_nm = #oldRecordCreatOrgNm:VARCHAR#
+		    , open_div_cd = #openDivCd:VARCHAR#
+		    , open_grade = #openGrade:VARCHAR#
+		    , part_open_rsn = #partOpenRsn:VARCHAR#
+		    , open_limit_part = #openLimitPart:VARCHAR#
+		    , recver = #recver:VARCHAR#
+		    , sender = #sender:VARCHAR#
+		    , orign_copy_flag = #orignCopyFlag:VARCHAR#
+		    , doc_no = #docNo:VARCHAR#
+		    , creat_sys_record_id = #creatSysRecordId:VARCHAR#
+		    <!--cubrid, reg_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		    , reg_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		    , record_sumry = #recordSumry:CLOB#
+		    , creat_reg_no = #creatRegNo:VARCHAR#
+		    , attach_cnt = #attachCnt#
+		    , record_sno = #recordSno#
+		    , creat_user_id = #creatUserId:VARCHAR#
+		    , creat_user_nm = #creatUserNm:VARCHAR#
+		    , creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		    , creat_user_org_nm = #creatUserOrgNm:VARCHAR#
+		    , creat_user_pos_rank_nm = #creatUserPosRankNm:VARCHAR#
+		    , creat_dtime = #creatDtime:VARCHAR#||'090000'
+		    , secret_clss = #secretClss:VARCHAR#
+		    , secret_term = #secretTerm:VARCHAR#
+		    , oper_read_range_cd = #operReadRangeCd:VARCHAR#
+		    , audvis_record_type = #audvisRecordType:VARCHAR#
+		    , pic_ymd = #picYmd:VARCHAR#
+		    , pic_area = #picArea:VARCHAR#
+		    , main_user_nm = #mainUserNm:VARCHAR#
+			, record_clss_cd = #recordClssCd:VARCHAR#
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_take_seq = #updateRecordTakeSeq:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (delete 기록물건 삭제)
+	 -->
+	<delete id="deleteRegTakeRegRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_TKRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (delete 기록물건 수정/삭제-검색어 삭제)
+	 -->
+	<delete id="deleteRegTakeRegRecordKeywd" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_TKSPCLLIST
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_take_seq = #recordTakeSeq:VARCHAR#
+		AND    spcl_list_loc = '2'
+		AND    seq = '1'
+	</delete>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (delete 기록물건 수정/삭제-행위자정보 삭제)
+	 -->
+	<delete id="deleteRegTakeRegRecordCreat" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_TKRECORDCREAT
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_take_seq = #recordTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (update 기록물건의 첨부파일정보 갱신)
+	 -->
+	<update id="updateRegTakeRegRecordAttachInfo" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_TKRECORD A
+		SET  A.record_size = NVL((SELECT SUM(B.file_size)
+		                          FROM  TB_TKATTACHFILE B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.record_take_seq = A.record_take_seq),0)
+		   , A.attach_cnt  = NVL((SELECT COUNT(1)
+		                          FROM  TB_TKATTACHFILE B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.record_take_seq = A.record_take_seq),0)
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (update 기록물철의 건정보 갱신)
+	 -->
+	<update id="updateRegTakeRegFolderRecordInfo" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_TKFOLDER A
+		SET  A.folder_size = NVL((SELECT SUM(B.record_size)
+		                          FROM  TB_TKRECORD B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.folder_take_seq = A.folder_take_seq),0)
+		    , A.record_tot_page_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(TO_NUMBER(B.record_page_cnt))),6,'0')
+		                                   FROM  TB_TKRECORD B
+		                                   WHERE B.record_center_id = A.record_center_id
+		                                   AND   B.folder_take_seq = A.folder_take_seq),'000000')
+		    , A.record_reg_cnt = NVL((SELECT LPAD(TO_CHAR(COUNT(1)),6,'0')
+		                              FROM  TB_TKRECORD B
+		                              WHERE B.record_center_id = A.record_center_id
+		                              AND   B.folder_take_seq = A.folder_take_seq),'000000')
+		    , A.efile_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(B.attach_cnt)),6,'0')
+		                     FROM  TB_TKRECORD B
+		                     WHERE B.record_center_id = A.record_center_id
+		                     AND   B.folder_take_seq = A.folder_take_seq),'000000')
+			, A.erecord_flag = DECODE((SELECT SUM(DECODE (B.erecord_flag, '1', 1, 0))
+			                           FROM  TB_TKRECORD B
+			                           WHERE B.record_center_id = A.record_center_id
+			                           AND   B.folder_take_seq = A.folder_take_seq),0,'2'
+									   , DECODE((SELECT SUM(DECODE (B.erecord_flag, '2', 1, 0))
+				                                 FROM  TB_TKRECORD B
+				                                 WHERE B.record_center_id = A.record_center_id
+				                                 AND   B.folder_take_seq = A.folder_take_seq),0,'1','3'))
+			, A.reg_fin_flag = '0'
+		WHERE
+			EXISTS 
+			(
+			SELECT 'X'
+			FROM  TB_TKRECORD
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND   record_take_seq = #updateRecordTakeSeq:VARCHAR#
+			AND  record_center_id = A.record_center_id
+			AND folder_take_seq = A.folder_take_seq 
+			)
+	</update>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (update 기록물철의 건정보 갱신)
+	 -->
+	<update id="updateRegTakeRegFolderRecordInfoAll" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_TKFOLDER A
+		SET  A.folder_size = NVL((SELECT SUM(B.record_size)
+		                          FROM  TB_TKRECORD B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.folder_take_seq = A.folder_take_seq),0)
+		    , A.record_tot_page_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(TO_NUMBER(B.record_page_cnt))),6,'0')
+		                                   FROM  TB_TKRECORD B
+		                                   WHERE B.record_center_id = A.record_center_id
+		                                   AND   B.folder_take_seq = A.folder_take_seq),'000000')
+		    , A.record_reg_cnt = NVL((SELECT LPAD(TO_CHAR(COUNT(1)),6,'0')
+		                              FROM  TB_TKRECORD B
+		                              WHERE B.record_center_id = A.record_center_id
+		                              AND   B.folder_take_seq = A.folder_take_seq),'000000')
+		    , A.efile_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(B.attach_cnt)),6,'0')
+		                     FROM  TB_TKRECORD B
+		                     WHERE B.record_center_id = A.record_center_id
+		                     AND   B.folder_take_seq = A.folder_take_seq),'000000')
+			, A.erecord_flag = DECODE((SELECT SUM(DECODE (B.erecord_flag, '1', 1, 0))
+			                           FROM  TB_TKRECORD B
+			                           WHERE B.record_center_id = A.record_center_id
+			                           AND   B.folder_take_seq = A.folder_take_seq),0,'2'
+									   , DECODE((SELECT SUM(DECODE (B.erecord_flag, '2', 1, 0))
+				                                 FROM  TB_TKRECORD B
+				                                 WHERE B.record_center_id = A.record_center_id
+				                                 AND   B.folder_take_seq = A.folder_take_seq),0,'1','3'))
+			, A.reg_fin_flag = '0'
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (update 기록물철 등록완료 시 바이러스검사 정상완료처리)
+	 -->
+	<update id="updateRegTakeRegFolderVaccineCommitList" parameterClass="rms.take.regTake.domain.TkFolder">
+		UPDATE TB_TKFOLDER
+		SET   virus_flag = '0'
+		    <!--cubrid , virus_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		    , virus_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (update 기록물철 등록완료)
+	 -->
+	<update id="updateRegTakeRegFolderFinList" parameterClass="rms.take.regTake.domain.TkFolder">
+		UPDATE TB_TKFOLDER
+		SET   reg_fin_flag = '1'
+		    , exam_rslt_cd = '0'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>검수 (count 기록물철)
+	 -->
+	<select id="countRegTakeCheckFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeCheckFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_TKFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = '03'
+		AND   A.reg_fin_flag = '1'
+		AND   A.take_fin_flag = '0'
+        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="regYmdF">
+			A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			A.creat_yyyy BETWEEN NVL(#creatYyyyF:VARCHAR#,'0001') AND NVL(#creatYyyyT:VARCHAR#,'9999')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+		    (A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="presvTermCd">
+            A.presv_term_cd = #presvTermCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="examRsltCd">
+            A.exam_rslt_cd = #examRsltCd:VARCHAR#
+        </isNotEmpty>
+	</select>
+	
+	<resultMap id="regTakeCheckFolderList-result" class="rms.take.regTake.domain.RegTakeCheckFolder">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserOrgAbbrNm" 		column="creat_user_org_abbr_nm"/>
+		<result property="clssId" 					column="clss_id"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="title" 					column="title"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="presvTermCd" 				column="presv_term_cd"/>
+		<result property="presvTermNm" 				column="presv_term_nm"/>
+		<result property="recordRegCnt" 			column="record_reg_cnt"/>
+		<result property="examRsltCd" 				column="exam_rslt_cd"/>
+		<result property="examRsltNm" 				column="exam_rslt_nm"/>
+	</resultMap>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>검수 (select 기록물철)
+	 -->
+	<select id="findRegTakeCheckFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeCheckFolder" resultMap="regTakeCheckFolderList-result">
+	SELECT C.*
+    FROM (
+        SELECT ROWNUM AS rnum
+            , B.*
+        FROM (
+		SELECT A.record_center_id
+		     , A.folder_take_seq
+		     , A.org_cd
+			 , B.org_nm org_nm
+			 , B.org_nm org_abbr_nm
+		     , A.creat_user_org_cd
+			 , E.org_nm creat_user_org_nm
+			 , E.org_nm creat_user_org_abbr_nm
+			 , A.clss_id
+			 , A.clss_nm
+			 , A.title
+			 , A.creat_yyyy
+			 , A.presv_term_cd
+			 , C.com_cd_nm presv_term_nm
+			 , A.record_reg_cnt
+			 , A.exam_rslt_cd
+			 , D.com_cd_nm exam_rslt_nm
+		FROM  TB_TKFOLDER A
+		    , (SELECT org_cd, org_nm, org_abbr_nm FROM TB_STORG
+			   WHERE record_center_id = #recordCenterId:VARCHAR#) B
+			, (SELECT com_cd, com_cd_nm
+			   FROM  TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD07') C
+			, (SELECT com_cd, com_cd_nm
+			   FROM  TB_ZZCOMCD
+			   WHERE com_type_cd = 'TK03') D
+		    , (SELECT org_cd, org_nm, org_abbr_nm FROM TB_STORG
+			   WHERE record_center_id = #recordCenterId:VARCHAR#) E
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = '03'
+		AND   A.reg_fin_flag = '1'
+		AND   A.take_fin_flag = '0'
+		AND   A.org_cd = B.org_cd(+)
+		AND   DECODE(A.presv_term_cd, '20', '25', A.presv_term_cd) = C.com_cd(+)
+		AND   A.exam_rslt_cd = D.com_cd(+)
+		AND   A.creat_user_org_cd = E.org_cd(+)
+        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="regYmdF">
+			A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			A.creat_yyyy BETWEEN NVL(#creatYyyyF:VARCHAR#,'0001') AND NVL(#creatYyyyT:VARCHAR#,'9999')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+		    (A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty property="presvTermCd">
+	        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            A.presv_term_cd IN ('20','25')
+            </isEqual>
+	        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+            A.presv_term_cd = #presvTermCd:VARCHAR#
+            </isNotEqual>		            
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="examRsltCd">
+            A.exam_rslt_cd = #examRsltCd:VARCHAR#
+        </isNotEmpty>
+        ORDER BY A.record_center_id, org_nm, A.clss_nm, A.title
+         ) B
+        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+    ) C
+    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록현황 (count)
+	 -->
+	<select id="countRegTakeCurStatePagedList" parameterClass="rms.take.regTake.domain.RegTakeCurState" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT D.org_cd
+			FROM  TB_TKFOLDER D
+			WHERE D.record_center_id = #recordCenterId:VARCHAR#
+			AND   D.creat_sys_cd = '03'
+	        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+	            D.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+	        </isNotEmpty>
+			<isNotEmpty prepend="AND" property="regYmdF">
+				D.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+			</isNotEmpty>
+	        <isNotEmpty prepend="AND" property="orgCd">
+	            D.org_cd = #orgCd:VARCHAR#
+	        </isNotEmpty>
+        	GROUP BY D.org_cd
+        )
+	</select>
+	
+	<resultMap id="regTakeCurStateList-result" class="rms.take.regTake.domain.RegTakeCurState">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="folderRegCnt" 			column="folder_reg_cnt"/>
+		<result property="folderTakeCnt" 			column="folder_take_cnt"/>
+		<result property="recordRegCnt" 			column="record_reg_cnt"/>
+		<result property="recordTakeCnt" 			column="record_take_cnt"/>
+		<result property="folderRegCntExcel" 		column="folderRegCntExcel"/>
+		<result property="folderTakeCntExcel" 		column="folderTakeCntExcel"/>
+	</resultMap>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록현황 (select)
+	 -->
+	<select id="findRegTakeCurStatePagedList" parameterClass="rms.take.regTake.domain.RegTakeCurState" resultMap="regTakeCurStateList-result">
+	SELECT C.*
+    FROM (
+        SELECT ROWNUM AS rnum
+            , B.*
+        FROM (
+		SELECT E.record_center_id
+		     , E.org_cd
+			 , F.org_nm
+			 , F.org_abbr_nm
+			 , E.folder_reg_cnt
+			 , E.folder_take_cnt
+			 , E.record_reg_cnt
+			 , E.record_take_cnt
+			 , E.folder_reg_cnt || '(' || E.record_reg_cnt  || ')' AS folderRegCntExcel
+			 , E.folder_take_cnt || '(' || E.record_take_cnt  || ')' AS folderTakeCntExcel
+		FROM (
+		    SELECT record_center_id
+		         , org_cd
+		    	 , SUM(folder_reg_cnt) folder_reg_cnt
+		    	 , SUM(folder_take_cnt) folder_take_cnt
+		    	 , SUM(record_reg_cnt) record_reg_cnt
+		    	 , SUM(record_take_cnt) record_take_cnt
+		    FROM (
+		        SELECT D.record_center_id
+		             , D.org_cd
+		        	 , DECODE(D.take_fin_flag,'1',0,1) folder_reg_cnt
+		        	 , DECODE(D.take_fin_flag,'1',1,0) folder_take_cnt
+		        	 , DECODE(D.take_fin_flag,'1',0,C.record_cnt) record_reg_cnt
+		        	 , DECODE(D.take_fin_flag,'1',C.record_cnt,0) record_take_cnt
+		        FROM (
+		            SELECT A.record_center_id
+		                 , A.folder_take_seq
+		            	 , COUNT(B.record_take_seq) record_cnt
+		            FROM  TB_TKFOLDER A
+		                , TB_TKRECORD B
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		            AND   A.creat_sys_cd = '03'
+		            AND   A.record_center_id = B.record_center_id(+)
+		            AND   A.folder_take_seq = B.folder_take_seq(+)
+		            GROUP BY A.record_center_id, A.folder_take_seq
+		        ) C, TB_TKFOLDER D
+		        WHERE D.record_center_id = #recordCenterId:VARCHAR#
+		        AND   D.creat_sys_cd = '03'
+		        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+		            D.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		        </isNotEmpty>
+				<isNotEmpty prepend="AND" property="regYmdF">
+					D.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+				</isNotEmpty>
+		        <isNotEmpty prepend="AND" property="orgCd">
+		            D.org_cd = #orgCd:VARCHAR#
+		        </isNotEmpty>
+		        AND   C.record_center_id = D.record_center_id
+		        AND   C.folder_take_seq = D.folder_take_seq
+		    )
+		    GROUP BY record_center_id, org_cd
+		) E , TB_STORG F
+		WHERE E.record_center_id = F.record_center_id
+		AND   E.org_cd = F.org_cd
+		ORDER BY E.record_center_id, E.org_cd
+		) B
+        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+    ) C
+    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>	
+	
+	<resultMap id="regTakeRegRecordAttachFile-result" class="rms.take.regTake.domain.TkAttachFile">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="recordTakeSeq" 			column="record_take_seq"/>
+		<result property="regSeq" 					column="reg_seq"/>
+		<result property="docTypeCd" 				column="doc_type_cd"/>
+		<result property="fileNm" 					column="file_nm"/>
+		<result property="attachFilePath" 			column="attach_file_path"/>
+		<result property="attachFileType"			column="attach_file_type" />
+	</resultMap>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (SELECT 기록물건 상세 조회-본문파일)
+	 -->
+	<select id="findRegTakeRegRecordAttachFileMain" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="regTakeRegRecordAttachFile-result">
+		SELECT A.record_center_id
+		     , A.record_take_seq
+		     , A.attach_file_type
+		     , A.reg_seq
+		     , A.doc_type_cd
+		     , A.file_nm
+		     , '' AS attach_file_path
+		FROM  TB_TKATTACHFILE A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+		AND   A.doc_type_cd = '01'
+	</select>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록 (SELECT 기록물건 상세 조회-첨부파일)
+	 -->
+	<select id="findRegTakeRegRecordAttachFileSub" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="regTakeRegRecordAttachFile-result">
+		SELECT A.record_center_id
+		     , A.record_take_seq
+		     , A.attach_file_type
+		     , A.reg_seq
+		     , A.doc_type_cd
+		     , A.file_nm
+		     , '' AS attach_file_path
+		FROM  TB_TKATTACHFILE A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+		AND   A.doc_type_cd = '02'
+		ORDER BY A.reg_seq
+	</select>
+	
+		<!-- 
+		기록물인수>등록인수>기록물등록>등록현황 (count 등록 기록물철 목록)
+	 -->
+	<select id="countRegTakeCurStateFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeCurState" resultClass="long">
+		SELECT COUNT(1)
+		FROM  TB_TKFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = '03'
+		AND   A.take_fin_flag = #takeFinFlag:VARCHAR#
+        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="regYmdF">
+			A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyy">
+			A.creat_yyyy = #creatYyyy:VARCHAR#
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="presvTermCd">
+            A.presv_term_cd = #presvTermCd:VARCHAR#
+        </isNotEmpty>
+	</select>
+	
+	<resultMap id="RegTakeCurStateFolderList-result" class="rms.take.regTake.domain.RegTakeCurState">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="clssId" 					column="clss_id"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="title" 					column="title"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+	</resultMap>
+	
+	<!-- 
+		기록물인수>등록인수>기록물등록>등록현황 (select 등록 기록물철 목록)
+	 -->
+	<select id="findRegTakeCurStateFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeCurState" resultMap="RegTakeCurStateFolderList-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT A.record_center_id
+		     , A.folder_take_seq
+			 , A.clss_id
+			 , A.clss_nm
+			 , A.title
+			 , A.creat_yyyy
+		FROM  TB_TKFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = '03'
+		AND   A.take_fin_flag = #takeFinFlag:VARCHAR#
+        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="regYmdF">
+			A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyy">
+			A.creat_yyyy = #creatYyyy:VARCHAR#
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="presvTermCd">
+            A.presv_term_cd = #presvTermCd:VARCHAR#
+        </isNotEmpty>
+		ORDER BY record_center_id, folder_take_seq
+		) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+		<!-- 
+		기록물철이 가진 첨불파일의 수량 조회
+	 -->
+	<select id="findAttachFileYn" parameterClass="rms.take.regTake.domain.TkFolder" resultClass="int">
+		SELECT COUNT(1) 
+		FROM TB_TKATTACHFILE Z
+		<!--cubrid WHERE (record_center_id, record_take_seq) 
+		IN (
+			SELECT record_center_id, record_take_seq-->
+                WHERE 
+		EXISTS (
+			SELECT 1
+			FROM TB_TKRECORD 
+			WHERE record_center_id = #recordCenterId:VARCHAR# 
+			AND folder_take_seq = #folderTakeSeq:VARCHAR#
+                        <!--cubrid-->
+                        AND record_center_id = Z.record_center_id
+                        AND record_take_seq = Z.record_take_seq
+		   )
+	</select>
+	
+	<resultMap id="findClssNm-resultMap" class="rms.common.tree.domain.TreeClss">
+		<result property="bisClssId"	column="bis_clss_id" />
+		<result property="bisClssNm"	column="bis_clss_nm" />
+		<result property="presvTermCd"	column="presv_term_cd" />
+		<result property="delFlag"	column="del_flag" />
+	</resultMap>
+		<!-- 
+		단위과제검색
+	 -->
+	<select id="countClssNm" parameterClass="rms.common.tree.domain.TreeClss" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_ZZBISCLSS A
+		<dynamic prepend="WHERE">
+		    <isNotEmpty prepend="AND" property="orgCd">
+		    	A.bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = #orgCd:VARCHAR#)
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="bisClssId">
+				A.bis_clss_id LIKE #bisClssId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="bisClssNm">
+				A.bis_clss_nm LIKE #bisClssNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="delFlag">
+				A.del_flag = #delFlag:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findClssNm" parameterClass="rms.common.tree.domain.TreeClss" resultMap="findClssNm-resultMap">
+		SELECT C.bis_clss_id
+			, C.bis_clss_nm
+			, C.presv_term_cd
+			, C.del_flag
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+			    SELECT A.bis_clss_id 
+					, A.bis_clss_nm
+					, A.presv_term_cd
+					, (CASE WHEN A.del_flag='1' THEN '폐기' ELSE '사용' END) AS del_flag
+				FROM  TB_ZZBISCLSS A
+				<dynamic prepend="WHERE">
+				    <isNotEmpty prepend="AND" property="orgCd">
+				    	A.bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = #orgCd:VARCHAR#)
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="bisClssId">
+						A.bis_clss_id LIKE #bisClssId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="bisClssNm">
+						A.bis_clss_nm LIKE #bisClssNm:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="delFlag">
+						A.del_flag = #delFlag:VARCHAR#
+				    </isNotEmpty>
+				</dynamic>
+				ORDER BY A.bis_clss_nm
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		단위과제 트리 검색 
+	-->
+	<select id="findClssTree" parameterClass="rms.take.regTake.domain.RegTakeTree" resultClass="rms.take.regTake.domain.RegTakeTree">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType
+				, A.bis_clss_id AS id
+				, A.bis_clss_nm AS text
+				, A.presv_term_cd AS cd
+				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'
+						ELSE 'open'
+					END) AS state 
+				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)
+						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)
+					END) AS iconCls
+			FROM  TB_ZZBISCLSS A
+			<dynamic prepend="WHERE">
+				<isEmpty prepend="AND" property="id">
+					A.levl = 1
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="id">
+					<isEqual property="id" compareValue="ROOT">
+						A.levl = 1
+					</isEqual>
+					<isNotEqual property="id" compareValue="ROOT">
+						A.upper_bis_clss_id = #id:VARCHAR#
+					</isNotEqual>
+				</isNotEmpty>
+			</dynamic>
+			ORDER BY A.levl, A.sort_sno
+		) B
+	</select>
+	
+	<!-- 
+		단위과제 트리 검색 
+	-->
+	<select id="findOrgClssTree" parameterClass="rms.take.regTake.domain.RegTakeTree" resultClass="rms.take.regTake.domain.RegTakeTree">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType
+				, A.bis_clss_id AS id
+				, A.bis_clss_nm AS text
+				, A.presv_term_cd AS cd
+				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'
+						ELSE 'open'
+					END) AS state 
+				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)
+						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)
+					END) AS iconCls
+			FROM  TB_ZZBISCLSS A
+			WHERE A.bis_clss_id IN (
+				SELECT bis_clss_id FROM TB_ZZBISCLSS
+				START WITH bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = #orgCd:VARCHAR#)
+				CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id
+			)
+			<isEmpty prepend="AND" property="id">
+				A.levl = 1
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="id">
+				<isEqual property="id" compareValue="ROOT">
+					A.levl = 1
+				</isEqual>
+				<isNotEqual property="id" compareValue="ROOT">
+					A.upper_bis_clss_id = #id:VARCHAR#
+				</isNotEqual>
+			</isNotEmpty>
+			ORDER BY A.levl, A.sort_sno
+		) B
+	</select>
+	<select id="findCheckPresvTermState" parameterClass="rms.stnd.stndinfo.domain.Task" resultClass="string">
+		SELECT PRESV_TERM_STATE
+		FROM TB_ZZBISCLSS 
+		WHERE bis_clss_id = #bisClssId:VARCHAR#		
+	</select>
+	<!-- 단위업무 트리 박성우 추가-->
+	<resultMap id="findUnitNm-resultMap" class="rms.take.regTake.domain.RegTakeTreeUnit">
+		<result property="unitCd"	column="unit_cd" />
+		<result property="unitNm"	column="unit_nm" />
+		<result property="orgCd"	column="org_cd" />
+		<result property="orgNm"	column="org_nm" />
+		<result property="useFlag"	column="use_flag" />
+		<result property="presvTermCd"	column="presv_term_cd" />		
+	</resultMap>
+	<select id="countUnitNm" parameterClass="rms.take.regTake.domain.RegTakeTreeUnit" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STORG A
+			, TB_ZZORGUNIT B
+			, TB_ZZUNIT C
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	    <isNotEmpty prepend="AND" property="orgCd">
+			A.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		AND   B.record_center_id = A.record_center_id
+		AND   B.org_cd = A.org_cd
+		<isNotEmpty property="useFlag">
+			<isEqual prepend="AND" property="useFlag" compareValue="3">
+				(B.use_flag IS NULL OR B.use_flag = '0' OR B.use_flag = '1')
+			</isEqual>
+			<isNotEqual prepend="AND" property="useFlag" compareValue="3">
+				B.use_flag = #useFlag:VARCHAR#
+			</isNotEqual>
+	    </isNotEmpty>
+		AND   C.record_center_id = B.record_center_id
+		AND   C.unit_cd = B.unit_cd
+		<isNotEmpty prepend="AND" property="unitCd">
+			C.unit_cd LIKE #unitCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="unitNm">
+			C.unit_nm LIKE #unitNm:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findUnitNm" parameterClass="rms.take.regTake.domain.RegTakeTreeUnit" resultMap="findUnitNm-resultMap">
+		SELECT E.unit_cd
+			, E.unit_nm
+			, E.presv_term_cd
+			, E.org_nm
+			, E.org_cd
+			, E.use_flag
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+			    SELECT C.unit_cd 
+					, C.unit_nm
+					, C.presv_term_cd
+					, A.org_cd
+					, A.org_nm
+					, (CASE WHEN B.use_flag='0' THEN '폐지' ELSE '현존' END) AS use_flag
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			    <isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				<isNotEmpty property="useFlag">
+					<isEqual prepend="AND" property="useFlag" compareValue="3">
+						(B.use_flag IS NULL OR B.use_flag = '0' OR B.use_flag = '1')
+					</isEqual>
+					<isNotEqual prepend="AND" property="useFlag" compareValue="3">
+						B.use_flag = #useFlag:VARCHAR#
+					</isNotEqual>
+			    </isNotEmpty>
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				<isNotEmpty prepend="AND" property="unitCd">
+					C.unit_cd LIKE #unitCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="unitNm">
+					C.unit_nm LIKE #unitNm:VARCHAR#
+				</isNotEmpty>
+				ORDER BY C.unit_nm, A.org_nm
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		단위업무 트리 검색 
+	-->
+	<select id="findUnitTree" parameterClass="rms.take.regTake.domain.RegTakeTree" resultClass="rms.take.regTake.domain.RegTakeTree">
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, C.unit_cd AS id
+					, C.unit_nm AS text
+					, C.presv_term_cd AS cd
+					, 'open' AS state
+					, (CASE WHEN B.use_flag = '0' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.org_cd = #id:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				ORDER BY A.levl, A.org_seq
+			) D
+		)
+		UNION ALL
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.org_cd AS id
+					, A.org_abbr_nm AS text
+					, A.CLOSE_FLAG AS cd
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+				<isEqual prepend="AND" property="treeType" compareValue="0">
+					NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+				</isEqual>
+				<isNotEqual prepend="AND" property="treeType" compareValue="0">
+					A.upper_org_cd = #id:VARCHAR#
+				</isNotEqual>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+			) D
+		)
+	</select>
+	
+	<!-- 
+		단위업무 트리 검색 
+	-->
+	<select id="findOrgUnitTree" parameterClass="rms.take.regTake.domain.RegTakeTree" resultClass="rms.take.regTake.domain.RegTakeTree">
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, C.unit_cd AS id
+					, C.unit_nm AS text
+					, C.presv_term_cd AS cd
+					, 'open' AS state
+					, (CASE WHEN B.use_flag = '0' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.org_cd = #id:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				ORDER BY A.levl, A.org_seq
+			) D
+		)
+		UNION ALL
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.org_cd AS id
+					, A.org_abbr_nm AS text
+					, A.close_flag AS cd
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				<isEqual prepend="AND" property="treeType" compareValue="0">
+					A.org_cd = #orgCd:VARCHAR#
+				</isEqual>
+				<isNotEqual prepend="AND" property="treeType" compareValue="0">
+					0 = 1
+				</isNotEqual>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+			) D
+		)
+	</select>	
+	
+		<!-- 
+		기록관 트리 검색
+	 -->
+	<select id="findRecordCenterTree" parameterClass="rms.take.regTake.domain.RegTakeTree" resultClass="rms.take.regTake.domain.RegTakeTree">
+		SELECT A.record_center_id AS recordCenterId
+			, '0' AS treeType
+			, 'RC_'||A.record_center_id AS id
+			, A.record_center_nm AS text
+			, 'closed' AS state
+			, 'icon-search' AS iconCls
+			, 0 AS levl
+		FROM TB_STRECORDCENTER A
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				A.record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.record_center_id
+	</select>
+	
+	<resultMap id="findRegTakeRegDclssfyFolder-result" class="rms.take.regTake.domain.TkFolder">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderId" 			    column="folder_id"/>
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="title" 					column="title"/>
+		<result property="subTitle" 				column="sub_title"/>
+		<result property="clssDivCd"                column="clss_div_cd"/>
+		<result property="clssId" 					column="clss_id"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="folderTypeDivCd" 			column="folder_type_div_cd"/>
+		<result property="sumry" 					column="sumry"	jdbcType="CLOB"	javaType="java.lang.String"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="hoNo" 					column="ho_no"/> 
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="takeOrgCd" 				column="take_org_cd"/>
+		<result property="oldFolderCreatOrgNm" 		column="old_folder_creat_org_nm"/>
+		<result property="oldFolderClssNo" 			column="old_folder_clss_no"/>
+		<result property="groupPresvTermCd" 		column="group_presv_term_cd"/>
+		<result property="presvTermCd" 				column="presv_term_cd"/>
+		<result property="presvTermFixRsn" 			column="presv_term_fix_rsn"/>
+		<result property="operReadRangeCd" 			column="oper_read_range_cd"/>
+		<result property="readCnt" 					column="read_cnt"/>
+		<result property="creatUserId" 				column="creat_user_id"/>
+		<result property="creatUserNm" 				column="creat_user_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserPosRankNm" 		column="creat_user_pos_rank_nm"/>
+		<result property="creatDtime" 				column="creat_dtime"/>
+		<result property="secretRelsRecordYn" 	    column="secret_rels_record_yn"/>		
+	</resultMap>	
+	
+	<!-- 비밀해제기록물 기록물철 조회 -->
+	<select id="findRegTakeRegDclssfyFolder" parameterClass="rms.take.regTake.domain.TkFolder" resultMap="findRegTakeRegDclssfyFolder-result">
+		SELECT A.record_center_id
+		     , A.folder_id
+		     , A.folder_take_seq
+		     , A.title
+		     , A.sub_title
+		     , A.clss_div_cd
+		     , A.clss_id
+		     , A.clss_nm
+		     , A.creat_yyyy
+		     , A.folder_type_div_cd
+		     , A.sumry
+		     , A.org_cd
+		     , B.org_nm
+		     , A.take_org_cd
+		     , A.old_folder_creat_org_nm
+		     , A.old_folder_clss_no
+		     , A.group_presv_term_cd
+		     , A.presv_term_cd
+		     , A.presv_term_fix_rsn
+		     , A.oper_read_range_cd
+		     , A.read_cnt
+		     , A.creat_user_id
+		     , A.creat_user_nm
+		     , A.creat_user_org_cd
+		     , (SELECT B.org_nm
+						   FROM TB_STORG B
+						   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+						   AND   B.org_cd=A.creat_user_org_cd) creat_user_org_nm
+		     , A.creat_user_pos_rank_nm
+		     , SUBSTR(A.creat_dtime,0,8) creat_dtime
+		     , A.ho_no
+		     , A.secret_rels_record_yn		     
+		FROM  TB_RDFOLDER A
+		    , TB_STORG B
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_take_seq = #folderTakeSeq:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.org_cd = B.org_cd
+	</select>
+
+	<resultMap id="regTakeRegDclssfyFolderList-result" class="rms.take.regTake.domain.RegTakeRegFolder">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderId" 				column="folder_id"/>		
+		<result property="folderTakeSeq" 			column="folder_take_seq"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserOrgAbbrNm" 		column="creat_user_org_abbr_nm"/>
+		<result property="clssId" 					column="clss_id"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="title" 					column="title"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="presvTermCd" 				column="presv_term_cd"/>
+		<result property="presvTermNm" 				column="presv_term_nm"/>
+		<result property="recordRegCnt" 			column="record_reg_cnt"/>
+		<result property="examRsltCd" 				column="exam_rslt_cd"/>
+		<result property="examRsltNm" 				column="exam_rslt_nm"/>		
+		<result property="hoNo" 					column="ho_no"/>
+		<result property="hoNoCnt" 					column="ho_no_cnt"/>
+		<result property="recordCount" 				column="record_count"/>
+		<result property="recordOrignCount" 	    column="record_orign_count"/>
+		<result property="recordRegDtimeCount" 	    column="record_reg_dtime_count"/>					
+		<result property="folderKeepStateCd" 		column="folder_keep_state_cd"/>	
+		<result property="secretRelsRecordYn" 		column="secret_rels_record_yn"/>				
+	</resultMap>
+	
+	<!-- 
+		비밀해제기록물 기록물철 목록 조회
+	 -->
+	<select id="findRegTakeRegDclssfyFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegFolder" resultMap="regTakeRegDclssfyFolderList-result">
+		SELECT C.*
+	    FROM (
+	        SELECT ROWNUM AS rnum
+	            , B.*
+	        FROM (
+				SELECT A.record_center_id
+					, A.folder_id
+				    , A.folder_take_seq
+				    , A.org_cd
+					, (SELECT B.org_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.org_cd) org_nm
+					, (SELECT B.org_abbr_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.org_cd) org_abbr_nm
+					, A.creat_user_org_cd
+					, (SELECT B.org_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.creat_user_org_cd) creat_user_org_nm
+					, (SELECT B.org_abbr_nm
+					   FROM TB_STORG B
+					   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					   AND   B.org_cd=A.creat_user_org_cd) creat_user_org_abbr_nm
+					, A.clss_id
+					, A.clss_nm
+					, A.title
+					, A.creat_yyyy
+					, A.presv_term_cd
+					, (SELECT C.com_cd_nm
+					   FROM TB_ZZCOMCD C
+					   WHERE C.com_type_cd = 'RD07'
+					   AND C.com_cd=DECODE(A.presv_term_cd, '20', '25', A.presv_term_cd)) presv_term_nm
+					, TO_CHAR(TO_NUMBER(NVL(A.record_reg_cnt,'0'))) record_reg_cnt
+					, A.folder_keep_state_cd exam_rslt_cd
+					, DECODE(A.folder_keep_state_cd,'','등록중','등록완료') exam_rslt_nm
+					, A.ho_no
+                    , (SELECT COUNT(1) 
+                       FROM TB_RDRECORD B 
+                       WHERE B.record_center_id = A.record_center_id 
+                       AND B.folder_id = A.folder_id) record_count
+                    , (SELECT COUNT(orign_id) 
+                       FROM TB_RDRECORD B 
+                       WHERE B.record_center_id = A.record_center_id 
+                       AND B.folder_id = A.folder_id) record_orign_count
+                    , (SELECT COUNT(reg_dtime)
+                       FROM TB_RDRECORD B
+                       WHERE B.record_center_id = A.record_center_id
+                       AND B.folder_id = A.folder_id) record_reg_dtime_count
+					, (select count(*)
+                            from tb_rdfolder e
+                            where e.record_center_id = a.record_center_id
+                            and e.creat_sys_cd = a.creat_sys_cd
+                            and e.org_cd = a.org_cd
+                            and e.clss_id = a.clss_id
+                            and e.creat_yyyy = a.creat_yyyy
+                            and e.folder_reg_seq = a.folder_reg_seq
+                            ) as ho_no_cnt                       
+                    , DECODE(A.folder_keep_state_cd,'','N','Y') folder_keep_state_cd
+                    , secret_rels_record_yn   
+				FROM TB_RDFOLDER A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.creat_sys_cd = '03' 
+		        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+		            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		        </isNotEmpty>
+				<isNotEmpty prepend="AND" property="regYmdF">
+					A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+				</isNotEmpty>
+		        <isNotEmpty prepend="AND" property="orgCd">
+		            A.org_cd = #orgCd:VARCHAR#
+		        </isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyF">
+					A.creat_yyyy BETWEEN NVL(#creatYyyyF:VARCHAR#,'0001') AND NVL(#creatYyyyT:VARCHAR#,'9999')
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+				    (A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+		        <isNotEmpty property="presvTermCd">
+			        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD IN ('20','25')
+		            </isEqual>
+			        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		            </isNotEqual>		            
+		        </isNotEmpty>		        
+				<isNotEmpty prepend="AND" property="title">
+					(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty property="examRsltCd">
+					<isEqual prepend="AND" property="examRsltCd" compareValue="FIN">
+						A.folder_keep_state_cd is not null 
+					</isEqual>
+					<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+						A.folder_keep_state_cd is null 
+					</isEqual>
+				</isNotEmpty>
+				<isEmpty property="order">
+					ORDER BY A.record_center_id, A.reg_dtime DESC
+				</isEmpty>
+				<isEqual property="order" compareValue="0">
+					ORDER BY A.record_center_id, A.reg_dtime DESC
+				</isEqual>				
+				<isEqual property="order" compareValue="1">
+					ORDER BY A.record_center_id, A.clss_nm
+				</isEqual>
+				<isEqual property="order" compareValue="2">
+					ORDER BY A.record_center_id, A.creat_yyyy DESC
+				</isEqual>
+				<isEqual property="order" compareValue="3">
+					ORDER BY A.record_center_id, A.title
+				</isEqual>				
+		        <!-- ORDER BY A.record_center_id, org_nm, A.clss_nm, A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no -->
+			) B
+	        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	    ) C
+	    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		비밀해제기록물 기록물철 목록 조회 (카운트)
+	 -->
+	<select id="countRegTakeRegDclssfyFolderPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_RDFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = '03'
+		<!-- AND   A.take_fin_flag = '0' -->
+		<!-- AND   A.exam_rslt_cd IN ('0', '2') -->
+        <isNotEmpty prepend="AND" property="creatUserOrgCd">
+            A.creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="regYmdF">
+			A.reg_dtime BETWEEN NVL(#regYmdF:VARCHAR#,'00010101')||'000000' AND NVL(#regYmdT:VARCHAR#,'99991231')||'240000'
+		</isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			A.creat_yyyy BETWEEN NVL(#creatYyyyF:VARCHAR#,'0001') AND NVL(#creatYyyyT:VARCHAR#,'9999')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+		    (A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty property="presvTermCd">
+	        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            A.PRESV_TERM_CD IN ('20','25')
+            </isEqual>
+	        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEqual>		            
+        </isNotEmpty>        
+		<isNotEmpty prepend="AND" property="title">
+			(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty property="examRsltCd">
+			<isEqual prepend="AND" property="examRsltCd" compareValue="FIN">
+				A.folder_keep_state_cd is not null
+			</isEqual>
+			<isEqual prepend="AND" property="examRsltCd" compareValue="0">
+				A.folder_keep_state_cd is null
+			</isEqual>
+		</isNotEmpty>
+	</select>
+	
+	<!-- 비밀해제기록물 기록물철 등록 -->
+	<insert id="createRegTakeRegDclssfyFolder" parameterClass="rms.take.regTake.domain.TkFolder">
+		INSERT INTO TB_RDFOLDER
+		(
+			record_center_id, folder_id, folder_take_seq, creat_sys_cd, take_org_cd, cur_keep_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy
+			, take_yyyy_sno, clss_nm, org_title, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt
+			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, folder_start_dtime 
+			, folder_close_dtime, virus_flag, erecord_flag, open_div_cd, mig_flag, folder_keep_state_cd, efile_del_flag, secret_rels_record_yn
+		)
+		VALUES 
+		(
+			#recordCenterId:VARCHAR#, TO_CHAR(SYSDATE, 'YYYY')  || LPAD((TB_RDFOLDER_SQ01.nextval), 10, '0'), #folderTakeSeq:VARCHAR#, #creatSysCd:VARCHAR#, #orgCd:VARCHAR#, #orgCd:VARCHAR#, #clssDivCd:VARCHAR#
+			, #clssId:VARCHAR#, #creatYyyy:VARCHAR#, #folderRegSeq:VARCHAR#, #hoNo:VARCHAR#, TO_CHAR(SYSDATE,'YYYY')
+			, #takeSno:VARCHAR#, (SELECT bis_clss_nm FROM TB_ZZBISCLSS WHERE bis_clss_id = #clssId:VARCHAR# UNION SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND UNIT_CD = #clssId:VARCHAR# )
+			, #title:VARCHAR#, #title:VARCHAR#, #subTitle:VARCHAR#, #folderTypeDivCd:VARCHAR#
+			, #folderDetlTypeCd:VARCHAR#, #sumry:CLOB#, #folderSize:VARCHAR#, #recordTotPageCnt:VARCHAR#, #recordRegCnt:VARCHAR#
+			, #efileCnt:VARCHAR#, #oldFolderCreatOrgNm:VARCHAR#, #oldFolderClssNo:VARCHAR#, #presvTermCd:VARCHAR#, #presvTermFixRsn:VARCHAR#
+			, #operReadRangeCd:VARCHAR#, #readCnt:VARCHAR#, #newDivCd:VARCHAR#, #presvMethodCd:VARCHAR#, #presvAreaCd:VARCHAR#
+			, #creatUserId:VARCHAR#, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#
+			, #creatDtime:VARCHAR#||'090000', TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), #orgCd:VARCHAR#, #groupPresvTermCd:VARCHAR#, #creatYyyy:VARCHAR#||'0101000000'  
+			, #creatYyyy:VARCHAR#||'1231000000', #virusFlag:VARCHAR#, #erecordFlag:VARCHAR#, '3', '0', '', '0', #secretRelsRecordYn:VARCHAR#
+		)
+	</insert>
+
+	<!-- 비밀해제기록물 권호수 추가 -->
+	<insert id="createRegTakeHonoAddDclssfyFolder"  parameterClass="rms.take.regTake.domain.TkFolder">
+		INSERT INTO TB_RDFOLDER
+		(
+			record_center_id, folder_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy
+			, take_yyyy_sno, clss_nm, org_title, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt
+			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd
+			, folder_start_dtime
+			, folder_close_dtime, virus_flag, erecord_flag, open_div_cd, secret_rels_record_yn
+		)
+		SELECT record_center_id, TO_CHAR(SYSDATE, 'YYYY')  || LPAD((TB_RDFOLDER_SQ01.nextval), 10, '0'), #folderTakeSeq:VARCHAR#, creat_sys_cd, take_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, 
+			(	SELECT LPAD(MAX(HO_NO)+1, 3, '0') 
+				FROM TB_RDFOLDER 
+				WHERE RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ IN (
+					SELECT RECORD_CENTER_ID||ORG_CD||CLSS_ID||CREAT_YYYY||FOLDER_REG_SEQ 
+					FROM TB_RDFOLDER  
+					WHERE FOLDER_TAKE_SEQ = #oldFolderTakeSeq:VARCHAR# )
+			)
+			, take_yyyy
+			, take_yyyy_sno, clss_nm, title, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, '0', '0', '0'
+			, '0', old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			, creat_dtime, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), org_cd, group_presv_term_cd
+			, folder_start_dtime
+			, folder_close_dtime, virus_flag, erecord_flag, '3', secret_rels_record_yn
+			FROM TB_RDFOLDER 
+			WHERE FOLDER_TAKE_SEQ = #oldFolderTakeSeq:VARCHAR#
+	</insert>
+
+	<!-- 비밀해제기록물 행위자정보 등록 -->
+	<insert id="createRegTakeRegDclssfyFolderCreat" parameterClass="rms.take.regTake.domain.TkFolderCreat">
+		INSERT INTO TB_RDFOLDERCREAT
+		(
+			record_center_id
+			, folder_id
+			, agent_sno
+			, agent_type_cd
+			, agent_id
+			, agent_nm
+			, agent_org_cd
+			, agent_org_nm
+			, agent_pos_rank_nm
+			, opin
+			, duty_type_cd
+			, duty_act_dtime
+			, reg_dtime
+		)
+		(
+			SELECT #recordCenterId:VARCHAR#   
+	               , folder_id
+	               , (SELECT NVL(MAX(agent_sno),0)+1 agent_sno  
+	                  FROM TB_TKFOLDERCREAT
+	                  WHERE record_center_id = #recordCenterId:VARCHAR#
+	                  AND   folder_take_seq = #folderTakeSeq:VARCHAR#)
+		           , #agentTypeCd:VARCHAR#
+		           , #agentId:VARCHAR#
+		           , #agentNm:VARCHAR#
+		           , #agentOrgCd:VARCHAR#
+		           , #agentOrgNm:VARCHAR#
+		           , #agentPosRankNm:VARCHAR#
+		           , #opin:CLOB#
+		           , #dutyTypeCd:VARCHAR#
+		           , #dutyActDtime:VARCHAR#
+		           , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		    FROM TB_RDFOLDER 
+		    WHERE record_center_id = #recordCenterId:VARCHAR#
+		    AND folder_take_seq =  #folderTakeSeq:VARCHAR#
+		)		
+	</insert>
+
+	<!-- 비밀해제기록물 행위자 정보 삭제 -->
+	<delete id="deleteRegTakeRegDclssfyFolderCreat" parameterClass="rms.take.regTake.domain.TkFolder">
+		DELETE TB_RDFOLDERCREAT
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    folder_id = #folderId:VARCHAR#
+	</delete>
+	
+	<!-- 비밀해제기록물 기록물철 삭제 -->
+	<delete id="deleteRegTakeRegDclssfyFolder" parameterClass="rms.take.regTake.domain.TkFolder">
+		DELETE TB_RDFOLDER
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#
+	</delete>
+
+	<!-- 비밀해제기록물 기록물철 수정 -->
+	<update id="updateRegTakeRegDclssfyFolder" parameterClass="rms.take.regTake.domain.TkFolder">
+		UPDATE TB_RDFOLDER
+		SET   title = #title:VARCHAR#
+		    , sub_title = #subTitle:VARCHAR#
+		    , clss_div_cd = #clssDivCd:VARCHAR#
+		    , clss_id = #clssId:VARCHAR#
+		    , clss_nm = (SELECT bis_clss_nm FROM TB_ZZBISCLSS WHERE bis_clss_id = #clssId:VARCHAR# UNION SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND UNIT_CD = #clssId:VARCHAR# )
+		    , creat_yyyy = #creatYyyy:VARCHAR#
+		    , folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+		    , sumry = #sumry:CLOB#
+		    , org_cd = #orgCd:VARCHAR#
+		    , take_org_cd = #orgCd:VARCHAR#
+		    , old_folder_creat_org_nm = #oldFolderCreatOrgNm:VARCHAR#
+		    , old_folder_clss_no = #oldFolderClssNo:VARCHAR#
+		    , group_presv_term_cd = #groupPresvTermCd:VARCHAR#
+		    , presv_term_cd = #presvTermCd:VARCHAR#
+		    , presv_term_fix_rsn = #presvTermFixRsn:VARCHAR#
+		    , oper_read_range_cd = #operReadRangeCd:VARCHAR#
+		    , read_cnt = #readCnt:VARCHAR#
+		    , creat_user_id = #creatUserId:VARCHAR#
+		    , creat_user_nm = #creatUserNm:VARCHAR#
+		    , creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		    , creat_user_org_nm = #creatUserOrgNm:VARCHAR#
+		    , creat_user_pos_rank_nm = #creatUserPosRankNm:VARCHAR#
+		    , creat_dtime = #creatDtime:VARCHAR#||'090000'
+		    , reg_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		    , folder_start_dtime = #creatYyyy:VARCHAR#||'0101000000'
+			, folder_close_dtime = #creatYyyy:VARCHAR#||'1231000000'
+			, secret_rels_record_yn = #secretRelsRecordYn:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+
+	<resultMap id="regTakeRegDclssfyRecordList-result" class="rms.take.regTake.domain.RegTakeRegRecord">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderId" 			    column="folder_id"/>
+		<result property="recordTakeSeq" 			column="record_take_seq"/>
+		<result property="recordTakeSeqNm" 			column="record_take_seq_nm"/>
+		<result property="title" 					column="title"/>
+		<result property="creatRegDtime" 			column="creat_reg_dtime"/>
+		<result property="subTitle" 				column="sub_title"/>	
+		<result property="dutyChrgrNm" 				column="duty_Chrgr_Nm"/>
+		<result property="recordPageCnt" 			column="record_page_cnt"/>
+		<result property="erecordFlag" 				column="erecord_flag"/>
+		<result property="recordRegDivCd" 			column="record_Reg_Div_Cd"/>
+		<result property="oldRecordPresvTerm" 		column="old_Record_Presv_Term"/>
+		<result property="oldRecordDocno" 			column="old_Record_Docno"/>
+		<result property="oldRecordCreatOrgNm" 		column="old_Record_Creat_Org_Nm"/>
+		<result property="recordSumry" 				column="record_Sumry"/>
+		<result property="recver" 					column="recver"/>
+		<result property="sender" 					column="sender"/>
+		<result property="openDivCd" 				column="open_Div_Cd"/>
+		<result property="operReadRangeCd" 			column="oper_Read_Range_Cd"/>
+		<result property="secretClss" 				column="secret_Clss"/>
+		<result property="secretTerm" 				column="secret_Term"/>
+		<result property="creatUserOrgCd" 			column="creat_User_Org_Cd"/>
+		<result property="creatUserPosRankNm" 		column="creat_User_Pos_Rank_Nm"/>
+		<result property="creatUserId" 				column="creat_User_Id"/>
+		<result property="creatUserNm" 				column="creat_user_nm"/>
+		<result property="creatDtime" 				column="creat_Dtime"/>
+		<result property="protYn" 					column="prot_Yn"/>
+		<result property="secretRelsRecordPresvLoc" column="secret_Rels_Record_Presv_Loc"/>
+		<result property="secretResortRsn" 			column="secret_Resort_Rsn"/>
+		<result property="secretResortTypeCd" 		column="secret_Resort_Type_Cd"/>
+		<result property="secretResortDtime" 		column="secret_Resort_Dtime"/>
+		<result property="secretResortDeptNm" 		column="secret_resort_dept_nm"/>
+		<result property="secretResortPosRank" 		column="secret_Resort_Pos_Rank"/>
+		<result property="secretResortUserNm" 		column="secret_Resort_User_Nm"/>
+	</resultMap>
+	
+	<!-- 비밀해제기록물 기록물건 목록 조회 -->
+	<select id="findRegTakeRegDclssfyRecordPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegRecord" resultMap="regTakeRegDclssfyRecordList-result">
+	SELECT C.*
+	    FROM (
+	        SELECT ROWNUM AS rnum
+	            , B.*
+	        FROM (
+		SELECT record_center_id
+		     , folder_id
+		     , record_take_seq
+		     , SUBSTR(record_take_seq,0,4)||'-'||SUBSTR(record_take_seq,5) record_take_seq_nm
+		     , title
+		     , substr(creat_reg_dtime, 1,8) creat_reg_dtime
+		     , sub_title
+		     , duty_Chrgr_Nm
+		     , record_page_cnt
+		     , erecord_flag
+		     , record_Reg_Div_Cd
+		     , old_Record_Presv_Term
+		     , old_Record_Docno
+		     , old_Record_Creat_Org_Nm
+		     , record_Sumry
+		     , recver
+		     , sender
+		     , open_Div_Cd
+		     , oper_Read_Range_Cd
+		     , secret_Clss
+		     , secret_Term
+		     , creat_User_Org_Cd
+		     , creat_User_Pos_Rank_Nm
+		     , creat_User_Id
+		     , creat_user_nm
+		     , creat_Dtime
+		     , prot_Yn
+		     , secret_Rels_Record_Presv_Loc
+		     , secret_Resort_Rsn
+		     , secret_Resort_Type_Cd
+		     , secret_Resort_Dtime
+		     , secret_resort_dept_nm
+		     , secret_Resort_Pos_Rank
+		     , secret_Resort_User_Nm 
+		FROM TB_RDRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#
+        <isNotEmpty prepend="AND" property="recordTakeSeq">
+              record_take_seq = #recordTakeSeq:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="title">
+              title LIKE #title:VARCHAR#
+        </isNotEmpty>
+        ORDER BY record_center_id, record_sno, record_take_seq
+        ) B
+	        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	    ) C
+	    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 비밀해제기록물 기록물건 목록 조회 -->
+	<select id="countRegTakeRegDclssfyRecordPagedList" parameterClass="rms.take.regTake.domain.RegTakeRegRecord" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_RDRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#
+        <isNotEmpty prepend="AND" property="recordTakeSeq">
+              record_take_seq = #recordTakeSeq:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="title">
+              title LIKE #title:VARCHAR#
+        </isNotEmpty>
+	</select>
+
+	<resultMap id="regTakeRegDclssfyRecord-result" class="rms.take.regTake.domain.TkRecord">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="recordId" 			    column="record_id"/>
+		<result property="folderId" 			    column="folder_id"/>				
+		<result property="recordTakeSeq" 			column="record_take_seq"/>
+		<result property="creatSysCd" 				column="creat_sys_cd"/>
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="creatRegDtime" 			column="creat_reg_dtime"/>
+		<result property="creatRegNo" 				column="creat_reg_no"/>
+		<result property="dtchRegNo" 				column="dtch_reg_no"/>
+		<result property="title" 					column="title"/>
+		<result property="subTitle" 				column="sub_title"/>
+		<result property="recordRegDivCd" 			column="record_reg_div_cd"/>
+		<result property="recordRegDivNm" 			column="record_reg_div_nm"/>
+		<result property="recordSumry" 				column="record_sumry"	jdbcType="CLOB"	javaType="java.lang.String"/>
+		<result property="recordSize" 				column="record_size"/>
+		<result property="attachCnt" 				column="attach_cnt"/>
+		<result property="recordPageCnt" 			column="record_page_cnt"/>
+		<result property="dutyChrgrNm" 				column="duty_chrgr_nm"/>
+		<result property="erecordFlag" 				column="erecord_flag"/>
+		<result property="oldRecordPresvTerm" 		column="old_record_presv_term"/>
+		<result property="oldRecordPresvTermNm"		column="old_record_presv_term_nm"/>
+		<result property="oldRecordDocno" 			column="old_record_docno"/>
+		<result property="oldRecordCreatOrgNm" 		column="old_record_creat_org_nm"/>
+		<result property="openDivCd" 				column="open_div_cd"/>
+		<result property="openDivNm" 				column="open_div_nm"/>
+		<result property="openGrade" 				column="open_grade"/>
+		<result property="openGrade1" 				column="open_grade1"/>
+		<result property="openGrade2" 				column="open_grade2"/>
+		<result property="openGrade3" 				column="open_grade3"/>
+		<result property="openGrade4" 				column="open_grade4"/>
+		<result property="openGrade5" 				column="open_grade5"/>
+		<result property="openGrade6" 				column="open_grade6"/>
+		<result property="openGrade7" 				column="open_grade7"/>
+		<result property="openGrade8" 				column="open_grade8"/>
+		<result property="partOpenRsn" 				column="part_open_rsn"/>
+		<result property="openLimitPart" 			column="open_limit_part"/>
+		<result property="recver" 					column="recver"/>
+		<result property="sender" 					column="sender"/>
+		<result property="creatUserId" 				column="creat_user_id"/>
+		<result property="creatUserNm" 				column="creat_user_nm"/>
+		<result property="creatUserOrgCd" 			column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm" 			column="creat_user_org_nm"/>
+		<result property="creatUserPosRankNm" 		column="creat_user_pos_rank_nm"/>
+		<result property="creatDtime" 				column="creat_dtime"/>
+		<result property="secretClss" 				column="secret_clss"/>
+		<result property="secretClssNm" 			column="secret_clss_nm"/>
+		<result property="secretTerm" 				column="secret_term"/>
+		<result property="operReadRangeCd" 			column="oper_read_range_cd"/>
+		<result property="operReadRangeNm" 			column="oper_read_range_nm"/>
+		<result property="audvisRecordType" 		column="audvis_record_type"/>
+		<result property="picYmd" 					column="pic_ymd"/>
+		<result property="picArea" 					column="pic_area"/>
+		<result property="mainUserNm" 				column="main_user_nm"/>
+		<result property="keywd" 					column="keywd"/>
+		<result property="recordClssCd" 			column="record_clss_cd"/>
+		<result property="recordClssNm" 			column="record_clss_nm"/>
+		<result property="subComTypeCd" 			column="sub_com_type_cd"/>
+		<result property="orignId" 			        column="orign_id"/>
+		<result property="regDtime" 		        column="reg_dtime"/>		
+		<result property="secretResortTypeCd"		column="secret_resort_type_cd" />	
+		<result property="secretResortDtime"		column="secret_resort_dtime" />	
+		<result property="secretResortRsn"	    	column="secret_resort_rsn" />
+		<result property="secretResortDeptNm"	  	column="secret_resort_dept_nm" />
+		<result property="secretResortPosRank"	  	column="secret_resort_pos_rank" />		
+		<result property="secretResortUserNm"	  	column="secret_resort_user_nm" />	
+		<result property="secretRelsRecordPresvLoc"	column="secret_rels_record_presv_loc" />
+		<result property="protYn"					column="prot_yn" />					
+	</resultMap>
+	
+	<!-- 비밀해제기록물 기록물건 내용 조회 -->
+	<select id="findRegTakeRegDclssfyRecord" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="regTakeRegDclssfyRecord-result">
+		SELECT A.record_center_id
+		     , A.record_id
+		     , A.folder_id		
+		     , A.record_take_seq
+		     , A.creat_sys_cd
+		     , A.org_cd
+		     , A.creat_yyyy
+		     , SUBSTR(A.creat_reg_dtime,1,8) creat_reg_dtime
+		     , A.creat_reg_no
+		     , A.dtch_reg_no
+		     , A.title
+		     , A.sub_title
+		     , A.record_reg_div_cd
+		     , C.com_cd_nm record_reg_div_nm
+		     , A.record_sumry
+		     , A.record_size
+		     , A.attach_cnt
+		     , A.record_page_cnt
+		     , A.duty_chrgr_nm
+		     , A.erecord_flag
+		     , A.old_record_presv_term
+		     , D.com_cd_nm old_record_presv_term_nm
+		     , A.old_record_docno
+		     , A.old_record_creat_org_nm
+		     , A.open_div_cd
+		     , E.com_cd_nm open_div_nm
+		     , A.open_grade
+		     , SUBSTR(A.open_grade,1,1) open_grade1
+		     , SUBSTR(A.open_grade,2,1) open_grade2
+		     , SUBSTR(A.open_grade,3,1) open_grade3
+		     , SUBSTR(A.open_grade,4,1) open_grade4
+		     , SUBSTR(A.open_grade,5,1) open_grade5
+		     , SUBSTR(A.open_grade,6,1) open_grade6
+		     , SUBSTR(A.open_grade,7,1) open_grade7
+		     , SUBSTR(A.open_grade,8,1) open_grade8
+		     , A.part_open_rsn
+		     , A.open_limit_part
+		     , A.recver
+		     , A.sender
+		     , A.creat_user_id
+		     , A.creat_user_nm
+		     , A.creat_user_org_cd
+		     , A.creat_user_org_nm
+		     , A.creat_user_pos_rank_nm
+		     , SUBSTR(A.creat_dtime,1,8) creat_dtime
+		     , A.secret_clss
+		     , G.com_cd_nm secret_clss_nm
+		     , A.secret_term
+		     , A.oper_read_range_cd
+		     , F.com_cd_nm oper_read_range_nm
+		     , A.audvis_record_type
+		     , A.pic_ymd
+		     , A.pic_area
+		     , A.main_user_nm
+		     , B.spcl_list1 keywd
+			 , A.record_clss_cd
+		     , DECODE(C.sub_com_type_cd,'','',(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = C.sub_com_type_cd AND com_cd = A.record_clss_cd)) record_clss_nm
+		     , C.sub_com_type_cd
+		     , A.orign_id
+		     , A.reg_dtime	
+		     , A.secret_resort_type_cd
+		     , A.secret_resort_dtime
+		     , A.secret_resort_rsn
+		     , A.secret_resort_dept_nm
+		     , A.secret_resort_pos_rank
+		     , A.secret_resort_user_nm
+		     , A.secret_rels_record_presv_loc
+		     , A.prot_yn
+		FROM TB_RDRECORD A
+			, (SELECT record_center_id, record_take_seq, spcl_list1
+			   FROM TB_RDSPCLLIST
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #updateRecordTakeSeq:VARCHAR#
+			   AND   spcl_list_loc = '2'
+			   AND   seq = '1') B
+			, (SELECT com_cd, com_cd_nm, sub_com_type_cd
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD02') C
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD07') D
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD05') E
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD53') F
+			, (SELECT com_cd, com_cd_nm
+			   FROM TB_ZZCOMCD
+			   WHERE com_type_cd = 'RD11') G
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #updateRecordTakeSeq:VARCHAR#
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.record_take_seq = B.record_take_seq(+)
+		AND   A.record_reg_div_cd = C.com_cd(+)
+		AND   A.old_record_presv_term = D.com_cd(+)
+		AND   A.open_div_cd = E.com_cd(+)
+		AND   A.oper_read_range_cd = F.com_cd(+)
+		AND   A.secret_clss = G.com_cd(+)
+	</select>
+
+	<!-- 비밀해제기록물 기록물건 등록 -->
+	<insert id="createRegTakeRegDclssfyRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+   		INSERT INTO TB_RDRECORD
+		(
+			record_center_id, record_id, record_take_seq, folder_id, take_yyyy, take_yyyy_sno
+			, clss_div_cd, clss_id, clss_nm, creat_sys_cd, org_cd
+			, creat_yyyy, creat_reg_dtime, org_title, title, sub_title, record_reg_div_cd
+			, record_detl_type_cd, record_size, record_page_cnt, duty_chrgr_nm, erecord_flag
+			, old_record_presv_term, open_div_cd, open_grade, part_open_rsn, open_limit_part
+			, recver, sender, folder_clss_no, spcl_record_type, orign_copy_flag
+			, new_div_cd, chng_flag, rjct_flag, doc_no, creat_sys_record_id
+			, reg_dtime, record_sumry, creat_reg_no
+			, dtch_reg_no, attach_cnt, record_sno, creat_user_id
+			, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm, creat_dtime
+			, secret_clss, secret_term, oper_read_range_cd, audvis_record_type, pic_ymd
+			, pic_area, main_user_nm, old_record_docno, old_record_creat_org_nm, record_clss_cd
+			, secret_resort_type_cd, secret_resort_dtime, secret_resort_rsn, secret_resort_dept_nm
+			, secret_resort_pos_rank, secret_resort_user_nm, secret_rels_record_presv_loc, prot_yn, secret_record_yn			
+		)
+		(
+			SELECT #recordCenterId:VARCHAR#, TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_RDRECORD_SQ01.nextval), 10, '0'), #recordTakeSeq:VARCHAR#, folder_id, take_yyyy, take_yyyy_sno
+			, clss_div_cd, clss_id, clss_nm, #creatSysCd:VARCHAR#, (SELECT org_cd FROM TB_RDFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND folder_id=#folderId:VARCHAR#)
+			, SUBSTR(#creatRegDtime:VARCHAR#,1,4), (#creatRegDtime:VARCHAR#||'090000'), #title:VARCHAR#, #title:VARCHAR#, #subTitle:VARCHAR#, #recordRegDivCd:VARCHAR#
+			, #recordDetlTypeCd:VARCHAR#, #recordSize#, #recordPageCnt:VARCHAR#, #dutyChrgrNm:VARCHAR#, #erecordFlag:VARCHAR#
+			, #oldRecordPresvTerm:VARCHAR#, #openDivCd:VARCHAR#, #openGrade:VARCHAR#, #partOpenRsn:VARCHAR#, #openLimitPart:VARCHAR#
+			, #recver:VARCHAR#, #sender:VARCHAR#, (SELECT org_cd||clss_id||creat_yyyy||folder_reg_seq||ho_no FROM TB_RDFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND folder_id=#folderId:VARCHAR#), #spclRecordType:VARCHAR#, #orignCopyFlag:VARCHAR#
+			, #newDivCd:VARCHAR#, #chngFlag:VARCHAR#, #rjctFlag:VARCHAR#, #docNo:VARCHAR#, #creatSysRecordId:VARCHAR#
+			, '', #recordSumry:CLOB#, LPAD(NVL((SELECT MAX(TO_NUMBER(NVL(C.creat_reg_no,0))) FROM TB_RDRECORD C WHERE C.record_center_id = #recordCenterId:VARCHAR# AND   C.creat_sys_cd = #creatSysCd:VARCHAR# AND   C.org_cd = (SELECT org_cd FROM TB_RDFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND folder_id=#folderId:VARCHAR#) AND C.creat_yyyy = SUBSTR(#creatRegDtime:VARCHAR#,1,4)),0)+ROWNUM,13,'0')
+			, #dtchRegNo:VARCHAR#, #attachCnt#, #recordSno#, #creatUserId:VARCHAR#
+			, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#, #creatDtime:VARCHAR#||'090000'
+			, #secretClss:VARCHAR#, #secretTerm:VARCHAR#, #operReadRangeCd:VARCHAR#, #audvisRecordType:VARCHAR#, #picYmd:VARCHAR#
+			, #picArea:VARCHAR#, #mainUserNm:VARCHAR#, #oldRecordDocno:VARCHAR#, #oldRecordCreatOrgNm:VARCHAR#, #recordClssCd:VARCHAR#
+			, #secretResortTypeCd:VARCHAR#, #secretResortDtime:VARCHAR#, #secretResortRsn:VARCHAR#, #secretResortDeptNm:VARCHAR#
+			, #secretResortPosRank:VARCHAR#, #secretResortUserNm:VARCHAR#, #secretRelsRecordPresvLoc:VARCHAR#, #protYn:VARCHAR#, 'Y'
+	      FROM TB_RDFOLDER 
+	      WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	      AND FOLDER_ID = #folderId:VARCHAR#							
+		)		
+	</insert>
+
+	<!-- 비밀해제기록물 검색어 등록 -->
+	<insert id="createRegTakeRegDclssfyRecordKeywd" parameterClass="rms.take.regTake.domain.TkRecord">
+		INSERT INTO TB_RDSPCLLIST
+		(
+			record_center_id
+			, spcl_list_take_seq
+			, record_take_seq
+			, spcl_list_loc
+			, seq
+			, spcl_list1
+			, reg_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, LPAD((TB_RDSPCLLIST_SQ01.nextval), 15, '0')
+			, #updateRecordTakeSeq:VARCHAR#
+			, '2'
+			, '1'
+			, #keywd:VARCHAR#
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 비밀해제기록물 행위자정보 등록 -->
+	<insert id="createRegTakeRegDclssfyRecordCreat" parameterClass="rms.take.regTake.domain.TkRecordCreat">
+   		INSERT INTO TB_RDRECORDCREAT
+		(
+			record_center_id
+			, record_id
+			, agent_sno
+			, agent_type_cd
+			, agent_id
+			, agent_nm
+			, agent_org_cd
+			, agent_org_nm
+			, agent_pos_rank_nm
+			, req_state_val
+			, opin_dtime
+			, handl_rslt
+			, opin
+			, duty_type_cd
+			, duty_act_dtime
+		)
+		(
+		 SELECT 
+      		#recordCenterId:VARCHAR#
+			, record_id
+			, (SELECT NVL(MAX(agent_sno),0)+1 agent_sno
+			   FROM TB_RDRECORDCREAT
+			   WHERE record_center_id = A.record_center_id
+			   AND   record_id = A.record_id)
+			, #agentTypeCd:VARCHAR#
+			, #agentId:VARCHAR#
+			, #agentNm:VARCHAR#
+			, #agentOrgCd:VARCHAR#
+			, #agentOrgNm:VARCHAR#
+			, #agentPosRankNm:VARCHAR#
+			, #reqStateVal:VARCHAR#
+			, #opinDtime:VARCHAR#
+			, #handlRslt:VARCHAR#
+			, #opin:CLOB#
+			, #dutyTypeCd:VARCHAR#
+			, #dutyActDtime:VARCHAR#
+	      FROM TB_RDRECORD A
+	      WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	      AND A.RECORD_TAKE_SEQ = #recordTakeSeq:VARCHAR# 
+		)		
+	</insert>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (insert 기록물건 등록/수정-본문/첨부파일 추가) 
+	 -->
+	<insert id="createRegTakeRegDclssfyRecordAttachFile" parameterClass="rms.take.regTake.domain.TkAttachFile">
+		INSERT INTO TB_RDATTACHFILE
+		(
+			record_center_id
+			, record_take_seq
+			, reg_seq
+			, org_cd
+			, creat_yyyy
+			, creat_reg_no
+			, attach_file_seq
+			, attach_file_page_cnt
+			, doc_type_cd
+			, doc_type_sno
+			, file_nm
+			, file_size
+			, ver
+			, attach_file_path
+			, virus_flag
+			, reg_dtime
+		)
+		(
+		SELECT #recordCenterId:VARCHAR#
+			, #recordTakeSeq:VARCHAR#
+			, (SELECT NVL(MAX(reg_seq),0)+1 reg_seq
+			   FROM TB_RDATTACHFILE
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #recordTakeSeq:VARCHAR#)
+			, org_cd
+			, creat_yyyy
+			, creat_reg_no
+			, #attachFileSeq:VARCHAR#
+			, #attachFilePageCnt:VARCHAR#
+			, #docTypeCd:VARCHAR#
+			, (SELECT NVL(MAX(doc_type_sno),0)+1 doc_type_sno
+			   FROM TB_RDATTACHFILE
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #recordTakeSeq:VARCHAR#
+			   AND   doc_type_cd = #docTypeCd:VARCHAR#)
+			, #fileNm:VARCHAR#
+			, #fileSize:VARCHAR#
+			, #ver:VARCHAR#
+			, #attachFilePath:VARCHAR#
+			, #virusFlag:VARCHAR#
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		FROM TB_RDRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+		)
+	</insert>
+
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (delete 기록물건 수정-첨부파일 삭제)
+	 -->
+	<delete id="deleteRegTakeRegDclssfyRecordAttachFile" parameterClass="rms.take.regTake.domain.TkAttachFile">
+		DELETE	TB_RDATTACHFILE
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND	record_take_seq	=	#recordTakeSeq:VARCHAR#
+		AND	attach_file_type = #attachFileType:VARCHAR#
+		AND	reg_seq	=	#regSeq:VARCHAR#
+	</delete>	
+
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (delete 기록물건 삭제-첨부파일 전체 삭제)
+	 -->
+	<delete id="deleteRegTakeRegDclssfyRecordAttachFileAll" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_RDATTACHFILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (update 기록물건수정)
+	 -->
+	<update id="updateRegTakeRegDclssfyRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_RDRECORD
+		SET   creat_yyyy = SUBSTR(#creatRegDtime:VARCHAR#,1,4)
+		    , creat_reg_dtime = (#creatRegDtime:VARCHAR#||'090000')
+		    , title = #title:VARCHAR#
+		    , sub_title = #subTitle:VARCHAR#
+		    , record_reg_div_cd = #recordRegDivCd:VARCHAR#
+		    , record_detl_type_cd = #recordDetlTypeCd:VARCHAR#
+		    , record_page_cnt = #recordPageCnt:VARCHAR#
+		    , duty_chrgr_nm = #dutyChrgrNm:VARCHAR#
+		    , erecord_flag = #erecordFlag:VARCHAR#
+		    , old_record_presv_term = #oldRecordPresvTerm:VARCHAR#
+		    , old_record_docno = #oldRecordDocno:VARCHAR#
+		    , old_record_creat_org_nm = #oldRecordCreatOrgNm:VARCHAR#
+		    , open_div_cd = #openDivCd:VARCHAR#
+		    , open_grade = #openGrade:VARCHAR#
+		    , part_open_rsn = #partOpenRsn:VARCHAR#
+		    , open_limit_part = #openLimitPart:VARCHAR#
+		    , recver = #recver:VARCHAR#
+		    , sender = #sender:VARCHAR#
+		    , orign_copy_flag = #orignCopyFlag:VARCHAR#
+		    , doc_no = #docNo:VARCHAR#
+		    , creat_sys_record_id = #creatSysRecordId:VARCHAR#
+		    , reg_dtime = ''
+		    , record_sumry = #recordSumry:CLOB#
+		    <!-- , creat_reg_no = #creatRegNo:VARCHAR# -->
+		    , attach_cnt = #attachCnt#
+		    , record_sno = #recordSno#
+		    , creat_user_id = #creatUserId:VARCHAR#
+		    , creat_user_nm = #creatUserNm:VARCHAR#
+		    , creat_user_org_cd = #creatUserOrgCd:VARCHAR#
+		    , creat_user_org_nm = #creatUserOrgNm:VARCHAR#
+		    , creat_user_pos_rank_nm = #creatUserPosRankNm:VARCHAR#
+		    , creat_dtime = #creatDtime:VARCHAR#||'090000'
+		    , secret_clss = #secretClss:VARCHAR#
+		    , secret_term = #secretTerm:VARCHAR#
+		    , oper_read_range_cd = #operReadRangeCd:VARCHAR#
+		    , audvis_record_type = #audvisRecordType:VARCHAR#
+		    , pic_ymd = #picYmd:VARCHAR#
+		    , pic_area = #picArea:VARCHAR#
+		    , main_user_nm = #mainUserNm:VARCHAR#
+			, record_clss_cd = #recordClssCd:VARCHAR#
+			, prot_yn = #protYn:VARCHAR#
+			, secret_rels_record_presv_loc = #secretRelsRecordPresvLoc:VARCHAR#
+			, secret_resort_rsn = #secretResortRsn:VARCHAR#
+			, secret_resort_type_cd = #secretResortTypeCd:VARCHAR#
+			, secret_resort_dtime = #secretResortDtime:VARCHAR#
+			, secret_resort_dept_nm = #secretResortDeptNm:VARCHAR#
+			, secret_resort_pos_rank = #secretResortPosRank:VARCHAR#
+			, secret_resort_user_nm = #secretResortUserNm:VARCHAR#
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_take_seq = #updateRecordTakeSeq:VARCHAR#
+	</update>
+
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (delete 기록물건 삭제)
+	 -->
+	<delete id="deleteRegTakeRegDclssfyRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_RDRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+	</delete>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (delete 기록물건 수정/삭제-검색어 삭제)
+	 -->
+	<delete id="deleteRegTakeRegDclssfyRecordKeywd" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_RDSPCLLIST
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_take_seq = #recordTakeSeq:VARCHAR#
+		AND    spcl_list_loc = '2'
+		AND    seq = '1'
+	</delete>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (delete 기록물건 수정/삭제-행위자정보 삭제)
+	 -->
+	<delete id="deleteRegTakeRegDclssfyRecordCreat" parameterClass="rms.take.regTake.domain.TkRecord">
+		DELETE TB_RDRECORDCREAT
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    record_id = #recordId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (update 기록물건의 첨부파일정보 갱신)
+	 -->
+	<update id="updateRegTakeRegDclssfyRecordAttachInfo" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_RDRECORD A
+		SET  A.record_size = NVL((SELECT SUM(B.file_size)
+		                          FROM  TB_RDATTACHFILE B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.record_take_seq = A.record_take_seq),0)
+		   , A.attach_cnt  = NVL((SELECT COUNT(1)
+		                          FROM  TB_RDATTACHFILE B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.record_take_seq = A.record_take_seq),0)
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+	</update>
+
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (update 기록물철의 건정보 갱신)
+	 -->
+	<update id="updateRegTakeRegDclssfyFolderRecordInfo" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_RDFOLDER A
+		SET  A.folder_size = NVL((SELECT SUM(B.record_size)
+		                          FROM  TB_RDRECORD B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.folder_id = A.folder_id),0)
+		    , A.record_tot_page_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(TO_NUMBER(B.record_page_cnt))),6,'0')
+		                                   FROM  TB_RDRECORD B
+		                                   WHERE B.record_center_id = A.record_center_id
+		                                   AND   B.folder_id = A.folder_id),'000000')
+		    , A.record_reg_cnt = NVL((SELECT LPAD(TO_CHAR(COUNT(1)),6,'0')
+		                              FROM  TB_RDRECORD B
+		                              WHERE B.record_center_id = A.record_center_id
+		                              AND   B.folder_id = A.folder_id),'000000')
+		    , A.efile_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(B.attach_cnt)),6,'0')
+		                     FROM  TB_RDRECORD B
+		                     WHERE B.record_center_id = A.record_center_id
+		                     AND   B.folder_id = A.folder_id),'000000')
+			, A.erecord_flag = DECODE((SELECT SUM(DECODE (B.erecord_flag, '1', 1, 0))
+			                           FROM  TB_RDRECORD B
+			                           WHERE B.record_center_id = A.record_center_id
+			                           AND   B.folder_id = A.folder_id),0,'2'
+									   , DECODE((SELECT SUM(DECODE (B.erecord_flag, '2', 1, 0))
+				                                 FROM  TB_RDRECORD B
+				                                 WHERE B.record_center_id = A.record_center_id
+				                                 AND   B.folder_id = A.folder_id),0,'1','3'))
+			, secret_rels_record_yn = 'Y'
+			, folder_keep_state_cd = ''	                                 
+		WHERE
+			<!--CUBRID
+			( A.record_center_id, A.folder_id )
+		IN
+			(
+			SELECT record_center_id, folder_id
+			-->
+			EXISTS (SELECT 1
+			FROM  TB_RDRECORD
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND   record_take_seq = #updateRecordTakeSeq:VARCHAR#
+			AND A.record_center_id = record_center_id
+			AND A.folder_id = folder_id
+			)
+	</update>
+
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (update 기록물철의 건정보 갱신)
+	 -->
+	<update id="updateRegTakeRegDclssfyFolderRecordInfoAll" parameterClass="rms.take.regTake.domain.TkRecord">
+		UPDATE TB_RDFOLDER A
+		SET  A.folder_size = NVL((SELECT SUM(B.record_size)
+		                          FROM  TB_RDRECORD B
+		                          WHERE B.record_center_id = A.record_center_id
+		                          AND   B.folder_id = A.folder_id),0)
+		    , A.record_tot_page_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(TO_NUMBER(B.record_page_cnt))),6,'0')
+		                                   FROM  TB_RDRECORD B
+		                                   WHERE B.record_center_id = A.record_center_id
+		                                   AND   B.folder_id = A.folder_id),'000000')
+		    , A.record_reg_cnt = NVL((SELECT LPAD(TO_CHAR(COUNT(1)),6,'0')
+		                              FROM  TB_RDRECORD B
+		                              WHERE B.record_center_id = A.record_center_id
+		                              AND   B.folder_id = A.folder_id),'000000')
+		    , A.efile_cnt = NVL((SELECT LPAD(TO_CHAR(SUM(B.attach_cnt)),6,'0')
+		                     FROM  TB_RDRECORD B
+		                     WHERE B.record_center_id = A.record_center_id
+		                     AND   B.folder_id = A.folder_id),'000000')
+			, A.erecord_flag = DECODE((SELECT SUM(DECODE (B.erecord_flag, '1', 1, 0))
+			                           FROM  TB_RDRECORD B
+			                           WHERE B.record_center_id = A.record_center_id
+			                           AND   B.folder_id = A.folder_id),0,'2'
+									   , DECODE((SELECT SUM(DECODE (B.erecord_flag, '2', 1, 0))
+				                                 FROM  TB_RDRECORD B
+				                                 WHERE B.record_center_id = A.record_center_id
+				                                 AND   B.folder_id = A.folder_id),0,'1','3'))
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_id = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (update 기록물철 등록완료 시 바이러스검사 정상완료처리)
+	 -->
+	<update id="updateRegTakeRegDclssfyFolderVaccineCommitList" parameterClass="rms.take.regTake.domain.TkFolder">
+		UPDATE TB_RDFOLDER
+		SET   virus_flag = '0'
+		    , virus_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#		
+		<!-- AND   folder_take_seq = #folderTakeSeq:VARCHAR# -->
+	</update>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (update 기록물철 등록완료)
+	 -->
+	<update id="updateRegTakeRegDclssfyFolderFinList" parameterClass="rms.take.regTake.domain.TkFolder">
+		UPDATE TB_RDFOLDER
+		SET   folder_keep_state_cd = '01'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#
+		<!-- AND   folder_take_seq = #folderTakeSeq:VARCHAR# -->		
+	</update>
+	
+	<!-- 
+		비밀해제기록물 기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (SELECT 기록물건 상세 조회-본문파일)
+	 -->
+	<select id="findRegTakeRegDclssfyRecordAttachFileMain" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="regTakeRegRecordAttachFile-result">
+		SELECT A.record_center_id
+		     , A.record_take_seq
+		     , A.attach_file_type
+		     , A.reg_seq
+		     , A.doc_type_cd
+		     , A.file_nm
+		     , '' AS attach_file_path
+		FROM  TB_RDATTACHFILE A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+		AND   A.doc_type_cd = '01'
+	</select>
+
+
+	<!-- 
+		기록물인수>등록인수>기록물등록>비밀해제기록물 등록 (SELECT 기록물건 상세 조회-첨부파일)
+	 -->
+	<select id="findRegTakeRegDclssfyRecordAttachFileSub" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="regTakeRegRecordAttachFile-result">
+		SELECT A.record_center_id
+		     , A.record_take_seq
+		     , A.attach_file_type
+		     , A.reg_seq
+		     , A.doc_type_cd
+		     , A.file_nm
+		     , '' AS attach_file_path
+		FROM  TB_RDATTACHFILE A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+		AND   A.doc_type_cd = '02'
+		ORDER BY A.reg_seq
+	</select>
+	
+	<!-- 
+		비밀해제기록물 기록물철이 가진 첨불파일의 수량 조회
+	 -->
+	<select id="findDclssfyAttachFileYn" parameterClass="rms.take.regTake.domain.TkFolder" resultClass="int">
+		SELECT COUNT(1) 
+		FROM TB_RDATTACHFILE Z
+		<!--cubrid WHERE (record_center_id, record_take_seq) 
+		IN (
+			SELECT record_center_id, record_take_seq -->
+		WHERE 
+		EXISTS (
+			SELECT 1
+			FROM TB_RDRECORD 
+			WHERE record_center_id = #recordCenterId:VARCHAR# 
+			AND folder_id = #folderId:VARCHAR#
+<!-- 			AND folder_take_seq = #folderTakeSeq:VARCHAR# -->
+                        <!--cubrid-->
+                        AND record_center_id = Z.record_center_id
+                        AND record_take_seq = Z.record_take_seq
+		   )
+	</select>
+	
+	<!-- 비밀해제기록물 기록물건 일괄등록 중 발생한 오류를 저장한 엑셀파일 조회 -->
+	<resultMap id="findRegTakeBatchRegDclssfyRecordErrorXls-result" class="java.util.HashMap">
+		<result property="fileNm" 			column="file_nm"/>
+		<result property="fileKey" 			column="file_key"/>
+	</resultMap>
+	<select id="findRegTakeBatchRegDclssfyRecordErrorXls" parameterClass="rms.take.regTake.domain.TkRecord" resultMap="findRegTakeBatchRegDclssfyRecordErrorXls-result">
+		SELECT file_nm
+			, file_key
+		FROM TB_ZZREQEXCELLIST
+		WHERE REQ_USER_ID = #reqUserId:VARCHAR#
+		AND REQ_MENU_ID = #menuId:VARCHAR#
+		AND REQ_INDEX = #reqIndex:VARCHAR#
+	</select>		
+	
+	<!-- 비밀해제기록물 기록물건 일괄등록 -->
+	<insert id="createRegTakeBatchRegDclssfyRecord" parameterClass="rms.take.regTake.domain.TkRecord">
+   		INSERT INTO TB_RDRECORD
+		(
+			record_center_id, record_id, record_take_seq, folder_id, take_yyyy, take_yyyy_sno
+			, clss_div_cd, clss_id, clss_nm, creat_sys_cd, org_cd
+			, creat_yyyy, creat_reg_dtime, org_title, title, sub_title, record_reg_div_cd
+			, record_detl_type_cd, record_size, record_page_cnt, duty_chrgr_nm, erecord_flag
+			, old_record_presv_term, open_div_cd, open_grade, part_open_rsn, open_limit_part
+			, recver, sender, folder_clss_no, spcl_record_type, orign_copy_flag
+			, new_div_cd, chng_flag, rjct_flag, doc_no, creat_sys_record_id
+			, reg_dtime, record_sumry, creat_reg_no
+			, dtch_reg_no, attach_cnt, record_sno, creat_user_id
+			, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm, creat_dtime
+			, secret_clss, secret_term, oper_read_range_cd, audvis_record_type, pic_ymd
+			, pic_area, main_user_nm, old_record_docno, old_record_creat_org_nm, record_clss_cd
+			, secret_resort_type_cd, secret_resort_dtime, secret_resort_rsn, secret_resort_dept_nm
+			, secret_resort_pos_rank, secret_resort_user_nm, secret_rels_record_presv_loc, prot_yn, secret_record_yn			
+		)
+		(
+			SELECT #recordCenterId:VARCHAR#, TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_RDRECORD_SQ01.nextval), 10, '0'), #recordTakeSeq:VARCHAR#, folder_id, take_yyyy, take_yyyy_sno
+			, clss_div_cd, clss_id, clss_nm, #creatSysCd:VARCHAR#, (SELECT org_cd FROM TB_RDFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND folder_id=#folderId:VARCHAR#)
+			, SUBSTR(#creatRegDtime:VARCHAR#,1,4), (#creatRegDtime:VARCHAR#||'090000'), #title:VARCHAR#, #title:VARCHAR#, #subTitle:VARCHAR#, #recordRegDivCd:VARCHAR#
+			, #recordDetlTypeCd:VARCHAR#, #recordSize#, #recordPageCnt:VARCHAR#, #dutyChrgrNm:VARCHAR#, #erecordFlag:VARCHAR#
+			, #oldRecordPresvTerm:VARCHAR#, #openDivCd:VARCHAR#, #openGrade:VARCHAR#, #partOpenRsn:VARCHAR#, #openLimitPart:VARCHAR#
+			, #recver:VARCHAR#, #sender:VARCHAR#, (SELECT org_cd||clss_id||creat_yyyy||folder_reg_seq||ho_no FROM TB_RDFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND folder_id=#folderId:VARCHAR#), #spclRecordType:VARCHAR#, #orignCopyFlag:VARCHAR#
+			, #newDivCd:VARCHAR#, #chngFlag:VARCHAR#, #rjctFlag:VARCHAR#, #docNo:VARCHAR#, #creatSysRecordId:VARCHAR#
+			, '', #recordSumry:CLOB#, LPAD(NVL((SELECT MAX(TO_NUMBER(NVL(C.creat_reg_no,0))) FROM TB_RDRECORD C WHERE C.record_center_id = #recordCenterId:VARCHAR# AND   C.creat_sys_cd = #creatSysCd:VARCHAR# AND   C.org_cd = (SELECT org_cd FROM TB_RDFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND folder_id=#folderId:VARCHAR#) AND C.creat_yyyy = SUBSTR(#creatRegDtime:VARCHAR#,1,4)),0)+ROWNUM,13,'0')
+			, #dtchRegNo:VARCHAR#, #attachCnt#, #recordSno#, #creatUserId:VARCHAR#
+			, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#, #creatDtime:VARCHAR#||'090000'
+			, #secretClss:VARCHAR#, #secretTerm:VARCHAR#, #operReadRangeCd:VARCHAR#, #audvisRecordType:VARCHAR#, #picYmd:VARCHAR#
+			, #picArea:VARCHAR#, #mainUserNm:VARCHAR#, #oldRecordDocno:VARCHAR#, #oldRecordCreatOrgNm:VARCHAR#, #recordClssCd:VARCHAR#
+			, #secretResortTypeCd:VARCHAR#, #secretResortDtime:VARCHAR#, #secretResortRsn:VARCHAR#, #secretResortDeptNm:VARCHAR#
+			, #secretResortPosRank:VARCHAR#, #secretResortUserNm:VARCHAR#, #secretRelsRecordPresvLoc:VARCHAR#, #protYn:VARCHAR#, 'Y'
+	      FROM TB_RDFOLDER 
+	      WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	      AND FOLDER_ID = #folderId:VARCHAR#							
+		)		
+	</insert>
+	
+		
+
+</sqlMap>

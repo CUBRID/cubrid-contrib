@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.unitMng">
+	<resultMap id="stnd-notifile-result" class="rms.stnd.unitMng.domain.UnitNotiFile" >
+		<result property="lrgNm" 			column="LRG_NM"/>	
+		<result property="midNm" 			column="MID_NM"/>	
+		<result property="smlNm" 			column="SML_NM"/>	
+		<result property="unitNm" 			column="UNIT_NM"/>	
+		<result property="presvTermNm" 		column="PRESV_TERM_NM"/>
+		<result property="unitDescr" 		column="UNIT_DESCR"/>	
+		<result property="unitCd" 		    column="UNIT_CD"/>
+	</resultMap>
+	
+	<resultMap id="stnd-chrgorg-result" class="rms.stnd.unitMng.domain.UnitNotiFile" >
+		<result property="orgCd" 					column="ORG_CD"/>
+		<result property="orgNm" 					column="ORG_NM"/>
+	</resultMap>
+	
+	<resultMap id="stnd-findnotifile-result" class="rms.stnd.unitMng.domain.UnitNotiFile" >
+		<result property="recordCenterId"			column="RECORD_CENTER_ID"/>
+		<result property="infoFileId"		        column="INFO_FILE_ID"/>
+	</resultMap>
+	
+	<resultMap id="stnd-recordclssnoti-result" class="rms.stnd.unitMng.domain.UnitNotiFile" >
+		<result property="notiYyyy"			column="NOTI_YYYY"/>
+		<result property="infoFileId"		column="INFO_FILE_ID"/>
+	</resultMap>
+
+    <!-- 
+		SELECT(고시파일을 만들기 위한 조회)
+	 -->
+	<select id="findCurUnitList" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile" resultMap="stnd-notifile-result">
+		SELECT LRG_NM, 
+			   MID_NM, 
+			   SML_NM,
+			   (SELECT COM_CD_NM
+		            FROM TB_ZZCOMCD
+		           WHERE COM_TYPE_CD = 'RD07'
+		             AND USE_FLAG = '1'
+		             AND COM_CD = PRESV_TERM_CD) PRESV_TERM_NM,
+			   UNIT_NM,
+			   UNIT_DESCR,
+			   A.UNIT_CD
+		FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST C
+		WHERE A.PRESVTERM_STATE_CD = '2'
+		 AND  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		 AND  A.UNIT_CD = C.UNIT_CD
+		 AND  SUBSTR(C.NARS_CHECK_YMD,1,4) = TO_CHAR(SYSDATE, 'YYYY')
+	</select>
+	
+	<!-- 
+		SELECT(소관부서 조회)
+	 -->
+	<select id="findChrgOrg" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile" resultMap="stnd-chrgorg-result">
+		SELECT ORG_CD, ORG_NM 
+		FROM TB_STORG 
+		WHERE ORG_CD IN (SELECT ORG_CD FROM TB_ZZORGUNIT WHERE UNIT_CD = #unitCd:VARCHAR# ) AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	<!-- 
+		UPDATE(고시파일 수정)
+	 -->
+	<update id="updateNotiFile" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile">
+	    UPDATE TB_ZZRECORDCLSSNOTI SET NOTI_FILE_NM=#notiFileNm:VARCHAR#
+	    ,INFO_FILE_ID=#infoFileId:VARCHAR#
+	    ,NOTI_USER_ID=#notiUserId:VARCHAR#
+	    ,NOTI_YMD=#notiYmd:VARCHAR#
+	    WHERE NOTI_YYYY=#notiYyyy:VARCHAR#
+	    AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE(고시파일 수정)
+	 -->
+	<select id="findNotiFile" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile" resultMap="stnd-findnotifile-result">
+	    SELECT RECORD_CENTER_ID,INFO_FILE_ID
+	    FROM TB_ZZRECORDCLSSNOTI
+	    WHERE NOTI_YYYY=#notiYyyy:VARCHAR#
+	    AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		CREATE (고시파일 등록)
+	 -->
+	<insert id="createNotiFile" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile">
+		INSERT INTO TB_ZZRECORDCLSSNOTI(NOTI_YYYY, NOTI_FILE_NM, INFO_FILE_ID, NOTI_USER_ID, NOTI_YMD, RECORD_CENTER_ID) 
+		VALUES (#notiYyyy# ,#notiFileNm#, #infoFileId#, #notiUserId#, #notiYmd#, #recordCenterId#)
+	</insert>
+	
+	<!-- 
+		SELECT (고시파일 조회)
+	 -->
+	<select id="isNotiFile" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile" resultClass="string">
+	    SELECT count(1)
+	    FROM TB_ZZRECORDCLSSNOTI
+	    WHERE NOTI_YYYY=#notiYyyy:VARCHAR#
+	    AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</select>		
+	<!-- 
+		SELECT
+	 -->
+	<select id="findNotiList" parameterClass="rms.stnd.unitMng.domain.UnitNotiFile" resultMap="stnd-recordclssnoti-result">
+		SELECT NOTI_YYYY,INFO_FILE_ID
+		FROM TB_ZZRECORDCLSSNOTI
+		WHERE NOTI_YYYY = #notiYyyy:VARCHAR#
+		AND RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	</select>
+
+</sqlMap>

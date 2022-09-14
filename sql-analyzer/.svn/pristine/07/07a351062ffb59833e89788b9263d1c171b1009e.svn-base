@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.confset">
+
+	<!-- 
+		환경설정 포맷변환서버관리 인증서 관리 서버용 인증서 정보를 조회한다.
+	 -->
+	<resultMap id="findSerFormatPki-result" class="rms.sys.confset.domain.FormatPki">
+		<result property="seq"					column="seq"/>
+		<result property="issuer"				column="issuer"/>
+		<result property="pki"					column="pki"/>
+		<result property="pkiUsg"				column="pki_usg"/>
+		<result property="validityDateFrom"		column="validity_date_from"/>
+		<result property="validityDateTo"		column="validity_date_to"/>
+		<result property="creatUserId"			column="creat_user_id"/>
+		<result property="creatUserNm"			column="creat_user_nm"/>
+		<result property="creatUserOrgCd"		column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm"		column="creat_user_org_nm"/>
+		<result property="regFlag"				column="reg_flag"/>
+		<result property="regDtime"				column="reg_dtime"/>
+	</resultMap>
+	<select id="findSerFormatPki" parameterClass="rms.sys.confset.domain.FormatPki" resultMap="findSerFormatPki-result">
+		SELECT	seq
+			, issuer
+			, pki
+			, pki_usg
+			, validity_date_from
+			, validity_date_to
+			, creat_user_id
+			, creat_user_nm
+			, creat_user_org_cd
+			, creat_user_org_nm
+			, reg_flag
+			, reg_dtime
+		FROM	TB_STFORMATPKI
+		WHERE	pki_usg = 'svr'
+	</select>
+	
+	<!-- 
+		환경설정 포맷변환서버관리 인증서 관리 기관용 인증서 정보를 조회한다.
+	 -->
+	<resultMap id="findOrgFormatPki-result" class="rms.sys.confset.domain.FormatPki">
+		<result property="seq"					column="seq"/>
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="recordCenterCd"		column="record_center_cd"/>
+		<result property="recordCenterNm"		column="record_center_nm"/>
+		<result property="repOrgCd"				column="rep_org_cd"/>
+		<result property="issuer"				column="issuer"/>
+		<result property="pki"					column="pki"/>
+		<result property="pkiUsg"				column="pki_usg"/>
+		<result property="validityDateFrom"		column="validity_date_from"/>
+		<result property="validityDateTo"		column="validity_date_to"/>
+		<result property="creatUserId"			column="creat_user_id"/>
+		<result property="creatUserNm"			column="creat_user_nm"/>
+		<result property="creatUserOrgCd"		column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm"		column="creat_user_org_nm"/>
+		<result property="regFlag"				column="reg_flag"/>
+		<result property="regDtime"				column="reg_dtime"/>
+	</resultMap>
+	<select id="findOrgFormatPki" parameterClass="rms.sys.confset.domain.FormatPki" resultMap="findOrgFormatPki-result">
+		SELECT	record_center_id
+			, record_center_cd
+			, record_center_nm
+			, rep_org_cd
+			, (SELECT seq FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') seq
+			, (SELECT pki_usg FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') pki_usg
+			, (SELECT reg_flag FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') reg_flag
+			, (SELECT issuer FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') issuer
+			, (SELECT pki FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') pki
+			, (SELECT creat_user_id FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_id
+			, (SELECT creat_user_nm FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_nm
+			, (SELECT creat_user_org_cd FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_org_cd
+			, (SELECT creat_user_org_nm FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_org_nm
+			, (SELECT reg_dtime FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') reg_dtime
+			, (SELECT validity_date_from FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') validity_date_from
+			, (SELECT validity_date_to FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') validity_date_to
+		FROM    TB_STRECORDCENTER A
+		ORDER BY record_center_cd
+	</select>
+	
+	<!-- 
+		포맷변환서버관리_인증서관리
+		: 포맷변환서버 기관용인증서를 등록한다.
+	 -->
+	<insert id="createFormatOrgPKI" parameterClass="rms.sys.confset.domain.FormatPki">
+		INSERT INTO TB_STFORMATPKI (
+			seq, record_center_id, pki, pki_usg, validity_date_from
+		   ,validity_date_to, reg_flag, creat_user_id, creat_user_nm, creat_user_org_cd
+		   ,creat_user_org_nm, reg_dtime, record_center_cd, record_center_nm
+		)
+		VALUES (
+			TB_STFORMATPKI_SQ01.nextVal, #recordCenterId:VARCHAR#, #pki:VARCHAR#, #pkiUsg:VARCHAR#, #validityDateFrom:VARCHAR#
+		   ,#validityDateTo:VARCHAR#, 'Y', #creatUserId:VARCHAR#, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#
+		   ,(SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = #creatUserRecordCenterId:VARCHAR# AND B.org_cd = #creatUserOrgCd:VARCHAR#), TO_CHAR(SYSDATE, 'YYYYMMDD'), #recordCenterCd:VARCHAR#, (SELECT record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_cd = #recordCenterCd:VARCHAR#)
+		)
+	</insert>
+	
+	<!-- 
+		포맷변환서버관리_인증서관리
+		: 포맷변환서버 서버용인증서를 등록한다.	
+	 -->
+	<insert id="createFormatSvrPKI" parameterClass="rms.sys.confset.domain.FormatPki">
+		INSERT INTO TB_STFORMATPKI (
+			seq, pki, pki_usg, validity_date_from, validity_date_to, reg_flag, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, reg_dtime
+		)
+		VALUES (
+			TB_STFORMATPKI_SQ01.nextVal, #pki:VARCHAR#, #pkiUsg:VARCHAR#, #validityDateFrom:VARCHAR#, #validityDateTo:VARCHAR#, 'Y', #creatUserId:VARCHAR#,
+			#creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#,
+			(SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = #creatUserRecordCenterId:VARCHAR# AND B.org_cd = #creatUserOrgCd:VARCHAR#),
+			TO_CHAR(SYSDATE, 'YYYYMMDD')
+		)
+	</insert>
+	
+	<!-- 
+		포맷변환서버관리_인증서관리
+		: 포맷변환서버 기관용인증서를 교체한다.
+	 -->
+	<update id="updateFormatOrgPKI" parameterClass="rms.sys.confset.domain.FormatPki">
+		UPDATE 	TB_STFORMATPKI
+		SET		pki = #pki:VARCHAR#, record_center_id = #recordCenterId:VARCHAR#, 
+				validity_date_from = #validityDateFrom:VARCHAR#, validity_date_to = #validityDateTo:VARCHAR#,
+				creat_user_id = #creatUserId:VARCHAR#, creat_user_nm = #creatUserNm#, creat_user_org_cd = #creatUserOrgCd:VARCHAR#,
+				creat_user_org_nm = (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = #creatUserRecordCenterId:VARCHAR# AND B.org_cd = #creatUserOrgCd:VARCHAR#),
+				reg_dtime = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		WHERE	seq = #seq:VARCHAR#
+		AND		record_center_cd = #recordCenterCd:VARCHAR#
+		<!-- 2016.06.02 수정 by kkj -->
+		AND		record_center_id = #recordCenterId:VARCHAR#  
+		<!-- AND		record_center_id = #creatUserRecordCenterId:VARCHAR# -->
+	</update>
+	
+	<!-- 
+		포맷변환서버관리_인증서관리
+		: 포맷변환서버 서버용인증서를 교체한다.
+	 -->
+	<update id="updateFormatSvrPKI" parameterClass="rms.sys.confset.domain.FormatPki">
+		UPDATE 	TB_STFORMATPKI
+		SET		pki = #pki:VARCHAR#, validity_date_from = #validityDateFrom:VARCHAR#, validity_date_to = #validityDateTo:VARCHAR#,
+				creat_user_id = #creatUserId:VARCHAR#, creat_user_nm = #creatUserNm#, creat_user_org_cd = #creatUserOrgCd:VARCHAR#,
+				creat_user_org_nm = (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = #creatUserRecordCenterId:VARCHAR# AND B.org_cd = #creatUserOrgCd:VARCHAR#),
+				reg_dtime = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		WHERE	seq = #seq:VARCHAR#
+	</update>
+	
+	<!-- 
+		포맷변환서버관리_인증서관리
+		: 포맷변환서버 인증서 이력정보를 등록한다.	
+	 -->
+	<insert id="createFormatPKIHist" parameterClass="rms.sys.confset.domain.FormatPki">
+		INSERT INTO TB_STFORMATPKIHIST (
+			seq, record_center_id, pki, pki_usg, validity_date_from, validity_date_to, creat_user_id, creat_user_nm,
+			creat_user_org_cd, creat_user_org_nm, reg_dtime, record_center_cd, record_center_nm
+		)
+		VALUES (
+			TB_STFORMATPKIHIST_SQ01.nextVal, #recordCenterId:VARCHAR#, #pki:VARCHAR#, #pkiUsg:VARCHAR#, #validityDateFrom:VARCHAR#, #validityDateTo:VARCHAR#, #creatUserId:VARCHAR#,
+			#creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = #creatUserRecordCenterId:VARCHAR# AND B.org_cd = #creatUserOrgCd:VARCHAR#), TO_CHAR(SYSDATE, 'YYYYMMDD'),
+			#recordCenterCd:VARCHAR#, (SELECT record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_cd = #recordCenterCd:VARCHAR#)
+		) 
+	</insert>
+	
+	<!-- 
+		포맷변환서버관리_인증서관리
+		: 포맷변환서버 인증서 이력정보를 조회한다.	
+	 -->
+	<resultMap id="findFormatPKIHist-result" class="rms.sys.confset.domain.FormatPki">
+		<result property="rnum"					column="RNUM"/>
+		<result property="seq"					column="seq"/>
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="pki"					column="pki"/>
+		<result property="pkiUsg"				column="pki_usg"/>
+		<result property="recordCenterCd"		column="record_center_cd"/>
+		<result property="recordCenterNm"		column="record_center_nm"/>
+		<result property="repOrgCd"				column="rep_org_cd"/>
+		<result property="validityDateFrom"		column="validity_date_from"/>
+		<result property="validityDateTo"		column="validity_date_to"/>
+		<result property="creatUserId"			column="creat_user_id"/>
+		<result property="creatUserNm"			column="creat_user_nm"/>
+		<result property="creatUserOrgCd"		column="creat_user_org_cd"/>
+		<result property="creatUserOrgNm"		column="creat_user_org_nm"/>
+		<result property="regDtime"				column="reg_dtime"/>
+	</resultMap>
+	<select id="countFormatPKIHist" parameterClass="rms.sys.confset.domain.FormatPki" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STFORMATPKIHIST A
+		WHERE A.pki_usg = #pkiUsg:VARCHAR#
+		<dynamic prepend="AND">
+		    <isNotEmpty prepend="AND" property="recordCenterCd">
+		        A.record_center_cd = #recordCenterCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="recordCenterId">
+		        A.record_center_id = #recordCenterId:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+		ORDER BY seq
+	</select>
+	<select id="findFormatPKIHist" parameterClass="rms.sys.confset.domain.FormatPki" resultMap="findFormatPKIHist-result">
+		SELECT ROWNUM AS rnum
+			  ,seq
+		      ,record_center_id
+		      ,record_center_cd
+		      ,record_center_nm
+		      <isNotEmpty prepend="," property="recordCenterCd">
+		          (SELECT rep_org_cd FROM TB_STRECORDCENTER B WHERE B.record_center_cd = A.record_center_cd) rep_org_cd
+		      </isNotEmpty>
+		      <isEmpty prepend="," property="recordCenterCd">
+		          rep_org_cd
+		      </isEmpty>
+		      ,pki
+		      ,pki_usg
+		      ,validity_date_from
+		      ,validity_date_to
+		      ,creat_user_id
+		      ,creat_user_nm
+		      ,creat_user_org_cd
+		      ,creat_user_org_nm
+		      ,reg_dtime
+		FROM TB_STFORMATPKIHIST A
+		WHERE A.pki_usg = #pkiUsg:VARCHAR#
+		<dynamic prepend="AND">
+		    <isNotEmpty prepend="AND" property="recordCenterCd">
+		        A.record_center_cd = #recordCenterCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="recordCenterId">
+		        A.record_center_id = #recordCenterId:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+		ORDER BY seq
+	</select>
+	
+	
+	
+	
+	<!-- 포맷변환서버분배율 	-->
+	<!-- 환경설정 포맷변환서버관리 포맷변환서버분배율 기록관별 분배율을 조회한다. -->
+	<resultMap id="findRcrateList-result"  class="rms.sys.confset.domain.RecordCenter" >
+		<result property="recordCenterId"		column="record_center_id"></result>
+		<result property="recordCenterCd"		column="record_center_cd"></result>
+		<result property="recordCenterNm"		column="record_center_nm"></result>
+		<result property="rcrate"	            column="rcrate"></result>
+	</resultMap>
+	<select id="findRcrateList" resultMap="findRcrateList-result">
+		SELECT B.record_center_id
+			, B.RECORD_CENTER_CD
+			, B.RECORD_CENTER_NM
+			, NVL(A.RECORD_CENTER_RATE,0) as rcrate
+		FROM tb_strecordcenter B
+		LEFT OUTER JOIN TB_STWFLBRCRATE A
+		ON B.record_center_id = A.record_center_id
+		ORDER BY B.record_center_id
+	</select>
+
+	<!-- 
+		포맷변환서버관리_포맷변환서버분배율
+		: 포맷변환서버분배율 등록여부를 체크한다.
+	 -->
+	<select id="countRcRate" parameterClass="rms.sys.confset.domain.RecordCenter" resultClass="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM TB_STWFLBRCRATE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		포맷변환서버관리_포맷변환서버분배율
+		: 포맷변환서버분배율을 등록한다.
+	 -->
+	<insert id="createRcRate" parameterClass="rms.sys.confset.domain.RecordCenter">
+		INSERT INTO TB_STWFLBRCRATE
+			(record_center_id, record_center_rate)
+		VALUES 
+			(#recordCenterId:VARCHAR#, #rcrate:INT#)
+	</insert>
+	
+	<!-- 
+		포맷변환서버관리_포맷변환서버분배율
+		: 포맷변환서버분배율을 수정한다.
+	 -->
+	<update id="updateRcRate" parameterClass="rms.sys.confset.domain.RecordCenter">
+		UPDATE TB_STWFLBRCRATE
+		 SET   RECORD_CENTER_RATE = #rcrate:INT#
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+
+	<!-- 파일 확장자 관리 -->
+	<!-- 환경설정 포맷변환서버관리 파일확장자관리 목록을 조회한다. -->
+	<resultMap id="findFileExtList-result"  class="rms.sys.confset.domain.FileExtMng" >
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="fileExt"				column="file_ext"/>
+		<result property="fileExtNm"			column="file_ext_nm"/>
+		<result property="fileExtDesc"	        column="file_ext_desc"/>
+		<result property="fileTransFlag"        column="file_trans_flag"/>
+		<result property="workUserId"	        column="work_user_id"/>
+	</resultMap>
+	<select id="findFileExtList" parameterClass="rms.sys.confset.domain.FileExtMng" resultMap="findFileExtList-result">
+		SELECT record_center_id
+			, file_ext
+			, file_ext_nm
+			, file_ext_desc
+			, file_trans_flag
+			, work_user_id
+		FROM TB_STFILEEXTMNG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		<dynamic prepend="AND">
+			<isNotEmpty property="fileTransFlag">
+				file_trans_flag = #fileTransFlag:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!--
+		포맷변환서버관리_파일확장자관리
+		: 포맷변환 가능여부를 수정한다. 
+	 -->
+	<update id="updateFileTransFlag" parameterClass="rms.sys.confset.domain.FileExtMng">
+		UPDATE TB_STFILEEXTMNG
+		SET  file_trans_flag = #layerFileTransFlag:VARCHAR#
+			,work_user_id = #workUserId:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   file_ext = #fileExt:VARCHAR#
+	</update>
+	
+	
+</sqlMap>

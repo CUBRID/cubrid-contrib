@@ -1,0 +1,25 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeLinkTrgtOrg.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeLinkTrgtOrg.xml
+-- Query    : select
+-- Query Id : findTreeLinkTrgtList
+
+		SELECT DISTINCT '::'||NVL(link_trgt_id,'0000000')||'::'||NVL(link_trgt_id,'0000000') AS id			, NVL(link_trgt_nm,'πÃ¡ˆ¡§') AS text		    , (CASE WHEN link_trgt_id = 'L000001' THEN 'open'		    	    ELSE 'closed' END) AS state		    , 'icon-search' AS iconCls		FROM TB_STLINKTRGT		ORDER BY text	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeLinkTrgtOrg.xml
+-- Query    : select
+-- Query Id : findTreeLinkTrgtOrg
+
+		SELECT A.link_trgt_id AS linkTrgtId			, A.record_center_id||'::'||A.org_cd||'::'||A.link_trgt_id AS id			, A.org_abbr_nm AS text			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'					ELSE 'open'				END) AS state 			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'					ELSE 'icon-folder_full_accept'				END) AS iconCls		FROM TB_STORG A		WHERE A.link_trgt_id = '1'		 AND 			A.record_center_id = '1'		  AND 			A.upper_org_cd = '1'		 		ORDER BY A.record_center_id, A.levl, A.org_seq	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeLinkTrgtOrg.xml
+-- Query    : select
+-- Query Id : findTreeOrgLinkTrgt
+
+		SELECT A.record_center_id AS recordCenterId			, A.record_center_id||'::'||A.org_cd||'::'||A.link_trgt_id AS id			, A.org_abbr_nm AS text			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'					ELSE 'open'				END) AS state 			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'					ELSE 'icon-folder_full_accept'				END) AS iconCls		FROM TB_STORG A WHERE  				A.record_center_id = '1'			  AND 				A.record_center_id = '1'			  AND 				A.upper_org_cd = '1'			  		ORDER BY A.record_center_id, A.levl, A.org_seq	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeLinkTrgtOrg.xml

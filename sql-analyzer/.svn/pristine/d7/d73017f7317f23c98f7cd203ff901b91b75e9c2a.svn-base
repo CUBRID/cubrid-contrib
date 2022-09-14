@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="mainNotice">
+
+	<resultMap id="notice-doc-result" class="rms.common.main.domain.NoticeDoc" >
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userId" 			column="USER_ID"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+		<result property="notiTitle" 		column="NOTI_TITLE"/>
+		<result property="notiCont" 		column="NOTI_CONT"/>
+	</resultMap>
+	<!-- 
+		메인화면의 공지사항 목록을 조회한다.
+	 -->
+	<select id="mainNoticeDocList" parameterClass="rms.common.main.domain.NoticeDoc" resultMap="notice-doc-result">
+		SELECT /*+ index_desc (TB_STNOTI TB_STNOTI_PK) */
+			  board_sno,record_center_id, noti_title, noti_cont
+			, user_nm,user_id, SUBSTR(reg_dtime, 0, 8) reg_dtime
+		FROM TB_STNOTI
+		<![CDATA[
+			WHERE ROWNUM <='3'
+		]]>
+	</select>
+	
+	<!-- 
+		공지사항 목록을 조회한다.
+	 -->
+	<resultMap id="findNoticeDocPagedList-result" class="rms.common.main.domain.NoticeDoc">
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userId" 			column="USER_ID"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+		<result property="notiTitle" 		column="NOTI_TITLE"/>
+		<result property="notiCont" 		column="NOTI_CONT"/>
+	</resultMap>
+	<select id="countNoticeDocPagedList" parameterClass="rms.common.main.domain.NoticeDoc" resultClass="java.lang.Long">
+	  	SELECT COUNT(1)
+        FROM TB_STNOTI
+        <dynamic prepend="WHERE">
+            <isNotEmpty property="notiTitle">
+                <isEqual property="searchType" compareValue="1">
+                    NOTI_TITLE LIKE #notiTitle#
+                </isEqual>
+                <isEqual property="searchType" compareValue="2">
+                    (NOTI_TITLE LIKE #notiTitle:VARCHAR# OR NOTI_CONT LIKE #notiTitle:VARCHAR#)
+                </isEqual>
+                <isEqual property="searchType" compareValue="3">
+                    (NOTI_TITLE LIKE #notiTitle:VARCHAR# OR NOTI_CONT LIKE #notiTitle:VARCHAR# OR USER_NM LIKE #notiTitle:VARCHAR#)
+                </isEqual>
+            </isNotEmpty>    
+        </dynamic>
+	</select>
+	<select id="findNoticeDocPagedList" parameterClass="rms.common.main.domain.NoticeDoc" resultMap="findNoticeDocPagedList-result">
+		SELECT C.board_sno
+		      ,C.record_center_id
+		      ,C.user_nm
+		      ,C.user_id
+		      ,SUBSTR(C.reg_dtime, 0, 8) AS reg_dtime
+		      ,C.noti_title
+		      ,C.noti_cont
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT *
+		            FROM TB_STNOTI
+		            <dynamic prepend="WHERE">
+		                <isNotEmpty property="notiTitle">
+		                    <isEqual property="searchType" compareValue="1">
+		                        NOTI_TITLE LIKE #notiTitle#
+		                    </isEqual>
+		                    <isEqual property="searchType" compareValue="2">
+		                        (NOTI_TITLE LIKE #notiTitle:VARCHAR# OR NOTI_CONT LIKE #notiTitle:VARCHAR#)
+		                    </isEqual>
+		                    <isEqual property="searchType" compareValue="3">
+		                        (NOTI_TITLE LIKE #notiTitle:VARCHAR# OR NOTI_CONT LIKE #notiTitle:VARCHAR# OR USER_NM LIKE #notiTitle:VARCHAR#)
+		                    </isEqual>
+		                </isNotEmpty>    
+		            </dynamic>
+		            ORDER BY BOARD_SNO DESC
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+
+	<!-- 
+		공지사항을 등록한다.
+	 -->
+	<insert id="createNoticeDoc" parameterClass="rms.common.main.domain.NoticeDoc">
+		INSERT INTO TB_STNOTI(BOARD_SNO,RECORD_CENTER_ID,NOTI_TITLE,NOTI_CONT,USER_ID,USER_NM,FIND_CNT,REG_DTIME) 
+		VALUES(
+			<!--cubrid #boardSno#, #recordCenterId#, #notiTitle#, #notiCont#, #userId#,#userNm#, 0, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			#boardSno#, #recordCenterId#, #notiTitle#, #notiCont#, #userId#,#userNm#, 0, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		공지사항 순번을 조회한다.
+	 -->
+	<select id="findBoardSno" resultClass="java.lang.Integer">
+		SELECT tb_stnoti_sq01.nextval FROM DUAL
+	</select>
+	
+	<!-- 
+		공지사항 첨부파일을 등록한다.
+	 -->
+	<insert id="createNoticeUploadDoc" parameterClass="rms.common.main.domain.NoticeDoc">
+		INSERT INTO tb_stattachfile
+		(BOARD_SNO,ATTACH_FILE_SNO,BOARD_DIV,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,RECORD_CENTER_ID,REG_USER_ID,REG_DTIME) 
+		<!--cubrid VALUES(#boardSno#,#attachFileSno#,#boardDiv#,#attachFileNm#,#fileSize#,#storePath#,#storeFileNm#,#recordCenterId#,#userId#,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'))-->
+		VALUES(#boardSno#,#attachFileSno#,#boardDiv#,#attachFileNm#,#fileSize#,#storePath#,#storeFileNm#,#recordCenterId#,#userId#,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))
+	</insert>
+	
+	<!-- 
+		공지사항 상세를 조회한다.
+	 -->
+	<resultMap id="findNoticeDocDetail-result" class="rms.common.main.domain.NoticeDoc">
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userId" 			column="USER_ID"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+		<result property="notiTitle" 		column="NOTI_TITLE"/>
+		<result property="notiCont" 		column="NOTI_CONT"/>
+	</resultMap>
+	<select id="findNoticeDocDetail" parameterClass="rms.common.main.domain.NoticeDoc" resultMap="findNoticeDocDetail-result">
+		SELECT BOARD_SNO,NOTI_TITLE,NOTI_CONT,RECORD_CENTER_ID,USER_NM,USER_ID,REG_DTIME
+		FROM TB_STNOTI
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="boardSno">
+				BOARD_SNO = #boardSno:NUMBER#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		공지사항 첨부파일을 조회한다.
+	 -->
+	<resultMap id="findNoticeDocFile-result" class="rms.common.main.domain.NoticeDoc" >
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="userId" 			column="REG_USER_ID"/>
+		<result property="boardDiv" 		column="BOARD_DIV"/>
+		<result property="attachFileSno" 	column="ATTACH_FILE_SNO"/>
+		<result property="attachFileNm" 	column="ATTACH_FILE_NM"/>
+		<result property="fileSize" 		column="FILE_SIZE"/>
+		<result property="storePath" 		column="STORE_PATH"/>
+		<result property="storeFileNm" 		column="STORE_FILE_NM"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+	</resultMap>
+	<select id="findNoticeDocFile" parameterClass="rms.common.main.domain.NoticeDoc" resultMap="findNoticeDocFile-result">
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME
+		FROM TB_STATTACHFILE
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		<isNotEmpty prepend="AND" property="attachFileSno">
+			<isNotEqual property="attachFileSno" compareValue="0">
+				ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+			</isNotEqual>
+		</isNotEmpty>
+		AND BOARD_DIV ='1'
+	</select>
+	
+	<!-- 
+		공지사항을 수정한다.
+	 -->
+	<update id="updateNoticeDoc" parameterClass="rms.common.main.domain.NoticeDoc">
+		 UPDATE TB_STNOTI 
+		 SET   NOTI_TITLE = #notiTitle:VARCHAR#
+		 	  ,NOTI_CONT  = #notiCont:VARCHAR# 
+		 WHERE BOARD_SNO  = #boardSno:NUMBER#
+	</update>
+
+	<!-- 
+		공지사항 첨부파일의 최종 순번을 조회한다.
+	 -->
+	<select id="findAttachFileMaxSno" parameterClass="rms.common.main.domain.NoticeDoc" resultClass="java.lang.Integer">
+		SELECT NVL(MAX(attach_file_sno), 0) FROM TB_STATTACHFILE WHERE BOARD_SNO = #boardSno:NUMBER# AND BOARD_DIV ='1'
+	</select>
+	
+	<!-- 
+		공지사항 첨부파일을 삭제한다.
+	 -->	
+	<delete id="deleteNoticeDocFile" parameterClass="rms.common.main.domain.NoticeDoc">
+		DELETE FROM TB_STATTACHFILE 
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		<isNotEmpty prepend="AND" property="attachFileSno">
+			<isNotEqual property="attachFileSno" compareValue="0">
+				ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+			</isNotEqual>
+		</isNotEmpty> 
+		AND BOARD_DIV = '1'
+	</delete>
+	
+	<!-- 
+		공지사항을 삭제한다.
+	 -->
+	<delete id="deleteNoticeDoc" parameterClass="rms.common.main.domain.NoticeDoc">
+		DELETE FROM TB_STNOTI WHERE BOARD_SNO = #boardSno:NUMBER#
+	</delete>
+
+	<!-- 
+		공지사항 첨부파일을 조회한다.
+	 -->	
+	<select id="findNoticeDocDownloadFile" parameterClass="rms.common.main.domain.NoticeDoc" resultMap="findNoticeDocFile-result">
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME
+		FROM TB_STATTACHFILE
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		AND BOARD_DIV = #boardDiv:NUMBER#
+		AND ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+	</select>	
+</sqlMap>

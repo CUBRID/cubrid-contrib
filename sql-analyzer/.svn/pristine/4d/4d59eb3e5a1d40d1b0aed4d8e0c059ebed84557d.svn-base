@@ -1,0 +1,1410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.optidiskmst">
+
+	<!-- 
+		보존매체관리_보존매체파기
+		: 보존매체파기 목록을 조회한다.
+	 -->
+	<resultMap id="findOptihistPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskMst">
+		<result property="optidiskId" 		column="optidisk_id"		nullValue="" 	/>
+		<result property="optidiskTypeCd"	column="optidisk_type_cd"	nullValue="" 	/>
+		<result property="orgCd"			column="org_cd"				nullValue="" 	/>
+		<result property="orgNm"			column="org_nm"				nullValue="" 	/>
+		<result property="orgAbbrNm"		column="org_abbr_nm"		nullValue="" 	/>
+		<result property="creatYyyy"		column="creat_yyyy"			nullValue="" 	/>
+		<result property="presvTermCd"		column="presv_term_cd"		nullValue="" 	/>
+		<result property="presvTermNm"		column="presv_term_nm"		nullValue="" 	/>
+		<result property="optidiskYyyy"		column="optidisk_yyyy"		nullValue="" 	/>
+		<result property="folderCnt"		column="folder_cnt"			nullValue="0" 	/>
+		<result property="storeSize"		column="store_size"			nullValue="" 	/>
+		<result property="optidiskStateCd"	column="optidisk_state_cd"	nullValue=""	/>
+		<result property="optidiskStakrmId"	column="optidisk_stakrm_id"	nullValue=""	/>
+		<result property="optidiskBooksfId"	column="optidisk_booksf_id"	nullValue=""	/>
+		<result property="floorNo"			column="floor_no"			nullValue=""	/>
+		<result property="colNo"			column="col_no"				nullValue=""	/>
+		<result property="evalCnt"			column="eval_cnt"			nullValue="0"	/>
+		<result property="evalSize"			column="eval_size"			nullValue="0"	/>
+		<result property="disuseFlag"		column="disuse_flag"		nullValue="0"	/>
+		<result property="disuseYyyy"		column="disuse_yyyy"		nullValue=""  	/>
+		<result property="disuseYmd"		column="disuse_ymd"			nullValue=""  	/>
+		<result property="disuseRsn"		column="disuse_rsn"			nullValue="" 	/>
+		<result property="disuseUserId"		column="disuse_user_id"  	nullValue="" 	/>
+		<result property="splitTot"			column="split_tot"			nullValue="0" 	/>
+	</resultMap>
+	<select id="countOptihistPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskMst" resultClass="java.lang.Long">
+		<isEqual property="mediaDiv" compareValue="1"><!-- 광디스크 -->
+            SELECT COUNT(1)
+            FROM    TB_SROPTIDISK_MST M,
+                    ( SELECT  O.optidisk_id, O.record_center_id, COUNT(*) AS eval_cnt, SUM(O.store_size) AS eval_size
+                      FROM    TB_NKFOLDER F, TB_SROPTIHIST_FLD O
+                      WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+                      AND     F.record_center_id = O.record_center_id
+                      AND     F.folder_id = O.folder_id
+                      AND     F.folder_keep_state_cd in ('02', '03')
+                      <isNotEmpty property="disuseYyyy" prepend="AND">
+                            F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+                      </isNotEmpty>
+                      GROUP BY O.optidisk_id, O.record_center_id
+                      UNION    ALL
+                      SELECT  O.optidisk_id, O.record_center_id, COUNT(*) AS eval_cnt, SUM(O.store_size) AS eval_size
+                      FROM    TB_RDFOLDER F, TB_SROPTIHIST_FLD O
+                      WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+                      AND     F.record_center_id = O.record_center_id
+                      AND     F.folder_id = O.folder_id
+                      AND     F.disu_div_cd = '3'
+                      AND     F.presv_term_cd != (SELECT presv_term_cd FROM TB_SROPTIDISK_MST WHERE record_center_id = O.record_center_id AND optidisk_id = O.optidisk_id)
+                      <isNotEmpty property="disuseYyyy" prepend="AND">
+                            F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+                      </isNotEmpty>
+                      GROUP BY O.optidisk_id, O.record_center_id) T
+            WHERE  M.record_center_id = #recordCenterId:VARCHAR#
+            AND    M.record_center_id = T.record_center_id
+            AND    M.optidisk_id = T.optidisk_id
+            AND    M.optidisk_state_cd = '4'
+            <isNotEmpty property="disuseFlag" prepend="AND">
+            	M.disuse_flag = #disuseFlag:VARCHAR#
+            </isNotEmpty>
+		</isEqual>        
+		<isEqual property="mediaDiv" compareValue="2"> <!-- MF -->
+			SELECT COUNT(1)
+			FROM    TB_SRMFPIC M,
+			        (
+			          SELECT  O.record_center_id, O.pic_sno, COUNT(*) AS eval_cnt
+			          FROM    TB_NKFOLDER F, (SELECT record_center_id, pic_sno, folder_id FROM TB_SRMFPICDETL GROUP BY record_center_id, pic_sno, folder_id) o
+			          WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+			          AND     F.record_center_id = O.record_center_id
+			          AND     F.folder_id = O.folder_id
+			          AND     F.folder_keep_state_cd in ('02', '03')   <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+			         <isNotEmpty property="disuseYyyy" prepend="AND">
+			         	F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+			         </isNotEmpty>
+			         GROUP BY O.record_center_id, O.pic_sno
+			         UNION    ALL
+			         SELECT  O.record_center_id, O.pic_sno, COUNT(*) AS eval_cnt
+			         FROM    TB_RDFOLDER F, (SELECT record_center_id, pic_sno, folder_id FROM TB_SRMFPICDETL GROUP BY record_center_id, pic_sno, folder_id) o
+			         WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+			         AND     F.record_center_id = O.record_center_id
+			         AND     F.folder_id = O.folder_id
+			         AND     F.disu_div_cd = '3'                         <!-- 폐기평가의견이 재책정인 경우 -->
+			          <isNotEmpty property="disuseYyyy" prepend="AND">
+			          	F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+			          </isNotEmpty>
+			          GROUP BY O.record_center_id, O.pic_sno
+			        ) t
+			WHERE  M.record_center_id = #recordCenterId:VARCHAR#
+			AND     M.record_center_id = T.record_center_id
+			AND     M.pic_sno = T.pic_sno
+			AND       M.pic_reg_flag = '1'
+			<isNotEmpty property="disuseFlag" prepend="AND">
+			    M.disuse_flag = #disuseFlag:VARCHAR#
+			</isNotEmpty>
+		</isEqual>
+	</select>
+	<select id="findOptihistPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskMst" resultMap="findOptihistPagedList-result">
+		<isEqual property="mediaDiv" compareValue="1"><!-- 광디스크 -->
+		    SELECT C.optidisk_id
+		            ,C.optidisk_type_cd
+		            ,C.org_cd
+		            ,C.creat_yyyy
+		            ,C.presv_term_cd
+		            ,C.optidisk_yyyy
+		            ,(SELECT COUNT(*) FROM TB_SROPTIHIST_FLD WHERE record_center_id = C.record_center_id AND optidisk_id = C.optidisk_id) AS folder_cnt
+		            ,(SELECT dept_nm FROM TB_STDEPT WHERE record_center_id = C.record_center_id AND org_cd = C.org_cd) AS org_nm
+		            ,(SELECT dept_abbr_nm FROM TB_STDEPT WHERE record_center_id = C.record_center_id AND org_cd = C.org_cd) AS org_abbr_nm
+		            ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = C.presv_term_cd) AS presv_term_nm
+		            ,C.store_size
+		            ,C.optidisk_state_cd
+		            ,C.optidisk_stakrm_id
+		            ,C.optidisk_booksf_id
+		            ,C.floor_no
+		            ,C.col_no
+		            ,C.eval_cnt
+		            ,C.eval_size
+		            ,'' AS record_cnt
+		            ,NVL(C.disuse_flag, '0') AS disuse_flag
+		            ,C.disuse_yyyy
+		            ,C.disuse_ymd
+		            ,C.disuse_rsn
+		            ,C.disuse_user_id
+		            ,C.split_tot
+		    FROM (
+		        SELECT B.*
+		        FROM (
+		            SELECT ROWNUM AS rnum
+		                    ,A.*
+		            FROM (
+		                SELECT M.record_center_id,M.optidisk_id,M.optidisk_type_cd,M.org_cd,M.creat_yyyy
+		                        ,M.presv_term_cd,M.optidisk_yyyy,M.store_size,M.optidisk_state_cd,M.optidisk_stakrm_id
+		                        ,M.optidisk_booksf_id,M.floor_no,M.col_no,T.eval_cnt,T.eval_size
+		                        ,M.disuse_flag,M.disuse_yyyy,M.disuse_ymd,M.disuse_rsn,M.disuse_user_id
+		                        ,M.split_tot
+		                FROM    TB_SROPTIDISK_MST M,
+		                        ( SELECT  O.optidisk_id, O.record_center_id, COUNT(*) AS eval_cnt, SUM(O.store_size) AS eval_size
+		                          FROM    TB_NKFOLDER F, TB_SROPTIHIST_FLD O
+		                          WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+		                          AND     F.record_center_id = O.record_center_id
+		                          AND     F.folder_id = O.folder_id
+		                          AND     F.folder_keep_state_cd in ('02', '03')
+		                          <isNotEmpty property="disuseYyyy" prepend="AND">
+		                                F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+		                          </isNotEmpty>
+		                          GROUP BY O.optidisk_id, O.record_center_id
+		                          UNION    ALL
+		                          SELECT  O.optidisk_id, O.record_center_id, COUNT(*) AS eval_cnt, SUM(O.store_size) AS eval_size
+		                          FROM    TB_RDFOLDER F, TB_SROPTIHIST_FLD O
+		                          WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+		                          AND     F.record_center_id = O.record_center_id
+		                          AND     F.folder_id = O.folder_id
+		                          AND     F.disu_div_cd = '3'
+		                          AND     F.presv_term_cd != (SELECT presv_term_cd FROM TB_SROPTIDISK_MST WHERE record_center_id = O.record_center_id AND optidisk_id = O.optidisk_id)
+		                          <isNotEmpty property="disuseYyyy" prepend="AND">
+		                                F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+		                          </isNotEmpty>
+		                          GROUP BY O.optidisk_id, O.record_center_id) T
+		                WHERE  M.record_center_id = #recordCenterId:VARCHAR#
+		                AND     M.record_center_id = T.record_center_id
+		                AND     M.optidisk_id = T.optidisk_id
+		                AND       M.optidisk_state_cd = '4'
+		                <isNotEmpty property="disuseFlag" prepend="AND">
+		                     M.disuse_flag = #disuseFlag:VARCHAR#
+		                </isNotEmpty>
+		                ORDER BY M.record_center_id, M.org_cd, M.seq
+		            ) A
+		            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		        ) B
+		        WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		    ) C
+		    ORDER BY C.rnum
+		</isEqual>        
+		<isEqual property="mediaDiv" compareValue="2"> <!-- MF -->
+		    SELECT C.pic_sno AS optidisk_id
+		            ,SUBSTR(C.pic_ymd, 1, 4) AS creat_yyyy
+		            ,C.pic_user_nm AS presv_term_nm
+		            ,C.film_type_cd AS optidisk_type_cd
+		            ,(SELECT COUNT(folder_id) FROM TB_RDFOLDER WHERE record_center_id = C.record_center_id AND folder_id in (SELECT folder_id FROM tb_srmfpicdetl WHERE record_center_id = C.record_center_id AND pic_sno = C.pic_sno GROUP BY folder_id)) AS folder_cnt
+		            ,(SELECT COUNT(record_id) FROM TB_SRMFPICDETL WHERE record_center_id = C.record_center_id AND pic_sno = C.pic_sno) AS store_size
+		            ,C.eval_cnt
+		            ,C.cut_cnt AS eval_size
+		            ,C.disuse_flag
+		            ,C.disuse_yyyy
+		            ,C.disuse_ymd
+		            ,C.disuse_rsn
+		            ,C.disuse_user_id
+		            ,C.creat_org_cd AS org_cd
+		            ,(SELECT dept_nm FROM tb_stdept WHERE record_center_id = C.record_center_id AND org_cd = C.creat_org_cd) AS org_nm
+		            ,(SELECT dept_abbr_nm FROM tb_stdept WHERE record_center_id = C.record_center_id AND org_cd = C.creat_org_cd) AS org_abbr_nm
+		            ,'' AS presv_term_cd
+		            ,C.optidisk_yyyy
+		            ,'' AS optidisk_state_cd
+		            ,C.mf_stakrm_id AS optidisk_stakrm_id
+		            ,C.mf_booksf_id AS optidisk_booksf_id
+		            ,C.booksf_shelf_cno AS floor_no
+		            ,C.booksf_shelf_rno AS col_no
+		            ,C.tot_copy_cnt As split_tot
+		    FROM (
+		        SELECT B.*
+		        FROM (
+		            SELECT ROWNUM AS rnum
+		                    ,A.*
+		            FROM (
+		                SELECT M.record_center_id, M.pic_sno,M.pic_ymd,M.pic_user_nm,M.film_type_cd
+		                        ,T.eval_cnt,M.cut_cnt,M.disuse_flag,M.disuse_yyyy,M.disuse_ymd
+		                        ,M.disuse_rsn,M.disuse_user_id,M.creat_org_cd,'' AS presv_term_cd,M.pic_ymd AS optidisk_yyyy
+		                        ,'' AS optidisk_state_cd,M.mf_stakrm_id,M.mf_booksf_id,M.booksf_shelf_cno,M.booksf_shelf_rno
+		                        ,M.tot_copy_cnt
+		                FROM    TB_SRMFPIC M,
+		                        (
+		                          SELECT  O.record_center_id, O.pic_sno, COUNT(*) AS eval_cnt
+		                          FROM    TB_NKFOLDER F
+		                                    , (SELECT record_center_id, pic_sno, folder_id FROM TB_SRMFPICDETL GROUP BY record_center_id, pic_sno, folder_id) o
+		                          WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+		                          AND     F.record_center_id = O.record_center_id
+		                          AND     F.folder_id = O.folder_id
+		                          AND     F.folder_keep_state_cd in ('02', '03')   <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+		                          <isNotEmpty property="disuseYyyy" prepend="AND">
+		                                F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+		                          </isNotEmpty>
+		                          GROUP BY O.record_center_id, O.pic_sno
+		                          UNION    ALL
+		                          SELECT  O.record_center_id, O.pic_sno, COUNT(*) AS eval_cnt
+		                          FROM    TB_RDFOLDER F
+		                                    , (SELECT record_center_id, pic_sno, folder_id FROM TB_SRMFPICDETL GROUP BY record_center_id, pic_sno, folder_id) o
+		                          WHERE   F.record_center_id = #recordCenterId:VARCHAR#
+		                          AND     F.record_center_id = O.record_center_id
+		                          AND     F.folder_id = O.folder_id
+		                          AND     F.disu_div_cd = '3'                         <!-- 폐기평가의견이 재책정인 경우 -->
+		                          <isNotEmpty property="disuseYyyy" prepend="AND">
+		                                F.last_eval_yyyy = #disuseYyyy:VARCHAR#
+		                          </isNotEmpty>
+		                          GROUP BY O.record_center_id, O.pic_sno
+		                        ) t
+		                WHERE  M.record_center_id = #recordCenterId:VARCHAR#
+		                AND     M.record_center_id = T.record_center_id
+		                AND     M.pic_sno = T.pic_sno
+		                AND       M.pic_reg_flag = '1'
+		                <isNotEmpty property="disuseFlag" prepend="AND">
+		                    M.disuse_flag = #disuseFlag:VARCHAR#
+		                </isNotEmpty>
+		                ORDER BY M.record_center_id, M.pic_sno
+		            ) A
+		            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		        ) B
+		        WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		    ) C
+		    ORDER BY C.rnum
+		</isEqual>
+	</select>
+	
+	<!-- 
+		보존매체관리_보존매체파기
+		: 파기대상 수록철 목록을 조회한다.
+	 -->
+	<resultMap id="findOptihistFldPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskFld">
+		<result property="recordCenterId"		column="record_center_id" 		nullValue=""	/>
+		<result property="folderId"				column="folder_id"				nullValue=""	/>
+		<result property="orgCd"				column="org_cd"					nullValue=""	/>
+		<result property="orgNm"				column="org_nm"					nullValue=""	/>
+		<result property="orgAbbrNm"			column="org_abbr_nm"			nullValue=""	/>
+		<result property="clssId"				column="clss_id"				nullValue=""	/>
+		<result property="clssNm"				column="clss_nm"				nullValue=""	/>
+		<result property="title"				column="title"					nullValue=""	/>
+		<result property="creatYyyy"			column="creat_yyyy"				nullValue=""	/>
+		<result property="presvTermCd"			column="presv_term_cd"			nullValue=""	/>
+		<result property="presvTermNm"			column="presv_term_nm"			nullValue=""	/>
+		<result property="recordCnt"			column="record_cnt"				nullValue="0"	/>
+		<result property="storeSize"			column="store_size"				nullValue="0"	/>
+		<result property="folderKeepStateCd"	column="folder_keep_state_cd" 	nullValue=""	/>
+		<result property="samePresv"			column="same_presv"				nullValue=""	/>
+	</resultMap>
+	<select id="countOptihistFldPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultClass="java.lang.Long">
+		<isEqual property="mediaDiv" compareValue="1">
+			SELECT COUNT(1)
+			FROM    TB_RDFOLDER F, TB_SROPTIHIST_FLD O
+			WHERE   O.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND     O.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+			AND     O.FOLDER_ID = F.FOLDER_ID
+			AND     O.OPTIDISK_ID = #optidiskId:VARCHAR#
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+			SELECT  COUNT(1)
+			FROM    TB_RDFOLDER F, (SELECT RECORD_CENTER_ID
+			                              ,PIC_SNO
+			                              ,FOLDER_ID
+			                              ,COUNT(RECORD_ID) AS RECORD_CNT
+			                        FROM  TB_SRMFPICDETL
+			                        GROUP BY RECORD_CENTER_ID, PIC_SNO, FOLDER_ID) S
+			WHERE   S.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND     S.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+			AND     S.FOLDER_ID = F.FOLDER_ID
+			AND     S.PIC_SNO = #optidiskId:VARCHAR#
+		</isEqual>
+	</select>
+	<select id="findOptihistFldPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultMap="findOptihistFldPagedList-result">
+		<isEqual property="mediaDiv" compareValue="1">
+		    SELECT C.*
+		    FROM (
+		        SELECT B.*
+		        FROM (
+		            SELECT ROWNUM AS rnum
+		                    ,A.*
+		            FROM (
+		                SELECT  F.RECORD_CENTER_ID
+		                        ,F.FOLDER_ID
+		                        ,F.ORG_CD
+		                        ,F.CLSS_ID
+		                        ,F.TITLE
+		                        ,F.CREAT_YYYY
+		                        ,F.PRESV_TERM_CD
+		                        ,O.RECORD_CNT
+		                        ,O.STORE_SIZE
+		                        ,F.FOLDER_KEEP_STATE_CD
+		                        ,(CASE WHEN (TRIM(F.PRESV_TERM_CD)=TRIM((SELECT PRESV_TERM_CD FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = O.RECORD_CENTER_ID AND OPTIDISK_ID = O.OPTIDISK_ID))) THEN '0'
+		                                  ELSE '1'
+		                          END) AS SAME_PRESV
+		                         ,(SELECT DEPT_NM FROM TB_STDEPT WHERE ORG_CD = F.ORG_CD) AS ORG_NM
+		                         ,(SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE ORG_CD = F.ORG_CD) AS ORG_ABBR_NM
+		                         ,(SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD07' AND Z.COM_CD = F.PRESV_TERM_CD) PRESV_TERM_NM
+		                         ,(CASE WHEN F.CLSS_DIV_CD = '1' THEN (SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = F.CLSS_ID)
+		                                   WHEN F.CLSS_DIV_CD = '2' THEN (SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID = F.RECORD_CENTER_ID AND UNIT_CD = F.CLSS_ID)
+		                            END) AS CLSS_NM
+		                FROM    TB_RDFOLDER F, TB_SROPTIHIST_FLD O
+		                WHERE   O.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                AND     O.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+		                AND     O.FOLDER_ID = F.FOLDER_ID
+		                AND     O.OPTIDISK_ID = #optidiskId:VARCHAR#
+		                ORDER BY ORG_NM, CLSS_NM, F.TITLE
+		            ) A
+		            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		        ) B
+		        WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		    ) C
+		    ORDER BY C.rnum
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+		    SELECT C.*
+		    FROM (
+		        SELECT B.*
+		        FROM (
+		            SELECT ROWNUM AS rnum
+		                    ,A.*
+		            FROM (
+		                SELECT  F.RECORD_CENTER_ID
+		                        ,F.FOLDER_ID
+		                        ,F.ORG_CD
+		                        ,F.CLSS_ID
+		                        ,F.TITLE
+		                        ,F.CREAT_YYYY
+		                        ,F.PRESV_TERM_CD
+		                        ,S.RECORD_CNT
+		                        ,'' AS STORE_SIZE
+		                        ,F.FOLDER_KEEP_STATE_CD
+		                        ,(CASE WHEN F.DISU_DIV_CD = '3' THEN '1' ELSE '0' END) SAME_PRESV
+		                        ,(SELECT DEPT_NM FROM TB_STDEPT WHERE ORG_CD = F.ORG_CD) AS ORG_NM
+		                        ,(SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE ORG_CD = F.ORG_CD) AS ORG_ABBR_NM
+		                        ,'' AS PRESV_TERM_NM
+		                        ,(CASE WHEN F.CLSS_DIV_CD = '1' THEN (SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = F.CLSS_ID)
+		                                   WHEN F.CLSS_DIV_CD = '2' THEN (SELECT UNIT_NM FROM TB_ZZUNIT WHERE RECORD_CENTER_ID = F.RECORD_CENTER_ID AND UNIT_CD = F.CLSS_ID)
+		                           END) AS CLSS_NM
+		                FROM    TB_RDFOLDER F, (SELECT RECORD_CENTER_ID
+		                                              ,PIC_SNO
+		                                              ,FOLDER_ID
+		                                              ,COUNT(RECORD_ID) AS RECORD_CNT
+		                                        FROM  TB_SRMFPICDETL
+		                                        GROUP BY RECORD_CENTER_ID, PIC_SNO, FOLDER_ID) S
+		                WHERE   S.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                AND     S.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+		                AND     S.FOLDER_ID = F.FOLDER_ID
+		                AND     S.PIC_SNO = #optidiskId:VARCHAR#
+		                ORDER BY ORG_NM, CLSS_NM, F.TITLE
+		            ) A
+		            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		        ) B
+		        WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		    ) C
+		    ORDER BY C.rnum
+		</isEqual>
+	</select>
+	
+	<!-- 
+		보존매체관리_보존매체파기
+		: 보존매체 파기처리를 한다.
+	 -->
+	<update id="updateOptihistDisuse" parameterClass="rms.presv.optidiskmst.domain.OptidiskMst">
+		<isEqual property="mediaDiv" compareValue="1">
+			UPDATE	tb_sroptidisk_mst
+			SET	disuse_ymd = #disuseYmd:VARCHAR#,
+					disuse_flag = #disuseFlag:VARCHAR#,
+					disuse_rsn = #disuseRsn:VARCHAR#,
+					disuse_user_id = #workUserId:VARCHAR#,
+					disuse_yyyy = #disuseYyyy:VARCHAR#
+			WHERE	record_center_id = #recordCenterId:VARCHAR#
+			AND		optidisk_id = #optidiskId:VARCHAR#
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">	
+			UPDATE	tb_srmfpic
+			SET	disuse_ymd = #disuseYmd:VARCHAR#,
+					disuse_flag = #disuseFlag:VARCHAR#,
+					disuse_rsn = #disuseRsn:VARCHAR#,
+					disuse_user_id = #workUserId:VARCHAR#,
+					disuse_yyyy = #disuseYyyy:VARCHAR#
+			WHERE	record_center_id = #recordCenterId:VARCHAR#
+			AND		pic_sno = #optidiskId:VARCHAR#
+		</isEqual>
+	</update>
+	
+	<!-- 
+		보존매체관리_보존매체파기
+		: 보존매체파기 대상 수록기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findOptihistDisuse-result" class="rms.presv.optidiskmst.domain.OptidiskFld">
+		<result property="recordCenterId"		column="record_center_id" 		nullValue=""	/>
+		<result property="folderId"				column="folder_id"				nullValue=""	/>
+		<result property="orgCd"				column="org_cd"					nullValue=""	/>
+		<result property="orgNm"				column="org_nm"					nullValue=""	/>
+		<result property="orgAbbrNm"			column="org_abbr_nm"			nullValue=""	/>
+		<result property="clssId"				column="clss_id"				nullValue=""	/>
+		<result property="clssNm"				column="clss_nm"				nullValue=""	/>
+		<result property="title"				column="title"					nullValue=""	/>
+		<result property="creatYyyy"			column="creat_yyyy"				nullValue=""	/>
+		<result property="presvTermCd"			column="presv_term_cd"			nullValue=""	/>
+		<result property="presvTermNm"			column="presv_term_nm"			nullValue=""	/>
+		<result property="recordCnt"			column="record_cnt"				nullValue="0"	/>
+		<result property="storeSize"			column="store_size"				nullValue="0"	/>
+		<result property="folderKeepStateCd"	column="folder_keep_state_cd" 	nullValue=""	/>
+		<result property="samePresv"			column="same_presv"				nullValue=""	/>
+	</resultMap>
+	<select id="findOptihistDisuse" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultMap="findOptihistDisuse-result">
+		<isEqual property="mediaDiv" compareValue="1">
+			SELECT f.record_center_id
+				  ,f.folder_id
+				  ,f.org_cd
+				  ,f.clss_id
+				  ,f.title
+				  ,f.creat_yyyy
+				  ,f.presv_term_cd
+				  ,o.record_cnt
+				  ,o.store_size
+				  ,f.folder_keep_state_cd
+				  ,(case WHEN (trim(f.presv_term_cd)=trim((select presv_term_cd from tb_sroptidisk_mst where record_center_id = o.record_center_id and optidisk_id = o.optidisk_id))) THEN '0'
+				         ELSE '1'
+				    end) as same_presv
+				  ,(select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm
+				  ,(select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm
+				  ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = f.presv_term_cd) presv_term_nm
+				  ,(case when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+				         when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+				    end) as clss_nm
+			FROM tb_rdfolder f, tb_sroptihist_fld o
+			WHERE o.record_center_id = #recordCenterId:VARCHAR#
+			AND o.record_center_id = f.record_center_id
+			AND o.folder_id = f.folder_id
+			AND o.optidisk_id = #optidiskId:VARCHAR#
+			ORDER BY org_nm, clss_nm, f.title
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+			SELECT f.record_center_id
+				  ,f.folder_id
+				  ,f.org_cd
+				  ,f.clss_id
+				  ,f.title
+				  ,f.creat_yyyy
+				  ,f.presv_term_cd
+				  ,s.record_cnt
+				  ,'' as store_size
+				  ,f.folder_keep_state_cd
+				  ,(case when f.disu_div_cd = '3' then '1' else '0' end) same_presv
+				  ,(select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm
+				  ,(select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm
+				  ,'' as presv_term_nm
+				  ,(case when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+	                     when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+	                end) as clss_nm
+	        FROM tb_rdfolder f, (select record_center_id, pic_sno, folder_id, count(record_id) as record_cnt
+	                    		 from  tb_srmfpicdetl
+	                    		 group by record_center_id, pic_sno, folder_id) s
+	        WHERE s.record_center_id = #recordCenterId:VARCHAR#
+	        AND s.record_center_id = f.record_center_id
+	        AND s.folder_id = f.folder_id
+	        AND s.pic_sno = #optidiskId:VARCHAR#
+	        ORDER BY org_nm, clss_nm, f.title
+        </isEqual>
+	</select>
+	
+	<!-- 
+		보존매체관리_보존매체파기
+		: 보존매체파기대상 기록물철의 정보를 갱신한다.
+	 -->
+	<update id="updateOptihistDisuseFolder" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld">
+		UPDATE tb_rdfolder
+		<isEqual property="mediaDiv" compareValue="1">	
+			<isEqual property="optidiskTypeCd" compareValue="1">
+				SET		opti_disk_store_state_cd = '0'
+			</isEqual>
+			<isEqual property="optidiskTypeCd" compareValue="2">
+				SET		opti_disk_neo_store_state_cd = '0'
+			</isEqual>
+			<isEqual property="optidiskTypeCd" compareValue="3">
+				SET		opti_disk_scn_store_state_cd = '0'
+			</isEqual>
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+			SET	mf_pic_state_cd = '0', medium = ''
+		</isEqual>
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+	</update>	
+	
+	<!-- 
+		보존매체관리_보존매체파기
+		: 기록물건정보목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskRcdPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskRcd">
+		<result property="recordCenterId" 	column="record_center_id"		nullValue=""  />
+		<result property="folderId" 		column="folder_id"				nullValue=""  />
+		<result property="recordId" 		column="record_id"				nullValue=""  />
+		<result property="storeSize" 		column="store_size"				nullValue=""  />
+		<result property="splitSeq"			column="split_seq"				nullValue="0" />
+		<result property="fileCnt"	 		column="file_cnt"				nullValue="0" />
+		<result property="title"	 		column="title"					nullValue="" />
+		<result property="creatSysCd"	 	column="creat_sys_cd"			nullValue="" />
+		<result property="orgCd"	 		column="org_cd"					nullValue="" />
+		<result property="creatYyyy"	 	column="creat_yyyy"				nullValue="" />
+		<result property="creatRegNo"	 	column="creat_reg_no"			nullValue="" />
+		<result property="dtchRegNo"	 	column="dtch_reg_no"			nullValue="" />
+		<result property="creatSysRecordId"	column="creat_sys_record_id"	nullValue="" />
+		<result property="recordDetlTypeCd"	column="record_detl_type_cd"	nullValue="" />
+		<result property="dtchRegNoCnt"		column="dtch_reg_no_cnt"		nullValue="" />
+		<result property="creatRegNoSub"	column="creat_reg_no_sub"		nullValue="" />
+		<result property="docNo"			column="doc_no"					nullValue="" />
+	</resultMap>
+	<select id="countOptidiskRcdPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultClass="java.lang.Long">
+	    <isEqual property="mediaDiv" compareValue="1">
+            SELECT COUNT(1)
+            FROM    tb_sroptihist_rcd r, tb_rdrecord o
+            WHERE r.record_center_id = o.record_center_id
+            AND r.record_id = o.record_id
+            AND r.record_center_id = #recordCenterId:VARCHAR#
+            AND r.folder_id = #folderId:VARCHAR#
+            AND r.optidisk_id = (select optidisk_id from tb_sroptihist_fld where record_center_id = #recordCenterId:VARCHAR# and folder_id = #folderId:VARCHAR#)
+            <isNotEmpty property="splitSeq" prepend="AND">
+                r.split_seq = #splitSeq:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty property="title" prepend="AND">
+                o.title like #title#
+            </isNotEmpty>
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">
+            SELECT COUNT(1)
+            FROM tb_srmfpicdetl r, tb_rdrecord o
+            WHERE r.record_center_id = o.record_center_id
+            AND r.record_id = o.record_id
+            AND r.record_center_id = #recordCenterId:VARCHAR#
+            AND r.folder_id = #folderId:VARCHAR#
+            AND r.pic_sno = #optidiskId:VARCHAR#
+            <isNotEmpty property="title" prepend="AND">
+                o.title like #title:VARCHAR#
+            </isNotEmpty>
+	    </isEqual>
+	</select>
+	<select id="findOptidiskRcdPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultMap="findOptidiskRcdPagedList-result">
+	    <isEqual property="mediaDiv" compareValue="1">
+		    SELECT C.*
+		    FROM (
+		        SELECT B.*
+		        FROM (
+		            SELECT ROWNUM AS rnum
+		                ,A.*
+		            FROM (
+		                SELECT r.record_center_id
+		                        ,r.folder_id
+		                        ,r.record_id
+		                        ,r.split_seq
+		                        ,r.file_cnt
+		                        ,r.store_size
+		                        ,o.title
+		                        ,o.creat_sys_cd
+		                        ,o.org_cd
+		                        ,o.creat_yyyy
+		                        ,o.creat_reg_no
+		                        ,o.dtch_reg_no
+		                        ,o.creat_sys_record_id
+		                        ,o.record_detl_type_cd
+		                        ,o.doc_no
+		                        ,(SELECT COUNT(DTCH_REG_NO) FROM TB_RDRECORD WHERE CREAT_SYS_CD = O.CREAT_SYS_CD AND ORG_CD = O.ORG_CD AND CREAT_YYYY = O.CREAT_YYYY AND CREAT_REG_NO = O.CREAT_REG_NO) dtch_reg_no_cnt
+		                        ,SUBSTR(o.creat_reg_no, 8, 6) creat_reg_no_sub
+		                FROM    tb_sroptihist_rcd r, tb_rdrecord o
+		                WHERE r.record_center_id = o.record_center_id
+		                AND r.record_id = o.record_id
+		                AND r.record_center_id = #recordCenterId:VARCHAR#
+		                AND r.folder_id = #folderId:VARCHAR#
+		                AND r.optidisk_id = (select optidisk_id from tb_sroptihist_fld where record_center_id = #recordCenterId:VARCHAR# and folder_id = #folderId:VARCHAR#)
+		                <isNotEmpty property="splitSeq" prepend="AND">
+		                    r.split_seq = #splitSeq:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="title" prepend="AND">
+		                    o.title like #title#
+		                </isNotEmpty>
+		                ORDER BY    r.record_id, r.split_seq
+		            ) A
+		            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		        ) B
+		        WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		    ) C
+		    ORDER BY C.rnum
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">
+		    SELECT C.*
+		    FROM (
+		        SELECT B.*
+		        FROM (
+		            SELECT ROWNUM AS rnum
+		                ,A.*
+		            FROM (
+		                SELECT r.record_center_id
+		                        ,r.folder_id
+		                        ,r.record_id
+		                        ,o.creat_sys_cd
+		                        ,o.org_cd
+		                        ,o.creat_yyyy
+		                        ,o.creat_reg_no
+		                        ,o.dtch_reg_no
+		                        ,o.creat_sys_record_id
+		                        ,o.record_detl_type_cd
+		                        ,o.doc_no
+		                        ,(SELECT COUNT(DTCH_REG_NO) FROM TB_RDRECORD WHERE CREAT_SYS_CD = O.CREAT_SYS_CD AND ORG_CD = O.ORG_CD AND CREAT_YYYY = O.CREAT_YYYY AND CREAT_REG_NO = O.CREAT_REG_NO) dtch_reg_no_cnt 
+		                        ,SUBSTR(o.creat_reg_no, 8, 6) creat_reg_no_sub
+		                        ,r.cut_sno as split_seq
+		                        ,r.start_cut_loc as file_cnt
+		                        ,r.end_cut_loc as store_size
+		                        ,o.title
+		                FROM tb_srmfpicdetl r, tb_rdrecord o
+		                WHERE r.record_center_id = o.record_center_id
+		                AND r.record_id = o.record_id
+		                AND r.record_center_id = #recordCenterId:VARCHAR#
+		                AND r.folder_id = #folderId:VARCHAR#
+		                AND r.pic_sno = #optidiskId:VARCHAR#
+		                <isNotEmpty property="title" prepend="AND">
+		                    o.title like #title:VARCHAR#
+		                </isNotEmpty>
+		                ORDER BY    r.record_id, r.cut_sno
+		            ) A
+		            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		        ) B
+		        WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		    ) C
+		    ORDER BY C.rnum
+	    </isEqual>
+	</select>
+
+	<!-- 
+		보존매체관리_보존매체파기
+		: 보존매체목록 엑셀저장 데이터를 조회한다.
+	-->
+	<resultMap id="findExcelDocOptihistList-result" class="rms.presv.optidiskmst.domain.OptidiskMst">
+		<result property="optidiskId" 		column="optidisk_id"		nullValue="" 	/>
+		<result property="optidiskTypeCd"	column="optidisk_type_cd"	nullValue="" 	/>
+		<result property="orgCd"			column="org_cd"				nullValue="" 	/>
+		<result property="orgNm"			column="org_nm"				nullValue="" 	/>
+		<result property="orgAbbrNm"		column="org_abbr_nm"		nullValue="" 	/>
+		<result property="creatYyyy"		column="creat_yyyy"			nullValue="" 	/>
+		<result property="presvTermCd"		column="presv_term_cd"		nullValue="" 	/>
+		<result property="presvTermNm"		column="presv_term_nm"		nullValue="" 	/>
+		<result property="optidiskYyyy"		column="optidisk_yyyy"		nullValue="" 	/>
+		<result property="folderCnt"		column="folder_cnt"			nullValue="0" 	/>
+		<result property="storeSize"		column="store_size"			nullValue="" 	/>
+		<result property="optidiskStateCd"	column="optidisk_state_cd"	nullValue=""	/>
+		<result property="optidiskStakrmId"	column="optidisk_stakrm_id"	nullValue=""	/>
+		<result property="optidiskBooksfId"	column="optidisk_booksf_id"	nullValue=""	/>
+		<result property="floorNo"			column="floor_no"			nullValue=""	/>
+		<result property="colNo"			column="col_no"				nullValue=""	/>
+		<result property="evalCnt"			column="eval_cnt"			nullValue="0"	/>
+		<result property="evalSize"			column="eval_size"			nullValue="0"	/>
+		<result property="disuseFlag"		column="disuse_flag"		nullValue=""	/>
+		<result property="disuseYyyy"		column="disuse_yyyy"		nullValue=""  />
+		<result property="disuseYmd"		column="disuse_ymd"			nullValue=""  />
+		<result property="disuseRsn"		column="disuse_rsn"			nullValue="" />
+		<result property="disuseUserId"		column="disuse_user_id"  	nullValue="" />
+		<result property="splitTot"			column="split_tot"			nullValue="0" />
+	</resultMap>
+	<select id="findExcelDocOptihistList" parameterClass="rms.presv.optidiskmst.domain.OptidiskMst" resultMap="findExcelDocOptihistList-result">
+		<isEqual property="mediaDiv" compareValue="1">
+			SELECT  m.optidisk_id, m.optidisk_type_cd, m.org_cd, m.creat_yyyy, m.presv_term_cd, m.optidisk_yyyy, 
+		        (select count(*) from tb_sroptihist_fld where record_center_id = m.record_center_id and optidisk_id = m.optidisk_id) as folder_cnt,
+		        (SELECT dept_nm FROM tb_stdept WHERE org_cd = m.org_cd) as org_nm,
+		        (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = m.org_cd) as org_abbr_nm,
+		        (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = m.presv_term_cd) presv_term_nm,
+		        m.store_size, m.optidisk_state_cd, m.optidisk_stakrm_id, m.optidisk_booksf_id, m.floor_no, m.col_no, t.eval_cnt, t.eval_size, '' as record_cnt,
+		        m.disuse_flag, m.disuse_yyyy, m.disuse_ymd, m.disuse_rsn, m.disuse_user_id
+		        ,m.split_tot
+			FROM    tb_sroptidisk_mst m, (select o.optidisk_id, o.record_center_id, count(*) as eval_cnt, sum(o.store_size) as eval_size
+		          						  from tb_nkfolder f, tb_sroptihist_fld o
+		          						  where f.record_center_id = #recordCenterId:VARCHAR#
+		          						  and f.record_center_id = o.record_center_id
+		          						  and f.folder_id = o.folder_id
+		          						  and f.folder_keep_state_cd in ('02', '03')
+		          						  <isNotEmpty property="disuseYyyy" prepend="AND">
+											  f.last_eval_yyyy = #disuseYyyy:VARCHAR#
+				  						  </isNotEmpty>
+		          						  group by o.optidisk_id, o.record_center_id
+		          						  UNION	ALL
+		          						  select o.optidisk_id, o.record_center_id, count(*) as eval_cnt, sum(o.store_size) as eval_size
+				  						  from tb_rdfolder f, tb_sroptihist_fld o
+				  						  where f.record_center_id = #recordCenterId:VARCHAR#
+				  						  and f.record_center_id = o.record_center_id
+				  						  and f.folder_id = o.folder_id
+				  						  and f.disu_div_cd = '3'
+				  						  and f.presv_term_cd != (select presv_term_cd 
+				  						  						  from tb_sroptidisk_mst 
+				  						  						  where record_center_id = o.record_center_id 
+				  						  						  and optidisk_id = o.optidisk_id)
+				  						  <isNotEmpty property="disuseYyyy" prepend="AND">
+											  f.last_eval_yyyy = #disuseYyyy:VARCHAR#
+				  						  </isNotEmpty>
+				  						  group by o.optidisk_id, o.record_center_id) t
+			WHERE m.record_center_id = #recordCenterId:VARCHAR#
+			AND m.record_center_id = t.record_center_id
+			AND m.optidisk_id = t.optidisk_id
+			AND m.optidisk_state_cd = '4'
+			<isNotEmpty property="disuseFlag" prepend="AND">
+				m.disuse_flag = #disuseFlag:VARCHAR#
+			</isNotEmpty>
+			ORDER BY m.record_center_id, m.org_cd, m.seq
+		</isEqual>		
+		<isEqual property="mediaDiv" compareValue="2">
+			SELECT m.pic_sno as optidisk_id
+            	  ,substr(m.pic_ymd, 1, 4) as creat_yyyy
+            	  ,m.pic_user_nm as presv_term_nm
+				  ,m.film_type_cd as optidisk_type_cd
+		          ,(select count(folder_id) from tb_rdfolder where record_center_id = m.record_center_id and folder_id in (select folder_id from tb_srmfpicdetl where record_center_id = m.record_center_id and pic_sno = m.pic_sno group by folder_id)) as folder_cnt   <!-- 촬영철수 -->
+		          ,(select count(record_id) from tb_srmfpicdetl where record_center_id = m.record_center_id and pic_sno = m.pic_sno) as store_size
+		          ,t.eval_cnt
+		          ,m.cut_cnt eval_size             
+				  ,m.disuse_flag, m.disuse_yyyy, m.disuse_ymd, m.disuse_rsn, m.disuse_user_id
+		          ,m.creat_org_cd as org_cd
+		          ,(SELECT dept_nm FROM tb_stdept WHERE org_cd = m.creat_org_cd) as org_nm
+		          ,(SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = m.creat_org_cd) as org_abbr_nm
+		          ,'' as presv_term_cd
+		          ,m.pic_ymd as optidisk_yyyy
+		          ,'' as optidisk_state_cd, m.mf_stakrm_id as optidisk_stakrm_id, m.mf_booksf_id as optidisk_booksf_id, m.booksf_shelf_cno as floor_no, m.booksf_shelf_rno as col_no   <!-- 배치정보 -->
+		          ,m.tot_copy_cnt as split_tot
+			FROM tb_srmfpic m, (select  o.record_center_id, o.pic_sno, count(*) as eval_cnt
+		          				from tb_nkfolder f, (select record_center_id, pic_sno, folder_id 
+		          									 from tb_srmfpicdetl 
+		          									 group by record_center_id, pic_sno, folder_id) o
+		          				where f.record_center_id = #recordCenterId:VARCHAR#
+		          				and f.record_center_id = o.record_center_id
+		          				and f.folder_id = o.folder_id
+		          				and f.folder_keep_state_cd in ('02', '03')
+		          				<isNotEmpty property="disuseYyyy" prepend="AND">
+									f.last_eval_yyyy = #disuseYyyy:VARCHAR#
+				  				</isNotEmpty>
+		          				group by o.record_center_id, o.pic_sno
+		          				UNION ALL
+		          				select o.record_center_id, o.pic_sno, count(*) as eval_cnt
+				  				from tb_rdfolder f, (select record_center_id, pic_sno, folder_id 
+				  									 from tb_srmfpicdetl group by record_center_id, pic_sno, folder_id) o
+				  				where f.record_center_id = #recordCenterId:VARCHAR#
+				  				and f.record_center_id = o.record_center_id
+				  				and f.folder_id = o.folder_id
+				  				and f.disu_div_cd = '3'
+		  						<isNotEmpty property="disuseYyyy" prepend="AND">
+									f.last_eval_yyyy = #disuseYyyy:VARCHAR#
+				  				</isNotEmpty>
+				  				group by o.record_center_id, o.pic_sno) t
+			WHERE m.record_center_id = #recordCenterId:VARCHAR#
+			AND m.record_center_id = t.record_center_id
+			AND m.pic_sno = t.pic_sno
+			AND m.pic_reg_flag = '1'
+			<isNotEmpty property="disuseFlag" prepend="AND">
+				m.disuse_flag = #disuseFlag:VARCHAR#
+			</isNotEmpty>
+			ORDER BY m.record_center_id, m.pic_sno
+		</isEqual>
+	</select>
+	
+
+	
+	
+	
+	
+	
+	
+	<!-- 
+		보존매체관리_수록대상정리
+		: 수록대상정리 목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskMstCnclPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskFld">
+		<result property="recordCenterId"			column="record_center_id"		nullValue="" />
+		<result property="folderId"					column="folder_id"				nullValue="" />
+		<result property="title"					column="title"					nullValue="" />
+		<result property="folderKeepStateCd"		column="folder_keep_state_cd"	nullValue="" />
+		<result property="samePresv"				column="same_presv"				nullValue="" />
+		<result property="optidiskTypeCd"			column="optidisk_type_cd"		nullValue="" />
+		<result property="orgCd"					column="org_cd"					nullValue="" />
+		<result property="seq"						column="seq"					nullValue="0"/>
+		<result property="creatYyyy"				column="creat_yyyy"				nullValue="0"/>
+		<result property="orgNm"					column="org_nm"					nullValue="" />
+		<result property="orgAbbrNm"				column="org_abbr_nm"			nullValue="" />
+		<result property="presvTermNm"		    	column="presv_term_nm"			nullValue="" />
+		<result property="presvTermCd"				column="presv_term_cd"			nullValue="" />
+		<result property="clssId"					column="clss_id"				nullValue="" />
+		<result property="clssNm"					column="clss_nm"				nullValue="" />
+		<result property="lastEvalYyyy"				column="last_eval_yyyy"			nullValue="" />
+		<result property="optiPresvTermCd"			column="opti_presv_term_cd"		nullValue="" />
+		<result property="optidiskId"				column="optidisk_id"			nullValue="" />
+		<result property="optidiskId"				column="optidisk_id"			nullValue="" />
+		<result property="totCopyCnt"				column="tot_copy_cnt"			nullValue="" />
+	</resultMap>
+	<select id="countOptidiskMstCnclPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultClass="java.lang.Long">
+		<isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+            SELECT  COUNT(1)
+            FROM    (
+                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '0' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+                                t.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, t.fld_presv_term_cd as opti_presv_term_cd, t.org_cd||'-'||LPAD(t.seq, 6, '0') optidisk_id,
+                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(t.fld_presv_term_cd, '20', '25', t.fld_presv_term_cd)) as presv_term_nm,
+                                (case when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+                                         when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+                                 end) as clss_nm
+                        FROM    tb_nkfolder f, 
+                                ( select  o.folder_id, o.record_center_id, o.optidisk_type_cd, o.seq, o.org_cd, '' tot_copy_cnt,
+                                            o.presv_term_cd as fld_presv_term_cd, o.creat_yyyy as fld_creat_yyyy, o.org_cd as fld_org_cd
+                                  from    tb_sroptidisk_fld o left outer join tb_sroptidisk_mst m on m.record_center_id = o.record_center_id and m.org_cd = o.org_cd and m.seq = o.seq
+                                    where   o.record_center_id = #recordCenterId:VARCHAR#) t
+                        WHERE f.record_center_id = t.record_center_id
+                        AND     f.folder_id = t.folder_id
+                        AND     f.org_cd = t.fld_org_cd
+                        AND     f.creat_yyyy = t.fld_creat_yyyy
+                        AND     f.presv_term_cd = t.fld_presv_term_cd
+                        AND     f.folder_keep_state_cd in ('02', '03')         <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+                    UNION ALL
+                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '1' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+                                t.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, t.fld_presv_term_cd as opti_presv_term_cd, t.org_cd||'-'||LPAD(t.seq, 6, '0') optidisk_id,
+                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(t.fld_presv_term_cd, '20', '25', t.fld_presv_term_cd)) as presv_term_nm,
+                                (
+                                    case 
+                                        when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+                                        when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+                                    end 
+                                ) as clss_nm
+                        FROM    tb_rdfolder f, 
+                                (
+                                  select  o.folder_id, o.record_center_id, o.optidisk_type_cd, o.seq, o.org_cd, '' tot_copy_cnt,
+                                            o.presv_term_cd as fld_presv_term_cd, o.creat_yyyy as fld_creat_yyyy, o.org_cd as fld_org_cd
+                                  from    tb_sroptidisk_fld o left outer join tb_sroptidisk_mst m on m.record_center_id = o.record_center_id and m.org_cd = o.org_cd and m.seq = o.seq
+                                    where   o.record_center_id = #recordCenterId:VARCHAR#
+                                ) t
+                        WHERE   f.record_center_id = t.record_center_id
+                        AND      f.folder_id = t.folder_id
+                        AND        f.org_cd = t.fld_org_cd
+                        AND        f.creat_yyyy = t.fld_creat_yyyy
+                        AND      f.disu_div_cd = '3'                              <!-- 폐기평가의견이 재책정인 경우 -->
+                        AND      f.presv_term_cd != t.fld_presv_term_cd
+                    ) tb
+                WHERE 1=1
+                <isNotEmpty property="lastEvalYyyy" prepend="AND">
+                    tb.last_eval_yyyy = #lastEvalYyyy:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyy" prepend="AND">
+                    tb.creat_yyyy = #creatYyyy:VARCHAR#
+                </isNotEmpty>
+		        <isNotEmpty property="optiPresvTermCd">
+			        <isEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+			            tb.opti_presv_term_cd IN ('20','25')
+		            </isEqual>
+			        <isNotEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+                    tb.opti_presv_term_cd = #optiPresvTermCd:VARCHAR#
+		            </isNotEqual>		            
+                </isNotEmpty>
+                <isNotEmpty property="optidiskTypeCd" prepend="AND">
+                    tb.optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="clssId" prepend="AND">
+                    tb.clss_id = #clssId#
+                </isNotEmpty>
+                <isNotEmpty property="optidiskId" prepend="AND">
+                    REPLACE(tb.optidisk_id, '-', '') = #optidiskId:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="orgCd" prepend="AND">
+                    tb.org_cd = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="title" prepend="AND">
+                    tb.title like #title# 
+                </isNotEmpty>
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">       <!-- M/F -->
+            SELECT  COUNT(1)
+            FROM    (
+                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '0' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+                                f.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, f.presv_term_cd as opti_presv_term_cd, t.seq as optidisk_id,
+                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(f.presv_term_cd, '20', '25', f.presv_term_cd)) as presv_term_nm,
+                                (
+                                    case 
+                                        when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+                                        when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+                                    end 
+                                ) as clss_nm
+                        FROM    tb_nkfolder f,
+                                (
+                                  select   o.record_center_id, o.pic_sno as seq, o.folder_id, m.film_type_cd as optidisk_type_cd, m.tot_copy_cnt
+                                  from    tb_srmfpicdetl o left outer join tb_srmfpic m on m.record_center_id = o.record_center_id and m.pic_sno = o.pic_sno
+                                  where   o.record_center_id = #recordCenterId:VARCHAR# 
+                                  group by o.record_center_id, o.pic_sno, o.folder_id, m.film_type_cd, m.tot_copy_cnt
+                                ) t
+                        WHERE   f.record_center_id = t.record_center_id
+                        AND      f.folder_id = t.folder_id
+                        AND      f.folder_keep_state_cd in ('02', '03')           <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+                    UNION ALL
+                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '1' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+                                f.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, f.presv_term_cd as opti_presv_term_cd, t.seq as optidisk_id,
+                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(f.presv_term_cd, '20', '25', f.presv_term_cd)) as presv_term_nm,
+                                (
+                                    case 
+                                        when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+                                        when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+                                    end 
+                                ) as clss_nm
+                        FROM    tb_rdfolder f, 
+                                (
+                                  select   o.record_center_id, o.pic_sno as seq, o.folder_id, m.film_type_cd as optidisk_type_cd, m.tot_copy_cnt
+                                  from    tb_srmfpicdetl o left outer join tb_srmfpic m on m.record_center_id = o.record_center_id and m.pic_sno = o.pic_sno
+                                  where   o.record_center_id = #recordCenterId:VARCHAR# 
+                                  group by o.record_center_id, o.pic_sno, o.folder_id, m.film_type_cd, m.tot_copy_cnt
+                                ) t
+                        WHERE   f.record_center_id = t.record_center_id
+                        AND      f.folder_id = t.folder_id
+                        AND      f.disu_div_cd = '3'                             <!-- 폐기평가의견이 재책정인 경우 -->
+                    ) tb
+            	WHERE 1=1
+                <isNotEmpty property="lastEvalYyyy" prepend="AND">
+                    tb.last_eval_yyyy = #lastEvalYyyy:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyy" prepend="AND">
+                    tb.creat_yyyy = #creatYyyy:VARCHAR#
+                </isNotEmpty>
+		        <isNotEmpty property="optiPresvTermCd">
+			        <isEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+			            tb.presv_term_cd IN ('20','25')
+		            </isEqual>
+			        <isNotEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+                    tb.presv_term_cd = #optiPresvTermCd:VARCHAR#
+		            </isNotEqual>		            
+                </isNotEmpty>
+                <isNotEmpty property="optidiskTypeCd" prepend="AND">
+                    tb.optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="clssId" prepend="AND">
+                    tb.clss_id = #clssId:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="optidiskId" prepend="AND">
+                    tb.seq = #optidiskId:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="orgCd" prepend="AND">
+                    tb.org_cd = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="title" prepend="AND">
+                    tb.title like #title#
+                </isNotEmpty>
+		</isEqual>
+	</select>
+	<select id="findOptidiskMstCnclPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultMap="findOptidiskMstCnclPagedList-result">
+		<isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+			SELECT C.*
+			FROM (
+			    SELECT B.*
+			    FROM (
+			        SELECT ROWNUM AS rnum
+			                ,A.*
+			        FROM (
+			            SELECT    tb.*
+			            FROM    (
+			                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '0' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                                t.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, t.fld_presv_term_cd as opti_presv_term_cd, t.org_cd||'-'||LPAD(t.seq, 6, '0') optidisk_id,
+			                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(t.fld_presv_term_cd, '20', '25', t.fld_presv_term_cd)) as presv_term_nm,
+			                                (case when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                                         when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                                 end) as clss_nm
+			                        FROM    tb_nkfolder f, 
+			                                ( select  o.folder_id, o.record_center_id, o.optidisk_type_cd, o.seq, o.org_cd, '' tot_copy_cnt,
+			                                            o.presv_term_cd as fld_presv_term_cd, o.creat_yyyy as fld_creat_yyyy, o.org_cd as fld_org_cd
+			                                  from    tb_sroptidisk_fld o left outer join tb_sroptidisk_mst m on m.record_center_id = o.record_center_id and m.org_cd = o.org_cd and m.seq = o.seq
+			                                    where   o.record_center_id = #recordCenterId:VARCHAR#) t
+			                        WHERE f.record_center_id = t.record_center_id
+			                        AND     f.folder_id = t.folder_id
+			                        AND     f.org_cd = t.fld_org_cd
+			                        AND     f.creat_yyyy = t.fld_creat_yyyy
+			                        AND     f.presv_term_cd = t.fld_presv_term_cd
+			                        AND     f.folder_keep_state_cd in ('02', '03')         <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+			                    UNION ALL
+			                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '1' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                                t.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, t.fld_presv_term_cd as opti_presv_term_cd, t.org_cd||'-'||LPAD(t.seq, 6, '0') optidisk_id,
+			                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(t.fld_presv_term_cd, '20', '25', t.fld_presv_term_cd)) as presv_term_nm,
+			                                (
+			                                    case 
+			                                        when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                                        when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                                    end 
+			                                ) as clss_nm
+			                        FROM    tb_rdfolder f, 
+			                                (
+			                                  select  o.folder_id, o.record_center_id, o.optidisk_type_cd, o.seq, o.org_cd, '' tot_copy_cnt,
+			                                            o.presv_term_cd as fld_presv_term_cd, o.creat_yyyy as fld_creat_yyyy, o.org_cd as fld_org_cd
+			                                  from    tb_sroptidisk_fld o left outer join tb_sroptidisk_mst m on m.record_center_id = o.record_center_id and m.org_cd = o.org_cd and m.seq = o.seq
+			                                    where   o.record_center_id = #recordCenterId:VARCHAR#
+			                                ) t
+			                        WHERE   f.record_center_id = t.record_center_id
+			                        AND     f.folder_id = t.folder_id
+			                        AND     f.org_cd = t.fld_org_cd
+			                        AND     f.creat_yyyy = t.fld_creat_yyyy
+			                        AND     f.disu_div_cd = '3'                              <!-- 폐기평가의견이 재책정인 경우 -->
+			                        AND     f.presv_term_cd != t.fld_presv_term_cd
+			                    ) tb
+			           		WHERE 1=1
+			                <isNotEmpty property="lastEvalYyyy" prepend="AND">
+			                    tb.last_eval_yyyy = #lastEvalYyyy:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="creatYyyy" prepend="AND">
+			                    tb.creat_yyyy = #creatYyyy:VARCHAR#
+			                </isNotEmpty>
+					        <isNotEmpty property="optiPresvTermCd">
+						        <isEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+						            tb.opti_presv_term_cd IN ('20','25')
+					            </isEqual>
+						        <isNotEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+			                    tb.opti_presv_term_cd = #optiPresvTermCd:VARCHAR#
+					            </isNotEqual>		            
+			                </isNotEmpty>
+			                <isNotEmpty property="optidiskTypeCd" prepend="AND">
+			                    tb.optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="clssId" prepend="AND">
+			                    tb.clss_id = #clssId#
+			                </isNotEmpty>
+			                <isNotEmpty property="optidiskId" prepend="AND">
+			                    REPLACE(tb.optidisk_id, '-', '') = #optidiskId:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="orgCd" prepend="AND">
+			                    tb.org_cd = #orgCd:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="title" prepend="AND">
+			                    tb.title like #title# 
+			                </isNotEmpty>
+			            ORDER BY tb.org_cd, tb.seq
+			        ) A
+			        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			    ) B
+			    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+			) C
+			ORDER BY C.rnum
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">       <!-- M/F -->
+			SELECT C.*
+			FROM (
+			    SELECT B.*
+			    FROM (
+			        SELECT ROWNUM AS rnum
+			                ,A.*
+			        FROM (
+			            SELECT    tb.*
+			            FROM    (
+			                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '0' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                                f.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, f.presv_term_cd as opti_presv_term_cd, t.seq as optidisk_id,
+			                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(f.presv_term_cd, '20', '25', f.presv_term_cd)) as presv_term_nm,
+			                                (
+			                                    case 
+			                                        when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                                        when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                                    end 
+			                                ) as clss_nm
+			                        FROM    tb_nkfolder f,
+			                                (
+			                                  select   o.record_center_id, o.pic_sno as seq, o.folder_id, m.film_type_cd as optidisk_type_cd, m.tot_copy_cnt
+			                                  from    tb_srmfpicdetl o left outer join tb_srmfpic m on m.record_center_id = o.record_center_id and m.pic_sno = o.pic_sno
+			                                  where   o.record_center_id = #recordCenterId:VARCHAR# 
+			                                  group by o.record_center_id, o.pic_sno, o.folder_id, m.film_type_cd, m.tot_copy_cnt
+			                                ) t
+			                        WHERE   f.record_center_id = t.record_center_id
+			                        AND      f.folder_id = t.folder_id
+			                        AND      f.folder_keep_state_cd in ('02', '03')           <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+			                    UNION ALL
+			                        SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '1' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                                f.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, f.presv_term_cd as opti_presv_term_cd, t.seq as optidisk_id,
+			                                (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                                (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                                (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = DECODE(f.presv_term_cd, '20', '25', f.presv_term_cd)) as presv_term_nm,
+			                                (
+			                                    case 
+			                                        when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                                        when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                                    end 
+			                                ) as clss_nm
+			                        FROM    tb_rdfolder f, 
+			                                (
+			                                  select   o.record_center_id, o.pic_sno as seq, o.folder_id, m.film_type_cd as optidisk_type_cd, m.tot_copy_cnt
+			                                  from    tb_srmfpicdetl o left outer join tb_srmfpic m on m.record_center_id = o.record_center_id and m.pic_sno = o.pic_sno
+			                                  where   o.record_center_id = #recordCenterId:VARCHAR# 
+			                                  group by o.record_center_id, o.pic_sno, o.folder_id, m.film_type_cd, m.tot_copy_cnt
+			                                ) t
+			                        WHERE   f.record_center_id = t.record_center_id
+			                        AND      f.folder_id = t.folder_id
+			                        AND      f.disu_div_cd = '3'                             <!-- 폐기평가의견이 재책정인 경우 -->
+			                    ) tb
+			            	WHERE 1=1
+			                <isNotEmpty property="lastEvalYyyy" prepend="AND">
+			                    tb.last_eval_yyyy = #lastEvalYyyy:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="creatYyyy" prepend="AND">
+			                    tb.creat_yyyy = #creatYyyy:VARCHAR#
+			                </isNotEmpty>
+					        <isNotEmpty property="optiPresvTermCd">
+						        <isEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+						            tb.presv_term_cd IN ('20','25')
+					            </isEqual>
+						        <isNotEqual prepend="AND" property="optiPresvTermCd" compareValue="25">
+			                    tb.presv_term_cd = #optiPresvTermCd:VARCHAR#
+					            </isNotEqual>		            
+			                </isNotEmpty>
+			                <isNotEmpty property="optidiskTypeCd" prepend="AND">
+			                    tb.optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="clssId" prepend="AND">
+			                    tb.clss_id = #clssId:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="optidiskId" prepend="AND">
+			                    tb.seq = #optidiskId:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="orgCd" prepend="AND">
+			                    tb.org_cd = #orgCd:VARCHAR#
+			                </isNotEmpty>
+			                <isNotEmpty property="title" prepend="AND">
+			                    tb.title like #title#
+			                </isNotEmpty>
+			            ORDER BY tb.seq
+			        ) A
+			        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			    ) B
+			    WHERE B.rnum <![CDATA[>=]]> #pagedEnd:NUMBER#
+			) C
+			ORDER BY C.rnum
+		</isEqual>
+	</select>
+	
+	<!-- 
+		보존매체관리_수록대상정리
+		: 정리대상 기록물목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskMstCnclList-result" class="rms.presv.optidiskmst.domain.OptidiskFld">
+		<result property="recordCenterId"			column="record_center_id"		nullValue="" />
+		<result property="folderId"					column="folder_id"				nullValue="" />
+		<result property="title"					column="title"					nullValue="" />
+		<result property="folderKeepStateCd"		column="folder_keep_state_cd"	nullValue="" />
+		<result property="samePresv"				column="same_presv"				nullValue="" />
+		<result property="optidiskTypeCd"			column="optidisk_type_cd"		nullValue="" />
+		<result property="orgCd"					column="org_cd"					nullValue="" />
+		<result property="seq"						column="seq"					nullValue="0"/>
+		<result property="creatYyyy"				column="creat_yyyy"				nullValue="0"/>
+		<result property="orgNm"					column="org_nm"					nullValue="" />
+		<result property="orgAbbrNm"				column="org_abbr_nm"			nullValue="" />
+		<result property="presvTermNm"		    	column="presv_term_nm"			nullValue="" />
+		<result property="presvTermCd"				column="presv_term_cd"			nullValue="" />
+		<result property="clssId"					column="clss_id"				nullValue="" />
+		<result property="clssNm"					column="clss_nm"				nullValue="" />
+		<result property="lastEvalYyyy"				column="last_eval_yyyy"			nullValue="" />
+		<result property="optiPresvTermCd"			column="opti_presv_term_cd"		nullValue="" />
+		<result property="optidiskId"				column="optidisk_id"			nullValue="" />
+		<result property="optidiskId"				column="optidisk_id"			nullValue="" />
+		<result property="totCopyCnt"				column="tot_copy_cnt"			nullValue="" />
+	</resultMap>
+	<select id="findOptidiskMstCnclList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld" resultMap="findOptidiskMstCnclList-result">
+		<isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+			SELECT    tb.*
+			FROM    (
+			            SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '0' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                    t.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, t.fld_presv_term_cd as opti_presv_term_cd, t.org_cd||'-'||LPAD(t.seq, 6, '0') optidisk_id,
+			                    (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                    (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                    (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = t.fld_presv_term_cd) as presv_term_nm,
+			                    (case when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                             when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                     end) as clss_nm
+			            FROM    tb_nkfolder f, 
+			                    ( select  o.folder_id, o.record_center_id, o.optidisk_type_cd, o.seq, o.org_cd, '' tot_copy_cnt,
+			                                o.presv_term_cd as fld_presv_term_cd, o.creat_yyyy as fld_creat_yyyy, o.org_cd as fld_org_cd
+			                      from    tb_sroptidisk_fld o left outer join tb_sroptidisk_mst m on m.record_center_id = o.record_center_id and m.org_cd = o.org_cd and m.seq = o.seq
+			                        where   o.record_center_id = #recordCenterId:VARCHAR#) t
+			            WHERE f.record_center_id = t.record_center_id
+			            AND     f.folder_id = t.folder_id
+			            AND     f.org_cd = t.fld_org_cd
+			            AND     f.creat_yyyy = t.fld_creat_yyyy
+			            AND     f.presv_term_cd = t.fld_presv_term_cd
+			            AND     f.folder_keep_state_cd in ('02', '03')         <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+			        UNION ALL
+			            SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '1' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                    t.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, t.fld_presv_term_cd as opti_presv_term_cd, t.org_cd||'-'||LPAD(t.seq, 6, '0') optidisk_id,
+			                    (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                    (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                    (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = t.fld_presv_term_cd) as presv_term_nm,
+			                    (
+			                        case 
+			                            when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                            when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                        end 
+			                    ) as clss_nm
+			            FROM    tb_rdfolder f, 
+			                    (
+			                      select  o.folder_id, o.record_center_id, o.optidisk_type_cd, o.seq, o.org_cd, '' tot_copy_cnt,
+			                                o.presv_term_cd as fld_presv_term_cd, o.creat_yyyy as fld_creat_yyyy, o.org_cd as fld_org_cd
+			                      from    tb_sroptidisk_fld o left outer join tb_sroptidisk_mst m on m.record_center_id = o.record_center_id and m.org_cd = o.org_cd and m.seq = o.seq
+			                        where   o.record_center_id = #recordCenterId:VARCHAR#
+			                    ) t
+			            WHERE   f.record_center_id = t.record_center_id
+			            AND      f.folder_id = t.folder_id
+			            AND        f.org_cd = t.fld_org_cd
+			            AND        f.creat_yyyy = t.fld_creat_yyyy
+			            AND      f.disu_div_cd = '3'                              <!-- 폐기평가의견이 재책정인 경우 -->
+			            AND      f.presv_term_cd != t.fld_presv_term_cd
+			        ) tb
+				WHERE 1=1
+			    <isNotEmpty property="lastEvalYyyy" prepend="AND">
+			        tb.last_eval_yyyy = #lastEvalYyyy:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="creatYyyy" prepend="AND">
+			        tb.creat_yyyy = #creatYyyy:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="optiPresvTermCd" prepend="AND">
+			        tb.opti_presv_term_cd = #optiPresvTermCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="optidiskTypeCd" prepend="AND">
+			        tb.optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="clssId" prepend="AND">
+			        tb.clss_id = #clssId#
+			    </isNotEmpty>
+			    <isNotEmpty property="optidiskId" prepend="AND">
+			        REPLACE(tb.optidisk_id, '-', '') = #optidiskId:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="orgCd" prepend="AND">
+			        tb.org_cd = #orgCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="title" prepend="AND">
+			        tb.title like #title# 
+			    </isNotEmpty>
+			ORDER BY tb.org_cd, tb.seq
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">       <!-- M/F -->
+			SELECT    tb.*
+			FROM    (
+			            SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '0' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                    f.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, f.presv_term_cd as opti_presv_term_cd, t.seq as optidisk_id,
+			                    (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                    (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                    (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = f.presv_term_cd) as presv_term_nm,
+			                    (
+			                        case 
+			                            when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                            when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                        end 
+			                    ) as clss_nm
+			            FROM    tb_nkfolder f,
+			                    (
+			                      select   o.record_center_id, o.pic_sno as seq, o.folder_id, m.film_type_cd as optidisk_type_cd, m.tot_copy_cnt
+			                      from    tb_srmfpicdetl o left outer join tb_srmfpic m on m.record_center_id = o.record_center_id and m.pic_sno = o.pic_sno
+			                      where   o.record_center_id = #recordCenterId:VARCHAR# 
+			                      group by o.record_center_id, o.pic_sno, o.folder_id, m.film_type_cd, m.tot_copy_cnt
+			                    ) t
+			            WHERE   f.record_center_id = t.record_center_id
+			            AND      f.folder_id = t.folder_id
+			            AND      f.folder_keep_state_cd in ('02', '03')           <!-- 철의 현재 상태가 이관, 폐기인 경우(RD32) -->
+			        UNION ALL
+			            SELECT  f.record_center_id, f.folder_id, f.title, f.folder_keep_state_cd, '1' as same_presv, t.optidisk_type_cd, t.tot_copy_cnt,
+			                    f.org_cd, t.seq, f.presv_term_cd, f.clss_id, f.creat_yyyy, f.last_eval_yyyy, f.presv_term_cd as opti_presv_term_cd, t.seq as optidisk_id,
+			                    (select dept_nm from tb_stdept where org_cd = f.org_cd) as org_nm,
+			                    (select dept_abbr_nm from tb_stdept where org_cd = f.org_cd) as org_abbr_nm,
+			                    (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd = f.presv_term_cd) as presv_term_nm,
+			                    (
+			                        case 
+			                            when f.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = f.clss_id)
+			                            when f.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = f.record_center_id and unit_cd = f.clss_id)
+			                        end 
+			                    ) as clss_nm
+			            FROM    tb_rdfolder f, 
+			                    (
+			                      select   o.record_center_id, o.pic_sno as seq, o.folder_id, m.film_type_cd as optidisk_type_cd, m.tot_copy_cnt
+			                      from    tb_srmfpicdetl o left outer join tb_srmfpic m on m.record_center_id = o.record_center_id and m.pic_sno = o.pic_sno
+			                      where   o.record_center_id = #recordCenterId:VARCHAR# 
+			                      group by o.record_center_id, o.pic_sno, o.folder_id, m.film_type_cd, m.tot_copy_cnt
+			                    ) t
+			            WHERE   f.record_center_id = t.record_center_id
+			            AND      f.folder_id = t.folder_id
+			            AND      f.disu_div_cd = '3'                             <!-- 폐기평가의견이 재책정인 경우 -->
+			        ) tb
+				WHERE 1=1
+			    <isNotEmpty property="lastEvalYyyy" prepend="AND">
+			        tb.last_eval_yyyy = #lastEvalYyyy:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="creatYyyy" prepend="AND">
+			        tb.creat_yyyy = #creatYyyy:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="optiPresvTermCd" prepend="AND">
+			        tb.presv_term_cd = #optiPresvTermCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="optidiskTypeCd" prepend="AND">
+			        tb.optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="clssId" prepend="AND">
+			        tb.clss_id = #clssId:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="optidiskId" prepend="AND">
+			        tb.seq = #optidiskId:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="orgCd" prepend="AND">
+			        tb.org_cd = #orgCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty property="title" prepend="AND">
+			        tb.title like #title#
+			    </isNotEmpty>
+			ORDER BY tb.seq
+		</isEqual>
+	</select>
+	
+	<!-- 
+		보존매체관리_수록대상정리
+		: 광디스크 수록대상 기록물건 정보를 삭제한다.
+	 -->
+	<delete id="deleteOptidiskRcdInfo" parameterClass="rms.presv.optidiskmst.domain.OptidiskRcd">
+		DELETE	FROM tb_sroptidisk_rcd
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		folder_id = #folderId:VARCHAR#
+		AND		record_id = #recordId:VARCHAR#
+		AND		optidisk_type_cd = #optidiskTypeCd:VARCHAR#	
+	</delete>
+	
+	<!-- 
+		보존매체관리_수록대상정리
+		: 광디스크 수록 대상 기록물철 정보를 삭제한다.
+	 -->
+	<delete id="deleteOptidiskFldInfo" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld">
+		DELETE
+		FROM	tb_sroptidisk_fld
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		folder_id = #folderId:VARCHAR#
+		AND		org_cd = #orgCd:VARCHAR#
+		AND		seq = #seq#
+	</delete>
+			
+	<!-- 
+		보존매체관리_수록대상정리
+		: M/F 기록물 철건 정보를 삭제 
+	-->
+	<delete id="deleteMfFldInfo" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld">
+        DELETE FROM tb_srmfpicdetl
+        WHERE record_center_id = #recordCenterId:VARCHAR#
+        AND    pic_sno = #seq#
+        AND    folder_id = #folderId:VARCHAR#
+    </delete>
+	
+	<!--
+		보존매체관리_수록대상정리
+		:  M/F 수록대상정리시 마스터 테이블 삭제 전 복제 테이블 먼저 삭제 
+	-->
+	<delete id="deleteMfMstInfo" parameterClass="rms.presv.optidiskmst.domain.OptidiskMst">
+		DELETE	FROM tb_srmfcopy
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND 		pic_sno = #seq#
+	</delete>
+	
+	<!-- 보존매체관리 > 수록대상정리 > 일괄정리 버튼 -->
+	<delete id="deleteOptidiskFldInfoList" parameterClass="rms.presv.optidiskmst.domain.OptidiskFld">
+		<isEqual property="mediaDiv" compareValue="1">
+			DELETE	FROM tb_sroptidisk_fld                                       
+			WHERE	record_center_id = #recordCenterId:VARCHAR#
+			AND		folder_id = #folderId:VARCHAR#
+			AND		creat_yyyy = #creatYyyy:VARCHAR#
+			AND		presv_term_cd = #optiPresvTermCd:VARCHAR#
+			AND		optidisk_type_cd = #optidiskTypeCd:VARCHAR#
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+			DELETE FROM tb_srmfpicdetl
+	        WHERE record_center_id = #recordCenterId:VARCHAR#
+	        AND    pic_sno = #seq#
+	        AND    folder_id = #folderId:VARCHAR#
+        </isEqual>
+	</delete>
+	
+	
+</sqlMap>

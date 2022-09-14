@@ -1,0 +1,24 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\openresortopin\OpenResortOpinTrgtChoice.xml
+
+findOpenResortOpinCallList
+Semantic: Class of t does not have attribute last_open_resort_yyyy. select t.record_center_id, t.folder_id, t.record_id, t.title...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\openresortopin\OpenResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findOpenResortOpinCallList
+
+		SELECT t.record_center_id			, t.folder_id			, t.record_id			, t.title			, t.current_open_div_cd			, t.open_grade			, t.org_cd			, t.record_detl_type_cd			, t.clss_id			, t.dept_abbr_nm			, t.bis_clss_nm			, t.record_detl_type_nm			, t.resort_yyyy			, NVL(t.resort_case, '0') as resort_case			, t.resort_prog_state_cd			, t.resort_seq			, t.folder_keep_state_cd			, t.presv_term_cd			, t.full_org_nm		FROM (			SELECT r.record_center_id				, r.folder_id				, r.record_id				, r.title				, r.open_div_cd as current_open_div_cd				, r.open_grade				, r.org_cd				, r.record_detl_type_cd				, r.clss_id				, r.creat_yyyy				, f.cur_keep_org_cd				, f.folder_keep_state_cd				, (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = r.org_cd) as dept_abbr_nm				, (SELECT full_org_nm FROM tb_storg WHERE org_cd = r.org_cd) as full_org_nm				, (CASE WHEN r.clss_div_cd = '1' THEN (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = r.clss_id)					    WHEN r.clss_div_cd = '2' THEN (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = r.record_center_id and unit_cd = r.clss_id)				   END) as bis_clss_nm				, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = r.record_detl_type_cd) as record_detl_type_nm				, o.resort_yyyy				, o.resort_case				, NVL(o.resort_prog_state_cd, '0') as resort_prog_state_cd				, o.resort_seq				, f.presv_term_cd		    FROM tb_rdfolder f		    	, tb_rdrecord r LEFT OUTER JOIN tb_rdopenresortopin o 	              ON 	r.record_center_id = o.record_center_id 	              AND r.record_id = o.record_id 	              AND o.resort_yyyy = '1' 	              AND o.resort_case in ('3','4')                  AND	o.resort_prog_state_cd != '7'		    WHERE   r.record_center_id = f.record_center_id		    AND     r.folder_id = f.folder_id		    AND     f.folder_keep_state_cd in ('01', '04')		    ORDER BY r.creat_yyyy DESC	    ) t		WHERE   t.record_center_id = '1' AND 			t.title like '%' || '1' || '%'		  AND  				t.cur_keep_org_cd = '1'			   AND 			t.record_detl_type_cd = '1'		  AND 			t.clss_id = '1'		  AND 			t.current_open_div_cd = '1'		  AND 			t.open_grade = '1'		  AND 			t.last_open_resort_yyyy = '1'		 		ORDER BY t.resort_case DESC	;
+
+createOpenResortOpin
+The constraint of the foreign key 'tb_rdopenresortopin_fk01' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\openresortopin\OpenResortOpinTrgtChoice.xml
+-- Query    : insert
+-- Query Id : createOpenResortOpin
+
+		INSERT INTO tb_rdopenresortopin (record_center_id			, folder_id			, record_id			, resort_yyyy			, resort_seq			, resort_case			, resort_prog_state_cd			, org_cd			, current_open_div_cd			, clss_id			, resort_case_no			, discu_trgt_flag		) VALUES ('1'			, '1'			, '1'			, '1'			, (SELECT NVL(MAX(RESORT_SEQ), 0) + 1 FROM tb_rdopenresortopin WHERE record_center_id = '1' AND record_id = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'		)	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\openresortopin\OpenResortOpinTrgtChoice.xml

@@ -1,0 +1,340 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigRecordCenterCd
+
+		SELECT RECORD_CENTER_CD FROM TB_STRECORDCENTER WHERE RECORD_CENTER_ID ='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : countMigPagedList
+
+		SELECT COUNT(1)		FROM (			(				SELECT SUM(FOLDER_CNT) FOLDER_CNT,					   SUM(FOLDERCHNGHIST_CNT) FOLDERCHNGHIST_CNT,					   SUM(FOLDERKEYWD_CNT) FOLDERKEYWD_CNT,					   SUM(RECORD_CNT) RECORD_CNT,					   SUM(RECORDCHNGHIST_CNT) RECORDCHNGHIST_CNT,					   SUM(RECORDKEYWD_CNT) RECORDKEYWD_CNT,					   SUM(ATTACH_CNT) ATTACH_CNT,				       A.REG_DTIME,					   DECODE(B.MIG_FLAG,'0','접수','1','등록완료','9','접수완료') MIG_FLAG				  FROM (                                                                                                              				  			SELECT COUNT(1) FOLDER_CNT,0  FOLDERCHNGHIST_CNT,0 FOLDERKEYWD_CNT,0 RECORD_CNT,0 RECORDCHNGHIST_CNT,0 RECORDKEYWD_CNT, 0 ATTACH_CNT, REG_DTIME,MIG_FLAG				  			  FROM TB_MGFOLDER             				  			 WHERE RECORD_CENTER_CD = '1'				  			   AND MIG_FLAG IN ('0','9')				  			   				  			   AND REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'				  		  GROUP BY REG_DTIME,MIG_FLAG				  			UNION ALL							SELECT 0, COUNT(1) FOLDERCHNGHIST_CNT,0,0,0,0,0, B.REG_DTIME ,B.MIG_FLAG				  			  FROM TB_MGFOLDERCHNGHIST A, TB_MGFOLDER B				  			 WHERE B.RECORD_CENTER_CD = '1'				  			   AND A.RECORD_CENTER_CD = B.RECORD_CENTER_CD							   AND A.FOLDER_ID 	      = B.FOLDER_ID				  			   AND B.MIG_FLAG IN ('0','9')				  			   				  			   AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'			   			  GROUP BY B.REG_DTIME,B.MIG_FLAG							UNION ALL							SELECT 0,0, COUNT(1) FOLDERKEYWD_CNT,0,0,0,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_MGFOLDERKEYWD A, TB_MGFOLDER B		 		  			 WHERE B.RECORD_CENTER_CD = '1'		 		  			   AND A.RECORD_CENTER_CD = B.RECORD_CENTER_CD							   AND A.FOLDER_ID 	      = B.FOLDER_ID		 		  			   AND B.MIG_FLAG IN ('0','9')		 		  			   		 		  			   AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'			  			  GROUP BY B.REG_DTIME,B.MIG_FLAG				  			UNION ALL				  			SELECT 0,0,0, COUNT(1) RECORD_CNT,0,0,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_MGRECORD A, TB_MGFOLDER B		 		  			 WHERE B.RECORD_CENTER_CD = '1'		 		  			   AND A.RECORD_CENTER_CD = B.RECORD_CENTER_CD							   AND A.FOLDER_ID	      = B.FOLDER_ID		 		  			   AND B.MIG_FLAG IN ('0','9')		 		  			   		 		  			   AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'		 	  			  GROUP BY B.REG_DTIME,B.MIG_FLAG							UNION ALL							SELECT 0,0,0,0, COUNT(1) RECORDCHNGHIST_CNT,0,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_MGRECORDCHNGHIST A, TB_MGFOLDER B, TB_MGRECORD C				  	         WHERE B.RECORD_CENTER_CD = '1'				  	           AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		                       AND A.RECORD_ID 		  = C.RECORD_ID							   AND B.RECORD_CENTER_CD = C.RECORD_CENTER_CD		                       AND B.FOLDER_ID 		  = C.FOLDER_ID				  	           AND B.MIG_FLAG IN ('0','9')				  	           				  	           AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'		 	  	          GROUP BY B.REG_DTIME,B.MIG_FLAG							UNION ALL							SELECT 0,0,0,0,0, COUNT(1) RECORDKEYWD_CNT,0, B.REG_DTIME,B.MIG_FLAG 				  			  FROM TB_MGRECORDKEYWD A,				  			       (SELECT DISTINCT B.REG_DTIME, B.MIG_FLAG, C.RECORD_ID				  			          FROM TB_MGFOLDER B, TB_MGRECORD C				  			         WHERE B.RECORD_CENTER_CD = '1'				  			           AND B.RECORD_CENTER_CD = C.RECORD_CENTER_CD(+)									   AND B.FOLDER_ID 	      = C.FOLDER_ID(+)				  			           AND B.MIG_FLAG IN ('0','9')				  			           				  			           AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959') B				  	         WHERE A.RECORD_ID = B.RECORD_ID				  	           AND B.MIG_FLAG IN ('0','9')			  	          GROUP BY B.REG_DTIME,B.MIG_FLAG				  			UNION ALL				  			SELECT   0, 0, 0, 0, 0, 0, COUNT (1), B.REG_DTIME, B.MIG_FLAG		                      FROM TB_MGFOLDER B, TB_MGRECORD C, TB_MGATTACHFILE A		                     WHERE B.RECORD_CENTER_CD = '1'		                       AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1','YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1','YYYYMMDD')), 'YYYYMMDD')||'235959'		                       AND B.RECORD_CENTER_CD = C.RECORD_CENTER_CD(+)		                       AND B.FOLDER_ID 		  = C.FOLDER_ID(+)							   AND C.RECORD_CENTER_CD = A.RECORD_CENTER_CD		                       AND C.RECORD_ID = A.RECORD_TAKE_SEQ 		                  GROUP BY B.REG_DTIME, B.MIG_FLAG				  	    )A, (SELECT DISTINCT MIG_FLAG FROM TB_MGFOLDER) B				WHERE A.MIG_FLAG = B.MIG_FLAG						AND A.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'						AND B.MIG_FLAG IN ('0','9')				GROUP BY A.REG_DTIME,B.MIG_FLAG			)			UNION ALL			(				SELECT SUM(FOLDER_CNT) FOLDER_CNT,					   SUM(FOLDERCHNGHIST_CNT) FOLDERCHNGHIST_CNT,					   SUM(FOLDERKEYWD_CNT) FOLDERKEYWD_CNT,					   SUM(RECORD_CNT) RECORD_CNT,					   SUM(RECORDCHNGHIST_CNT) RECORDCHNGHIST_CNT,					   SUM(RECORDKEYWD_CNT) RECORDKEYWD_CNT,					   SUM(ATTACH_CNT) ATTACH_CNT,				       A.REG_DTIME,					   DECODE(B.MIG_FLAG,'0','접수','1','등록완료','9','접수완료') MIG_FLAG				  FROM (				  			SELECT COUNT(1) FOLDER_CNT,0  FOLDERCHNGHIST_CNT,0 FOLDERKEYWD_CNT,0 RECORD_CNT,0 RECORDCHNGHIST_CNT,0 RECORDKEYWD_CNT, 0 ATTACH_CNT, REG_DTIME,MIG_FLAG				  			  FROM TB_RDFOLDER				  		     WHERE RECORD_CENTER_ID = '1'		 					   AND MIG_FLAG = '1'				  		       AND REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'				  		  GROUP BY REG_DTIME,MIG_FLAG				  			UNION ALL							SELECT 0, COUNT(1) FOLDERCHNGHIST_CNT,0,0,0,0,0, B.REG_DTIME ,B.MIG_FLAG				  			  FROM TB_RDFOLDERCHNGHIST A, TB_RDFOLDER B				  			 WHERE B.RECORD_CENTER_ID = '1'							   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID							   AND A.FOLDER_ID 		  = B.FOLDER_ID				  			   AND B.MIG_FLAG 		  = '1'				  			   				  			   AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'			   			  GROUP BY B.REG_DTIME,B.MIG_FLAG							UNION ALL							SELECT 0,0, COUNT(1) FOLDERKEYWD_CNT,0,0,0,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_RDFOLDERKEYWD A, TB_RDFOLDER B		 		  			 WHERE B.RECORD_CENTER_ID = '1'							   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID							   AND A.FOLDER_ID 		  = B.FOLDER_ID		 		  			   AND B.MIG_FLAG 		  = '1'		 		  			   		 		  			   AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'			  			  GROUP BY B.REG_DTIME,B.MIG_FLAG				  			UNION ALL				  			SELECT 0,0,0, COUNT(1) RECORD_CNT,0,0,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_RDRECORD A, TB_RDFOLDER B		 		  			 WHERE B.RECORD_CENTER_ID = '1'							   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID							   AND A.FOLDER_ID 		  = B.FOLDER_ID		 		  			   AND B.MIG_FLAG 		  = '1'		 		  			   		 		  			   AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'		 	  			  GROUP BY B.REG_DTIME,B.MIG_FLAG							UNION ALL							SELECT 0,0,0,0, COUNT(1) RECORDCHNGHIST_CNT,0,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_RDRECORDCHNGHIST A, TB_RDFOLDER B, TB_RDRECORD C				  	         WHERE B.RECORD_CENTER_ID = '1'							   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		                       AND A.RECORD_ID		  = C.RECORD_ID							   AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		                       AND B.FOLDER_ID        = C.FOLDER_ID				  	           AND B.MIG_FLAG 		  = '1'				  	           				  	           AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'		 	  	          GROUP BY B.REG_DTIME,B.MIG_FLAG							UNION ALL							SELECT 0,0,0,0,0, COUNT(1) RECORDKEYWD_CNT,0, B.REG_DTIME,B.MIG_FLAG				  			  FROM TB_RDRECORDKEYWD A,				  			       (SELECT DISTINCT B.REG_DTIME, B.MIG_FLAG, C.RECORD_ID, B.RECORD_CENTER_ID				  			          FROM TB_RDFOLDER B, TB_RDRECORD C				  			         WHERE B.RECORD_CENTER_ID = '1'									   AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)							   		   AND B.FOLDER_ID 		  = C.FOLDER_ID(+)				  			           AND B.MIG_FLAG 		  = '1'				  			           				  			           AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959') B				  	         WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID				  	           AND A.RECORD_ID 		  = B.RECORD_ID				  	           AND B.MIG_FLAG 		  = '1'			  	          GROUP BY B.REG_DTIME,B.MIG_FLAG				  			UNION ALL				  			SELECT   0, 0, 0, 0, 0, 0, COUNT (1), B.REG_DTIME, B.MIG_FLAG				              FROM TB_STRECORDORIGN A, TB_RDFOLDER B,TB_RDRECORD C,TB_STORIGNFILE D				             WHERE A.RECORD_CENTER_ID = '1'							   AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID				               AND B.FOLDER_ID 		  = C.FOLDER_ID							   AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID				               AND C.RECORD_ID 		  = A.RECORD_ID 							   AND C.ORIGN_ID		  = A.ORIGN_ID							   AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID				               AND D.ORIGN_ID 		  = A.ORIGN_ID				               AND B.MIG_FLAG 		  = '1'		                  GROUP BY B.REG_DTIME, B.MIG_FLAG				  	    )A, (SELECT DISTINCT MIG_FLAG FROM TB_RDFOLDER) B				WHERE A.MIG_FLAG = B.MIG_FLAG				  AND A.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'			 	  AND B.MIG_FLAG = '1'				GROUP BY A.REG_DTIME,B.MIG_FLAG			)		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigPagedList
+
+		SELECT E.folder_cnt                ,E.folderchnghist_cnt                ,E.folderkeywd_cnt                ,E.record_cnt                ,E.recordchnghist_cnt                ,E.recordkeywd_cnt                ,E.attach_cnt                ,E.reg_dtime                ,E.mig_flag                ,E.mig_flag_nm        FROM (            SELECT D.*            FROM (                SELECT ROWNUM AS rnum                        , C.*                FROM (                    SELECT *                    FROM (                        SELECT SUM(FOLDER_CNT) FOLDER_CNT,                               SUM(FOLDERCHNGHIST_CNT) FOLDERCHNGHIST_CNT,                               SUM(FOLDERKEYWD_CNT) FOLDERKEYWD_CNT,                               SUM(RECORD_CNT) RECORD_CNT,                               SUM(RECORDCHNGHIST_CNT) RECORDCHNGHIST_CNT,                               SUM(RECORDKEYWD_CNT) RECORDKEYWD_CNT,                               SUM(ATTACH_CNT) ATTACH_CNT,                               A.REG_DTIME,                               B.MIG_FLAG,                               DECODE(B.MIG_FLAG,'0','접수','1','등록완료','9','접수완료') MIG_FLAG_NM                          FROM (                                                                                                                                                    SELECT COUNT(1) FOLDER_CNT,0  FOLDERCHNGHIST_CNT,0 FOLDERKEYWD_CNT,0 RECORD_CNT,0 RECORDCHNGHIST_CNT,0 RECORDKEYWD_CNT, 0 ATTACH_CNT, REG_DTIME,MIG_FLAG                                        FROM TB_MGFOLDER                                                    WHERE RECORD_CENTER_CD ='1'                                         AND MIG_FLAG IN ('0','9')                                         AND REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                    GROUP BY REG_DTIME,MIG_FLAG                                      UNION ALL                                    SELECT 0, COUNT(1) FOLDERCHNGHIST_CNT,0,0,0,0,0, B.REG_DTIME ,B.MIG_FLAG                                        FROM TB_MGFOLDERCHNGHIST A, TB_MGFOLDER B                                       WHERE B.RECORD_CENTER_CD ='1'                                         AND A.RECORD_CENTER_CD = B.RECORD_CENTER_CD                                       AND A.FOLDER_ID           = B.FOLDER_ID                                         AND B.MIG_FLAG IN ('0','9')                                                                                  AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                     GROUP BY B.REG_DTIME,B.MIG_FLAG                                    UNION ALL                                    SELECT 0,0, COUNT(1) FOLDERKEYWD_CNT,0,0,0,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_MGFOLDERKEYWD A, TB_MGFOLDER B                                        WHERE B.RECORD_CENTER_CD ='1'                                          AND A.RECORD_CENTER_CD = B.RECORD_CENTER_CD                                       AND A.FOLDER_ID           = B.FOLDER_ID                                          AND B.MIG_FLAG IN ('0','9')                                                                                    AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                    GROUP BY B.REG_DTIME,B.MIG_FLAG                                      UNION ALL                                      SELECT 0,0,0, COUNT(1) RECORD_CNT,0,0,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_MGRECORD A, TB_MGFOLDER B                                        WHERE B.RECORD_CENTER_CD ='1'                                          AND A.RECORD_CENTER_CD = B.RECORD_CENTER_CD                                       AND A.FOLDER_ID          = B.FOLDER_ID                                          AND B.MIG_FLAG IN ('0','9')                                                                                    AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                     GROUP BY B.REG_DTIME,B.MIG_FLAG                                    UNION ALL                                    SELECT 0,0,0,0, COUNT(1) RECORDCHNGHIST_CNT,0,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_MGRECORDCHNGHIST A, TB_MGFOLDER B, TB_MGRECORD C                                       WHERE B.RECORD_CENTER_CD ='1'                                         AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD                                       AND A.RECORD_ID           = C.RECORD_ID                                       AND B.RECORD_CENTER_CD = C.RECORD_CENTER_CD                                       AND B.FOLDER_ID           = C.FOLDER_ID                                         AND B.MIG_FLAG IN ('0','9')                                                                                  AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                     GROUP BY B.REG_DTIME,B.MIG_FLAG                                    UNION ALL                                    SELECT 0,0,0,0,0, COUNT(1) RECORDKEYWD_CNT,0, B.REG_DTIME,B.MIG_FLAG                                         FROM TB_MGRECORDKEYWD A,                                             (SELECT DISTINCT B.REG_DTIME, B.MIG_FLAG, C.RECORD_ID                                                FROM TB_MGFOLDER B, TB_MGRECORD C                                               WHERE B.RECORD_CENTER_CD ='1'                                                 AND B.RECORD_CENTER_CD = C.RECORD_CENTER_CD(+)                                               AND B.FOLDER_ID           = C.FOLDER_ID(+)                                                 AND B.MIG_FLAG IN ('0','9')                                                                                                  AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959') B                                       WHERE A.RECORD_ID = B.RECORD_ID                                         AND B.MIG_FLAG IN ('0','9')                                    GROUP BY B.REG_DTIME,B.MIG_FLAG                                      UNION ALL                                      SELECT   0, 0, 0, 0, 0, 0, COUNT (1), B.REG_DTIME, B.MIG_FLAG                                      FROM TB_MGFOLDER B, TB_MGRECORD C, TB_MGATTACHFILE A                                     WHERE B.RECORD_CENTER_CD ='1'                                       AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1','YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1','YYYYMMDD')), 'YYYYMMDD')||'235959'                                       AND B.RECORD_CENTER_CD = C.RECORD_CENTER_CD(+)                                       AND B.FOLDER_ID           = C.FOLDER_ID(+)                                       AND C.RECORD_CENTER_CD = A.RECORD_CENTER_CD                                       AND C.RECORD_ID = A.RECORD_TAKE_SEQ                                   GROUP BY B.REG_DTIME, B.MIG_FLAG                                  )A, (SELECT DISTINCT MIG_FLAG FROM TB_MGFOLDER) B                        WHERE A.MIG_FLAG = B.MIG_FLAG                                                                AND A.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                AND B.MIG_FLAG IN ('0','9')                        GROUP BY A.REG_DTIME,B.MIG_FLAG                        UNION ALL                        SELECT SUM(FOLDER_CNT) FOLDER_CNT,                               SUM(FOLDERCHNGHIST_CNT) FOLDERCHNGHIST_CNT,                               SUM(FOLDERKEYWD_CNT) FOLDERKEYWD_CNT,                               SUM(RECORD_CNT) RECORD_CNT,                               SUM(RECORDCHNGHIST_CNT) RECORDCHNGHIST_CNT,                               SUM(RECORDKEYWD_CNT) RECORDKEYWD_CNT,                               SUM(ATTACH_CNT) ATTACH_CNT,                               A.REG_DTIME,                               B.MIG_FLAG,                               DECODE(B.MIG_FLAG,'0','접수','1','등록완료','9','접수완료') MIG_FLAG_NM                          FROM (                                      SELECT COUNT(1) FOLDER_CNT,0  FOLDERCHNGHIST_CNT,0 FOLDERKEYWD_CNT,0 RECORD_CNT,0 RECORDCHNGHIST_CNT,0 RECORDKEYWD_CNT, 0 ATTACH_CNT, REG_DTIME,MIG_FLAG                                        FROM TB_RDFOLDER                                       WHERE RECORD_CENTER_ID ='1'                                        AND MIG_FLAG = '1'                                                                                  AND REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                    GROUP BY REG_DTIME,MIG_FLAG                                      UNION ALL                                    SELECT 0, COUNT(1) FOLDERCHNGHIST_CNT,0,0,0,0,0, B.REG_DTIME ,B.MIG_FLAG                                        FROM TB_RDFOLDERCHNGHIST A, TB_RDFOLDER B                                       WHERE B.RECORD_CENTER_ID ='1'                                       AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                                       AND A.FOLDER_ID           = B.FOLDER_ID                                         AND B.MIG_FLAG           = '1'                                                                                  AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                     GROUP BY B.REG_DTIME,B.MIG_FLAG                                    UNION ALL                                    SELECT 0,0, COUNT(1) FOLDERKEYWD_CNT,0,0,0,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_RDFOLDERKEYWD A, TB_RDFOLDER B                                        WHERE B.RECORD_CENTER_ID ='1'                                       AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                                       AND A.FOLDER_ID           = B.FOLDER_ID                                          AND B.MIG_FLAG           = '1'                                                                                    AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                    GROUP BY B.REG_DTIME,B.MIG_FLAG                                      UNION ALL                                      SELECT 0,0,0, COUNT(1) RECORD_CNT,0,0,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_RDRECORD A, TB_RDFOLDER B                                        WHERE B.RECORD_CENTER_ID ='1'                                       AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                                       AND A.FOLDER_ID           = B.FOLDER_ID                                          AND B.MIG_FLAG           = '1'                                                                                    AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                     GROUP BY B.REG_DTIME,B.MIG_FLAG                                    UNION ALL                                    SELECT 0,0,0,0, COUNT(1) RECORDCHNGHIST_CNT,0,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_RDRECORDCHNGHIST A, TB_RDFOLDER B, TB_RDRECORD C                                       WHERE B.RECORD_CENTER_ID ='1'                                       AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID                                       AND A.RECORD_ID          = C.RECORD_ID                                       AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID                                       AND B.FOLDER_ID        = C.FOLDER_ID                                         AND B.MIG_FLAG           = '1'                                                                                  AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                                     GROUP BY B.REG_DTIME,B.MIG_FLAG                                    UNION ALL                                    SELECT 0,0,0,0,0, COUNT(1) RECORDKEYWD_CNT,0, B.REG_DTIME,B.MIG_FLAG                                        FROM TB_RDRECORDKEYWD A,                                             (SELECT DISTINCT B.REG_DTIME, B.MIG_FLAG, C.RECORD_ID, B.RECORD_CENTER_ID                                                FROM TB_RDFOLDER B, TB_RDRECORD C                                               WHERE B.RECORD_CENTER_ID ='1'                                               AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)                                                  AND B.FOLDER_ID           = C.FOLDER_ID(+)                                                 AND B.MIG_FLAG           = '1'                                                                                                AND B.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959') B                                       WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                                         AND A.RECORD_ID           = B.RECORD_ID                                         AND B.MIG_FLAG           = '1'                                    GROUP BY B.REG_DTIME,B.MIG_FLAG                                      UNION ALL                                      SELECT   0, 0, 0, 0, 0, 0, COUNT (1), B.REG_DTIME, B.MIG_FLAG                                      FROM TB_STRECORDORIGN A, TB_RDFOLDER B,TB_RDRECORD C,TB_STORIGNFILE D                                     WHERE A.RECORD_CENTER_ID ='1'                                       AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID                                       AND B.FOLDER_ID           = C.FOLDER_ID                                       AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID                                       AND C.RECORD_ID           = A.RECORD_ID                                        AND C.ORIGN_ID          = A.ORIGN_ID                                       AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID                                       AND D.ORIGN_ID           = A.ORIGN_ID                                       AND B.MIG_FLAG           = '1'                                  GROUP BY B.REG_DTIME, B.MIG_FLAG                                  )A, (SELECT DISTINCT MIG_FLAG FROM TB_RDFOLDER) B                        WHERE A.MIG_FLAG = B.MIG_FLAG                          AND A.REG_DTIME BETWEEN TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'000000' AND TO_CHAR((TO_DATE('1', 'YYYYMMDD')), 'YYYYMMDD')||'235959'                           AND B.MIG_FLAG = '1'                        GROUP BY A.REG_DTIME,B.MIG_FLAG                    )                            ORDER BY REG_DTIME                ) C                WHERE ROWNUM <= '1'            ) D            WHERE D.rnum >= '1'        ) E        ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationPresvBox
+
+		INSERT INTO TB_SRPRESVBOX		(		RECORD_CENTER_ID, PRESV_BOX_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_SHELF_CNO, BOOKSF_SHELF_RNO, SHELF_R_SNO, ARNG_FOLDER_CNT, USE_FLAG		)		(		    SELECT DISTINCT B.RECORD_CENTER_ID		        , B.PRESV_BOX_ID		        , B.STAKRM_ID		        , (SELECT Z.BOOKSF_ID FROM TB_SRBOOKSF Z WHERE Z.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND Z.STAKRM_ID=B.STAKRM_ID AND Z.BOOKSF_NM=B.BOOKSF_ID) BOOKSF_ID		        , B.BOOKSF_SHELF_CNO		        , B.BOOKSF_SHELF_RNO		        , B.SHELF_R_SNO		        , B.ARNG_FOLDER_CNT		        , B.USE_FLAG		    FROM (		        SELECT '1' RECORD_CENTER_ID		            , A.PRESV_BOX_ID		            , (SELECT Z.STAKRM_ID FROM TB_SRSTAKRM Z WHERE Z.RECORD_CENTER_ID='1' AND Z.STAKRM_NM=A.STAKRM_ID) STAKRM_ID		            , A.BOOKSF_ID		            , A.SHELF_C_CNT BOOKSF_SHELF_CNO		            , A.SHELF_R_CNT BOOKSF_SHELF_RNO		            , A.STAKRM_SNO SHELF_R_SNO		            , 1 ARNG_FOLDER_CNT		            , '1' USE_FLAG		        FROM  TB_MGFOLDER A		        WHERE A.REG_DTIME = '1'		        AND   A.PRESV_BOX_ID IS NOT NULL		    ) B		    WHERE NOT EXISTS (SELECT 1 FROM TB_SRPRESVBOX C WHERE C.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND C.PRESV_BOX_ID=B.PRESV_BOX_ID)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationFolder
+
+	INSERT INTO TB_RDFOLDER		(			 RECORD_CENTER_ID ,TAKE_YYYY_SNO, FOLDER_ID			,CREAT_SYS_CD, ORG_CD, CLSS_ID, CREAT_YYYY			,FOLDER_REG_SEQ, HO_NO, CLSS_NM, ORG_TITLE, TITLE, SUB_TITLE			,FOLDER_TYPE_DIV_CD, ETC_FOLDER_TYPE, FOLDER_DETL_TYPE_CD, CREAT_PURPS, SUMRY			,MEDIA_FORMAT, MEDIUM, FOLDER_SIZE, RECORD_TOT_PAGE_CNT, RECORD_REG_CNT			,EFILE_CNT, NEW_DIV_CD, CHNG_FLAG, OLD_FOLDER_CREAT_ORG_NM, OLD_FOLDER_CLSS_NO			,CLSS_DIV_CD, FOLDER_BISPJT_DIV_CD, BIS_CLSS_PATH_NM, PJT_CLSS_PATH_NM, FOLDER_START_DTIME			,FOLDER_CLOSE_DTIME, FUNSH_END_DTIME, FUNSH_RSN, PRESV_TERM_CD, PRESV_TERM_FIX_RSN			,PRESV_METHOD_CD, PRESV_AREA_CD, PRESV_LOC, PRESV_DUTY_CHRGR_NM, SECU_CLSS_CD			,SECU_CLSS_RSN, OPER_READ_RANGE_CD, READ_RANGE, OPEN_DIV_CD, TAKE_TAKOVR_DIV_CD			,TAKE_TAKOVR_ORG_CD, TAKE_TAKOVR_CLSS_ID, TAKE_TAKOVR_CREAT_YYYY, TAKE_TAKOVR_FOLDER_REG_SEQ, TAKE_TAKOVR_HO_NO			,TAKE_TAKOVR_YMD, CREAT_USER_ID, CREAT_USER_NM, CREAT_USER_ORG_CD, CREAT_USER_ORG_NM			,CREAT_USER_POS_RANK_NM, CREAT_DTIME, CREAT_SYS_FOLDER_ID, TAKE_YYYY, PDF_A1_TRANS_STATE			,NEO_TRANS_STATE, RECORD_NEO_TRANS_STATE, DAMG_FLAG, BOOKSF_ARNG_FLAG, EFILE_DEL_FLAG			,OUT_FLAG, SCAN_PROG_STATE_CD, ERECORD_FLAG, REG_DTIME, FOLDER_KEEP_STATE_CD			,STAKRM_MNG_NO_DIV_CD, STAKRM_MNG_NO_RULE, STAKRM_MNG_NO, GROUP_PRESV_TERM_CD			,TAKOVR_RECORD_CENTER_ID, ORG_TAKE_YYYY, ORG_TAKE_SNO, ORG_TAKE_EXAM_RSLT_CD			, EXPT_DISUSE_YYYY, EXPT_TRANSF_YYYY, CUR_KEEP_ORG_CD, MIG_FLAG			, TRANSF_STATE_CD, TRANSF_YMD, DISUSE_STATE_CD, DISUSE_YMD, PRESV_BOX_ID		)		(	   SELECT B.RECORD_CENTER_ID ,(TB_RDFOLDER_SQ01.NEXTVAL) TAKE_YYYY_SNO,TO_CHAR(SYSDATE, 'YYYY')||LPAD((TB_RDFOLDER_SQ01.NEXTVAL),10,'0') FOLDER_ID	       ,'05', A.ORG_CD, A.CLSS_ID, A.CREAT_YYYY	       ,A.FOLDER_REG_SEQ, A.HO_NO, A.CLSS_NM, A.TITLE, A.TITLE, A.SUB_TITLE	       ,A.FOLDER_TYPE_DIV_CD, A.ETC_FOLDER_TYPE, A.FOLDER_DETL_TYPE_CD, A.CREAT_PURPS, A.SUMRY	       ,A.MEDIA_FORMAT, A.MEDIUM, A.FOLDER_SIZE, A.RECORD_TOT_PAGE_CNT, A.RECORD_REG_CNT	       ,A.EFILE_CNT, A.NEW_DIV_CD, A.CHNG_FLAG, A.OLD_FOLDER_CREAT_ORG_NM, A.OLD_FOLDER_CLSS_NO	       ,A.CLSS_DIV_CD, A.FOLDER_BISPJT_DIV_CD,A.BIS_CLSS_PATH_NM,A.PJT_CLSS_PATH_NM,A.FOLDER_START_DTIME	       ,A.FOLDER_CLOSE_DTIME, A.FUNSH_END_DTIME, A.FUNSH_RSN	       ,DECODE(A.PRESV_TERM_CD, '20','25',A.PRESV_TERM_CD) PRESV_TERM_CD	       ,A.PRESV_TERM_FIX_RSN	       ,A.PRESV_METHOD_CD, A.PRESV_AREA_CD, A.PRESV_LOC, A.PRESV_DUTY_CHRGR_NM, A.SECU_CLSS_CD	       ,A.SECU_CLSS_RSN, '01' OPER_READ_RANGE_CD, A.READ_RANGE, A.OPEN_DIV_CD, A.TAKE_TAKOVR_DIV_CD	       ,A.TAKE_TAKOVR_ORG_CD, A.TAKE_TAKOVR_CLSS_ID, A.TAKE_TAKOVR_CREAT_YYYY, A.TAKE_TAKOVR_FOLDER_REG_SEQ, A.TAKE_TAKOVR_HO_NO	       ,A.TAKE_TAKOVR_YMD, A.CREAT_USER_ID, A.CREAT_USER_NM, A.CREAT_USER_ORG_CD, A.CREAT_USER_ORG_NM	       ,A.CREAT_USER_POS_RANK_NM, A.CREAT_DTIME, A.CREAT_SYS_FOLDER_ID, A.TAKE_YYYY, A.PDF_A1_TRANS_STATE	       ,A.NEO_TRANS_STATE, A.RECORD_NEO_TRANS_STATE, A.DAMG_FLAG, A.BOOKSF_ARNG_FLAG, A.EFILE_DEL_FLAG	       ,A.OUT_FLAG, A.SCAN_PROG_STATE_CD, A.ERECORD_FLAG, A.REG_DTIME, A.FOLDER_KEEP_STATE_CD	       ,A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO_RULE, A.STAKRM_MNG_NO, A.PRESV_TERM_CD        	   ,'','','',''	       ,DECODE(GREATEST(TO_NUMBER(A.PRESV_TERM_CD),19),19,(TO_NUMBER(NVL(SUBSTR(A.FOLDER_CLOSE_DTIME,0,4),A.CREAT_YYYY))+1+TO_NUMBER(A.PRESV_TERM_CD))) EXPT_DISUSE_YYYY           ,DECODE(LEAST(TO_NUMBER(A.PRESV_TERM_CD),20),20,(TO_NUMBER(NVL(SUBSTR(A.FOLDER_CLOSE_DTIME,0,4),A.CREAT_YYYY))+10)) EXPT_TRANSF_YYYY		   ,'3','1'		   ,(CASE WHEN A.TRANSF_STATE_CD='1' THEN '5' ELSE '0' END) AS TRANSF_STATE_CD		   , A.TRANSF_YMD 		   ,(CASE WHEN A.DISUSE_STATE_CD='1' THEN '7' ELSE '0' END) AS DISUSE_STATE_CD		   , A.DISUSE_YMD 		   , A.PRESV_BOX_ID	   FROM TB_MGFOLDER A,  TB_STRECORDCENTER B	  WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD	    AND B.RECORD_CENTER_ID = '1'	    AND A.REG_DTIME		   = '1'  	   );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationFolderChngHist
+
+		INSERT INTO TB_RDFOLDERCHNGHIST		(			RECORD_CENTER_ID , FOLDER_ID , CHNG_HIST_NO , ORG_CD, CLSS_ID,			CREAT_YYYY , FOLDER_REG_SEQ, HO_NO, TITLE_BEF, TITLE_AFT,			FOLDER_TYPE_DIV_CD_BEF, FOLDER_TYPE_DIV_CD_AFT, CHNG_YMD , CHNG_RSN, CHNG_USER_NM,			REG_DTIME		)		(		SELECT B.RECORD_CENTER_ID, D.FOLDER_ID, A.CHNG_HIST_NO, A.ORG_CD , A.CLSS_ID,	   		   A.CREAT_YYYY , A.FOLDER_REG_SEQ , A.HO_NO  , A.TITLE_BEF , A.TITLE_AFT,	   	       A.FOLDER_TYPE_DIV_CD_BEF, A.FOLDER_TYPE_DIV_CD_AFT, A.CHNG_YMD, A.CHNG_RSN , A.CHNG_USER_NM,     	       A.REG_DTIME		  FROM TB_MGFOLDERCHNGHIST A, TB_STRECORDCENTER B, TB_MGFOLDER C, TB_RDFOLDER  D		 WHERE A.RECORD_CENTER_CD   = B.RECORD_CENTER_CD	       AND A.RECORD_CENTER_CD 	= C.RECORD_CENTER_CD	       AND A.FOLDER_ID 		  	= C.FOLDER_ID		   AND C.CREAT_SYS_CD       = D.CREAT_SYS_CD		   AND C.ORG_CD 	   	    = D.ORG_CD		   AND C.CLSS_ID 	   	    = D.CLSS_ID		   AND C.CREAT_YYYY 	    = D.CREAT_YYYY		   AND C.FOLDER_REG_SEQ     = D.FOLDER_REG_SEQ		   AND C.HO_NO 	   	  	    = D.HO_NO		   AND B.RECORD_CENTER_ID   = '1'		   AND C.REG_DTIME  		= '1'		   )                                                                                                                                                                                                                                                                        	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigrationFolderKeywdList
+
+		 SELECT B.RECORD_CENTER_ID, D.FOLDER_ID, A.KEYWD_LEVL, A.KEYWD, A.REG_DTIME  		  FROM TB_MGFOLDERKEYWD A, TB_STRECORDCENTER B, TB_MGFOLDER C, TB_RDFOLDER D 		 WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		   AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		   AND A.FOLDER_ID		  = C.FOLDER_ID		   AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		   AND C.CREAT_SYS_CD     = D.CREAT_SYS_CD 		   AND C.ORG_CD 	   	  = D.ORG_CD		   AND C.CLSS_ID 	   	  = D.CLSS_ID		   AND C.CREAT_YYYY 	  = D.CREAT_YYYY		   AND C.FOLDER_REG_SEQ   = D.FOLDER_REG_SEQ		   AND C.HO_NO 	   	  	  = D.HO_NO		   AND C.REG_DTIME		  = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : countMigrationFolderKeywd
+
+        SELECT COUNT(1)		FROM   TB_RDFOLDERKEYWD		WHERE  RECORD_CENTER_ID = '1'		AND    FOLDER_ID = '1'		AND    KEYWD_LEVL = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationFolderKeywd
+
+		INSERT INTO TB_RDFOLDERKEYWD		(			RECORD_CENTER_ID, FOLDER_ID, KEYWD_LEVL, KEYWD, REG_DTIME		)		VALUES		(		    '1', '1', '1', '1', '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationFolderKeywd
+
+		UPDATE TB_RDFOLDERKEYWD		SET    KEYWD = (KEYWD || ',' || '1')		WHERE  RECORD_CENTER_ID = '1'		AND    FOLDER_ID = '1'		AND    KEYWD_LEVL = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecord
+
+	INSERT INTO TB_RDRECORD		(			TAKE_YYYY_SNO, RECORD_ID, FOLDER_ID, CREAT_SYS_CD, ORG_CD, CREAT_REG_DTIME			,CREAT_REG_NO, DTCH_REG_NO, ORG_TITLE, TITLE, SUB_TITLE, RECORD_REG_DIV_CD			,RECORD_DETL_TYPE_CD, AUDVIS_RECORD_TYPE, MEDIA_FORMAT, MEDIUM, RECORD_SIZE			,ATTACH_CNT, RECORD_PAGE_CNT, APROV_POS_RANK_NM, DUTY_CHRGR_NM, ENFORC_YMD			,CREAT_ORG_REG_NO, ERECORD_FLAG, OLD_RECORD_CREAT_ORG_NM, OLD_RECORD_DOCNO, OLD_RECORD_PRESV_TERM			,PRESV_LOC, SECU_CLSS_CD, SECU_CLSS_RSN, READ_RANGE, OPER_READ_RANGE_CD			,OPEN_DIV_CD, OPEN_GRADE, PART_OPEN_RSN, OPEN_LIMIT_PART, OPEN_EXPT_DTIME			,RECVER, SENDER, CHNG_VER_NO, DOC_DISTR_NO, FOLDER_CLSS_NO			,SPCL_RECORD_TYPE, ORIGN_COPY_FLAG, NEW_DIV_CD, CHNG_FLAG, RJCT_FLAG			,DOC_NO, CREAT_SYS_RECORD_ID, RECORD_CENTER_ID, NEO_TRANS_STATE, PDF_A1_TRANS_STATE			,CREAT_YYYY, TAKE_YYYY, CLSS_DIV_CD, CLSS_ID, CLSS_NM			,RECORD_SUMRY, REG_DTIME, CREAT_USER_ID, CREAT_USER_ORG_CD, CREAT_USER_ORG_NM			,CREAT_USER_POS_RANK_NM, CREAT_DTIME, AUDVIS_RECORD_SUMRY, MIG_FLAG, SCAN_TEST_DIV_CD, SCAN_FIN_FLAG, transf_neo_trans_state		)		(	   SELECT        	(TB_RDRECORD_SQ01.NEXTVAL) TAKE_YYYY_SNO, TO_CHAR(SYSDATE, 'YYYY')||LPAD((TB_RDRECORD_SQ01.NEXTVAL),10,'0') RECORD_ID        	,D.FOLDER_ID, '05', A.ORG_CD, RPAD(A.CREAT_REG_DTIME,14,'0')			,A.CREAT_REG_NO, A.DTCH_REG_NO, A.TITLE, A.TITLE, A.SUB_TITLE, A.RECORD_REG_DIV_CD			,A.RECORD_DETL_TYPE_CD, A.AUDVIS_RECORD_TYPE, A.MEDIA_FORMAT, A.MEDIUM, A.RECORD_SIZE			,A.ATTACH_CNT, A.RECORD_PAGE_CNT, A.APROV_POS_RANK_NM, A.DUTY_CHRGR_NM, A.ENFORC_YMD			,A.CREAT_ORG_REG_NO, A.ERECORD_FLAG, A.OLD_RECORD_CREAT_ORG_NM, A.OLD_RECORD_DOCNO, A.OLD_RECORD_PRESV_TERM			,A.PRESV_LOC, A.SECU_CLSS_CD, A.SECU_CLSS_RSN, A.READ_RANGE, '02' OPER_READ_RANGE_CD			,A.OPEN_DIV_CD, A.OPEN_GRADE, A.PART_OPEN_RSN, A.OPEN_LIMIT_PART, A.OPEN_EXPT_DTIME			,DECODE(A.RECORD_REG_DIV_CD,'2','','4','','7','',A.RECVER) RECVER, DECODE(A.RECORD_REG_DIV_CD,'2',A.SENDER,'4',A.SENDER,'7',A.SENDER,'') SENDER, A.CHNG_VER_NO, A.DOC_DISTR_NO, A.FOLDER_CLSS_NO			,A.SPCL_RECORD_TYPE, A.ORIGN_COPY_FLAG, A.NEW_DIV_CD, A.CHNG_FLAG, A.RJCT_FLAG			,A.DOC_NO, A.CREAT_SYS_RECORD_ID, B.RECORD_CENTER_ID, A.NEO_TRANS_STATE, A.PDF_A1_TRANS_STATE			,A.CREAT_YYYY, A.TAKE_YYYY, A.CLSS_DIV_CD, A.CLSS_ID, A.CLSS_NM			,A.RECORD_SUMRY,  A.REG_DTIME, A.CREAT_USER_ID, A.CREAT_USER_ORG_CD, A.CREAT_USER_ORG_NM        	,A.CREAT_USER_POS_RANK_NM, A.CREAT_DTIME, A.AUDVIS_RECORD_SUMRY, '1',A.SCAN_TEST_DIV_CD, A.SCAN_FIN_FLAG, '0' transf_neo_trans_state	     FROM		TB_MGRECORD A, TB_STRECORDCENTER B, TB_MGFOLDER C, TB_RDFOLDER D		WHERE A.RECORD_CENTER_CD   = B.RECORD_CENTER_CD		  AND A.RECORD_CENTER_CD   = C.RECORD_CENTER_CD		  AND A.FOLDER_ID 	   	   = C.FOLDER_ID		  AND B.RECORD_CENTER_ID   = D.RECORD_CENTER_ID		  AND C.CREAT_SYS_CD       = D.CREAT_SYS_CD		  AND C.ORG_CD 	   	   	   = D.ORG_CD		  AND C.CLSS_ID 	   	   = D.CLSS_ID		  AND C.CREAT_YYYY 	   	   = D.CREAT_YYYY		  AND C.FOLDER_REG_SEQ     = D.FOLDER_REG_SEQ		  AND C.HO_NO  	   	  	   = D.HO_NO		  AND B.RECORD_CENTER_ID   = '1'		  AND C.REG_DTIME 		   = '1'		 )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecordChngHist
+
+		INSERT INTO TB_RDRECORDCHNGHIST		(			RECORD_CENTER_ID, RECORD_ID, CHNG_HIST_NO , ORG_CD , CREAT_YYYY			, CREAT_REG_NO , DTCH_REG_NO, CREAT_REG_YMD_BEF, CREAT_REG_YMD_AFT, TITLE_BEF , TITLE_AFT			, PAGE_CNT_BEF , PAGE_CNT_AFT, APROV_POS_RANK_BEF, APROV_POS_RANK_AFT , DUTY_CHRGR_BEF			, DUTY_CHRGR_AFT, ENFORC_YMD_BEF, ENFORC_YMD_AFT, RECVER_BEF, RECVER_AFT			, CHNG_YMD, CHNG_RSN, CHNG_USER_NM, REG_DTIME		)		(		 SELECT /*+ LEADING(E) USE_NL(E C) */ B.RECORD_CENTER_ID, D.RECORD_ID, A.CHNG_HIST_NO, A.ORG_CD, A.CREAT_YYYY,				A.CREAT_REG_NO, A.DTCH_REG_NO, A.CREAT_REG_YMD_BEF, A.CREAT_REG_YMD_AFT, A.TITLE_BEF,				A.TITLE_AFT, A.PAGE_CNT_BEF, A.PAGE_CNT_AFT, A.APROV_POS_RANK_BEF, A.APROV_POS_RANK_AFT,				A.DUTY_CHRGR_BEF, A.DUTY_CHRGR_AFT, A.ENFORC_YMD_BEF, A.ENFORC_YMD_AFT, A.RECVER_BEF,				A.RECVER_AFT, A.CHNG_YMD,A.CHNG_RSN, A.CHNG_USER_NM, A.REG_DTIME           FROM TB_MGRECORDCHNGHIST A, TB_STRECORDCENTER B, TB_MGRECORD C, TB_RDRECORD D , TB_MGFOLDER E		  WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		    AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD			AND A.RECORD_ID        = C.RECORD_ID			AND C.ORG_CD           = D.ORG_CD			AND C.CREAT_SYS_CD     = D.CREAT_SYS_CD			AND C.CREAT_YYYY       = D.CREAT_YYYY			AND C.CREAT_REG_NO     = D.CREAT_REG_NO			AND C.DTCH_REG_NO      = D.DTCH_REG_NO			AND C.RECORD_CENTER_CD = E.RECORD_CENTER_CD			AND C.FOLDER_ID        = E.FOLDER_ID			AND B.RECORD_CENTER_ID = '1'			AND E.REG_DTIME		   = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigrationRecordKeywdList
+
+		SELECT B.RECORD_CENTER_ID, D.RECORD_ID, A.KEYWD_LEVL, A.KEYWD, A.REG_DTIME  		  FROM TB_MGRECORDKEYWD A, TB_STRECORDCENTER B, TB_MGRECORD C, TB_RDRECORD D, TB_MGFOLDER E 		 WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		   AND B.RECORD_CENTER_CD = E.RECORD_CENTER_CD		   AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		   AND A.RECORD_ID		  = C.RECORD_ID		   AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		   AND C.CREAT_SYS_CD     = D.CREAT_SYS_CD 		   AND C.ORG_CD 	   	  = D.ORG_CD		   AND C.CLSS_ID 	   	  = D.CLSS_ID		   AND C.CREAT_YYYY 	  = D.CREAT_YYYY		   AND C.CREAT_REG_DTIME  = D.CREAT_REG_DTIME		   AND C.CREAT_REG_NO 	  = D.CREAT_REG_NO		   AND C.RECORD_CENTER_CD = E.RECORD_CENTER_CD		   AND C.FOLDER_ID		  = E.FOLDER_ID		   AND E.REG_DTIME		  = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : countMigrationRecordKeywd
+
+        SELECT COUNT(1)		FROM   TB_RDRECORDKEYWD		WHERE  RECORD_CENTER_ID = '1'		AND    RECORD_ID = '1'		AND    KEYWD_LEVL = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecordKeywd
+
+		INSERT INTO TB_RDRECORDKEYWD		(			RECORD_CENTER_ID, RECORD_ID, KEYWD_LEVL, KEYWD, REG_DTIME		)		VALUES		(		    '1', '1', '1', '1', '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationRecordKeywd
+
+		UPDATE TB_RDRECORDKEYWD		SET    KEYWD = (KEYWD || ',' || '1')		WHERE  RECORD_CENTER_ID = '1'		AND    RECORD_ID = '1'		AND    KEYWD_LEVL = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigrationStakrmList
+
+	  SELECT  DISTINCT B.RECORD_CENTER_ID,  C.STAKRM_ID, A.STAKRM_NM, '0' KEEP_BOOKSF_CNT, A.REMK	    FROM TB_MGSTAKRM A, TB_STRECORDCENTER B, TB_MGFOLDER C 	   WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		     AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD 		 AND A.STAKRM_ID  		= C.STAKRM_ID 		 AND B.RECORD_CENTER_ID = '1'	     AND C.REG_DTIME	    = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : countMigrationStakrm
+
+	  SELECT COUNT(1)	    FROM TB_SRSTAKRM	   WHERE RECORD_CENTER_ID ='1'		 AND STAKRM_NM = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationStakrm
+
+		INSERT INTO TB_SRSTAKRM		(			RECORD_CENTER_ID, STAKRM_ID, STAKRM_NM, KEEP_BOOKSF_CNT, REMK		)		VALUES		(				'1', (SELECT LPAD(NVL(MAX(STAKRM_ID),0)+1,3,'0') FROM TB_SRSTAKRM WHERE RECORD_CENTER_ID = '1'),			'1', 0, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationStakrm
+
+		UPDATE TB_SRSTAKRM SET KEEP_BOOKSF_CNT = KEEP_BOOKSF_CNT+1		 WHERE RECORD_CENTER_ID = '1'		    AND STAKRM_NM = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigrationBooksfList
+
+	  SELECT  DISTINCT  B.RECORD_CENTER_ID, B.RECORD_CENTER_ID, A.STAKRM_ID, A.BOOKSF_ID, A.BOOKSF_NM, A.STAKRM_SNO, A.SHELF_C_CNT, A.SHELF_R_CNT, A.MAX_PRESV_BOX_CNT, A.KEEP_PRESV_BOX_CNT, A.LAST_CHECK_YYYY, A.REMK	    FROM TB_MGBOOKSF A, TB_STRECORDCENTER B, TB_MGFOLDER C 	   WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD	     AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		 AND A.STAKRM_ID  		= C.STAKRM_ID		 AND A.BOOKSF_ID 		= C.BOOKSF_ID  		 AND B.RECORD_CENTER_ID = '1'	     AND C.REG_DTIME	    = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : countMigrationBooksf
+
+	  SELECT COUNT(1)	    FROM TB_SRBOOKSF	   WHERE RECORD_CENTER_ID ='1' 	     AND STAKRM_ID = '1'		 AND BOOKSF_NM = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationBooksf
+
+		INSERT INTO TB_SRBOOKSF		(			RECORD_CENTER_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_NM, STAKRM_SNO, SHELF_C_CNT, SHELF_R_CNT,			MAX_PRESV_BOX_CNT, KEEP_PRESV_BOX_CNT, LAST_CHECK_YYYY, REMK		)		(		SELECT record_center_id, stakrm_id, LPAD((booksf_id+rnum),3,'0') booksf_id			 , booksf_nm, stakrm_sno, shelf_c_cnt, shelf_r_cnt, max_presv_box_cnt		     , keep_presv_box_cnt, last_check_yyyy, remk		FROM (		    SELECT B.record_center_id, D.stakrm_id		         , (SELECT NVL(MAX(F.booksf_id),0)		            FROM TB_SRBOOKSF F		            WHERE F.record_center_id = B.record_center_id		            AND   F.stakrm_id = D.stakrm_id) booksf_id		         , ROW_NUMBER() OVER (PARTITION BY A.stakrm_id ORDER BY A.booksf_id DESC) AS rnum		    	 , A.booksf_nm, A.stakrm_sno, A.shelf_c_cnt, A.shelf_r_cnt, A.max_presv_box_cnt		         , A.keep_presv_box_cnt, A.last_check_yyyy, A.remk		    FROM TB_MGBOOKSF A		       , TB_STRECORDCENTER B		       , (SELECT DISTINCT record_center_cd, stakrm_id, booksf_id		          FROM TB_MGFOLDER WHERE reg_dtime = '1') C		       , TB_SRSTAKRM D		       , TB_MGSTAKRM E		    WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		    AND   B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		    AND   A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		    AND   A.RECORD_CENTER_CD = E.RECORD_CENTER_CD		    AND   C.RECORD_CENTER_CD = E.RECORD_CENTER_CD		    AND   A.BOOKSF_NM        = C.BOOKSF_ID		    AND   C.STAKRM_ID        = E.STAKRM_ID		    AND   A.STAKRM_ID        = E.STAKRM_ID			    AND   D.STAKRM_NM        = E.STAKRM_NM		    AND   B.RECORD_CENTER_ID =  '1'			AND   0 = (SELECT COUNT(1) FROM TB_SRBOOKSF F 			 	 	   WHERE F.RECORD_CENTER_ID  = B.RECORD_CENTER_ID						 AND F.STAKRM_ID 		 = D.STAKRM_ID						 AND F.BOOKSF_NM		 = A.BOOKSF_NM)			)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : countMigrationBooksfArng
+
+	  SELECT COUNT(1)	    FROM TB_MGFOLDER A, TB_STRECORDCENTER B	   WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD	     AND A.BOOKSF_ARNG_FLAG ='1' 		 AND B.RECORD_CENTER_ID = '1'	     AND A.REG_DTIME	    = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationBooksfArng
+
+		INSERT INTO TB_SRBOOKSFARNG		(			RECORD_CENTER_ID, BOOKSF_ARNG_ID, ARNG_YYYY, SNO, PLAN_YMD, ARNG_YMD,			WORK_USER_ID, WORK_DTIME, FIN_FLAG		)		(		SELECT DISTINCT B.RECORD_CENTER_ID,       		   (SELECT A.ARNG_YYYY||LPAD(NVL(MAX(A.SNO)+RNUM,1),6,'0') FROM TB_SRBOOKSFARNG WHERE RECORD_CENTER_ID = '1'  AND  ARNG_YYYY = A.ARNG_YYYY) BOOKSF_ARNG_ID,       		   A.ARNG_YYYY, (A.SNO+RNUM) SNO, A.PLAN_YMD, A.ARNG_YMD, A.WORK_USER_ID, A.WORK_DTIME, A.FIN_FLAG          FROM     	   	 (			 SELECT ROWNUM AS RNUM,	      		NVL((SELECT MAX(NVL(SNO,0))	               FROM TB_SRBOOKSFARNG    		      WHERE RECORD_CENTER_ID = '1'		            AND ARNG_YYYY = A.ARNG_YYYY),0) SNO,	                   A.BOOKSF_ARNG_ID, A.ARNG_YYYY, A.PLAN_YMD, A.ARNG_YMD, A.WORK_USER_ID, A.WORK_DTIME, A.FIN_FLAG,A.RECORD_CENTER_CD			  FROM TB_MGBOOKSFARNG A			     )A, TB_STRECORDCENTER B, TB_MGBOOKSFARNGDETL C, TB_MGFOLDER D	    WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 		  AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		  AND A.BOOKSF_ARNG_ID	 = C.BOOKSF_ARNG_ID		  AND C.RECORD_CENTER_CD = D.RECORD_CENTER_CD		  AND C.FOLDER_ID		 = D.FOLDER_ID		  AND D.REG_DTIME		 = '1'  	      AND B.RECORD_CENTER_ID = '1'			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationBooksfArngDetl
+
+		INSERT INTO TB_SRBOOKSFARNGDETL (RECORD_CENTER_ID, BOOKSF_ARNG_ID, FOLDER_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_SHELF_CNO, BOOKSF_SHELF_RNO)		(			SELECT B.RECORD_CENTER_ID, 				(SELECT DISTINCT G.BOOKSF_ARNG_ID 				 FROM TB_SRBOOKSFARNG G, TB_MGBOOKSFARNG H				 WHERE G.RECORD_CENTER_ID = '1'				 AND G.WORK_DTIME = H.WORK_DTIME 				 AND H.RECORD_CENTER_CD = A.RECORD_CENTER_CD 				 AND H.BOOKSF_ARNG_ID   = A.BOOKSF_ARNG_ID				 ) BOOKSF_ARNG_ID, 				 D.FOLDER_ID, 				 F.STAKRM_ID, 				 F.BOOKSF_ID, 				 LPAD(A.BOOKSF_SHELF_CNO,3,'0'), LPAD(A.BOOKSF_SHELF_RNO,3,'0')			FROM TB_MGBOOKSFARNGDETL A, TB_STRECORDCENTER B, TB_MGFOLDER C, TB_RDFOLDER D, TB_SRSTAKRM E, TB_SRBOOKSF F 			WHERE B.RECORD_CENTER_ID = '1'			AND C.RECORD_CENTER_CD = B.RECORD_CENTER_CD 			AND C.REG_DTIME = '1'			AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD 			AND A.FOLDER_ID = C.FOLDER_ID 			AND D.RECORD_CENTER_ID = B.RECORD_CENTER_ID 			AND D.ORG_CD = C.ORG_CD 			AND D.CREAT_YYYY = C.CREAT_YYYY 			AND D.CLSS_ID = C.CLSS_ID 			AND D.FOLDER_REG_SEQ = C.FOLDER_REG_SEQ 			AND D.HO_NO = C.HO_NO			AND E.RECORD_CENTER_ID = B.RECORD_CENTER_ID			AND E.STAKRM_NM = C.STAKRM_ID			AND F.RECORD_CENTER_ID = E.RECORD_CENTER_ID			AND F.STAKRM_ID = E.STAKRM_ID			AND F.BOOKSF_NM = C.BOOKSF_ID		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationPresvBoxFolderCnt
+
+		UPDATE TB_SRPRESVBOX A		SET A.ARNG_FOLDER_CNT=(SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.PRESV_BOX_ID=A.PRESV_BOX_ID) 		WHERE 		EXISTS (		    SELECT 1		    FROM  TB_MGFOLDER		    WHERE REG_DTIME = '1'		    AND   FOLDER_KEEP_STATE_CD='01'                     AND   RECORD_CENTER_ID = A.RECORD_CENTER_ID                    AND   PRESV_BOX_ID = A.PRESV_BOX_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationFolder
+
+		UPDATE  TB_MGFOLDER Z		SET MIG_FLAG ='1'		WHERE 		EXISTS (SELECT 1		    FROM TB_MGFOLDER A, TB_STRECORDCENTER B 			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 		    AND B.RECORD_CENTER_ID   = '1'                                                                                                                                                                                                                                            		    AND A.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 = '9'                    AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                    AND A.FOLDER_ID = Z.FOLDER_ID			);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationRecord
+
+		UPDATE  TB_MGRECORD Z		SET MIG_FLAG ='1'		WHERE 		EXISTS (SELECT /*+ INDEX(A TB_MGRECORD_IX01) */ A.RECORD_CENTER_CD, A.FOLDER_ID, A.RECORD_ID		    FROM TB_MGRECORD A, TB_STRECORDCENTER B, TB_MGFOLDER C			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD			AND A.FOLDER_ID          = C.FOLDER_ID			AND A.RECORD_CENTER_CD   = C.RECORD_CENTER_CD 		    AND B.RECORD_CENTER_ID   = '1'		    AND C.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 = '9'                    AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                    AND A.FOLDER_ID = Z.FOLDER_ID                    AND A.FOLDER_ID = Z.FOLDER_ID                    AND A.RECORD_ID = Z.RECORD_ID			);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationFolderCreat
+
+		 INSERT INTO TB_RDFOLDERCREAT		(		 RECORD_CENTER_ID, FOLDER_ID, AGENT_TYPE_CD, AGENT_SNO, AGENT_NM, DUTY_TYPE_CD, DUTY_ACT_DTIME, REG_DTIME		 )		(		SELECT RECORD_CENTER_ID, FOLDER_ID, '28','1', NVL(PRESV_DUTY_CHRGR_NM, ' ') PRESV_DUTY_CHRGR_NM,'0',FOLDER_CLOSE_DTIME, REG_DTIME 		  FROM TB_RDFOLDER         WHERE RECORD_CENTER_ID = '1'           AND REG_DTIME 	    = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecordCreat
+
+		 INSERT INTO TB_RDRECORDCREAT		(		 RECORD_CENTER_ID, RECORD_ID, AGENT_TYPE_CD, AGENT_SNO, AGENT_NM, DUTY_TYPE_CD, DUTY_ACT_DTIME, REG_DTIME		 )		(		SELECT A.RECORD_CENTER_ID, A.RECORD_ID, '05','1', NVL(A.APROV_POS_RANK_NM, ' ') APROV_POS_RANK_NM,'0',A.CREAT_REG_DTIME, B.REG_DTIME  		  FROM TB_RDRECORD A, TB_RDFOLDER B 		 WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID   		   AND A.FOLDER_ID 		  = B.FOLDER_ID 		   AND B.RECORD_CENTER_ID = '1'           AND B.REG_DTIME 	      = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecordCreat1
+
+                                                                                                                                                                                                         		 INSERT INTO TB_RDRECORDCREAT		(		 RECORD_CENTER_ID, RECORD_ID, AGENT_TYPE_CD, AGENT_SNO, AGENT_NM, AGENT_POS_RANK_NM, DUTY_TYPE_CD, DUTY_ACT_DTIME, REG_DTIME		 )		(		SELECT A.RECORD_CENTER_ID, A.RECORD_ID,'02',       		(SELECT NVL(MAX(AGENT_SNO),0)+1        		   FROM TB_RDRECORDCREAT B 	   		  WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			    AND B.RECORD_ID        = A.RECORD_ID) AS AGENT_SNO,       		    NVL(A.DUTY_CHRGR_NM, ' ') DUTY_CHRGR_NM,      		    NVL(A.APROV_POS_RANK_NM, ' ') APROV_POS_RANK_NM,'0',A.CREAT_REG_DTIME, C.REG_DTIME  		  FROM TB_RDRECORD A, TB_RDFOLDER C 	 	 WHERE A.RECORD_CENTER_ID = C.RECORD_CENTER_ID   		   AND A.FOLDER_ID 		  = C.FOLDER_ID   	       AND A.DUTY_CHRGR_NM IS NOT NULL           AND C.RECORD_CENTER_ID = '1'           AND C.REG_DTIME 	      = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecordCreat2
+
+		 INSERT INTO TB_RDRECORDCREAT		(		 RECORD_CENTER_ID, RECORD_ID, AGENT_TYPE_CD, AGENT_SNO, AGENT_NM, DUTY_TYPE_CD, DUTY_ACT_DTIME, REG_DTIME		 )		(		SELECT A.RECORD_CENTER_ID, A.RECORD_ID,'08',	       (SELECT NVL(MAX(AGENT_SNO),0)+1        		  FROM TB_RDRECORDCREAT B 		     WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		       AND B.RECORD_ID        = A.RECORD_ID) AS AGENT_SNO,        	       NVL(RECVER, ' ') RECVER,'0',A.CREAT_REG_DTIME, C.REG_DTIME  	      FROM TB_RDRECORD A, TB_RDFOLDER C		 WHERE A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.FOLDER_ID 		  = C.FOLDER_ID            AND A.RECVER IS NOT NULL 		   AND C.RECORD_CENTER_ID = '1'           AND C.REG_DTIME 	      = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : insert
+-- Query Id : createMigrationRecordCreat3
+
+		 INSERT INTO TB_RDRECORDCREAT		(		 RECORD_CENTER_ID, RECORD_ID, AGENT_TYPE_CD, AGENT_SNO, AGENT_NM, DUTY_TYPE_CD, DUTY_ACT_DTIME, REG_DTIME		 )		(		SELECT A.RECORD_CENTER_ID, A.RECORD_ID,'09',	       (SELECT NVL(MAX(AGENT_SNO),0)+1        		  FROM TB_RDRECORDCREAT B 		     WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		       AND B.RECORD_ID        = A.RECORD_ID) AS AGENT_SNO,        	       NVL(SENDER, ' ') SENDER,'0',A.CREAT_REG_DTIME, C.REG_DTIME  	      FROM TB_RDRECORD A, TB_RDFOLDER C		 WHERE A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.FOLDER_ID 		  = C.FOLDER_ID            AND A.SENDER IS NOT NULL 		   AND C.RECORD_CENTER_ID = '1'           AND C.REG_DTIME 	      = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigrationAttachFileList
+
+		 SELECT /*+ LEADING(E) */ A.*, B.RECORD_CENTER_ID, D.RECORD_ID, C.ERECORD_FLAG 		   FROM TB_MGATTACHFILE A, TB_STRECORDCENTER B, TB_MGRECORD C, TB_RDRECORD D, TB_MGFOLDER E		  WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		    AND A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		    AND A.RECORD_TAKE_SEQ  = C.RECORD_ID			AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID  		    AND C.ORG_CD 		   = D.ORG_CD			AND C.CREAT_SYS_CD     = D.CREAT_SYS_CD		    AND C.CREAT_YYYY 	   = D.CREAT_YYYY		    AND C.CREAT_REG_NO     = D.CREAT_REG_NO		    AND C.DTCH_REG_NO 	   = D.DTCH_REG_NO		    AND C.RECORD_CENTER_CD = E.RECORD_CENTER_CD		    AND C.FOLDER_ID        = E.FOLDER_ID		    AND B.RECORD_CENTER_ID = '1'		    AND E.REG_DTIME        = '1'		    ORDER BY A.record_center_cd, A.record_take_seq, A.doc_type_cd, A.doc_type_sno;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : update
+-- Query Id : updateMigrationOrignId
+
+		UPDATE  TB_RDRECORD		SET     ORIGN_ID = '1'		WHERE   RECORD_CENTER_ID = '1'		AND     RECORD_ID ='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : select
+-- Query Id : findMigrationList
+
+		SELECT SUM(FOLDER_CNT) FOLDER_CNT, SUM(RECORD_CNT) RECORD_CNT, SUM(ATTACH_CNT) ATTACH_CNT, MAX(B.REG_DTIME) REG_DTIME		  FROM (		  			SELECT COUNT(1) FOLDER_CNT, 0 RECORD_CNT, 0 ATTACH_CNT		  			  FROM TB_RDFOLDER		  			 WHERE MIG_FLAG = '1'					   AND REG_DTIME = '1'					   AND RECORD_CENTER_ID = '1'		  			UNION ALL		  			SELECT 0, COUNT(1) RECORD_CNT, 0		  			  FROM TB_RDRECORD A, TB_RDFOLDER B		  			 WHERE B.MIG_FLAG = '1' 					   AND A.FOLDER_ID = B.FOLDER_ID					   AND B.REG_DTIME = '1' 		  			UNION ALL		  		SELECT 0, 0, COUNT(1)		  			  FROM TB_RDRECORD A, TB_STRECORDORIGN B, TB_RDFOLDER C, TB_STORIGNFILE D		  			 WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		  			   AND A.RECORD_ID = B.RECORD_ID		  			   AND A.MIG_FLAG = '1'					   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID					   AND A.FOLDER_ID = C.FOLDER_ID					   AND B.ORIGN_ID  = D.ORIGN_ID					   AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID					   AND C.REG_DTIME = '1'	 		  	    ) A, (SELECT MAX(REG_DTIME) REG_DTIME FROM TB_RDFOLDER WHERE MIG_FLAG = '1' ) B;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteBooksfarng
+
+		DELETE   		FROM TB_MGBOOKSFARNG Z	 	WHERE 	    EXISTS (SELECT 1	     	FROM TB_MGBOOKSFARNGDETL A, TB_STRECORDCENTER B,TB_MGFOLDER C, TB_MGBOOKSFARNG D		 	WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		    AND B.RECORD_CENTER_CD 	 = C.RECORD_CENTER_CD		 		    AND A.FOLDER_ID		  	 = C.FOLDER_ID			AND A.RECORD_CENTER_CD	 = D.RECORD_CENTER_CD			AND A.BOOKSF_ARNG_ID	 = D.BOOKSF_ARNG_ID		    AND B.RECORD_CENTER_ID   = '1'		    AND C.REG_DTIME 	     = '1'		    AND C.MIG_FLAG 		     in ('0','9')                    AND D.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                    AND D.BOOKSF_ARNG_ID = Z.BOOKSF_ARNG_ID)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteBooksfarngdetl
+
+		DELETE   		FROM TB_MGBOOKSFARNGDETL Z	 	WHERE 	    EXISTS (SELECT 1	     	FROM TB_MGBOOKSFARNGDETL A, TB_STRECORDCENTER B,TB_MGFOLDER C		 	WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD		    AND B.RECORD_CENTER_CD 	 = C.RECORD_CENTER_CD		 		    AND A.FOLDER_ID		  	 = C.FOLDER_ID		    AND B.RECORD_CENTER_ID   = '1'		    AND C.REG_DTIME 	     = '1'		    AND C.MIG_FLAG 		     in ('0','9')                    AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                    AND A.FOLDER_ID = Z.FOLDER_ID)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteBooksf
+
+	    DELETE 		FROM TB_MGBOOKSF Z		WHERE 		EXISTS	  (SELECT 1	    FROM TB_MGBOOKSF A	       , TB_STRECORDCENTER B	       , (SELECT DISTINCT record_center_cd, stakrm_id, booksf_id	          FROM TB_MGFOLDER WHERE reg_dtime = '1' AND MIG_FLAG IN ('0','9')) C	    WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD	    AND   A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		AND   A.STAKRM_ID		 = C.STAKRM_ID	    AND   A.BOOKSF_ID        = C.BOOKSF_ID	    AND   B.RECORD_CENTER_ID =  '1'            AND   A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD            AND   A.STAKRM_ID = Z.STAKRM_ID            AND   A.BOOKSF_ID = Z.BOOKSF_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteStakrm
+
+   		DELETE 		FROM TB_MGSTAKRM Z		WHERE 		EXISTS	  (SELECT 1	    FROM TB_MGSTAKRM A	       , TB_STRECORDCENTER B	       , (SELECT DISTINCT RECORD_CENTER_CD, STAKRM_ID	          FROM TB_MGFOLDER WHERE REG_DTIME = '1' AND MIG_FLAG IN ('0','9')) C	    WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD	    AND   A.RECORD_CENTER_CD = C.RECORD_CENTER_CD		AND   A.STAKRM_ID		 = C.STAKRM_ID	    AND   B.RECORD_CENTER_ID =  '1'            AND   A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD            AND   A.STAKRM_ID = Z.STAKRM_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteAttachFile
+
+		DELETE		FROM TB_MGATTACHFILE Z		WHERE 		EXISTS (SELECT 1			FROM TB_MGFOLDER A, TB_MGRECORD B, TB_STRECORDCENTER C 			WHERE A.RECORD_CENTER_CD = C.RECORD_CENTER_CD			AND A.RECORD_CENTER_CD 	 = B.RECORD_CENTER_CD 			AND A.FOLDER_ID 		 = B.FOLDER_ID			AND	C.RECORD_CENTER_ID   = '1'			AND A.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND B.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND B.RECORD_ID = Z.RECORD_ID)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteRecordKeywd
+
+		DELETE		FROM TB_MGRECORDKEYWD Z		WHERE 		EXISTS (SELECT 1			FROM TB_MGFOLDER A, TB_MGRECORD B, TB_STRECORDCENTER C  			WHERE A.RECORD_CENTER_CD = C.RECORD_CENTER_CD 			AND A.RECORD_CENTER_CD   = B.RECORD_CENTER_CD 			AND A.FOLDER_ID 	 	 = B.FOLDER_ID			AND	C.RECORD_CENTER_ID   = '1'			AND A.REG_DTIME 	 	 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND B.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND B.RECORD_ID = Z.RECORD_ID )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteRecordChngHist
+
+		DELETE		FROM TB_MGRECORDCHNGHIST Z		WHERE 		EXISTS (SELECT 1			FROM TB_MGFOLDER A, TB_MGRECORD B, TB_STRECORDCENTER C 			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 			AND A.FOLDER_ID 	 	 = B.FOLDER_ID			AND	C.RECORD_CENTER_ID   = '1' 			AND A.REG_DTIME 	 		 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND B.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND B.RECORD_ID = Z.RECORD_ID)		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteRecord
+
+		DELETE 		FROM TB_MGRECORD Z		WHERE 		EXISTS (SELECT 1		    FROM TB_MGFOLDER A, TB_STRECORDCENTER B			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 			AND	B.RECORD_CENTER_ID   = '1' 			AND A.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND A.FOLDER_ID = Z.FOLDER_ID                        )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteFolderKeywd
+
+		DELETE 		FROM TB_MGFOLDERKEYWD Z		WHERE 		EXISTS (SELECT 1 		    FROM TB_MGFOLDER A, TB_STRECORDCENTER B 			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 			AND	B.RECORD_CENTER_ID   = '1' 			AND A.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND A.FOLDER_ID = Z.FOLDER_ID)		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteFolderChngHist
+
+		DELETE 		FROM TB_MGFOLDERCHNGHIST Z		WHERE 		EXISTS (SELECT 1		    FROM TB_MGFOLDER A, TB_STRECORDCENTER B 			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 			AND	B.RECORD_CENTER_ID   = '1' 			AND A.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND A.RECORD_ID = Z.RECORD_ID)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml
+-- Query    : delete
+-- Query Id : deleteFolder
+
+		DELETE		FROM TB_MGFOLDER Z		WHERE 		EXISTS (SELECT 1		    FROM TB_MGFOLDER A, TB_STRECORDCENTER B 			WHERE A.RECORD_CENTER_CD = B.RECORD_CENTER_CD 			AND	B.RECORD_CENTER_ID   = '1' 			AND A.REG_DTIME 		 = '1'			AND A.MIG_FLAG 			 in ('0','9')                        AND A.RECORD_CENTER_CD = Z.RECORD_CENTER_CD                        AND A.RECORD_ID = Z.RECORD_ID)		;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\mig\Mig.xml

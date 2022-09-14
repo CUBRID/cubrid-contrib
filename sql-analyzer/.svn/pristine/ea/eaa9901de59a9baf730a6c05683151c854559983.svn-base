@@ -1,0 +1,35 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\ConfSet.xml
+
+createMultiRecordCenter
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_strecordcenter_record_center_id(B+tree: 4|161|840) ON CLASS tb_strecordcenter(CLASS_OID: 0|487|40). key: '0000001'(OID: 3|360|101).[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenter
+
+		INSERT INTO TB_STRECORDCENTER		(record_center_id, record_center_cd, record_center_nm, reg_dtime, remk, rep_org_nm)		VALUES(( SELECT LPAD(NVL(SUBSTR(MAX(record_center_id),6),0)+1, 7, '0')				 FROM TB_STRECORDCENTER)		       , '1'		       , '1'		       , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		       , '1'		       , '1' )	;
+
+updateMultiRecordCenterSetUnitOrg
+Semantic: before ' )	;'
+Only one column can be specified in the select list when the subquery is not introduced with EXISTS. update TB_ZZORGUNIT TB_ZZORGUNIT set TB_ZZORGUNIT.record_cen...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetUnitOrg
+
+		UPDATE TB_ZZORGUNIT		SET   record_center_id = '1'		WHERE record_center_id = '1'		AND   (org_cd, unit_cd) IN				(SELECT DISTINCT org_cd, unit_cd				 FROM TB_ZZORGUNIT				 WHERE record_center_id = '1'				 AND   org_cd IN				          (SELECT org_cd				           FROM TB_STORG				           WHERE record_center_id = '1'				           START WITH org_cd = '1'				                 AND  record_center_id = '1'				           CONNECT BY PRIOR org_cd = upper_org_cd				                      AND   record_center_id = '1'))	;
+
+createRecordCenterSet
+The constraint of the foreign key 'tb_stconfig_fk01' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\ConfSet.xml
+-- Query    : insert
+-- Query Id : createRecordCenterSet
+
+		INSERT INTO TB_STCONFIG (			record_center_id, noml_mng_no_rule, spcl_mng_no_rule, handl_org_cd, link_server_ip	  	   ,link_server_port, link_server_user_id, link_server_pwd, link_server_class, link_server_lang	  	   ,presv_box_id_rule		) VALUES (			'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1' 		)    	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\ConfSet.xml

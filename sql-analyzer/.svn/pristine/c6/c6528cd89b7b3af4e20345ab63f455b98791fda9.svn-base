@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<digester-rule>
+	
+	<object-create-rule pattern="efiles" classname="rms.common.xml.transf.rcTake.domain.RcTakeListT2"/>
+	
+	<pattern value="efiles/identifier">
+		<object-create-rule classname="rms.common.xml.transf.rcTake.domain.RcTakeListT2Identifier"/>
+		<call-method-rule pattern="record_center_id" methodname="setRecordCenterId" paramcount="0"/>
+		<call-method-rule pattern="folder_id" methodname="setFolderId" paramcount="0"/>
+		<call-method-rule pattern="efile_cnt" methodname="setEfileCnt" paramcount="0"/>
+		<pattern value="efile_info">
+			 <object-create-rule classname="rms.common.xml.transf.rcTake.domain.RcTakeListT2EfileInfo"/>
+			 <pattern value="neo_info">
+			 	<object-create-rule classname="rms.common.xml.transf.rcTake.domain.RcTakeListT2NeoInfo"/>
+				<call-method-rule pattern="folder_neo_file_id" methodname="setFolderNeoFileId" paramcount="0"/> 
+				<call-method-rule pattern="chng_sno" methodname="setChngSno" paramcount="0"/>
+				<call-method-rule pattern="file_nm" methodname="setFileNm" paramcount="0"/>
+				<call-method-rule pattern="neo_file_type_cd" methodname="setNeoFileTypeCd" paramcount="0"/> 
+				<call-method-rule pattern="file_size" methodname="setFileSize" paramcount="0"/>
+				<call-method-rule pattern="neo_trans_state" methodname="setNeoTransState" paramcount="0"/> 
+				<call-method-rule pattern="trans_req_dtime" methodname="setTransReqDtime" paramcount="0"/>
+				<call-method-rule pattern="trans_fin_dtime" methodname="setTransFinDtime" paramcount="0"/>
+				<call-method-rule pattern="reg_dtime" methodname="setRegDtime" paramcount="0"/> 
+			 	<set-next-rule methodname="addFolderNeoList"/>
+			 </pattern>
+			<set-next-rule methodname="setEfileInfo"/>
+		</pattern>
+		<set-next-rule methodname="setIdentifierT2"/>
+	</pattern>
+	
+</digester-rule>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="RmsUserSync">
+	
+	<!-- 사용자동기화 정보 -->
+	<select id="SelectUserSyncList" resultClass="java.util.HashMap">
+		SELECT A.LINK_USER_ID, A.LOGIN_USER_ID, A.DEPT_CD, A.USER_DIV, A.USER_NM
+			, A.USER_PWD, A.POS, A.RANK, A.TEL_NO, A.BIRTH_NO
+			, A.ADDR, A.WORK_FLAG, A.USE_FLAG, A.PKI_UID, A.PKI_REG_DTIME
+			, A.PKI_LEFT_DTIME, A.PKI_TYPE, A.REG_COMP_YN, A.UPD_DTIME, A.LINK_DTIME
+			, A.UPD_COLUMN
+			, (SELECT Z.RECORD_CENTER_ID FROM TB_STORG Z WHERE Z.ORG_CD = A.DEPT_CD AND NVL(Z.TAKE_ORG_FLAG,'0') = '0' AND ROWNUM = 1) AS RECORD_CENTER_ID
+        FROM (
+            SELECT *
+            FROM TB_STUSER_SYNC
+            ORDER BY UPD_DTIME
+        ) A
+	</select>
+	
+	<!-- 사용자 정보 존재여부 -->
+	<select id="CountUserSync" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM  TB_STUSER
+		WHERE SSO_KEY = #LINK_USER_ID:VARCHAR#
+	</select>
+	
+	<!-- 사용자 정보 추가 -->
+	<insert id="InsertUserSync" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STUSER
+		(
+			USER_ID, RECORD_CENTER_ID, DEPT_CD, USER_DIV, USER_NM
+			, LOGIN_USER_ID, USER_PWD, POS, RANK, WORK_FLAG
+			, TEL_NO, ADDR, RESID_NO, USE_FLAG, REG_DTIME
+			, SSO_FLAG, LOGIN_ERROR_CNT, ONNARA_USERID, MENU_GRANT_GRP_CD, PKI_NAME_CHECK
+			, SSO_KEY
+		)
+		VALUES
+		(
+			(SELECT LPAD(TO_CHAR(NVL((SELECT TO_NUMBER(MAX(USER_ID)) FROM TB_STUSER),0)+1),10,'0') FROM DUAL)
+			, #RECORD_CENTER_ID:VARCHAR#, #DEPT_CD:VARCHAR#, #USER_DIV:VARCHAR#, #USER_NM:VARCHAR#
+			, #LOGIN_USER_ID:VARCHAR#, #USER_PWD:VARCHAR#, #POS:VARCHAR#, #RANK:VARCHAR#, #WORK_FLAG:VARCHAR#
+			, #TEL_NO:VARCHAR#, #ADDR:VARCHAR#, #BIRTH_NO:VARCHAR#, #USE_FLAG:VARCHAR#, #UPD_DTIME:VARCHAR#
+			, '2', 0, '', (SELECT MENU_GRANT_GRP_CD FROM TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# AND DEFAULT_GRANT_DIV = #USER_DIV:VARCHAR#), 'Y'
+			, #LINK_USER_ID:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 사용자 정보 수정 -->
+	<update id="UpdateUserSync" parameterClass="java.util.HashMap">
+		UPDATE TB_STUSER A
+		SET   A.LOGIN_USER_ID     = #LOGIN_USER_ID:VARCHAR#
+			, A.REG_DTIME         = #UPD_DTIME:VARCHAR#
+			<isNotEmpty property="UPD_COLUMN_DEPT_CD">
+			, A.RECORD_CENTER_ID  = #RECORD_CENTER_ID:VARCHAR#
+			, A.DEPT_CD           = #DEPT_CD:VARCHAR#
+			, A.MENU_GRANT_GRP_CD = (SELECT B.MENU_GRANT_GRP_CD FROM TB_STMENUGRANTGRP B WHERE B.RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# AND B.DEFAULT_GRANT_DIV = A.USER_DIV)
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_USER_NM">
+			, A.USER_NM           = #USER_NM:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_POS">
+			, A.POS               = #POS:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_RANK">
+			, A.RANK              = #RANK:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_WORK_FLAG">
+			, A.WORK_FLAG         = #WORK_FLAG:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_TEL_NO">
+			, A.TEL_NO            = #TEL_NO:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_ADDR">
+			, A.ADDR              = #ADDR:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_BIRTH_NO">
+			, A.REGID_NO          = #BIRTH_NO:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="UPD_COLUMN_USE_FLAG">
+			, A.USE_FLAG          = #USE_FLAG:VARCHAR#
+			</isNotEmpty>
+		WHERE A.SSO_KEY = #LINK_USER_ID:VARCHAR#
+	</update>
+	
+	<!-- 사용자동기화 정보 삭제 -->
+	<delete id="DeleteUserSync" parameterClass="java.util.HashMap">
+		DELETE TB_STUSER_SYNC
+		WHERE LOGIN_USER_ID = #LINK_USER_ID:VARCHAR#
+		AND   UPD_DTIME     = #UPD_DTIME:VARCHAR#
+	</delete>
+	
+</sqlMap>

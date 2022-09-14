@@ -1,0 +1,67 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : select
+-- Query Id : findAccsSetFolder
+
+		SELECT AA.FOLDER_ID			, AA.ORG_CD			, AA.ORG_ABBR_NM 			, AA.ORG_NM			, AA.TITLE			, AA.CLSS_ID			, AA.CLSS_NM			, AA.PRESV_TERM_CD			, (SELECT COM_CD_NM FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = DECODE(AA.PRESV_TERM_CD, '20', '25', AA.PRESV_TERM_CD)) PRESV_TERM_NM			, AA.OPER_READ_RANGE_CD			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD53' AND USE_FLAG='1' AND COM_CD = AA.OPER_READ_RANGE_CD) OPER_READ_RANGE_NM			, AA.CREAT_SYS_CD			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD17' AND USE_FLAG='1' AND COM_CD = AA.CREAT_SYS_CD) CREAT_SYS_NM			, AA.ACCS_SET_RSN		FROM (			SELECT Z.*			FROM (				SELECT ROWNUM AS rnum					, Y.*				FROM (					SELECT A.FOLDER_ID						, A.ORG_CD						, B.ORG_ABBR_NM 						, B.ORG_NM						, A.TITLE						, A.CLSS_ID						, A.CLSS_NM						, A.PRESV_TERM_CD						, A.OPER_READ_RANGE_CD						, A.CREAT_SYS_CD						, A.ACCS_SET_RSN					FROM  TB_RDFOLDER A, TB_STORG B					WHERE A.OPER_READ_RANGE_CD IN ('02','03') AND A.ORG_CD = B.ORG_CD					AND A.RECORD_CENTER_ID = '1' 					AND B.RECORD_CENTER_ID = '1'										ORDER BY A.RECORD_CENTER_ID, A.TITLE				) Y				WHERE ROWNUM <= '1'			) Z			WHERE z.rnum >= '1'		) AA		ORDER BY AA.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : select
+-- Query Id : countAccsSetFolder
+
+		SELECT COUNT(1)		FROM  TB_RDFOLDER A, TB_STORG B		WHERE A.OPER_READ_RANGE_CD IN ('02','03') AND A.ORG_CD = B.ORG_CD 		AND A.RECORD_CENTER_ID = '1' 		AND B.RECORD_CENTER_ID = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : select
+-- Query Id : findAccsSetFolderUserList
+
+		SELECT A.FOLDER_ID			, A.ACCS_TYPE_CD			, A.ACCS_USER_ID			, B.USER_NM ACCS_USER_NM			, C.DEPT_ABBR_NM ACCS_USER_DEPT_NM			, '' ACCS_DEPT_CD			, '' ACCS_DEPT_NM 		FROM  TB_RDFOLDERACCS A, TB_STUSER B, TB_STDEPT C		WHERE A.RECORD_CENTER_ID = '1'		AND A.FOLDER_ID = '1'		AND A.ACCS_TYPE_CD = '1'		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.ACCS_USER_ID = B.USER_ID		AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		AND B.DEPT_CD = C.DEPT_CD		ORDER BY B.USER_NM;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : select
+-- Query Id : findAccsSetFolderDeptList
+
+		SELECT A.FOLDER_ID			, A.ACCS_TYPE_CD			, '' ACCS_USER_ID			, '' ACCS_USER_NM			, '' ACCS_USER_DEPT_NM			, A.ACCS_DEPT_CD			, B.DEPT_NM ACCS_DEPT_NM		FROM  TB_RDFOLDERACCS A, TB_STDEPT B		WHERE A.RECORD_CENTER_ID = '1'		AND A.FOLDER_ID = '1'		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.ACCS_DEPT_CD = B.DEPT_CD		ORDER BY B.DEPT_ABBR_NM	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : select
+-- Query Id : countAccsSetUserSch
+
+		SELECT COUNT(1)		FROM  TB_STUSER A, TB_STDEPT B		WHERE A.DEPT_CD = B.DEPT_CD			AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		 AND 			A.USER_ID = '1'		  AND 			A.USER_NM LIKE '1'		  AND 			B.DEPT_CD = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : select
+-- Query Id : findAccsSetUserSch
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.USER_ID					, A.USER_NM					, A.LOGIN_USER_ID					, B.DEPT_ABBR_NM 				FROM  TB_STUSER A, TB_STDEPT B				WHERE A.DEPT_CD = B.DEPT_CD					AND A.RECORD_CENTER_ID = '1'				AND B.RECORD_CENTER_ID = '1'					 AND 					A.USER_ID = '1'				  AND 					A.USER_NM LIKE '1'				  AND 					B.DEPT_CD = '1'				 			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : delete
+-- Query Id : deleteAccsSetFolder
+
+		DELETE		FROM TB_RDFOLDERACCS	  		WHERE FOLDER_ID = '1'		AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : insert
+-- Query Id : createAccsSetFolderUser
+
+		INSERT INTO TB_RDFOLDERACCS(FOLDER_ID			, ACCS_SNO			, ACCS_TYPE_CD			, ACCS_USER_ID			, ACCS_DEPT_CD			, REG_DTIME			, RECORD_CENTER_ID		) VALUES ('1'			, (SELECT NVL(MAX(ACCS_SNO),1) FROM TB_RDFOLDERACCS WHERE FOLDER_ID = '1' AND RECORD_CENTER_ID = '1') + 1 			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml
+-- Query    : update
+-- Query Id : updateAccsSetFolder
+
+		UPDATE TB_RDFOLDER		SET ACCS_SET_RSN = '1'		WHERE FOLDER_ID = '1'		AND RECORD_CENTER_ID = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetFolder.xml

@@ -1,0 +1,60 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : delete
+-- Query Id : deleteUserSyncData
+
+		DELETE FROM TB_STUSER_SYNC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : insert
+-- Query Id : insertUserSyncData
+
+		INSERT INTO TB_STUSER_SYNC 		(			LOGIN_USER_ID,NEIS_DEPT_CD,DEPT_CD,USER_DIV,USER_NM,USER_PWD,POS,RANK,TEL_NO,ADDR,USE_FLAG,BIRTH_DATE			)		VALUES (			'1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : select
+-- Query Id : selectUserSyncData
+
+		SELECT LOGIN_USER_ID,NEIS_DEPT_CD,DEPT_CD,USER_DIV,USER_NM,USER_PWD,POS,RANK,TEL_NO,ADDR,USE_FLAG,BIRTH_DATE		FROM TB_STUSER_SYNC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : insert
+-- Query Id : insertUserData
+
+		INSERT INTO TB_STUSER 		(			USER_ID,RECORD_CENTER_ID,DEPT_CD,USER_DIV,USER_NM,LOGIN_USER_ID,USER_PWD,POS,RANK,WORK_FLAG,RESID_NO,USE_FLAG,REG_DTIME,MENU_GRANT_GRP_CD		)		VALUES 		(			'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : select
+-- Query Id : selectRecordCenterId
+
+		SELECT RECORD_CENTER_ID		FROM TB_STORG		WHERE ORG_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : select
+-- Query Id : checkStuser
+
+		SELECT COUNT(*) FROM TB_STUSER		WHERE LOGIN_USER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : select
+-- Query Id : selectMaxUserId
+
+		SELECT LPAD(NVL(MAX(USER_ID),0)+ 1, 10, '0') AS USER_ID 		FROM  TB_STUSER;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml
+-- Query    : update
+-- Query Id : updateUserData
+
+		UPDATE TB_STUSER A		SET RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STORG WHERE ORG_CD = '1')		    , USE_FLAG = '1'		    , POS = '1'		    , RANK = '1'		    , DEPT_CD = '1'		WHERE EXISTS (SELECT USER_ID FROM TB_STUSER B WHERE A.LOGIN_USER_ID = B.LOGIN_USER_ID AND B.LOGIN_USER_ID = '1')	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncUser.xml

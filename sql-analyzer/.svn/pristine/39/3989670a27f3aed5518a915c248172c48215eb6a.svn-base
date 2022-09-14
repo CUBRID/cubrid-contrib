@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.recv">
+
+	<select id="test" resultClass="java.lang.String">
+		<!--cubrid select-->
+	SELECT sys_datetime FROM DUAL
+	</select>
+	
+	<resultMap id="recvFileList-result" class="rms.common.xml.com.recv.domain.TkRecvListFile" >
+		<result property="recvSeq" 					column="recv_seq"/>
+		<result property="recvDiv" 					column="recv_div"/>
+		<result property="recvDivFileNm" 			column="recv_div_file_nm"/>
+		<result property="recvFileNm" 				column="recv_file_Nm"/>
+		<result property="recvStateDivCd" 			column="recv_state_div_cd"/>
+		<result property="regDtime" 				column="reg_dtime"/>
+		<result property="creatSysCd" 				column="creat_sys_cd"/>
+	</resultMap>
+	
+	<!-- 
+		접수목록파일 업무등록
+	 -->
+	<insert id="createRecvListFileList" parameterClass="rms.common.xml.com.recv.domain.TkRecvListFile">
+		<!--cubrid insert-->
+		INSERT INTO TB_TKRECVLISTFILE
+		(
+			recv_seq, recv_div, recv_div_file_nm, recv_file_nm, recv_state_div_cd, reg_dtime, creat_sys_cd
+		)
+		(
+			 SELECT TB_TKRECVLISTFILE_SQ01.nextval
+			      , #recvDiv:VARCHAR#
+			      , #recvDivFileNm:VARCHAR#
+			      , #recvFileNm:VARCHAR#
+			      , #recvStateDivCd:VARCHAR#
+			      , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+			      , #creatSysCd:VARCHAR#
+			 FROM  DUAL
+			 WHERE 0 = (SELECT COUNT(1) 
+			            FROM TB_TKRECVLISTFILE
+					    WHERE recv_div_file_nm = '')
+		)
+	</insert>
+	
+	<insert id="createDummyRecvListFileList">
+		INSERT INTO TB_TKRECVLISTFILE
+		(
+			recv_seq, recv_div, recv_div_file_nm, recv_file_nm, recv_state_div_cd, reg_dtime, creat_sys_cd
+		) VALUES
+		(
+			 -1
+			, '01'
+			, 'dummy'
+			, 'dummy'
+			, '-1'
+			, '00000000000000'
+			, '04'
+		)
+	</insert>
+	
+	<delete id="deleteDummyRecvListFileList">
+		DELETE FROM TB_TKRECVLISTFILE
+		WHERE recv_seq = -1
+	</delete>
+	
+	<!-- 
+		SELECT TB_TKRECVLISTFILE(접수목록파일 등록된 업무조회)
+	 -->
+	<select id="findRecvListFileList" parameterClass="rms.common.xml.com.recv.domain.TkRecvListFile" resultMap="recvFileList-result">
+		SELECT recv_seq, recv_div, recv_div_file_nm, recv_file_Nm, recv_state_div_cd, reg_dtime, creat_sys_cd
+		FROM TB_TKRECVLISTFILE
+		WHERE recv_state_div_cd = '0'
+		AND RECV_DIV = '01'
+		AND ROWNUM  <![CDATA[<=]]> #rownum#
+	</select>
+	
+	<!-- 
+		UPDATE TB_TKRECVLISTFILE(접수목록파일 등록상태를 처리대기으로 지정)
+	 -->
+	<update id="updateRecvListFileList" parameterClass="rms.common.xml.com.recv.domain.TkRecvListFile">
+		UPDATE TB_TKRECVLISTFILE
+		SET   recv_state_div_cd = '1'
+		WHERE recv_seq = #recvSeq#
+	</update>
+	
+	<!-- 
+		UPDATE TB_TKRECVLISTFILE(접수목록파일 등록상태를 처리완료로 지정)
+	 -->
+	<update id="updateRecvListFileListEnd" parameterClass="rms.common.xml.com.recv.domain.TkRecvListFile">
+		UPDATE TB_TKRECVLISTFILE
+		SET   recv_state_div_cd = '2'
+		WHERE recv_seq = #recvSeq#
+	</update>
+	
+	<!-- 
+		접수목록파일 등록상태를 처리실패로 지정
+	 -->
+	<update id="updateRecvListFileListError" parameterClass="rms.common.xml.com.recv.domain.TkRecvListFile">
+		UPDATE TB_TKRECVLISTFILE
+		SET   recv_state_div_cd = '3'
+		WHERE recv_seq = #recvSeq#
+	</update>		
+</sqlMap>

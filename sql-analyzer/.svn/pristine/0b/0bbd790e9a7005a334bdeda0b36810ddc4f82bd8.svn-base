@@ -1,0 +1,95 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : mainNoticeDocList
+
+		SELECT /*+ index_desc (TB_STNOTI TB_STNOTI_PK) */			  board_sno,record_center_id, noti_title, noti_cont			, user_nm,user_id, SUBSTR(reg_dtime, 0, 8) reg_dtime		FROM TB_STNOTI			WHERE ROWNUM <='3'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : countNoticeDocPagedList
+
+	  	SELECT COUNT(1)        FROM TB_STNOTI WHERE                       NOTI_TITLE LIKE '1'                   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : findNoticeDocPagedList
+
+		SELECT C.board_sno		      ,C.record_center_id		      ,C.user_nm		      ,C.user_id		      ,SUBSTR(C.reg_dtime, 0, 8) AS reg_dtime		      ,C.noti_title		      ,C.noti_cont		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT *		            FROM TB_STNOTI		             WHERE   		                        NOTI_TITLE LIKE '1'		                       		            ORDER BY BOARD_SNO DESC		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : insert
+-- Query Id : createNoticeDoc
+
+		INSERT INTO TB_STNOTI(BOARD_SNO,RECORD_CENTER_ID,NOTI_TITLE,NOTI_CONT,USER_ID,USER_NM,FIND_CNT,REG_DTIME) 		VALUES(			'1', '1', '1', '1', '1','1', 0, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : findBoardSno
+
+		SELECT tb_stnoti_sq01.nextval FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : insert
+-- Query Id : createNoticeUploadDoc
+
+		INSERT INTO tb_stattachfile		(BOARD_SNO,ATTACH_FILE_SNO,BOARD_DIV,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,RECORD_CENTER_ID,REG_USER_ID,REG_DTIME) 		VALUES('1','1','1','1','1','1','1','1','1',TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : findNoticeDocDetail
+
+		SELECT BOARD_SNO,NOTI_TITLE,NOTI_CONT,RECORD_CENTER_ID,USER_NM,USER_ID,REG_DTIME		FROM TB_STNOTI WHERE  				BOARD_SNO = '1'			  AND 				BOARD_SNO = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : findNoticeDocFile
+
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME		FROM TB_STATTACHFILE		WHERE BOARD_SNO = '1'				AND BOARD_DIV ='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : update
+-- Query Id : updateNoticeDoc
+
+		 UPDATE TB_STNOTI 		 SET   NOTI_TITLE = '1'		 	  ,NOTI_CONT  = '1' 		 WHERE BOARD_SNO  = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : findAttachFileMaxSno
+
+		SELECT NVL(MAX(attach_file_sno), 0) FROM TB_STATTACHFILE WHERE BOARD_SNO = '1' AND BOARD_DIV ='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : delete
+-- Query Id : deleteNoticeDocFile
+
+		DELETE FROM TB_STATTACHFILE 		WHERE BOARD_SNO = '1' 		AND BOARD_DIV = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : delete
+-- Query Id : deleteNoticeDoc
+
+		DELETE FROM TB_STNOTI WHERE BOARD_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml
+-- Query    : select
+-- Query Id : findNoticeDocDownloadFile
+
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME		FROM TB_STATTACHFILE		WHERE BOARD_SNO = '1'		AND BOARD_DIV = '1'		AND ATTACH_FILE_SNO = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainNotice.xml

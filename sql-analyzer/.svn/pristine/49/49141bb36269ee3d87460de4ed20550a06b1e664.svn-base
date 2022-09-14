@@ -1,0 +1,26 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+
+findExcelCntChkDiskPlanPagedList
+Semantic: before '  , '-', '')			AND   A.MEDIA_DIV = '1'			AND   B.RECORD_CENTER...'
+Internal error, undefined conversion. select  lpad(B.ORG_CD, 7, '0')||'-'|| lpad(B.SEQ, 6, '0'), C...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : select
+-- Query Id : findExcelCntChkDiskPlanPagedList
+
+ 		  SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID			       ,C.SPLIT_TOT			       ,C.OPTIDISK_YYYY			       ,LPAD(C.OPTIDISK_STAKRM_ID,3,'0')||'-'||LPAD(C.OPTIDISK_BOOKSF_ID,3,'0')||'-'||LPAD(C.FLOOR_NO,3,'0')||'-'||LPAD(C.COL_NO,3,'0') AS OPTIDISK_LOC			       ,C.OPTIDISK_STAKRM_ID			       ,C.OPTIDISK_BOOKSF_ID			       ,B.CNTCHK_RSLT_CD			       ,(SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z				   WHERE Z.COM_TYPE_CD = 'SR08'				   AND Z.COM_CD = B.CNTCHK_RSLT_CD) CNTCHK_RSLT_NM				   ,B.CHECK_YMD				   ,HANDL_RSLT_CONT				   ,A.MEDIA_DIV				   ,(CASE WHEN A.MEDIA_DIV = '1' THEN '±¤µð½ºÅ©'				            WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM				   ,SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID				   ,B.CNTCHK_CNT				   ,B.REFER_DOCU				   ,A.CHECK_YYYY			FROM   TB_SROPTIDISK_CNTCHK A			       ,TB_SROPTIDISK_CNTCHKDETL B			       ,TB_SROPTIDISK_MST C			WHERE A.RECORD_CENTER_ID = '1'			AND   A.WORK_USER_ID = '1'			AND A.CNTCHK_ID IN				 			REPLACE( ('1','1','1') , '-', '')			AND   A.MEDIA_DIV = '1'			AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			AND   B.CNTCHK_ID = A.CNTCHK_ID			AND   B.MEDIA_DIV = A.MEDIA_DIV			AND   C.ORG_CD = B.ORG_CD			AND   C.SEQ = B.SEQ			AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID			ORDER BY A.CNTCHK_ID DESC, TRGT_ID ;
+
+updateOptidiskCntChkRsltDetail
+Semantic: before '  = '1'			    							,CNTCHK_CNT = '1' 		WHERE RECORD_CENTER_I...'
+There are multiple assignments to TB_SROPTIDISK_CNTCHKDETL.CNTCHK_CNT. update TB_SROPTIDISK_CNTCHKDETL TB_SROPTIDISK_CNTCHKDETL set...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml
+-- Query    : update
+-- Query Id : updateOptidiskCntChkRsltDetail
+
+	   UPDATE TB_SROPTIDISK_CNTCHKDETL		   SET CHECK_YMD = '1'		      ,CNTCHK_RSLT_CD = '1'		      ,HANDL_RSLT_CONT = '1'		      ,REFER_DOCU = '1'			   				,CNTCHK_CNT = '1'			    							,CNTCHK_CNT = '1' 		WHERE RECORD_CENTER_ID = '1'		AND   CNTCHK_ID = REPLACE('1', '-', '')		AND	 ORG_CD = SUBSTR('1',1,7)		AND	 SEQ = TO_NUMBER(SUBSTR('1',9,6))		AND   MEDIA_DIV = '1'	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskCntChk.xml

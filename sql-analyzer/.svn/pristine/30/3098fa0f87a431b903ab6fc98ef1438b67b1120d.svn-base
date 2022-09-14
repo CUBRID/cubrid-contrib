@@ -1,0 +1,375 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoJobGroupId
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_GROUP_SQ01.NEXTVAL,13,'0') FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoMediumInfo
+
+		SELECT medium_cd			, medium_detail_cd		FROM (		    SELECT medium_cd, medium_detail_cd		    FROM  TB_STMEDIUM		    WHERE record_center_id = '1'		    AND   volm_id IN (SELECT volm_id FROM TB_STVOLM WHERE del_flag='0' AND volm_div_cd='3')		    AND   del_flag = '0'		    AND   (tot_size - use_size) > 0		    ORDER BY record_center_id, medium_id		)		WHERE ROWNUM = 1;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoOrgPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.org_cd			FROM TB_RDFOLDER A			WHERE A.record_center_id = '1'			 AND 				A.org_cd = '1'			  AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  			AND   A.folder_keep_state_cd IN ('01','04')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoOrgPagedList
+
+		SELECT E.record_center_id			, E.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_abbr_nm		    , SUM(E.folder_tot_cnt) folder_tot_cnt		    , SUM(E.folder_def_cnt) folder_def_cnt		    , SUM(E.folder_ing_cnt) folder_ing_cnt		    , SUM(E.folder_fail_cnt) folder_fail_cnt		    , SUM(E.folder_end_cnt) folder_end_cnt		    , SUM(E.record_tot_cnt) record_tot_cnt		    , SUM(E.record_def_cnt) record_def_cnt		    , SUM(E.record_ing_cnt) record_ing_cnt		    , SUM(E.record_fail_cnt) record_fail_cnt		    , SUM(E.record_end_cnt) record_end_cnt		FROM (			SELECT D.record_center_id				, D.org_cd				, 1 folder_tot_cnt				, (CASE WHEN (D.neo_trans_state IS NULL OR D.neo_trans_state='0') THEN 1 ELSE 0 END) folder_def_cnt				, (CASE WHEN D.neo_trans_state IN ('1','2','3') THEN 1 ELSE 0 END) folder_ing_cnt				, (CASE WHEN D.neo_trans_state='5' THEN 1 ELSE 0 END) folder_fail_cnt				, (CASE WHEN D.neo_trans_state='4' THEN 1 ELSE 0 END) folder_end_cnt				, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id) record_tot_cnt				, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND (R.neo_trans_state IS NULL OR R.neo_trans_state='0')) record_def_cnt				, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state IN ('1','2','3')) record_ing_cnt				, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state='5') record_fail_cnt				, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state='4') record_end_cnt			FROM TB_RDFOLDER D			WHERE			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum, B.*					FROM (						SELECT DISTINCT A.record_center_id, A.org_cd						FROM TB_RDFOLDER A						WHERE A.record_center_id = '1'						 AND 							A.org_cd = '1'						  AND  								(A.creat_yyyy BETWEEN '1' AND '1')							  						AND   A.folder_keep_state_cd IN ('01','04')		                ORDER BY A.record_center_id, A.org_cd		            ) B		            WHERE ROWNUM <= '1'		 	    AND B.record_center_id = D.record_center_id			    AND B.org_cd = D.org_cd		        ) C		        WHERE C.rnum >= '1'		    ) AND  					(D.creat_yyyy BETWEEN '1' AND '1')				  		    AND   D.folder_keep_state_cd IN ('01','04')		) E		GROUP BY E.record_center_id, E.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoOrgFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT A.record_center_id, A.folder_id			FROM TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1' AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  			AND   A.folder_keep_state_cd IN ('01','04')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoOrgFolderPagedList
+
+		SELECT D.record_center_id			, D.folder_id			, D.title folder_title			, D.neo_trans_state folder_neo_state            , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST03' AND Z.com_cd=D.neo_trans_state) folder_neo_state_nm			            , (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id) record_tot_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND (R.neo_trans_state IS NULL OR R.neo_trans_state='0')) record_def_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state IN ('1','2','3')) record_ing_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state='5') record_fail_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state IN ('4','6')) record_end_cnt		FROM TB_RDFOLDER D				WHERE		EXISTS (			SELECT 1			FROM (				SELECT ROWNUM AS rnum, B.*				FROM (					SELECT A.record_center_id, A.folder_id					FROM TB_RDFOLDER A					WHERE A.record_center_id = '1'					AND   A.org_cd = '1' AND  							(A.creat_yyyy BETWEEN '1' AND '1')						  					AND   A.folder_keep_state_cd IN ('01','04')	                ORDER BY A.record_center_id, A.title	            ) B	            WHERE ROWNUM <= '1'	        ) C	        WHERE C.rnum >= '1'		AND C.record_center_id =  D.record_center_id		AND C.folder_id = D.folder_id	    )	    ORDER BY D.record_center_id, D.title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoOrgRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT A.record_center_id, A.record_id			FROM TB_RDRECORD A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoOrgRecordPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.title record_title			, D.pdf_a1_trans_state record_pdf_state			, ( CASE WHEN D.pdf_a1_trans_state IN (1,2,3)				THEN (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='NE02' AND Z.com_cd=(SELECT X.request_status FROM TB_STREQTRANS X WHERE X.record_id=D.record_id AND X.job_id=(SELECT MAX(Y.job_id) FROM TB_STREQTRANS Y WHERE Y.record_id=D.record_id AND Y.neo_gubun='0')))				ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST02' AND Z.com_cd=D.pdf_a1_trans_state)				END ) AS record_pdf_state_nm            , D.neo_trans_state AS record_neo_state			, ( CASE WHEN D.neo_trans_state IN (1,2,3)				THEN (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='NE02' AND Z.com_cd=(SELECT X.request_status FROM TB_STREQTRANS X WHERE X.record_id=D.record_id AND X.job_id=(SELECT MAX(Y.job_id) FROM TB_STREQTRANS Y WHERE Y.record_id=D.record_id AND Y.neo_gubun='2' AND Y.neochasu=1)))				ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST03' AND Z.com_cd=D.neo_trans_state)				END ) AS record_neo_state_nm            , D.neo_trans_state_2 AS record_neo_state2cha			, ( CASE WHEN D.neo_trans_state_2 IN (1,2,3)				THEN (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='NE02' AND Z.com_cd=(SELECT X.request_status FROM TB_STREQTRANS X WHERE X.record_id=D.record_id AND X.job_id=(SELECT MAX(Y.job_id) FROM TB_STREQTRANS Y WHERE Y.record_id=D.record_id AND Y.neo_gubun='2' AND Y.neochasu=2)))				ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST03' AND Z.com_cd=D.neo_trans_state_2)				END ) AS record_neo_state_nm2cha		FROM TB_RDRECORD D				WHERE		EXISTS (			SELECT 1			FROM (				SELECT ROWNUM AS rnum, B.*				FROM (					SELECT A.record_center_id, A.record_id					FROM TB_RDRECORD A					WHERE A.record_center_id = '1'					AND   A.folder_id = '1'	                ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no	            ) B	            WHERE ROWNUM <= '1'	        ) C	        WHERE C.rnum >= '1'				AND C.record_center_id = D.record_center_id		AND C.record_id = D.record_id	    )	    ORDER BY D.record_center_id, D.creat_reg_dtime, D.creat_reg_no;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT A.record_center_id, A.folder_id			FROM TB_RDFOLDER A			WHERE A.record_center_id = '1'			 AND 				A.creat_sys_cd = '1'			  AND 				A.org_cd = '1'			  AND 				A.clss_id = '1'			  AND  					(A.creat_yyyy BETWEEN '1' AND '1')				   AND 				A.folder_type_div_cd = '1'			  AND 				A.neo_trans_state = '1'			  AND 				A.title LIKE '1'			 			AND A.folder_keep_state_cd IN ('01','04')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoFolderPagedList
+
+		SELECT D.record_center_id			, D.folder_id			, D.title folder_title			, D.neo_trans_state folder_neo_state			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST03' AND Z.com_cd=D.neo_trans_state) folder_neo_state_nm			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id) record_tot_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND (R.neo_trans_state IS NULL OR R.neo_trans_state='0')) record_def_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state IN ('1','2','3')) record_ing_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state='5') record_fail_cnt			, (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=D.record_center_id AND R.folder_id=D.folder_id AND R.neo_trans_state IN ('4','6')) record_end_cnt		FROM TB_RDFOLDER D				WHERE		EXISTS (			SELECT 1			FROM (				SELECT ROWNUM AS rnum, B.*				FROM (					SELECT A.record_center_id, A.folder_id					FROM TB_RDFOLDER A					WHERE A.record_center_id = '1'					 AND 						A.creat_sys_cd = '1'					  AND 						A.org_cd = '1'					  AND 						A.clss_id = '1'					  AND  							(A.creat_yyyy BETWEEN '1' AND '1')   AND 						A.folder_type_div_cd = '1'					  AND 						A.neo_trans_state = '1'					  AND 						A.title LIKE '1'					 					AND A.folder_keep_state_cd IN ('01','04')					ORDER BY A.record_center_id, A.title, A.folder_id				) B	            WHERE ROWNUM <= '1'	        ) C	        WHERE C.rnum >= '1'		AND C.record_center_id = D.record_center_id		AND C.folder_id = D.folder_id		)		ORDER BY D.record_center_id, D.title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoFolderRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT A.record_center_id, A.folder_id			FROM TB_RDRECORD A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoFolderRecordPagedList
+
+	 	SELECT D.record_center_id			, D.record_id			, D.title record_title			, D.pdf_a1_trans_state AS record_pdf_state	        , (CASE WHEN  d.pdf_a1_trans_state IN (1,2,3) THEN (SELECT z.com_cd_nm FROM tb_zzcomcd z WHERE z.com_type_cd = 'NE02' AND z.com_cd = ( SELECT REQUEST_STATUS FROM TB_STREQTRANS WHERE RECORD_ID = d.record_id AND  JOB_ID = (SELECT MAX(JOB_ID) FROM TB_STREQTRANS WHERE RECORD_ID = d.record_id AND NEO_GUBUN = '0')))					ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST02' AND Z.com_cd=D.pdf_a1_trans_state)				END) AS record_pdf_state_nm            , D.neo_trans_state AS record_neo_state	        , (CASE WHEN  d.neo_trans_state IN (1,2,3) THEN (SELECT z.com_cd_nm FROM tb_zzcomcd z WHERE z.com_type_cd = 'NE02' AND z.com_cd = ( SELECT REQUEST_STATUS FROM TB_STREQTRANS WHERE RECORD_ID = d.record_id AND  JOB_ID = (SELECT MAX(JOB_ID) FROM TB_STREQTRANS WHERE RECORD_ID = d.record_id AND NEO_GUBUN = '2' AND NEOCHASU=1)))					ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST03' AND Z.com_cd=D.neo_trans_state)				END) AS record_neo_state_nm            , D.neo_trans_state_2 AS record_neo_state2cha	        , (CASE WHEN  d.neo_trans_state_2 IN (1,2,3) THEN (SELECT z.com_cd_nm FROM tb_zzcomcd z WHERE z.com_type_cd = 'NE02' AND z.com_cd = ( SELECT REQUEST_STATUS FROM TB_STREQTRANS WHERE RECORD_ID = d.record_id AND  JOB_ID = (SELECT MAX(JOB_ID) FROM TB_STREQTRANS WHERE RECORD_ID = d.record_id AND NEO_GUBUN = '2' AND NEOCHASU=2)))					ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST03' AND Z.com_cd=D.neo_trans_state_2)				END) AS record_neo_state_nm2cha		FROM TB_RDRECORD D			, (				SELECT C.record_center_id, C.record_id				FROM (					SELECT ROWNUM AS rnum, B.*					FROM (						SELECT A.record_center_id, A.record_id						FROM TB_RDRECORD A						WHERE A.record_center_id = '1'						AND   A.folder_id = '1'		                ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no		            ) B		            WHERE ROWNUM <= '1'		        ) C		        WHERE C.rnum >= '1'		    ) E		WHERE D.record_center_id = E.record_center_id		AND   D.record_id = E.record_id	    ORDER BY D.record_center_id, D.creat_reg_dtime, D.creat_reg_no	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoCurStateList
+
+		SELECT D.creat_yyyy			, D.presv_term_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=D.presv_term_cd) presv_term_nm 		    , NVL(C.folder_tot_cnt,0) AS folder_tot_cnt		    , NVL(C.folder_def_cnt,0) AS folder_def_cnt		    , NVL(C.folder_ing_cnt,0) AS folder_ing_cnt		    , NVL(C.folder_fail_cnt,0) AS folder_fail_cnt		    , NVL(C.folder_end_cnt,0) AS folder_end_cnt		    , NVL(C.record_tot_cnt,0) AS record_tot_cnt		    , NVL(C.record_def_cnt,0) AS record_def_cnt		    , NVL(C.record_ing_cnt,0) AS record_ing_cnt		    , NVL(C.record_fail_cnt,0) AS record_fail_cnt		    , NVL(C.record_end_cnt,0) AS record_end_cnt		FROM 		(   SELECT B.record_center_id, B.creat_yyyy, B.presv_term_cd		        , SUM(folder_tot_cnt) folder_tot_cnt		        , SUM(folder_def_cnt) folder_def_cnt		        , SUM(folder_ing_cnt) folder_ing_cnt		        , SUM(folder_fail_cnt) folder_fail_cnt		        , SUM(folder_end_cnt) folder_end_cnt		        , SUM(record_tot_cnt) record_tot_cnt		        , SUM(record_def_cnt) record_def_cnt		        , SUM(record_ing_cnt) record_ing_cnt		        , SUM(record_fail_cnt) record_fail_cnt		        , SUM(record_end_cnt) record_end_cnt		    FROM 		    (   SELECT A.record_center_id, A.folder_id, A.creat_yyyy, DECODE(A.presv_term_cd, '20', '25', A.presv_term_cd) presv_term_cd, A.neo_trans_state		            , 1 folder_tot_cnt		            , (CASE WHEN (A.neo_trans_state IS NULL OR A.neo_trans_state='0') THEN 1 ELSE 0 END) folder_def_cnt		            , (CASE WHEN A.neo_trans_state IN ('1','2','3') THEN 1 ELSE 0 END) folder_ing_cnt		            , (CASE WHEN A.neo_trans_state='5' THEN 1 ELSE 0 END) folder_fail_cnt		            , (CASE WHEN A.neo_trans_state IN ('4','6') THEN 1 ELSE 0 END) folder_end_cnt		            , (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_id=A.folder_id) record_tot_cnt		            , (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_id=A.folder_id AND (R.neo_trans_state IS NULL OR R.neo_trans_state='0')) record_def_cnt		            , (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_id=A.folder_id AND R.neo_trans_state IN ('1','2','3')) record_ing_cnt		            , (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_id=A.folder_id AND R.neo_trans_state='5') record_fail_cnt		            , (SELECT COUNT(1) FROM TB_RDRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_id=A.folder_id AND R.neo_trans_state IN ('4','6')) record_end_cnt		        FROM  TB_RDFOLDER A		        WHERE A.record_center_id = '1' AND  						(A.creat_yyyy BETWEEN '1' AND '1')					   AND  						TO_DATE(SUBSTR(A.creat_dtime,1,8),'YYYYMMDD') BETWEEN  TO_DATE('1','YYYYMMDD')  AND  TO_DATE('1','YYYYMMDD') 					  				AND   A.folder_keep_state_cd IN ('01','04')		    ) B		    GROUP BY B.record_center_id, B.creat_yyyy, presv_term_cd		    ORDER BY B.record_center_id, B.creat_yyyy, presv_term_cd		) C, (		    SELECT Y.yyyy AS creat_yyyy, Z.com_cd AS presv_term_cd		    FROM (SELECT com_cd FROM TB_ZZCOMCD WHERE com_type_cd='RD07') Z,			 		     (SELECT yyyy FROM (SELECT LEVEL AS yyyy FROM DUAL CONNECT BY LEVEL <= '1') WHERE yyyy >= '1') Y             		) D		WHERE D.creat_yyyy = C.creat_yyyy(+)		AND   D.presv_term_cd = C.presv_term_cd(+)		ORDER BY D.creat_yyyy DESC, D.presv_term_cd DESC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoFailedMsgPagedList
+
+		SELECT COUNT(1)		FROM  TB_STWORKHIST B    WHERE EXISTS ( SELECT 1               FROM TB_RDFOLDER A               WHERE A.record_center_id = '1'                   AND A.record_center_id = B.record_center_id                 AND A.folder_id = B.folder_id			 AND 				A.folder_id = '1'			  AND 				A.org_cd = '1'			 			AND   A.folder_keep_state_cd IN ('01','04')		) AND 			B.record_id = '1'		  AND 			B.format_div_cd = '1'		 		AND (B.followup_fin_flag IS NULL OR B.followup_fin_flag='0')		AND  (EXISTS (SELECT 1 FROM TB_RDFOLDER F WHERE F.record_center_id=B.record_center_id AND F.folder_id=B.folder_id AND F.neo_trans_state = '5')				OR EXISTS (SELECT 1 FROM TB_RDRECORD R WHERE R.record_center_id=B.record_center_id AND R.folder_id=B.folder_id AND R.neo_trans_state = '5' ))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : findPresvFormatNeoFailedMsgPagedList
+
+		SELECT E.rnum			, E.record_center_id			, E.work_hist_id			, E.folder_id			, NVL((SELECT Z.title FROM TB_RDFOLDER Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id),'') AS folder_title			, E.record_id			, NVL((SELECT Z.title FROM TB_RDRECORD Z WHERE Z.record_center_id=E.record_center_id AND Z.record_id=E.record_id),'') AS record_title			, E.orign_file_id			, (SELECT Z.file_nm FROM TB_STORIGNFILE Z WHERE Z.orign_file_id=E.orign_file_id) AS orign_file_nm			, E.work_start_dtime			, E.work_close_dtime			, E.error_cd			, E.error_cont			, E.followup_div_cd			, (CASE WHEN E.followup_div_cd='1' THEN '재변환' WHEN E.followup_div_cd='2' THEN '변환불가' ELSE '미조치' END) AS followup_div_nm			, E.followup_cause			, (CASE WHEN E.format_div_cd = '1' THEN (SELECT NVL(MAX(Z.neochasu),0) FROM TB_STREQTRANS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id)					WHEN E.format_div_cd = '2' THEN (SELECT NVL(MAX(Z.neochasu),0) FROM TB_STREQTRANS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.record_id=E.record_id)					ELSE 0 END) AS neo_chasu			, E.format_div_cd		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum, C.*				FROM (					SELECT B.record_center_id, B.work_hist_id, B.folder_id, B.record_id, B.orign_file_id						, B.work_start_dtime, B.work_close_dtime, B.error_cd, B.error_cont						, B.followup_div_cd, B.followup_cause, B.format_div_cd					FROM  TB_STWORKHIST B										WHERE 					EXISTS (		                SELECT 1		                FROM TB_RDFOLDER A		                WHERE A.record_center_id = '1'						 AND 							A.folder_id = '1'						  AND 							A.org_cd = '1'						 						AND   A.folder_keep_state_cd IN ('01','04')												AND   A.record_center_id = B.record_center_id						AND   A.folder_id = B.folder_id					)					 AND 						B.record_id = '1'					  AND 						B.format_div_cd = '1'					 					AND (B.followup_fin_flag IS NULL OR B.followup_fin_flag='0')					AND  (EXISTS (SELECT 1 FROM TB_RDFOLDER F WHERE F.record_center_id=B.record_center_id AND F.folder_id=B.folder_id AND F.neo_trans_state = '5')							OR EXISTS (SELECT 1 FROM TB_RDRECORD R WHERE R.record_center_id=B.record_center_id AND R.folder_id=B.folder_id AND R.neo_trans_state = '5' ))					ORDER BY record_center_id, work_hist_id DESC				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoFailedMsgFolder
+
+		SELECT COUNT(1)		FROM (			SELECT B.record_center_id, B.folder_id			FROM  TB_STWORKHIST B			WHERE 	           EXISTS (	               SELECT 1	               FROM TB_RDFOLDER A	               WHERE A.record_center_id = '1'				 AND 					A.folder_id = '1'				  AND 					A.org_cd = '1'				 				AND   A.folder_keep_state_cd IN ('01','04')								AND   A.record_center_id = B.record_center_id				AND   A.folder_id = B.folder_id	           )			AND  B.format_div_cd = '2'			AND (B.followup_fin_flag IS NULL OR B.followup_fin_flag='0')			AND  (EXISTS (SELECT 1 FROM TB_RDFOLDER F WHERE F.record_center_id=B.record_center_id AND F.folder_id=B.folder_id AND F.neo_trans_state = '5')					OR EXISTS (SELECT 1 FROM TB_RDRECORD R WHERE R.record_center_id=B.record_center_id AND R.folder_id=B.folder_id AND R.neo_trans_state = '5' ))			GROUP BY B.record_center_id, B.folder_id		) C	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : select
+-- Query Id : countPresvFormatNeoFailedMsgRecord
+
+		SELECT COUNT(1)		FROM (			SELECT B.record_center_id, B.record_id			FROM  TB_STWORKHIST B			WHERE	           EXISTS (	               SELECT 1	               FROM TB_RDFOLDER A	               WHERE A.record_center_id = '1'				 AND 					A.folder_id = '1'				  AND 					A.org_cd = '1'				 				AND   A.folder_keep_state_cd IN ('01','04')								AND   A.record_center_id = B.record_center_id				AND   A.folder_id = B.folder_id	           ) AND 				B.record_id = '1'			 			AND  B.format_div_cd = '1'			AND (B.followup_fin_flag IS NULL OR B.followup_fin_flag='0')			AND  (EXISTS (SELECT 1 FROM TB_RDFOLDER F WHERE F.record_center_id=B.record_center_id AND F.folder_id=B.folder_id AND F.neo_trans_state = '5')					OR EXISTS (SELECT 1 FROM TB_RDRECORD R WHERE R.record_center_id=B.record_center_id AND R.folder_id=B.folder_id AND R.neo_trans_state = '5' ))			GROUP BY B.record_center_id, B.record_id		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoOrgReqTransRecordList
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT B.record_center_id				, TO_CHAR(sys_datetime,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '2' AS neo_gubun				, 1 AS neochasu				, B.folder_id				, B.record_id				, '1' AS dest_storage_type				, '1' AS dest_storage_vendor				, '-' AS request_status				, B.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank	          FROM  TB_RDRECORD B	          	          WHERE 	          EXISTS (  SELECT 1	                FROM  TB_RDFOLDER A	                WHERE A.record_center_id = '1'	                AND   A.org_cd = '1'	                AND   A.folder_keep_state_cd IN ('01','04')			AND   record_center_id = B.record_center_id			AND   folder_id = B.folder_id	 AND  							(A.creat_yyyy BETWEEN '1' AND '1')						  	              )	          AND   (B.neo_trans_state IS NULL OR B.neo_trans_state='0')         )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoOrgReqTransFolderList
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT A.record_center_id				, TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '1' AS neo_gubun				, 1 AS neochasu				, A.folder_id				, '' AS record_id				, '1' AS dest_storage_type				, NVL('1', '01') AS dest_storage_vendor				, '-' AS request_status				, A.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'			AND   A.folder_keep_state_cd IN ('01','04') AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  			AND   (A.neo_trans_state IS NULL OR A.neo_trans_state='0')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : updatePresvFormatNeoOrgWaitToRecord
+
+		UPDATE TB_RDRECORD B		SET   B.neo_trans_state = '1'		WHERE 		EXISTS (SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'			AND   A.folder_keep_state_cd IN ('01','04')			AND   A.record_center_id = B.record_center_id			AND   A.folder_id = B.folder_id AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  		)		AND   (B.neo_trans_state IS NULL OR B.neo_trans_state='0');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoOrgWaitToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.neo_trans_state = '1'			, A.record_neo_trans_state = ( CASE WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3','5'))) THEN '4'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3'))) THEN '5'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.neo_trans_state IN ('1','2','3')) THEN '0'												ELSE '1' END )		WHERE A.record_center_id = '1'		AND   A.org_cd = '1'		AND   A.folder_keep_state_cd IN ('01','04')		 AND  				(A.creat_yyyy BETWEEN '1' AND '1')			  		AND   (A.neo_trans_state IS NULL OR A.neo_trans_state='0')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoOrgClearReqTransList
+
+		UPDATE TB_STREQTRANS Z		SET   request_status = 'E'			, request_start_time = SYSDATE				WHERE 		EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'			AND   A.folder_keep_state_cd IN ('01','04')						AND   A.record_center_id = Z.record_center_id			AND   A.folder_id = Z.folder_id AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  		)		AND   neo_gubun IN ('1','2')		AND   request_status IN ('-','A','B')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : delete
+-- Query Id : deletePresvFormatNeoOrgClearRecordToWorkHist
+
+		DELETE FROM TB_STWORKHIST Z				WHERE 		EXISTS (			SELECT 1			FROM  TB_RDRECORD B			WHERE 			EXISTS (				SELECT 1				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.org_cd = '1'				AND   A.folder_keep_state_cd IN ('01','04')								AND   A.record_center_id = B.record_center_id				AND   A.folder_id = B.folder_id AND  						(A.creat_yyyy BETWEEN '1' AND '1')					  			)						AND B.record_center_id = Z.record_center_id			AND B.folder_id	= Z.folder_id			AND B.record_id = Z.record_id		)		AND   format_div_cd = '1'		AND   (followup_div_cd IS NULL OR followup_div_cd IN ('0','1'));
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoOrgClearRecordToRecordOrign
+
+		UPDATE TB_STRECORDORIGN Z		SET   neo_trans_state = '0'				WHERE 		EXISTS (			SELECT 1			FROM  TB_RDRECORD B			WHERE 			EXISTS (				SELECT 1				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.org_cd = '1'				AND   A.folder_keep_state_cd IN ('01','04')								AND   A.record_center_id = B.record_center_id				AND   A.folder_id = B.folder_id AND  						(A.creat_yyyy BETWEEN '1' AND '1')					  			)						AND B.record_center_id = Z.record_center_id			AND B.record_id = Z.record_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoOrgClearRecordToFolder
+
+		UPDATE TB_RDFOLDER Z		SET   record_neo_trans_state = '0'		WHERE EXISTS(			SELECT 1			FROM  TB_RDRECORD B						WHERE EXISTS(				SELECT 1				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.org_cd = '1'				AND   A.folder_keep_state_cd IN ('01','04')				AND A.record_center_id = B.record_center_id				AND A.folder_id = B.folder_id AND  						(A.creat_yyyy BETWEEN '1' AND '1')					  			)					and B.record_center_id=Z.record_center_id		and B.folder_id=Z.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoOrgClearRecordToRecord
+
+		UPDATE TB_RDRECORD B		SET   B.neo_trans_state = '0'		WHERE EXISTS(			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'			AND   A.folder_keep_state_cd IN ('01','04')			AND B.record_center_id = A.record_center_id			AND B.folder_id = A.folder_id AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  		)		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : delete
+-- Query Id : updatePresvFormatNeoOrgClearFolderToWorkHist
+
+		DELETE FROM TB_STWORKHIST Z				WHERE EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'			AND   A.folder_keep_state_cd IN ('01','04')			AND A.record_center_id = Z.record_center_id			AND A.folder_id = Z.folder_id AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  		)		AND   format_div_cd = '2'		AND   (followup_div_cd IS NULL OR followup_div_cd IN ('0','1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoOrgClearFolderToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.neo_trans_state = '0'		WHERE A.record_center_id = '1'		AND   A.org_cd = '1'		AND   A.folder_keep_state_cd IN ('01','04')		 AND  				(A.creat_yyyy BETWEEN '1' AND '1')			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoFolderReqTransRecordList
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT B.record_center_id				, TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '2' AS neo_gubun				, 1 AS neochasu				, B.folder_id				, B.record_id				, '1' AS dest_storage_type				, '1' AS dest_storage_vendor				, '-' AS request_status				, B.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank			FROM  TB_RDRECORD B						WHERE EXISTS(				SELECT 1   				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.folder_id = '1'                                				AND record_center_id = B.record_center_id				AND folder_id = B.folder_id			)			AND   (B.neo_trans_state IS NULL OR B.neo_trans_state='0')         )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoFolderReqTransFolderList
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT A.record_center_id				, TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '1' AS neo_gubun				, 1 AS neochasu				, A.folder_id				, '' AS record_id				, '1' AS dest_storage_type				, '1' AS dest_storage_vendor				, '-' AS request_status				, A.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'			AND   (A.neo_trans_state IS NULL OR A.neo_trans_state='0')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : updatePresvFormatNeoFolderWaitToRecord
+
+		UPDATE TB_RDRECORD B		SET   B.neo_trans_state = '1'		WHERE EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'			AND B.record_center_id = A.record_center_id			AND B.folder_id = A.folder_id		)		AND   (B.neo_trans_state IS NULL OR B.neo_trans_state='0');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFolderWaitToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.neo_trans_state = '1'			, A.record_neo_trans_state = ( CASE WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3','5'))) THEN '4'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3'))) THEN '5'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.neo_trans_state IN ('1','2','3')) THEN '0'												ELSE '1' END )		WHERE A.record_center_id = '1'		AND   A.folder_id = '1'		AND   (A.neo_trans_state IS NULL OR A.neo_trans_state='0')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFolderClearReqTransList
+
+		UPDATE TB_STREQTRANS Z		SET   request_status = 'E'			, request_start_time = SYSDATE				WHERE EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'			AND A.record_center_id = Z.record_center_id			AND A.folder_id = Z.folder_id					)		AND   neo_gubun IN ('1','2')		AND   request_status IN ('-','A','B')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : delete
+-- Query Id : deletePresvFormatNeoFolderClearRecordToWorkHist
+
+		DELETE FROM TB_STWORKHIST Z				WHERE EXISTS(			SELECT 1			FROM  TB_RDRECORD B						WHERE EXISTS (				SELECT 1				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.folder_id = '1'				AND A.record_center_id = B.record_center_id				AND A.folder_id = B.folder_id			)		AND B.record_center_id = Z.record_center_id		AND B.folder_id = Z.folder_id		)		AND   format_div_cd = '1'		AND   (followup_div_cd IS NULL OR followup_div_cd IN ('0','1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFolderClearRecordToRecordOrign
+
+		UPDATE TB_STRECORDORIGN Z		SET   neo_trans_state = '0'		WHERE EXISTS (			SELECT 1			FROM  TB_RDRECORD B						WHERE EXISTS (				SELECT 1				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.folder_id = '1'				AND A.record_center_id = B.record_center_id				AND A.folder_id = B.folder_id			)		AND B.record_center_id = Z.record_center_id		AND B.record_id = Z.record_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFolderClearRecordToRecord
+
+		UPDATE TB_RDRECORD B		SET   B.neo_trans_state = '0'		WHERE EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'			AND A.record_center_id = B.record_center_id			AND A.folder_id = B.folder_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFolderClearRecordToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.record_neo_trans_state = ( CASE WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3','5'))) THEN '4'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3'))) THEN '5'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.neo_trans_state IN ('1','2','3')) THEN '0'												ELSE '1' END )		WHERE A.record_center_id = '1'		AND   A.folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : delete
+-- Query Id : updatePresvFormatNeoFolderClearFolderToWorkHist
+
+		DELETE FROM TB_STWORKHIST Z				WHERE EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'			AND A.record_center_id = Z.record_center_id			AND A.folder_id = Z.folder_id					)		AND   format_div_cd = '2'		AND   (followup_div_cd IS NULL OR followup_div_cd IN ('0','1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFolderClearFolderToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.neo_trans_state = '0'		WHERE A.record_center_id = '1'		AND   A.folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoRecordReqTransRecordList
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT A.record_center_id				, TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '2' AS neo_gubun				, 1 AS neochasu				, A.folder_id				, A.record_id				, '1' AS dest_storage_type				, '1' AS dest_storage_vendor				, '-' AS request_status				, A.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank	          FROM  TB_RDRECORD A	          WHERE A.record_center_id = '1'	          AND   A.record_id = '1'	          AND   (A.neo_trans_state IS NULL OR A.neo_trans_state='0')         )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : updatePresvFormatNeoRecordWaitToRecord
+
+		UPDATE TB_RDRECORD A		SET   A.neo_trans_state = '1'		WHERE A.record_center_id = '1'		AND   A.record_id = '1'		AND   (A.neo_trans_state IS NULL OR A.neo_trans_state='0')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordClearReqTransList
+
+		UPDATE TB_STREQTRANS Z		SET   request_status = 'E'			, request_start_time = SYSDATE				WHERE EXISTS (			SELECT 1			FROM  TB_RDRECORD B			WHERE B.record_center_id = '1'			AND   B.record_id = '1'			AND B.record_center_id = Z.record_center_id 			AND B.folder_id = Z.folder_id			AND B.record_id = Z.record_id		)		AND   neo_gubun IN ('1','2')		AND   request_status IN ('-','A','B')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : delete
+-- Query Id : deletePresvFormatNeoRecordClearRecordToWorkHist
+
+		DELETE FROM TB_STWORKHIST Z				WHERE EXISTS (			SELECT 1			FROM  TB_RDRECORD B			WHERE B.record_center_id = '1'			AND   B.record_id = '1'			AND B.record_center_id = Z.record_center_id			AND B.folder_id = Z.folder_id			AND B.record_id = Z.record_id		)		AND   format_div_cd = '1'		AND   (followup_div_cd IS NULL OR followup_div_cd IN ('0','1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordClearRecordToRecordOrign
+
+		UPDATE TB_STRECORDORIGN Z		SET   neo_trans_state = '0'		WHERE EXISTS( 			SELECT 1				FROM  TB_RDRECORD B			WHERE B.record_center_id = '1'			AND   B.record_id = '1'			AND B.record_center_id = Z.record_center_id			AND B.record_id = Z.record_id					)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordClearRecordToRecord
+
+		UPDATE TB_RDRECORD B		SET   B.neo_trans_state = '0'		WHERE B.record_center_id = '1'		AND   B.record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordClearRecordToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.record_neo_trans_state = ( CASE WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3','5'))) THEN '4'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3'))) THEN '5'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.neo_trans_state IN ('1','2','3')) THEN '0'												ELSE '1' END )				WHERE EXISTS (			SELECT 1			FROM  TB_RDRECORD B			WHERE B.record_center_id = '1'			AND   B.record_id = '1'			AND B.record_center_id = A.record_center_id			AND B.folder_id = A.folder_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoFollowup
+
+		UPDATE TB_STWORKHIST		SET   followup_div_cd = '1'			, followup_cause = '1'			, followup_fin_flag = '1'		WHERE record_center_id = '1'		AND   work_hist_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoFolderReqTransFollowup
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT A.record_center_id				, TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '1' AS neo_gubun				, 1 AS neochasu				, A.folder_id				, '' AS record_id				, '1' AS dest_storage_type				, '1' AS dest_storage_vendor				, '-' AS request_status				, A.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_id = '1'			AND   A.neo_trans_state = '5'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : updatePresvFormatNeoFolderFollowup
+
+		UPDATE TB_RDFOLDER A		SET   A.neo_trans_state = '1'			, A.record_neo_trans_state = ( CASE WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3','5'))) THEN '4'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3'))) THEN '5'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.neo_trans_state IN ('1','2','3')) THEN '0'												ELSE '1' END )		WHERE A.record_center_id = '1'		AND   A.folder_id = '1'		AND   A.neo_trans_state = '5'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : insert
+-- Query Id : createPresvFormatNeoRecordReqTransFollowup
+
+		INSERT INTO TB_STREQTRANS (			record_center_id, job_id, neo_gubun, neochasu, folder_id, record_id, dest_storage_type, dest_storage_vendor, request_status, erecord_flag			, request_corp_cd, request_corp_nm, request_org_cd, request_org_nm, request_user_id, request_user_nm, request_user_pos_rank_nm		)		(			SELECT A.record_center_id				, TO_CHAR(SYSDATE,'YYYY')||LPAD(TB_STFORMAT_SQ01.NEXTVAL,13,'0') AS job_id				, '2' AS neo_gubun				, 1 AS neochasu				, A.folder_id				, A.record_id				, '1' AS dest_storage_type				, '1' AS dest_storage_vendor				, '-' AS request_status				, A.erecord_flag				, (SELECT Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_corp_cd				, (SELECT Y.org_nm FROM TB_STORG Y, (SELECT Z.record_center_id, Z.hupper_org_cd FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') X WHERE Y.record_center_id=X.record_center_id AND Y.org_cd=X.hupper_org_cd) AS request_corp_nm				, '1'				, (SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.record_center_id = '1' AND Z.org_cd = '1') AS request_org_nm				, '1'				, '1'				, (SELECT (CASE WHEN pos IS NULL AND rank IS NULL THEN ''								WHEN pos IS NULL AND rank IS NOT NULL THEN rank								WHEN pos IS NOT NULL AND rank IS NULL THEN pos								ELSE pos||'/'||rank							END)					FROM  TB_STUSER					WHERE user_id = '1') AS user_pos_rank	          FROM  TB_RDRECORD A	          WHERE A.record_center_id = '1'	          AND   A.record_id = '1'	          AND   A.neo_trans_state = '5'         )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordFollowupRecordToRecordOrign
+
+		UPDATE TB_STRECORDORIGN		SET   neo_trans_state = '1'		WHERE record_center_id = '1'		AND   record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordFollowupRecordToRecord
+
+		UPDATE TB_RDRECORD B		SET   B.neo_trans_state = '1'		WHERE B.record_center_id = '1'		AND   B.record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoRecordFollowupRecordToFolder
+
+		UPDATE TB_RDFOLDER A		SET   A.record_neo_trans_state = ( CASE WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3','5'))) THEN '4'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND (B.neo_trans_state IS NULL OR B.neo_trans_state IN ('0','1','2','3'))) THEN '5'												WHEN NOT EXISTS (SELECT 1 FROM TB_RDRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.neo_trans_state IN ('1','2','3')) THEN '0'												ELSE '1' END )		WHERE 		exists (select 1			FROM  TB_RDRECORD B			WHERE B.record_center_id = '1'			AND   B.record_id = '1'			and a.record_center_id = b.record_center_id			and a.folder_id = b.folder_id		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeo.xml

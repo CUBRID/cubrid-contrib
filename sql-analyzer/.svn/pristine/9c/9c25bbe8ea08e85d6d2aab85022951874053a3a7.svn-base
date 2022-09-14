@@ -1,0 +1,130 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : findDisuseTrgtChoisePagedList
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND ORG_CD = B.ORG_CD) AS ORG_NM					, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)						    WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)					   END) AS BIS_CLSS_NM				    , B.TITLE				    , B.CREAT_YYYY				    , B.PRESV_TERM_CD				    , B.DISU_DELAY_CD				    , A.CUR_PRESV_TERM_CD				    , A.CUR_DELAY_CD						    , A.DISCU_PROG_STATE_CD				    , A.FOLDER_ID				    , A.DISCU_REQ_FLAG				    , B.folder_keep_state_cd				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = A.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG_NM				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = B.PRESV_TERM_CD) AS PRESV_TERM_NM				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.CUR_DELAY_CD) AS CUR_DELAY_NM				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = B.DISU_DELAY_CD) AS DISU_DELAY_NM				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD70' AND COM_CD = A.DISCU_PROG_STATE_CD) AS DISCU_PROG_STATE_NM				FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B				WHERE A.RECORD_CENTER_ID = '1'				AND A.DISCU_YYYY = '1'				 AND 					A.DISCU_REQ_FLAG = '1'				 				AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID				AND B.FOLDER_ID        = A.FOLDER_ID AND  				 		B.CUR_KEEP_ORG_CD = '1'					   AND 					B.PRESV_TERM_CD = '1'				  AND 					B.TITLE LIKE '1'				 				ORDER BY A.FOLDER_ID, B.CREAT_YYYY, B.ORG_CD			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : countDisuseTrgtChoisePagedList
+
+ 		SELECT COUNT(*) 		FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B		WHERE A.RECORD_CENTER_ID = '1'		AND A.DISCU_YYYY = '1' AND 			A.DISCU_REQ_FLAG = '1'		 		AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		AND B.FOLDER_ID        = A.FOLDER_ID AND  		 		B.CUR_KEEP_ORG_CD = '1'			   AND 			B.PRESV_TERM_CD = '1'		  AND 			B.TITLE LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : findDisuseTrgtChoiseList
+
+		SELECT (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND ORG_CD = B.ORG_CD) AS ORG_NM			, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)				    WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)			   END) AS BIS_CLSS_NM		    , B.TITLE		    , B.CREAT_YYYY		    , B.PRESV_TERM_CD		    , B.DISU_DELAY_CD		    , A.CUR_PRESV_TERM_CD		    , A.CUR_DELAY_CD				    , A.DISCU_PROG_STATE_CD		    , A.FOLDER_ID		    , A.DISCU_REQ_FLAG		    , B.folder_keep_state_cd		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = A.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG_NM		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = B.PRESV_TERM_CD) AS PRESV_TERM_NM		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.CUR_DELAY_CD) AS CUR_DELAY_NM		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = B.DISU_DELAY_CD) AS DISU_DELAY_NM		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD70' AND COM_CD = A.DISCU_PROG_STATE_CD) AS DISCU_PROG_STATE_NM		FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B		WHERE A.RECORD_CENTER_ID = '1'		AND A.DISCU_YYYY = '1' AND 				A.DISCU_REQ_FLAG = '1'			 			AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			AND B.FOLDER_ID        = A.FOLDER_ID AND  		 		B.CUR_KEEP_ORG_CD = '1'			   AND 			B.PRESV_TERM_CD = '1'		  AND 			B.TITLE LIKE '1'		 		ORDER BY A.FOLDER_ID, B.CREAT_YYYY, B.ORG_CD 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : findDisuseOpinHistPagedList
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.CHNG_HIST_NO			 		, A.DISCU_YYYY		     		, A.DISCU_SEQ		     		, A.CUR_PRESV_TERM_CD		     		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.CUR_PRESV_TERM_CD) AS CUR_PRESV_TERM_NM     		     		, A.REVIEW_OPIN		     		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.REVIEW_OPIN) AS REVIEW_OPIN_NM     		     		, A.REVIEW_PRESV_TERM_CD		     		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.REVIEW_PRESV_TERM_CD) AS REVIEW_PRESV_TERM_NM     		     		, A.REVIEW_DEFER_CD		     		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.REVIEW_DEFER_CD) AS REVIEW_DEFER_NM     		     		, A.REVIEW_RSN		     		, A.REVIEW_YMD		     		, A.RECORD_CHRGR_ID				FROM TB_DFDISUSEOPINHIST A				WHERE A.RECORD_CENTER_ID = '1'				AND A.FOLDER_ID = '1'				ORDER BY A.CHNG_HIST_NO			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : countDisuseOpinHistPagedList
+
+		SELECT COUNT(*)  		FROM TB_DFDISUSEOPINHIST A 		WHERE A.RECORD_CENTER_ID = '1'   		AND A.FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : findDisuseHandlDeptTrgtPagedList
+
+		SELECT D.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND ORG_CD = B.ORG_CD) AS ORG_NM					, (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND ORG_CD = B.CUR_KEEP_ORG_CD) AS CUR_KEEP_ORG_NM					, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)						    WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)					   END) AS BIS_CLSS_NM				    , B.TITLE				    , B.CREAT_YYYY				    , B.PRESV_TERM_CD				    , B.DISU_DELAY_CD				    , A.CUR_PRESV_TERM_CD				    , A.CUR_DELAY_CD						    , A.DISCU_PROG_STATE_CD				    , A.FOLDER_ID				    , B.folder_keep_state_cd				    , (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND ORG_CD = A.ORG_CD) AS ORG_NM2				FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B				WHERE A.RECORD_CENTER_ID = '1'				AND A.DISCU_YYYY = '1'				AND A.DISCU_PROG_STATE_CD NOT IN ('01')					AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID				AND B.FOLDER_ID        = A.FOLDER_ID				 AND  						B.CUR_KEEP_ORG_CD = '1'							   AND  						B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')					   AND 					B.PRESV_TERM_CD = '1'				  AND 					B.TITLE LIKE '1'				 				ORDER BY A.FOLDER_ID, B.CREAT_YYYY, B.ORG_CD			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : countDisuseHandlDeptTrgtPagedList
+
+ 		SELECT COUNT(*)		FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B		WHERE A.RECORD_CENTER_ID = '1'		AND A.DISCU_YYYY = '1'		AND A.DISCU_PROG_STATE_CD NOT IN ('01')					AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		AND B.FOLDER_ID        = A.FOLDER_ID		 AND  				B.CUR_KEEP_ORG_CD = '1'					   AND  				B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')			   AND 			B.PRESV_TERM_CD = '1'		  AND 			B.TITLE LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : findDisuseReasonPagedList
+
+		SELECT C.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.RECORD_CENTER_ID				    , A.DISCU_YYYY				    , A.DISCU_SEQ				    , A.DISCU_REASON				    , (SELECT COUNT(*) FROM TB_DFDISUSEOPIN WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND DISCU_YYYY = A.DISCU_YYYY AND DISCU_SEQ = A.DISCU_SEQ) AS OPIN_TOTAL_CNT				    , (SELECT COUNT(*) FROM TB_DFDISUSEOPIN WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND DISCU_YYYY = A.DISCU_YYYY AND DISCU_SEQ = A.DISCU_SEQ AND DISCU_PROG_STATE_CD NOT IN('01','02')) AS OPIN_END_CNT     				FROM TB_DFDISUSEREASON A				WHERE A.RECORD_CENTER_ID = '1'				AND A.DISCU_YYYY = '1' AND 					A.DISCU_REASON LIKE '1'				 				ORDER BY A.DISCU_SEQ			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : countDisuseReasonPagedList
+
+		SELECT COUNT(1)     		FROM TB_DFDISUSEREASON A		WHERE A.RECORD_CENTER_ID = '1'		AND A.DISCU_YYYY = '1' AND 			A.DISCU_REASON LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : findDisuseTrgtChoiseReason
+
+		SELECT RECORD_CENTER_ID AS recordCenterId			, DISCU_YYYY AS discuYyyy			, DISCU_SEQ  AS discuSeq			, DISCU_REASON AS discuReason		FROM TB_DFDISUSEREASON		WHERE RECORD_CENTER_ID = '1'		AND DISCU_YYYY = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : select
+-- Query Id : maxDisuseTrgtChoiseReasonSeq
+
+		SELECT NVL(MAX(A.DISCU_SEQ),0) AS DISCU_SEQ		FROM TB_DFDISUSEREASON A		WHERE A.RECORD_CENTER_ID = '1'		AND A.DISCU_YYYY = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : insert
+-- Query Id : createDisuseTrgtChoiseReason
+
+		INSERT INTO TB_DFDISUSEREASON (RECORD_CENTER_ID			, DISCU_YYYY			, DISCU_SEQ			, DISCU_REASON		) VALUES ('1'			, '1'			, (SELECT NVL(MAX(A.DISCU_SEQ),0) FROM TB_DFDISUSEREASON A WHERE A.RECORD_CENTER_ID = '1' AND A.DISCU_YYYY = '1') + 1			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateDisuseTrgtChoiseStateEach
+
+		UPDATE TB_DFDISUSEOPIN A   		SET A.DISCU_SEQ = '1'			, A.DISCU_PROG_STATE_CD = LPAD('1',2,'0') 		WHERE A.RECORD_CENTER_ID = '1'   		AND A.DISCU_YYYY = '1'		AND A.FOLDER_ID = '1'   		AND A.DISCU_PROG_STATE_CD IN ('01','02')  		AND A.DISCU_PROG_STATE_CD = CASE WHEN LPAD('1',2,'0') = '01' THEN '02' ELSE '01' END   		AND A.REVIEW_COFIRM_CD = '0'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateDisuseTrgtChoiseStateList
+
+		UPDATE TB_DFDISUSEOPIN A   		SET A.DISCU_SEQ = '1'     		, A.DISCU_PROG_STATE_CD = LPAD('1',2,'0') 		WHERE A.RECORD_CENTER_ID = '1'   		AND A.DISCU_YYYY       = '1'   		AND A.DISCU_PROG_STATE_CD IN ('01','02')   		AND A.DISCU_PROG_STATE_CD = CASE WHEN LPAD('1',2,'0') = '01' THEN '02' ELSE '01' END   		AND A.REVIEW_COFIRM_CD = '0'    AND  			A.DISCU_REQ_FLAG = '1'		       		AND EXISTS (   			SELECT B.FOLDER_ID         	FROM TB_RDFOLDER B        	WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID          	AND B.FOLDER_ID = A.FOLDER_ID AND  				B.ORG_CD = '1'			  AND  				B.PRESV_TERM_CD = '1'			  AND  				B.TITLE LIKE '%' || '1' || '%'			         	)   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateDisuseHandlDeptTrgtEach
+
+		UPDATE TB_DFDISUSEOPIN A	   	SET A.DISCU_PROG_STATE_CD = LPAD('1',2,'0')	    	, A.ORG_CD = CASE WHEN LPAD('1',2,'0') = '03' THEN '1' ELSE NULL END	    	, A.RJCT_FLAG = '0'     	 	WHERE A.RECORD_CENTER_ID = '1'	   	AND A.DISCU_YYYY = '1'		AND A.FOLDER_ID = '1'	   	AND A.DISCU_PROG_STATE_CD IN ('02','03')	   	AND A.DISCU_PROG_STATE_CD = CASE WHEN LPAD('1',2,'0') = '02' THEN '03' ELSE '02' END	   	AND A.REVIEW_COFIRM_CD = '0'   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateDisuseCurKeepOrgCd
+
+		UPDATE tb_rdfolder A		SET A.bef_keep_org_cd = A.cur_keep_org_cd, A.cur_keep_org_cd = '1'		WHERE A.record_center_id = '1'		AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateDisuseHandlDeptTrgtList
+
+		UPDATE TB_DFDISUSEOPIN A	   	SET A.DISCU_PROG_STATE_CD = LPAD('1',2,'0')	    	, A.ORG_CD = CASE WHEN LPAD('1',2,'0') = '03' 	    					  THEN (SELECT B.CUR_KEEP_ORG_CD FROM TB_RDFOLDER B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID)	                  		  ELSE NULL	                  	 END	    	, A.RJCT_FLAG = '0'                  	 	WHERE A.RECORD_CENTER_ID = '1'	   	AND A.DISCU_YYYY = '1'	   	AND A.DISCU_PROG_STATE_CD IN ('02','03')	   	AND A.DISCU_PROG_STATE_CD = CASE WHEN LPAD('1',2,'0') = '02' THEN '03' ELSE '02' END	   	AND A.REVIEW_COFIRM_CD = '0'   	   	AND EXISTS (	   		SELECT B.FOLDER_ID	        FROM TB_RDFOLDER B	        WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID	        AND B.FOLDER_ID = A.FOLDER_ID	    	 AND 	 			B.ORG_CD = '1'			  AND  					B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')				   AND 		 		B.PRESV_TERM_CD = '1'			  AND 				B.TITLE LIKE '1'			 	    )   	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateDisuseFolderStateCdMatch
+
+		UPDATE TB_RDFOLDER A		SET A.DISUSE_STATE_CD = (SELECT B.DISCU_PROG_STATE_CD FROM TB_DFDISUSEOPIN B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND B.DISCU_YYYY = '1')			, A.EXPT_TRANSF_YYYY = '1' 		WHERE A.RECORD_CENTER_ID = '1'   		AND A.DISUSE_EVAL_PROG_FLAG = '1'   		AND EXISTS (   			SELECT C.FOLDER_ID         	FROM TB_DFDISUSEOPIN C        	WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID          	AND C.FOLDER_ID = A.FOLDER_ID          	AND C.DISCU_YYYY = '1'          	AND C.DISCU_PROG_STATE_CD NOT IN ('09')          	AND C.DISCU_PROG_STATE_CD  <>  A.DISUSE_STATE_CD     	);
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\disuseeval\DisuseTrgtChoice.xml

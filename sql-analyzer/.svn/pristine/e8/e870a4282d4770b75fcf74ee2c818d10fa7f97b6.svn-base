@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : countDiosConfirmTrgt
+
+        SELECT (CASE WHEN EXISTS (SELECT 1 FROM TB_OPOPENLIST WHERE record_center_id = '1' AND open_sys_cd = '01' AND open_state IN ('1','2','3')) THEN 1 ELSE 0 END) AS EXISTS_FLAG FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : countDiosConfirmCurStatPagedList
+
+		SELECT COUNT(1)		FROM (			(		         		        	SELECT 1 FROM DUAL WHERE 0 = 1		         			)			UNION ALL			(				SELECT 1				FROM  TB_OPOPENGROUP A		        WHERE A.record_center_id = '1'		        AND   A.open_sys_cd = '01'		        AND   A.open_dtime LIKE '1'				AND   A.list_type_cd = '01'			)		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : findDiosConfirmCurStatPagedList
+
+		SELECT E.confirm_flag			, E.open_dtime			, NVL(E.cho_cnt,0)+NVL(E.exc_cnt,0)+NVL(E.app_cnt,0) AS tot_cnt			, NVL(E.cho_cnt,0) AS cho_cnt			, NVL(E.exc_cnt,0) AS exc_cnt			, NVL(E.app_cnt,0) AS app_cnt		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT C.confirm_flag, C.open_dtime, C.cho_cnt, C.exc_cnt, C.app_cnt				FROM (			        (				         				        	SELECT '' confirm_flag, '' open_dtime, 0 cho_cnt, 0 exc_cnt, 0 app_cnt				        	FROM DUAL WHERE 0 = 1 				    )				    UNION ALL				    (						SELECT B.confirm_flag, B.open_dtime, B.cho_cnt, B.exc_cnt, B.app_cnt						FROM (					        SELECT '1' AS confirm_flag					        	, A.open_dtime					            , A.choice_cnt AS cho_cnt					            , A.except_cnt AS exc_cnt					            , A.append_cnt AS app_cnt					        FROM  TB_OPOPENGROUP A					        WHERE A.record_center_id = '1'					        AND   A.open_sys_cd = '01'					        AND   A.open_dtime LIKE '1'							AND   A.list_type_cd = '01'					        ORDER BY A.record_center_id, A.open_sys_cd, A.open_dtime DESC						) B				    )				) C			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'		ORDER BY E.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : countDiosConfirmOrgPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd			FROM  TB_OPOPENLIST A			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state IN ('1','2','3')			 AND 				A.org_cd = '1'			  AND 				A.creat_sys_cd = '1'			  AND 				A.creat_yyyy = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : findDiosConfirmOrgPagedList
+
+		SELECT F.record_center_id			, F.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm			, NVL(SUM(F.cho_cnt),0)+NVL(SUM(F.exc_cnt),0)+NVL(SUM(F.app_cnt),0) AS tot_cnt			, NVL(SUM(F.cho_cnt),0) AS cho_cnt			, NVL(SUM(F.exc_cnt),0) AS exc_cnt			, NVL(SUM(F.app_cnt),0) AS app_cnt		FROM (			SELECT E.record_center_id				, E.org_cd                , (CASE WHEN E.open_state='1' THEN 1 ELSE 0 END) AS cho_cnt                , (CASE WHEN E.open_state='2' THEN 1 ELSE 0 END) AS exc_cnt                , (CASE WHEN E.open_state='3' THEN 1 ELSE 0 END) AS app_cnt			FROM  TB_OPOPENLIST E						WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd						FROM  TB_OPOPENLIST A						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state IN ('1','2','3') AND 							A.org_cd = '1'						  AND 							A.creat_sys_cd = '1'						  AND 							A.creat_yyyy = '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd			 	AND   D.org_cd = E.org_cd			)			AND   E.open_state IN ('1','2','3')			 AND 				E.creat_sys_cd = '1'			  AND 				E.creat_yyyy = '1'			 		) F		GROUP BY F.record_center_id, F.org_cd		ORDER BY F.record_center_id, F.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : countDiosConfirmFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id			FROM  TB_OPOPENLIST A				, TB_RDFOLDER B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state IN ('1','2','3')			AND   A.org_cd = '1'			 AND 				A.creat_sys_cd = '1'			  AND 				A.creat_yyyy = '1'			 			AND   B.record_center_id=A.record_center_id			AND   B.folder_id=A.folder_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : findDiosConfirmFolderPagedList
+
+		SELECT G.record_center_id			, G.folder_id			, G.folder_title			, NVL(SUM(G.cho_cnt),0)+NVL(SUM(G.exc_cnt),0)+NVL(SUM(G.app_cnt),0) AS tot_cnt			, NVL(SUM(G.cho_cnt),0) AS cho_cnt			, NVL(SUM(G.exc_cnt),0) AS exc_cnt			, NVL(SUM(G.app_cnt),0) AS app_cnt		FROM (			SELECT E.record_center_id				, E.folder_id				, F.title AS folder_title                , (CASE WHEN E.open_state='1' THEN 1 ELSE 0 END) AS cho_cnt                , (CASE WHEN E.open_state='2' THEN 1 ELSE 0 END) AS exc_cnt                , (CASE WHEN E.open_state='3' THEN 1 ELSE 0 END) AS app_cnt			FROM  TB_OPOPENLIST E				, TB_RDFOLDER F			WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title						FROM  TB_OPOPENLIST A							, TB_RDFOLDER B						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state IN ('1','2','3')						AND   A.org_cd = '1' AND 							A.creat_sys_cd = '1'						  AND 							A.creat_yyyy = '1'						 						AND   B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id AND 							B.title LIKE '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, B.title					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd				AND   D.folder_id = E.folder_id			)			AND   E.open_state IN ('1','2','3') AND 				E.creat_sys_cd = '1'			  AND 				E.creat_yyyy = '1'			 			AND   F.record_center_id = E.record_center_id			AND   F.folder_id = E.folder_id AND 				F.title LIKE '1'			 		) G		GROUP BY G.record_center_id, G.folder_id, G.folder_title		ORDER BY G.record_center_id, G.folder_title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : countDiosConfirmRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id			FROM  TB_OPOPENLIST A				, TB_RDRECORD B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state IN ('1','2','3')			AND   A.org_cd = '1'			AND   A.folder_id = '1' AND 				A.creat_sys_cd = '1'			  AND 				A.creat_yyyy = '1'			 			AND   B.record_center_id=A.record_center_id			AND   B.record_id=A.record_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : select
+-- Query Id : findDiosConfirmRecordPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.open_state			, D.record_title			, D.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm			, D.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm			, D.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.record_center_id					, A.record_id					, A.open_state					, B.title AS record_title					, B.record_reg_div_cd					, B.record_detl_type_cd					, B.open_div_cd				FROM  TB_OPOPENLIST A					, TB_RDRECORD B				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				AND   A.open_state IN ('1','2','3')				AND   A.org_cd = '1'				AND   A.folder_id = '1' AND 					A.creat_sys_cd = '1'				  AND 					A.creat_yyyy = '1'				 				AND   B.record_center_id = A.record_center_id				AND   B.record_id = A.record_id AND 					B.title LIKE '1'				 				ORDER BY A.record_center_id, A.open_sys_cd, B.title			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : insert
+-- Query Id : createOpenGroup
+
+		INSERT INTO TB_OPOPENGROUP		(			record_center_id, open_sys_cd, open_dtime, choice_cnt, except_cnt, append_cnt, list_type_cd, list_prov_flag, list_prov_dtime, reg_dtime		)		(			SELECT '1'				, '01'				, '1'				, (SELECT COUNT(1) FROM TB_OPOPENLIST WHERE record_center_id = '1' AND open_sys_cd = '01' AND open_state = '1') AS cho_cnt				, (SELECT COUNT(1) FROM TB_OPOPENLIST WHERE record_center_id = '1' AND open_sys_cd = '01' AND open_state = '2') AS exc_cnt				, (SELECT COUNT(1) FROM TB_OPOPENLIST WHERE record_center_id = '1' AND open_sys_cd = '01' AND open_state = '3') AS app_cnt				, '01'				, '0'				, ''								, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')			FROM  DUAL		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml
+-- Query    : update
+-- Query Id : updateOpenListConfirm
+
+		UPDATE TB_OPOPENLIST		SET   open_state = (CASE WHEN open_state='2' THEN '5' ELSE '4' END)			, open_dtime = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state IN ('1','2','3');
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosConfirm.xml

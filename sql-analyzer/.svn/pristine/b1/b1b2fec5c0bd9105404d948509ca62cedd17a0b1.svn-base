@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="batchReg">
+
+<resultMap id="findRecordId-result" 			class="rms.take.batchReg.domain.BatchRegFile">
+		<result property="recordCenterId"	 		column="RECORD_CENTER_ID"/>
+</resultMap>
+
+<!-- 기록관ID조회 -->
+	<select id="findRecordCenterId" parameterClass="rms.take.batchReg.domain.BatchRegFile" resultClass="java.lang.String">
+		SELECT DISTINCT RECORD_CENTER_ID
+		FROM TB_STORG
+		WHERE org_cd =#orgCd:VARCHAR# 
+	</select>
+<!-- 기록물철ID(접수) 조회 -->
+	<select id="findBatchRegFolderTakeSeq" resultClass="string">
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKFOLDER_SQ01.nextval), 15, '0') FROM DUAL
+	</select>
+<!-- 생산자 기관명 조회 -->
+	<select id="findCreatUserOrgNm" resultClass="string">
+		SELECT ORG_NM
+		FROM TB_STORG
+		WHERE ORG_CD=#orgCd:VARCHAR#
+	</select>
+<!-- 기록물건ID(접수) 조회 -->
+	<select id="findBatchRegRecordTakeSeq" resultClass="string">
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKRECORD_SQ01.nextval), 15, '0') FROM DUAL
+	</select>
+<!-- insert 기록물건 등록-검색어 등록 -->
+	<insert id="createBatchRecordKeywd" parameterClass="rms.take.batchReg.domain.RecordBatchReg">
+		INSERT INTO TB_TKSPCLLIST
+		(
+			record_center_id
+			, spcl_list_take_seq
+			, record_take_seq
+			, spcl_list_loc
+			, seq
+			, spcl_list1
+			, reg_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, LPAD((TB_TKSPCLLIST_SQ01.nextval), 15, '0')
+			, #recordTakeSeq:VARCHAR#
+			, '2'
+			, '1'
+			, #keywd:VARCHAR#
+			, #regDtime:VARCHAR#
+		)
+	</insert>
+	
+<!-- 기록물 에러정보등록 -->
+	<insert id="creatRMSBatchErrorReg" parameterClass="rms.take.batchReg.domain.BatchRegFile">
+			INSERT INTO TB_TKRECVERROR (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,line_no,recv_error_rsn,reg_prog_state_cd)
+			VALUES(#recordCenterId:VARCHAR#,#recvDtime:VARCHAR#,#creatSysCd:VARCHAR#,#fileDivCd:VARCHAR#,#lineNo:VARCHAR#,#recvErrorRsn:VARCHAR#,#regProgStateCd:VARCHAR#)
+	</insert>
+<!-- 기록물철 접수이력 등록 -->
+	<insert id="creatRMSBatchHist" parameterClass="rms.take.batchReg.domain.BatchRegFile">
+	INSERT INTO TB_TKRECVHIST (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,total_cnt,recv_imposs_error_cnt,auto_check_error_cnt,exam_error_cnt,reg_prog_state_cd)
+			VALUES(#recordCenterId:VARCHAR#,#recvDtime:VARCHAR#,#creatSysCd:VARCHAR#,#fileDivCd:VARCHAR#,#totalCnt:VARCHAR#,#recvImpossErrorCnt:VARCHAR#,#autoCheckErrorCnt:VARCHAR#,
+				   #examErrorCnt:VARCHAR#,#regProgStateCd:VARCHAR#)
+	</insert>
+	<update id="updateRMSBatchHist" parameterClass="rms.take.batchReg.domain.BatchRegFile">
+	UPDATE TB_TKRECVHIST
+	SET recv_imposs_error_cnt = NVL(#recvImpossErrorCnt#,0)
+	, auto_check_error_cnt=(auto_check_error_cnt+NVL(#autoCheckErrorCnt#,0))
+	, exam_error_cnt=(exam_error_cnt+NVL(#examErrorCnt#,0))
+	, reg_prog_state_cd=DECODE(reg_prog_state_cd,'3','3',#regProgStateCd:VARCHAR#)
+	, total_cnt = NVL(#totalCnt:VARCHAR#,0)
+	, state_flag = NVL(#stateFlag:VARCHAR#,0)
+	WHERE record_center_id=#recordCenterId:VARCHAR# and recv_dtime=#recvDtime:VARCHAR# and creat_sys_cd=#creatSysCd:VARCHAR# and file_div_cd=#fileDivCd:VARCHAR# 
+	</update>
+	
+	<select id="countRMSBatchHist" parameterClass="rms.take.batchReg.domain.BatchRegFile" resultClass="int">
+		SELECT COUNT(1) FROM TB_TKRECVHIST
+		WHERE record_center_id=#recordCenterId:VARCHAR# 
+		and recv_dtime=#recvDtime:VARCHAR# 
+		and creat_sys_cd=#creatSysCd:VARCHAR# 
+		and file_div_cd=#fileDivCd:VARCHAR# 
+	</select>
+<!-- 기록물철 등록 -->
+<insert id="creatRMSFolderReg" parameterClass="rms.take.batchReg.domain.FolderBatchReg">
+		INSERT INTO TB_TKFOLDER
+		(
+			record_center_id, folder_take_seq, creat_sys_cd, take_org_cd, clss_div_cd
+			, clss_id, creat_yyyy, folder_reg_seq, ho_no, take_yyyy
+			, take_sno, clss_nm, title, sub_title, folder_type_div_cd
+			, folder_detl_type_cd, sumry, folder_size, record_tot_page_cnt, record_reg_cnt
+			, efile_cnt, old_folder_creat_org_nm, old_folder_clss_no, presv_term_cd, presv_term_fix_rsn
+			, oper_read_range_cd, read_cnt, new_div_cd, presv_method_cd, presv_area_cd
+			, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm
+			, creat_dtime, reg_dtime, org_cd, group_presv_term_cd, error_flag
+			, exam_rslt_cd, rjct_flag, take_fin_flag, take_type_cd, folder_start_dtime
+			, folder_close_dtime, virus_flag, virus_dtime, erecord_flag, folder_seq
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#, #folderTakeSeq:VARCHAR#, #creatSysCd:VARCHAR#, #orgCd:VARCHAR#, #clssDivCd:VARCHAR#
+			, #clssId:VARCHAR#, #creatYyyy:VARCHAR#, #folderRegSeq:VARCHAR#, #hoNo:VARCHAR#, TO_CHAR(SYSDATE,'YYYY')
+			, #takeSno:VARCHAR#, #clssNm:VARCHAR# , #title:VARCHAR#, #subTitle:VARCHAR#, #folderTypeDivCd:VARCHAR#
+			, #folderDetlTypeCd:VARCHAR#, #sumry:VARCHAR#, #folderSize:VARCHAR#, #recordTotPageCnt:VARCHAR#, #recordRegCnt:VARCHAR#
+			, #efileCnt:VARCHAR#, #oldFolderCreatOrgNm:VARCHAR#, #oldFolderClssNo:VARCHAR#, #presvTermCd:VARCHAR#, #presvTermFixRsn:VARCHAR#
+			, #operReadRangeCd:VARCHAR#, #readCnt:VARCHAR#, #newDivCd:VARCHAR#, #presvMethodCd:VARCHAR#, #presvAreaCd:VARCHAR#
+			, #creatUserId:VARCHAR#, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#
+			, #creatDtime:VARCHAR#, #regDtime:VARCHAR#, #orgCd:VARCHAR#, #groupPresvTermCd:VARCHAR#, #errorFlag:VARCHAR#
+			, #examRsltCd:VARCHAR#, #rjctFlag:VARCHAR#, #takeFinFlag:VARCHAR#, #takeTypeCd:VARCHAR#, #creatYyyy:VARCHAR#||'0101000000'
+			, #creatYyyy:VARCHAR#||'1231000000', #virusFlag:VARCHAR#
+                        <!--cubrid, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), #erecordFlag:VARCHAR#, #folderSeq:VARCHAR#-->
+                        , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), #erecordFlag:VARCHAR#, #folderSeq:VARCHAR#
+		)
+	</insert>
+	
+<!-- (insert 기록물철 등록-행위자정보 등록) -->
+	<insert id="createRMSFolderCreat" parameterClass="rms.take.batchReg.domain.FolderBatchReg">
+		INSERT INTO TB_TKFOLDERCREAT
+		(
+			record_center_id
+			, folder_take_seq
+			, agent_sno
+			, agent_type_cd
+			, agent_id
+			, agent_nm
+			, agent_org_cd
+			, agent_org_nm
+			, agent_pos_rank_nm
+			, opin
+			, duty_type_cd
+			, duty_act_dtime
+			, reg_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, #folderTakeSeq:VARCHAR#
+			, (SELECT NVL(MAX(agent_sno),0)+1 agent_sno
+			   FROM TB_TKFOLDERCREAT
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   folder_take_seq = #folderTakeSeq:VARCHAR#)
+			, #agentTypeCd:VARCHAR#
+			, #agentId:VARCHAR#
+			, #agentNm:VARCHAR#
+			, #agentOrgCd:VARCHAR#
+			, #agentOrgNm:VARCHAR#
+			, #agentPosRankNm:VARCHAR#
+			, #opin:VARCHAR#
+			, #dutyTypeCd:VARCHAR#
+			, #dutyActDtime:VARCHAR#
+			, #regDtime:VARCHAR#
+		)
+	</insert>
+	<!-- 기록물건 등록 -->
+	<insert id="creatRMSBatchRecordReg" parameterClass="rms.take.batchReg.domain.RecordBatchReg">
+		INSERT INTO TB_TKRECORD
+		(
+			record_center_id, record_take_seq, folder_take_seq, creat_sys_cd, org_cd
+			, creat_yyyy, creat_reg_dtime, title, sub_title, record_reg_div_cd
+			, record_detl_type_cd, record_size, record_page_cnt, duty_chrgr_nm, erecord_flag
+			, old_record_presv_term, open_div_cd, open_grade, part_open_rsn, open_limit_part
+			, recver, sender, folder_clss_no, spcl_record_type, orign_copy_flag
+			, new_div_cd, chng_flag, rjct_flag, doc_no, creat_sys_record_id
+			, error_flag, take_fin_flag, reg_dtime, record_sumry, creat_reg_no
+			, dtch_reg_no, exam_rslt_cd, attach_cnt, record_sno, creat_user_id
+			, creat_user_nm, creat_user_org_cd, creat_user_org_nm, creat_user_pos_rank_nm, creat_dtime
+			, secret_clss, secret_term, oper_read_range_cd, audvis_record_type, pic_ymd
+			, pic_area, main_user_nm, old_record_docno, old_record_creat_org_nm, folder_seq, record_seq
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#, #recordTakeSeq:VARCHAR#, #folderTakeSeq:VARCHAR#, #creatSysCd:VARCHAR#
+			, (SELECT org_cd FROM TB_TKFOLDER 
+			   WHERE record_center_id=#recordCenterId:VARCHAR# 
+			   AND   folder_take_seq=#folderTakeSeq:VARCHAR#)
+			, SUBSTR(#creatRegDtime:VARCHAR#,1,4), (#creatRegDtime:VARCHAR#), #title:VARCHAR#, #subTitle:VARCHAR#, #recordRegDivCd:VARCHAR#
+			, #recordDetlTypeCd:VARCHAR#, #recordSize#, #recordPageCnt:VARCHAR#, #dutyChrgrNm:VARCHAR#, #erecordFlag:VARCHAR#
+			, #oldRecordPresvTerm:VARCHAR#, #openDivCd:VARCHAR#, #openGrade:VARCHAR#, #partOpenRsn:VARCHAR#, #openLimitPart:VARCHAR#
+			, #recver:VARCHAR#, #sender:VARCHAR#
+			, (SELECT org_cd||clss_id||creat_yyyy||folder_reg_seq||ho_no FROM TB_TKFOLDER 
+			   WHERE record_center_id=#recordCenterId:VARCHAR# 
+			   AND   folder_take_seq=#folderTakeSeq:VARCHAR#)
+			, #spclRecordType:VARCHAR#, #orignCopyFlag:VARCHAR#
+			, #newDivCd:VARCHAR#, #chngFlag:VARCHAR#, #rjctFlag:VARCHAR#, #docNo:VARCHAR#, #creatSysRecordId:VARCHAR#
+			, #errorFlag:VARCHAR#, #takeFinFlag:VARCHAR#, #regDtime:VARCHAR#, #recordSumry#, #creatRegNo:VARCHAR#
+			, #dtchRegNo:VARCHAR#, #examRsltCd:VARCHAR#, #attachCnt#, #recordSno#, #creatUserId:VARCHAR#
+			, #creatUserNm:VARCHAR#, #creatUserOrgCd:VARCHAR#, #creatUserOrgNm:VARCHAR#, #creatUserPosRankNm:VARCHAR#, #creatDtime:VARCHAR#
+			, #secretClss:VARCHAR#, #secretTerm:VARCHAR#, #operReadRangeCd:VARCHAR#, #audvisRecordType:VARCHAR#, #picYmd:VARCHAR#
+			, #picArea:VARCHAR#, #mainUserNm:VARCHAR#, #oldRecordDocno:VARCHAR#, #oldRecordCreatOrgNm:VARCHAR#, #folderSeq:VARCHAR#,#recordSeq:VARCHAR#
+		)
+	</insert>
+	<!-- 기록물건 등록-행위자정보 등록)-->
+	<insert id="creatRMSRecordCreatReg" parameterClass="rms.take.batchReg.domain.RecordBatchReg">
+		INSERT INTO TB_TKRECORDCREAT
+		(
+			record_center_id
+			, record_take_seq
+			, agent_sno
+			, agent_type_cd
+			, agent_id
+			, agent_nm
+			, agent_org_cd
+			, agent_org_nm
+			, agent_pos_rank_nm
+			, req_state_val
+			, opin_dtime
+			, handl_rslt
+			, opin
+			, duty_type_cd
+			, duty_act_dtime
+			, reg_dtime
+		)
+		VALUES
+		(
+			#recordCenterId:VARCHAR#
+			, #recordTakeSeq:VARCHAR#
+			, (SELECT NVL(MAX(agent_sno),0)+1 agent_sno
+			   FROM TB_TKRECORDCREAT
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND   record_take_seq = #recordTakeSeq:VARCHAR#)
+			, #agentTypeCd:VARCHAR#
+			, #agentId:VARCHAR#
+			, #agentNm:VARCHAR#
+			, #agentOrgCd:VARCHAR#
+			, #agentOrgNm:VARCHAR#
+			, #agentPosRankNm:VARCHAR#
+			, #reqStateVal:VARCHAR#
+			, #opinDtime:VARCHAR#
+			, #handlRslt:VARCHAR#
+			, #opin:VARCHAR#
+			, #dutyTypeCd:VARCHAR#
+			, #dutyActDtime:VARCHAR#
+			, #regDtime:VARCHAR#
+		)
+	</insert>
+	<!-- 기록물건 일련번호 조회 -->
+	<select id="findRecordSeq" resultClass="string">
+		SELECT COUNT(1)
+		FROM TB_TKRECORD
+		WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		      AND CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		      AND FOLDER_SEQ = #folderSeq:VARCHAR#
+		      AND RECORD_SEQ = #recordSeq:VARCHAR#
+	</select>
+	<!-- 기록물철 일련번호 조회 -->
+	<select id="findFolderSeq" resultClass="string">
+		SELECT COUNT(1)
+		FROM TB_TKFOLDER
+		WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		      AND CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		      AND FOLDER_SEQ = #folderSeq:VARCHAR#
+	</select>
+	<!-- 기록물철 인수 일련번호 조회 -->
+	<select id="findRecordFolderTakeSeq" resultClass="string">
+		SELECT FOLDER_TAKE_SEQ
+		FROM TB_TKFOLDER
+		WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		      AND CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		      AND FOLDER_SEQ = #folderSeq:VARCHAR#
+	</select>
+	<!-- 특수목록조회 -->
+	<select id="findSpclList" parameterClass="rms.take.batchReg.domain.FolderBatchReg" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_TKSPCLLIST
+		WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		      AND REG_DTIME = #regDtime:VARCHAR#
+		      AND SPCL_LIST1 IS NOT NULL
+	</select>
+	<!-- 전자파일 등록 -->
+	<insert id="creatRMSAttachFileReg" parameterClass="rms.take.batchReg.domain.AttachFileBatch">
+	INSERT INTO TB_TKATTACHFILE (record_center_id,org_cd,creat_yyyy,creat_reg_no,attach_file_seq,attach_file_page_cnt,record_take_seq,
+						   reg_seq,doc_type_cd,doc_type_sno,file_nm,attach_file_path,file_size,reg_dtime
+						)
+			VALUES(#recordCenterId:VARCHAR#,
+				   <!-- 처리과번호 TB_TKFOLDER 에서 찾아오기 2011.03.16 KHJ -->
+				   ( SELECT ORG_CD FROM TB_TKFOLDER 
+				      WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				        AND FOLDER_TAKE_SEQ IN ( SELECT FOLDER_TAKE_SEQ FROM TB_TKRECORD
+                                                  WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                                                    AND RECORD_TAKE_SEQ = #recordTakeSeq:VARCHAR# )),
+                   #creatYyyy:VARCHAR#,#creatRegNo:VARCHAR#,#attachFileSeq:VARCHAR#,
+				   #attachFilePageCnt:VARCHAR#,#recordTakeSeq:VARCHAR#,#regSeq:VARCHAR#,#docTypeCd:VARCHAR#,#docTypeSno:VARCHAR#,#fileNm:VARCHAR#,
+				   #attachFilePath:VARCHAR#, #fileSize:VARCHAR#, #regDtime:VARCHAR#
+			)
+	</insert>
+
+	<select id="findRmsUnitNm" parameterClass="string" resultClass="string">
+		SELECT UNIT_NM FROM TB_ZZUNIT WHERE UNIT_CD = #value:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	<select id="findRmsClssNm" parameterClass="string" resultClass="string">
+		SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = #value:VARCHAR#
+	</select>
+	
+</sqlMap>

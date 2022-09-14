@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.sys">
+
+	<resultMap id="menu-result" class="rms.sys.sys.domain.Menu" >
+		<result property="menuId" 			column="MENU_ID"/>
+		<result property="menuNm" 			column="MENU_NM"/>
+		<result property="useFlag" 			column="USE_FLAG"/>
+		<result property="menuSortSno" 		column="MENU_SORT_SNO"/>
+		<result property="upperMenuId" 		column="UPPER_MENU_ID"/>
+		<result property="menuDivCd" 		column="MENU_DIV_CD"/>
+		<result property="menuGrantLevl" 	column="MENU_GRANT_LEVL"/>
+	</resultMap>
+	<!-- 
+		시스템관리 메뉴관리 메뉴목록을 조회한다.
+	 -->
+	<select id="findMenuMngList" parameterClass="rms.sys.sys.domain.Menu" resultMap="menu-result">
+		SELECT A.menu_id
+			, A.menu_nm
+			, A.use_flag
+			, A.menu_sort_sno
+			, A.upper_menu_id
+			, A.menu_div_cd
+			, A.menu_grant_levl
+		FROM TB_STMENU A
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="menuNm">
+				A.MENU_NM LIKE #menuNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="menuDivCd">
+				A.MENU_DIV_CD = #menuDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="menuId">
+				A.MENU_ID = #menuId:VARCHAR#
+			</isNotEmpty>
+			<isNotEqual prepend="AND" property="multi" compareValue="1">
+				A.MENU_ID NOT IN ('174', '175', '176')
+				AND NOT EXISTS (SELECT Z.MENU_ID 
+						        FROM TB_STMENU  Z
+						        WHERE Z.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						        AND   Z.menu_id          = A.menu_id
+						        AND   Z.record_center_id = A.record_center_id
+						        START WITH MENU_ID = '40' AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+						        CONNECT BY PRIOR MENU_ID = UPPER_MENU_ID AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+			</isNotEqual>
+		</dynamic>
+		<dynamic>
+			<isEmpty property="menuNm">
+				<isEmpty property="menuDivCd">
+					CONNECT BY PRIOR A.menu_id = A.upper_menu_id AND A.record_center_id = #recordCenterId:VARCHAR# START WITH A.upper_menu_id IS NULL AND A.record_center_id = #recordCenterId:VARCHAR#
+				</isEmpty>
+			</isEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴관리
+		: 메뉴가 존재하는지 확인한다.
+	 -->
+	<select id="countMenu" parameterClass="rms.sys.sys.domain.Menu" resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM TB_STMENU WHERE record_center_id = #recordCenterId:VARCHAR# AND menu_id = #menuId:VARCHAR#
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴관리
+		: 메뉴를 등록한다.
+	 -->
+	<insert id="createMenu" parameterClass="rms.sys.sys.domain.Menu">
+ 		INSERT INTO TB_STMENU(
+ 			menu_id, menu_nm, use_flag, menu_sort_sno, upper_menu_id, menu_div_cd, work_dtime, record_center_id, menu_grant_levl
+ 		) VALUES (
+ 			 (SELECT DECODE((MAX(TO_NUMBER(menu_id))),null,0,(MAX(TO_NUMBER(menu_id))))+1 FROM TB_STMENU)
+ 			,#menuNm:VARCHAR#
+ 			,#useFlag:VARCHAR#
+ 			,#menuSortSno:VARCHAR#
+ 			,#upperMenuId:VARCHAR#
+ 			,#menuDivCd:VARCHAR#
+ 			<!--cubrid ,TO_CHAR(sysdate,'YYYYMMDDHH24MISS')-->
+ 			,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+ 			,#recordCenterId:VARCHAR#
+ 			,#menuGrantLevl:VARCHAR#
+ 		)
+	</insert>
+	
+	<!-- 
+		시스템관리_메뉴관리
+		: 메뉴를 수정한다.
+	 -->
+	<update id="updateMenu" parameterClass="rms.sys.sys.domain.Menu">
+		UPDATE TB_STMENU
+		SET   menu_nm = #menuNm:VARCHAR#, 
+			  use_flag = #useFlag:VARCHAR#, 
+			  menu_sort_sno = #menuSortSno:VARCHAR#, 
+			  <!--cubgrid work_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'),-->
+			  work_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'),
+			  menu_grant_levl = #menuGrantLevl:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   menu_id = #menuId:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리_메뉴관리
+		: 선택된 메뉴의 하위메뉴를 조회한다.
+	 -->
+	<resultMap id="findSubMenuList-result" class="rms.sys.sys.domain.Menu">
+		<result property="menuId" 			column="MENU_ID"/>
+		<result property="menuNm" 			column="MENU_NM"/>
+		<result property="useFlag" 			column="USE_FLAG"/>
+		<result property="menuSortSno" 		column="MENU_SORT_SNO"/>
+		<result property="upperMenuId" 		column="UPPER_MENU_ID"/>
+		<result property="menuDivCd" 		column="MENU_DIV_CD"/>
+		<result property="menuGrantLevl" 	column="MENU_GRANT_LEVL"/>
+	</resultMap>
+	<select id="findSubMenuList" parameterClass="rms.sys.sys.domain.Menu" resultMap="findSubMenuList-result">
+		SELECT menu_id, menu_nm, use_flag, menu_sort_sno, upper_menu_id, menu_div_cd, menu_grant_levl
+		FROM TB_STMENU
+		WHERE upper_menu_id = #menuId:VARCHAR#
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴관리
+		: 선택된 메뉴의 권한유무를 체크한다.
+	 -->
+	<select id="findMenuGrantUse" parameterClass="rms.sys.sys.domain.Menu" resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM TB_STMENUGRANTLINK WHERE record_center_id = #recordCenterId:VARCHAR# AND menu_id = #menuId:VARCHAR#
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴관리
+		: 선택된 메뉴를 삭제한다.
+	 -->
+	<delete id="deleteMenu" parameterClass="rms.sys.sys.domain.Menu">
+		DELETE FROM TB_STMENU WHERE  record_center_id = #recordCenterId:VARCHAR# AND menu_id = #menuId:VARCHAR#
+	</delete>
+	
+</sqlMap>

@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="orign.pkg.folder">
+
+	<resultMap id="Folder-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="curSysDate" column="CUR_SYS_DATE" />
+		<result property="clssDivCd" column="CLSS_DIV_CD" />
+		<result property="clssDivNm" column="CLSS_DIV_NM" />
+		<result property="clssId" column="CLSS_ID" />
+		<result property="creatSysFolderId" column="CREAT_SYS_FOLDER_ID" />
+		<result property="takeYyyy" column="TAKE_YYYY" />
+		<result property="takeYyyySNo" column="TAKE_YYYY_SNO" />
+		<result property="creatSysCd" column="CREAT_SYS_CD" />
+		<result property="creatSysNm" column="CREAT_SYS_NM" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="orgNm" column="ORG_NM" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="folderRegSeq" column="FOLDER_REG_SEQ" />
+		<result property="hoNo" column="HO_NO" />
+		<result property="clssNm" column="CLSS_NM" />
+		<result property="title" column="TITLE" />
+		<result property="subTitle" column="SUB_TITLE" />
+		<result property="corctTitle" column="CORCT_TITLE" />
+		<result property="folderTypeDivCd" column="FOLDER_TYPE_DIV_CD" />
+		<result property="folderTypeDivNm" column="FOLDER_TYPE_DIV_NM" />
+		<result property="etcFolderType" column="ETC_FOLDER_TYPE" />
+		<result property="folderDetlTypeCd" column="FOLDER_DETL_TYPE_CD" />
+		<result property="folderDetlTypeNm" column="FOLDER_DETL_TYPE_NM" />
+		<result property="creatPurps" column="CREAT_PURPS" />
+		<result property="sumry" column="SUMRY" jdbcType="CLOB"
+			javaType="java.lang.String" />
+		<result property="adjstDescr" column="ADJST_DESCR" />
+		<result property="mediaFormat" column="MEDIA_FORMAT" />
+		<result property="mediaFormatNm" column="MEDIA_FORMAT_NM" />
+		<result property="medium" column="MEDIUM" />
+		<result property="folderSize" column="FOLDER_SIZE" />
+		<result property="recordTotPageCnt" column="RECORD_TOT_PAGE_CNT" />
+		<result property="recordRegCnt" column="RECORD_REG_CNT" />
+		<result property="efileCnt" column="EFILE_CNT" />
+		<result property="newDivCd" column="NEW_DIV_CD" />
+		<result property="newDivNm" column="NEW_DIV_NM" />
+		<result property="oldFolderCreatOrgNm" column="OLD_FOLDER_CREAT_ORG_NM" />
+		<result property="oldFolderClssNo" column="OLD_FOLDER_CLSS_NO" />
+		<result property="oldPresvTermCd" column="OLD_PRESV_TERM_CD" />
+		<result property="oldPresvTermNm" column="OLD_PRESV_TERM_NM" />
+		<result property="folderStartDTime" column="FOLDER_START_DTIME" />
+		<result property="folderCloseDTime" column="FOLDER_CLOSE_DTIME" />
+		<result property="funshEndDTime" column="FUNSH_END_DTIME" />
+		<result property="funshRsn" column="FUNSH_RSN" />
+		<result property="presvTermCd" column="PRESV_TERM_CD" />
+		<result property="presvTermNm" column="PRESV_TERM_NM" />
+		<result property="presvTermFixRsn" column="PRESV_TERM_FIX_RSN" />
+		<result property="presvMethodCd" column="PRESV_METHOD_CD" />
+		<result property="presvMethodNm" column="PRESV_METHOD_NM" />
+		<result property="presvAreaCd" column="PRESV_AREA_CD" />
+		<result property="presvAreaNm" column="PRESV_AREA_NM" />
+		<result property="presvLoc" column="PRESV_LOC" />
+		<result property="presvDutyChrgrNm" column="PRESV_DUTY_CHRGR_NM" />
+		<result property="readRange" column="READ_RANGE" />
+		<result property="readRangeNm" column="READ_RANGE_NM" />
+		<result property="takeTakovrDivCd" column="TAKE_TAKOVR_DIV_CD" />
+		<result property="takeTakovrOrgCd" column="TAKE_TAKOVR_ORG_CD" />
+		<result property="takeTakovrOrgNm" column="TAKE_TAKOVR_ORG_NM" />
+		<result property="takeTakovrYmd" column="TAKE_TAKOVR_YMD" />
+	</resultMap>
+
+	<select id="findFolder" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Folder-result">
+		SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD')||'T'||TO_CHAR(SYSDATE,
+		'HH24:MI:SS') CUR_SYS_DATE,
+		F.CLSS_DIV_CD, C0.COM_CD_NM CLSS_DIV_NM, F.CLSS_ID,
+		F.CREAT_SYS_FOLDER_ID,
+		F.TAKE_YYYY, F.TAKE_YYYY_SNO,
+		F.CREAT_SYS_CD, C1.COM_CD_NM CREAT_SYS_NM,
+		F.ORG_CD, O.FULL_ORG_NM ORG_NM,
+		F.CREAT_YYYY, F.FOLDER_REG_SEQ, F.HO_NO, F.CLSS_NM,
+		NVL(F.TITLE, ' ') TITLE,
+		RTRIM(NVL(F.SUB_TITLE, ' ')) SUB_TITLE,
+		RTRIM(NVL(F.CORCT_TITLE, ' ')) CORCT_TITLE,
+		F.FOLDER_TYPE_DIV_CD, C2.COM_CD_NM FOLDER_TYPE_DIV_NM,
+		F.ETC_FOLDER_TYPE,
+		F.FOLDER_DETL_TYPE_CD, C3.COM_CD_NM FOLDER_DETL_TYPE_NM,
+		F.CREAT_PURPS, F.SUMRY, F.ADJST_DESCR,
+		F.MEDIA_FORMAT, NVL(C4.COM_CD_NM,'') MEDIA_FORMAT_NM,
+		NVL(C10.COM_CD_NM, '') MEDIUM,
+		NVL(F.FOLDER_SIZE,0) FOLDER_SIZE,
+		F.RECORD_TOT_PAGE_CNT, F.RECORD_REG_CNT, F.EFILE_CNT,
+		F.NEW_DIV_CD, NVL(C5.COM_CD_NM,'') NEW_DIV_NM,
+		F.OLD_FOLDER_CREAT_ORG_NM, F.OLD_FOLDER_CLSS_NO,
+		F.OLD_PRESV_TERM_CD, C9.COM_CD_NM OLD_PRESV_TERM_NM,
+		DECODE(F.FOLDER_START_DTIME, null, '',(DECODE(F.CREAT_SYS_CD,'04',DECODE(F.PERIOD_FROM_DT, NULL,
+		'',TO_CHAR(TO_DATE(F.PERIOD_FROM_DT, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(F.PERIOD_FROM_DT,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')), DECODE(F.FOLDER_START_DTIME,
+		NULL, '',TO_CHAR(TO_DATE(F.FOLDER_START_DTIME, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(F.FOLDER_START_DTIME,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS'))))) FOLDER_START_DTIME,
+		DECODE(F.FOLDER_CLOSE_DTIME, null,
+		'',(DECODE(F.CREAT_SYS_CD,'04',DECODE(F.PERIOD_TO_DT, NULL,
+		'',TO_CHAR(TO_DATE(F.PERIOD_TO_DT, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(F.PERIOD_TO_DT,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')), DECODE(F.FOLDER_CLOSE_DTIME,
+		NULL, '',TO_CHAR(TO_DATE(F.FOLDER_CLOSE_DTIME, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(F.FOLDER_CLOSE_DTIME,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS'))))) FOLDER_CLOSE_DTIME,
+		DECODE(F.FUNSH_END_DTIME, null, '', TO_CHAR(TO_DATE(F.FUNSH_END_DTIME,
+		'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(F.FUNSH_END_DTIME,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')) FUNSH_END_DTIME,
+		F.FUNSH_RSN,
+		F.PRESV_TERM_CD, C6.COM_CD_NM PRESV_TERM_NM,
+		F.PRESV_TERM_FIX_RSN,
+		F.PRESV_METHOD_CD, C7.COM_CD_NM PRESV_METHOD_NM,
+		F.PRESV_AREA_CD, C8.COM_CD_NM PRESV_AREA_NM,
+		F.PRESV_LOC, F.PRESV_DUTY_CHRGR_NM,
+		F.OPER_READ_RANGE_CD READ_RANGE, NVL(COR.COM_CD_NM,' ') READ_RANGE_NM,
+		NVL(F.TAKE_TAKOVR_DIV_CD, '0') TAKE_TAKOVR_DIV_CD,
+		F.TAKE_TAKOVR_ORG_CD, TKO.FULL_ORG_NM TAKE_TAKOVR_ORG_NM,
+		DECODE(F.TAKE_TAKOVR_YMD, null, '', TO_CHAR(TO_DATE(F.TAKE_TAKOVR_YMD,
+		'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(F.TAKE_TAKOVR_YMD,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')) TAKE_TAKOVR_YMD
+		FROM TB_RDFOLDER F
+		,TB_STORG O
+		,TB_STORG TKO
+		,TB_ZZCOMCD C0
+		,TB_ZZCOMCD C1
+		,TB_ZZCOMCD C2
+		,TB_ZZCOMCD C3
+		,TB_ZZCOMCD C4
+		,TB_ZZCOMCD C5
+		,TB_ZZCOMCD C6
+		,TB_ZZCOMCD C7
+		,TB_ZZCOMCD C8
+		,TB_ZZCOMCD C9
+		,TB_ZZCOMCD COR
+		,TB_ZZCOMCD C10
+		WHERE F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND F.FOLDER_ID = #folderId:VARCHAR#
+		AND F.RECORD_CENTER_ID = O.RECORD_CENTER_ID
+		AND F.ORG_CD = O.ORG_CD
+		AND F.OPER_READ_RANGE_CD = COR.COM_CD(+)
+		AND COR.COM_TYPE_CD(+) = 'RD53'
+		AND F.RECORD_CENTER_ID = TKO.RECORD_CENTER_ID(+)
+		AND F.TAKE_TAKOVR_ORG_CD = TKO.ORG_CD(+)
+		AND F.CLSS_DIV_CD = C0.COM_CD
+		AND C0.COM_TYPE_CD = 'RD19'
+		AND F.CREAT_SYS_CD = C1.COM_CD
+		AND C1.COM_TYPE_CD = 'RD17'
+		AND F.FOLDER_TYPE_DIV_CD = C2.COM_CD(+)
+		AND C2.COM_TYPE_CD(+) = 'RD01'
+		AND F.FOLDER_DETL_TYPE_CD = C3.COM_CD(+)
+		AND C3.COM_TYPE_CD(+) = 'RD41'
+		AND F.MEDIA_FORMAT = C4.COM_CD(+)
+		AND C4.COM_TYPE_CD(+) = 'RD15'
+		AND F.NEW_DIV_CD = C5.COM_CD(+)
+		AND C5.COM_TYPE_CD(+) = 'RD27'
+		AND F.PRESV_TERM_CD = C6.COM_CD(+)
+		AND C6.COM_TYPE_CD(+) = 'RD07'
+		AND F.PRESV_METHOD_CD = C7.COM_CD(+)
+		AND C7.COM_TYPE_CD(+) = 'RD09'
+		AND F.PRESV_AREA_CD = C8.COM_CD(+)
+		AND C8.COM_TYPE_CD(+) = 'RD10'
+		AND F.OLD_PRESV_TERM_CD = C9.COM_CD(+)
+		AND C9.COM_TYPE_CD(+) = 'RD07'
+		AND F.MEDIUM = C10.COM_CD(+)
+		AND C10.COM_TYPE_CD(+) = 'RD16'
+	</select>
+
+	<resultMap id="Record-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="recordId" column="RECORD_ID" />
+		<result property="recordDetlTypeCd" column="RECORD_DETL_TYPE_CD" />
+		<result property="recordDetlTypeNm" column="RECORD_DETL_TYPE_NM" />
+	</resultMap>
+
+	<select id="findRecordList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Record-result">
+		SELECT R.CREAT_SYS_CD || R.ORG_CD || R.CREAT_YYYY ||
+		TRIM(TO_CHAR(NVL(R.CREAT_REG_NO,0), '0000000000000')) || R.DTCH_REG_NO
+		RECORD_ID,
+		R.RECORD_DETL_TYPE_CD, C.COM_CD_NM RECORD_DETL_TYPE_NM
+		FROM TB_RDRECORD R
+		,TB_ZZCOMCD C
+		WHERE R.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND R.FOLDER_ID = #folderId:VARCHAR#
+		AND R.RECORD_DETL_TYPE_CD = C.COM_CD
+		AND C.COM_TYPE_CD = 'RD03'
+		ORDER BY R.TAKE_YYYY_SNO
+	</select>
+
+
+	<resultMap id="BisClss-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="bisClssId" column="BIS_CLSS_ID" />
+		<result property="bisClssNm" column="BIS_CLSS_NM" />
+		<result property="levl" column="LEVL" />
+	</resultMap>
+
+	<select id="findBisClssList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="BisClss-result">
+		SELECT BIS_CLSS_ID, BIS_CLSS_NM, NVL(LEVL, 0) LEVL
+		FROM TB_ZZBISCLSS START WITH BIS_CLSS_ID = #clssId:VARCHAR#
+		CONNECT BY PRIOR UPPER_BIS_CLSS_ID = BIS_CLSS_ID
+		ORDER BY NVL(LEVL, 0)
+	</select>
+
+	<resultMap id="Unit-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="lrgCd" column="LRG_CD" />
+		<result property="lrgNm" column="LRG_NM" />
+		<result property="midCd" column="MID_CD" />
+		<result property="midNm" column="MID_NM" />
+		<result property="smlCd" column="SML_CD" />
+		<result property="smlNm" column="SML_NM" />
+	</resultMap>
+
+	<select id="findUnitList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Unit-result">
+		SELECT LRG_CD, LRG_NM, MID_CD, MID_NM, SML_CD, SML_NM
+		FROM TB_ZZUNIT
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND UNIT_CD = #clssId:VARCHAR#
+	</select>
+
+	<resultMap id="Index-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="keywdLevl" column="KEYWD_LEVL" />
+		<result property="keyWd" column="KEYWD" jdbcType="CLOB"
+			javaType="java.lang.String" />
+	</resultMap>
+
+	<select id="findIndexList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Index-result">
+		SELECT KEYWD_LEVL, KEYWD
+		FROM TB_RDFOLDERKEYWD
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+		AND KEYWD IS NOT NULL
+		ORDER BY KEYWD_LEVL
+	</select>
+
+
+	<resultMap id="Creat-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="agentTypeCd" column="AGENT_TYPE_CD" />
+		<result property="agentTypeNm" column="AGENT_TYPE_NM" />
+		<result property="agentId" column="AGENT_ID" />
+		<result property="agentNm" column="AGENT_NM" />
+		<result property="agentOrgCd" column="AGENT_ORG_CD" />
+		<result property="agentOrgNm" column="AGENT_ORG_NM" />
+		<result property="agentPosRankNm" column="AGENT_POS_RANK_NM" />
+		<result property="dutyTypeCd" column="DUTY_TYPE_CD" />
+		<result property="dutyTypeNm" column="DUTY_TYPE_NM" />
+		<result property="dutyActDTime" column="DUTY_ACT_DTIME" />
+		<result property="opin" column="OPIN" jdbcType="CLOB"
+			javaType="java.lang.String" />
+	</resultMap>
+
+	<select id="findCreatList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Creat-result">
+		SELECT A.AGENT_TYPE_CD
+		,C1.COM_CD_NM AGENT_TYPE_NM
+		,NVL(A.AGENT_ID, ' ') AGENT_ID
+		,NVL(A.AGENT_NM, ' ') AGENT_NM
+		,NVL(A.AGENT_ORG_CD, ' ') AGENT_ORG_CD
+		,NVL(A.AGENT_ORG_NM, ' ') AGENT_ORG_NM
+		,NVL(A.AGENT_POS_RANK_NM, ' ') AGENT_POS_RANK_NM
+		,A.DUTY_TYPE_CD
+		,C2.COM_CD_NM DUTY_TYPE_NM
+		,DECODE(A.DUTY_ACT_DTIME, null, '', TO_CHAR(TO_DATE(A.DUTY_ACT_DTIME, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(A.DUTY_ACT_DTIME,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')) DUTY_ACT_DTIME
+		,NVL(A.OPIN, '') OPIN
+		FROM TB_RDFOLDERCREAT A
+		,TB_ZZCOMCD C1
+		,TB_ZZCOMCD C2
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.FOLDER_ID = #folderId:VARCHAR#
+		AND A.AGENT_TYPE_CD = C1.COM_CD
+		AND C1.COM_TYPE_CD = 'RD12'
+		AND A.DUTY_TYPE_CD = C2.COM_CD
+		AND C2.COM_TYPE_CD = 'RD59'
+		ORDER BY A.AGENT_SNO
+	</select>
+
+
+	<resultMap id="Rel-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="relTypeCd" column="REL_TYPE_CD" />
+		<result property="relTypeNm" column="REL_TYPE_NM" />
+		<result property="relTrgtId" column="REL_TRGT_ID" />
+		<result property="relDescr" column="REL_DESCR" />
+	</resultMap>
+
+	<select id="findRelList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Rel-result">
+		SELECT R.REL_TYPE_CD, C.COM_CD_NM REL_TYPE_NM,
+		R.REL_TRGT_ID, R.REL_DESCR
+		FROM TB_RDFOLDERREL R
+		,TB_ZZCOMCD C
+		WHERE R.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND R.FOLDER_ID = #folderId:VARCHAR#
+		AND R.REL_TYPE_CD = C.COM_CD
+		AND C.COM_TYPE_CD = 'RD26'
+		ORDER BY R.REL_SEQ
+	</select>
+
+
+	<resultMap id="Sub-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="fileId" column="FILE_ID" />
+		<result property="subFileId" column="SUB_FILE_ID" />
+		<result property="subFileTitle" column="SUB_FILE_TITLE" />
+		<result property="dateTimeOpened" column="DATE_TIME_OPENED" />
+		<result property="dateTimeClosed" column="DATE_TIME_CLOSED" />
+	</resultMap>
+
+	<select id="findSubList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Sub-result">
+		<!--cubrid select-->
+		SELECT DECODE(CREAT_SYS_CD, '01', CREAT_SYS_CD || ORG_CD || CLSS_ID ||
+		CREAT_YYYY || CREAT_SYS_FOLDER_ID,
+		'04', CREAT_SYS_CD || ORG_CD || CLSS_ID || CREAT_YYYY ||
+		CREAT_SYS_FOLDER_ID,
+		CREAT_SYS_CD || ORG_CD || CLSS_ID || CREAT_YYYY || FOLDER_REG_SEQ) FILE_ID,
+		HO_NO SUB_FILE_ID,
+		TITLE SUB_FILE_TITLE,
+		DECODE(FOLDER_START_DTIME, null, '', TO_CHAR(SUBSTR(FOLDER_START_DTIME,1,8),'YYYY-MM-DD')||'T'||TO_CHAR(SUBSTR(FOLDER_START_DTIME,9,8),'HH24:MI:SS')) DATE_TIME_OPENED,
+		DECODE(FOLDER_CLOSE_DTIME, null, '', TO_CHAR(SUBSTR(FOLDER_CLOSE_DTIME,1,8),'YYYY-MM-DD')||'T'||TO_CHAR(SUBSTR(FOLDER_CLOSE_DTIME,9,8),'HH24:MI:SS')) DATE_TIME_CLOSED
+		FROM TB_RDFOLDER
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		AND ORG_CD = #orgCd:VARCHAR#
+		AND CLSS_DIV_CD = #clssDivCd:VARCHAR#
+		AND CLSS_ID = #clssId:VARCHAR#
+		AND CREAT_YYYY = #creatYyyy:VARCHAR#
+		AND FOLDER_REG_SEQ = #folderRegSeq:VARCHAR#
+		AND HO_NO != #hoNo:VARCHAR#
+		ORDER BY HO_NO
+	</select>
+
+
+	<resultMap id="CntChk-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="workUserId" column="WORK_USER_ID" />
+		<result property="userNm" column="USER_NM" />
+		<result property="pos" column="POS" />
+		<result property="rank" column="RANK" />
+		<result property="deptCd" column="DEPT_CD" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="checkYmd" column="CHECK_YMD" />
+		<result property="defctFlag" column="DEFCT_FLAG" />
+		<result property="handlRsltCont" column="HANDL_RSLT_CONT" />
+	</resultMap>
+
+	<select id="findCntChkList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="CntChk-result">
+		SELECT C.WORK_USER_ID, U.USER_NM, U.POS, U.RANK,
+		P.ORG_CD DEPT_CD, P.DEPT_NM,
+		DECODE(D.CHECK_YMD, null, '', TO_CHAR(TO_DATE(D.CHECK_YMD, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(D.CHECK_YMD, 'YYYYMMDDHH24MISS'),
+		'HH24:MI:SS')) CHECK_YMD,
+		D.DEFCT_FLAG, D.HANDL_RSLT_CONT
+		FROM TB_SRCNTCHKDETL D
+		,TB_SRCNTCHK C
+		,TB_STUSER U
+		,TB_STDEPT P
+		WHERE D.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND D.FOLDER_ID = #folderId:VARCHAR#
+		AND D.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		AND D.CNTCHK_ID = C.CNTCHK_ID
+		AND C.CHECK_STATE_CD = '2'
+		AND D.RECORD_CENTER_ID = U.RECORD_CENTER_ID
+		AND C.WORK_USER_ID = U.USER_ID
+		AND U.RECORD_CENTER_ID = P.RECORD_CENTER_ID
+		AND U.DEPT_CD = P.DEPT_CD
+		ORDER BY C.SNO
+	</select>
+
+
+	<resultMap id="Opti-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="workUserId" column="WORK_USER_ID" />
+		<result property="userNm" column="USER_NM" />
+		<result property="pos" column="POS" />
+		<result property="rank" column="RANK" />
+		<result property="deptCd" column="DEPT_CD" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="workDTime" column="WORK_DTIME" />
+		<result property="storeStateCd" column="STORE_STATE_CD" />
+		<result property="storeStateNm" column="STORE_STATE_NM" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="mediumNm" column="MEDIUM_NM" />
+		<result property="storeSize" column="STORE_SIZE" />
+		<result property="storeCnt" column="STORE_CNT" />
+	</resultMap>
+
+	<select id="findOptiList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Opti-result">
+		SELECT O.WORK_USER_ID,
+		U.USER_NM,
+		U.POS, U.RANK,
+		P.ORG_CD DEPT_CD, P.DEPT_NM,
+		DECODE(D.WORK_DTIME, null, '', TO_CHAR(TO_DATE(D.WORK_DTIME, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(D.WORK_DTIME, 'YYYYMMDDHH24MISS'),
+		'HH24:MI:SS')) WORK_DTIME,
+		O.STORE_STATE_CD, C0.COM_CD_NM STORE_STATE_NM,
+		O.MEDIUM_ID, M.MEDIUM_NM,
+		NVL(O.STORE_SIZE,0) STORE_SIZE, NVL(O.STORE_CNT,0) STORE_CNT
+		FROM TB_SROPTIDISK O
+		,TB_SROPTIDISKDETL D
+		,TB_STUSER U
+		,TB_STDEPT P
+		,TB_ZZCOMCD C0
+		,TB_STMEDIUM M
+		WHERE D.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND D.FOLDER_ID = #folderId:VARCHAR#
+		AND O.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		AND O.OPTI_DISK_ID = D.OPTI_DISK_ID
+		AND O.STORE_STATE_CD = '3'
+		AND O.STORE_STATE_CD = C0.COM_CD
+		AND C0.COM_TYPE_CD = 'SR03'
+		AND O.RECORD_CENTER_ID = M.RECORD_CENTER_ID
+		AND O.MEDIUM_ID = M.MEDIUM_ID
+		AND D.RECORD_CENTER_ID = U.RECORD_CENTER_ID
+		AND O.WORK_USER_ID = U.USER_ID
+		AND U.RECORD_CENTER_ID = P.RECORD_CENTER_ID
+		AND U.DEPT_CD = P.DEPT_CD
+		ORDER BY O.OPEN_DIV_SYM
+	</select>
+
+
+	<resultMap id="Discu-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="workUserId" column="WORK_USER_ID" />
+		<result property="userNm" column="USER_NM" />
+		<result property="pos" column="POS" />
+		<result property="rank" column="RANK" />
+		<result property="deptCd" column="DEPT_CD" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="workDTime" column="WORK_DTIME" />
+		<result property="discuUserEvalDivCd" column="DISCU_USER_EVAL_DIV_CD" />
+		<result property="discuUserEvalDivNm" column="DISCU_USER_EVAL_DIV_NM" />
+		<result property="discuUserEvalRsn" column="DISCU_USER_EVAL_RSN" />
+	</resultMap>
+
+	<select id="findDiscuList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="Discu-result">
+		SELECT DU.DISCU_USER_ID WORK_USER_ID,
+		U.USER_NM,
+		U.POS, U.RANK,
+		P.ORG_CD DEPT_CD, P.DEPT_NM,
+		DECODE(DU.DISCU_USER_EVAL_YMD, null, '', TO_CHAR(TO_DATE(DU.DISCU_USER_EVAL_YMD,
+		'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(DU.DISCU_USER_EVAL_YMD,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')) WORK_DTIME,
+		DU.DISCU_USER_EVAL_DIV_CD, C0.COM_CD_NM DISCU_USER_EVAL_DIV_NM,
+		DU.DISCU_USER_EVAL_RSN
+		FROM TB_DFDISUSEEVAL DU
+		,TB_STUSER U
+		,TB_STDEPT P
+		,TB_ZZCOMCD C0
+		WHERE DU.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND DU.FOLDER_ID = #folderId:VARCHAR#
+		AND DU.DISCU_USER_EVAL_DIV_CD = C0.COM_CD
+		AND C0.COM_TYPE_CD = 'DF02'
+		AND DU.RECORD_CENTER_ID = U.RECORD_CENTER_ID
+		AND DU.DISCU_USER_ID = U.USER_ID
+		AND U.RECORD_CENTER_ID = P.RECORD_CENTER_ID
+		AND U.DEPT_CD = P.DEPT_CD
+		ORDER BY DU.DISCU_USER_EVAL_YMD
+	</select>
+
+
+	<resultMap id="ReadRang-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="deptCd" column="DEPT_CD" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="workDTime" column="WORK_DTIME" />
+		<result property="operReadRangeBef" column="OPER_READ_RANGE_BEF" />
+		<result property="operReadRangeBefNm" column="OPER_READ_RANGE_BEF_NM" />
+		<result property="operReadRangeAft" column="OPER_READ_RANGE_AFT" />
+		<result property="operReadRangeAftNm" column="OPER_READ_RANGE_AFT_NM" />
+		<result property="handlOrgOpin" column="HANDL_ORG_OPIN" />
+	</resultMap>
+
+	<select id="findReadRangList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="ReadRang-result">
+		SELECT O.ORG_CD DEPT_CD, O.FULL_ORG_NM DEPT_NM,
+		DECODE(RR.OPIN_REG_YMD, null, '', TO_CHAR(TO_DATE(RR.OPIN_REG_YMD, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(RR.OPIN_REG_YMD,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')) WORK_DTIME,
+		RR.OPER_READ_RANGE_BEF, C0.COM_CD_NM OPER_READ_RANGE_BEF_NM,
+		RR.OPER_READ_RANGE_AFT, C1.COM_CD_NM OPER_READ_RANGE_AFT_NM,
+		RR.HANDL_ORG_OPIN
+		FROM TB_RDFOLDERREADRANG RR
+		,TB_STORG O
+		,TB_ZZCOMCD C0
+		,TB_ZZCOMCD C1
+		WHERE RR.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RR.FOLDER_ID = #folderId:VARCHAR#
+		AND RR.OPER_READ_RANGE_BEF = C0.COM_CD
+		AND C0.COM_TYPE_CD = 'RD53'
+		AND RR.OPER_READ_RANGE_AFT = C1.COM_CD
+		AND C1.COM_TYPE_CD = 'RD53'
+		AND RR.RECORD_CENTER_ID = O.RECORD_CENTER_ID
+		AND RR.HANDL_ORG_CD = O.ORG_CD
+		ORDER BY RR.CHNG_HIST_NO
+	</select>
+
+
+	<resultMap id="DisHst-result" class="rms.orign.server.pkg.domain.ParamXMLFolder">
+		<result property="deptCd" column="DEPT_CD" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="workDTime" column="WORK_DTIME" />
+		<result property="lastDisuseEvalDivCd" column="LAST_DISUSE_EVAL_DIV_CD" />
+		<result property="suspnDetlCd" column="SUSPN_DETL_CD" />
+		<result property="suspnDetlNm" column="SUSPN_DETL_NM" />
+		<result property="refixBefPresvTerm" column="REFIX_BEF_PRESV_TERM" />
+		<result property="refixBefPresvTermNm" column="REFIX_BEF_PRESV_TERM_NM" />
+		<result property="refixAftPresvTerm" column="REFIX_AFT_PRESV_TERM" />
+		<result property="refixAftPresvTermNm" column="REFIX_AFT_PRESV_TERM_NM" />
+		<result property="refixAfeRsn" column="REFIX_AFT_RSN" />
+	</resultMap>
+
+	<select id="findDisHstList" parameterClass="rms.orign.server.pkg.domain.ParamXMLFolder"
+		resultMap="DisHst-result">
+		SELECT O.ORG_CD DEPT_CD, O.FULL_ORG_NM DEPT_NM,
+		DECODE(DU.CNCL_EVAL_YMD, null, '', TO_CHAR(TO_DATE(DU.CNCL_EVAL_YMD, 'YYYYMMDDHH24MISS'),
+		'YYYY-MM-DD')||'T'||TO_CHAR(TO_DATE(DU.CNCL_EVAL_YMD,
+		'YYYYMMDDHH24MISS'), 'HH24:MI:SS')) WORK_DTIME,
+		DU.LAST_DISUSE_EVAL_DIV_CD,
+		DU.SUSPN_DETL_CD, C0.COM_CD_NM SUSPN_DETL_NM,
+		DU.REFIX_BEF_PRESV_TERM, C1.COM_CD_NM REFIX_BEF_PRESV_TERM_NM,
+		DU.REFIX_AFT_PRESV_TERM, C2.COM_CD_NM REFIX_AFT_PRESV_TERM_NM,
+		DU.REFIX_AFT_RSN
+		FROM TB_DFDISUSEHIST DU
+		,TB_STORG O
+		,TB_ZZCOMCD C0
+		,TB_ZZCOMCD C1
+		,TB_ZZCOMCD C2
+		WHERE DU.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND DU.FOLDER_ID = #folderId:VARCHAR#
+		AND DU.LAST_DISUSE_EVAL_DIV_CD IN ('2','3')
+		AND DU.SUSPN_DETL_CD = C0.COM_CD
+		AND C0.COM_TYPE_CD = 'DF07'
+		AND DU.REFIX_BEF_PRESV_TERM = C1.COM_CD
+		AND C1.COM_TYPE_CD = 'RD07'
+		AND DU.REFIX_AFT_PRESV_TERM = C2.COM_CD
+		AND C2.COM_TYPE_CD = 'RD07'
+		AND DU.RECORD_CENTER_ID = O.RECORD_CENTER_ID
+		AND DU.ORG_CD = O.ORG_CD
+		ORDER BY DU.LAST_DISUSE_EVAL_DIV_CD, DU.CNCL_EVAL_YMD
+	</select>
+
+
+</sqlMap>

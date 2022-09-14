@@ -1,0 +1,2096 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="orign.HauriIntlk">
+
+
+	<!-- =======================인수 첨부파일 바이러스 체크======================== -->
+
+	<resultMap id="take-orgcd-group-folder-list-result" class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="takeOrgCd" column="TAKE_ORG_CD" />
+		<result property="folderTakeSeq" column="FOLDER_TAKE_SEQ" />
+	</resultMap>
+
+	<!-- SELECT(인수 첨부파일 처리과코드 단위 조회) -->
+	<select id="findTakeOrgCdGroupFolderList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="take-orgcd-group-folder-list-result">
+		SELECT RECORD_CENTER_ID
+		,TAKE_ORG_CD
+		,FOLDER_TAKE_SEQ
+		FROM
+		TB_TKFOLDER
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		TAKE_ORG_CD = #takeOrgCd:VARCHAR#
+		AND TAKE_YYYY = #takeYyyy:VARCHAR#
+		AND CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		AND TAKE_SNO = #takeSno:NUMBER#
+		ORDER BY FOLDER_TAKE_SEQ
+	</select>
+
+
+	<resultMap id="take-folder-group-file-list-result" class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="creatSysCd" column="CREAT_SYS_CD" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordDetlTypeCd" column="RECORD_DETL_TYPE_CD" />
+		<result property="creatRegNo" column="CREAT_REG_NO" />
+		<result property="creatSysRecordId" column="CREAT_SYS_RECORD_ID" />
+		<result property="dtchRegNo" column="DTCH_REG_NO" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="takeOrgCd" column="TAKE_ORG_CD" />
+		<result property="folderTakeSeq" column="FOLDER_TAKE_SEQ" />
+		<result property="recordTakeSeq" column="RECORD_TAKE_SEQ" />
+		<result property="regSeq" column="REG_SEQ" />
+		<result property="attachFilePath" column="ATTACH_FILE_PATH" />
+		<result property="attachFileType" column="ATTACH_FILE_TYPE" />
+		<result property="virusFlag" column="VIRUS_FLAG" />
+		<result property="virusDtime" column="VIRUS_DTIME" />
+		<result property="docNo" column="DOC_NO" />
+		<result property="recordOrgCd" column="RECORD_ORG_CD" />
+		<result property="recordOrgNm" column="RECORD_ORG_NM" />
+		<result property="userId" column="CREAT_USER_ID" />
+		<result property="userNm" column="CREAT_USER_NM" />
+		<result property="userOrgCd" column="CREAT_USER_ORG_CD" />
+		<result property="userOrgNm" column="CREAT_USER_ORG_NM" />
+		<result property="userPosRankNm" column="CREAT_USER_POS_RANK_NM" />
+	</resultMap>
+
+	<!-- SELECT(인수 첨부파일 기록물철 단위 조회) -->
+	<select id="findTakeFolderGroupFileList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="take-folder-group-file-list-result">
+		<!--cubrid select-->
+		SELECT TFOLDER.RECORD_CENTER_ID
+		,TFOLDER.CREAT_SYS_CD
+		,TFOLDER.ORG_CD
+		,TFOLDER.CREAT_YYYY
+		,TRECORD.RECORD_DETL_TYPE_CD
+		,TRECORD.CREAT_REG_NO
+		,TRECORD.CREAT_SYS_RECORD_ID
+		,TRECORD.DTCH_REG_NO
+		,TFILE.DOC_TYPE_CD
+		,TFILE.DOC_TYPE_SNO
+		,TFOLDER.TAKE_ORG_CD
+		,TFOLDER.FOLDER_TAKE_SEQ
+		,TRECORD.RECORD_TAKE_SEQ
+		,TFILE.REG_SEQ
+		,TFILE.ATTACH_FILE_PATH
+		,TFILE.ATTACH_FILE_TYPE
+		,TFILE.VIRUS_FLAG
+		,TFILE.VIRUS_DTIME
+		,TRECORD.DOC_NO,
+		CASE
+		WHEN TRECORD.CREAT_SYS_CD = '03'
+		THEN
+		(SELECT HUPPER_ORG_CD
+		FROM TB_STORG A
+		WHERE A.ORG_CD =
+		TRECORD.CREAT_USER_ORG_CD
+		AND
+		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID
+		)
+		ELSE
+		(SELECT HUPPER_ORG_CD
+		FROM TB_STORG A
+		WHERE A.ORG_CD = TRECORD.ORG_CD
+		AND
+		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID
+		)
+		END AS RECORD_ORG_CD,
+		CASE
+		WHEN TRECORD.CREAT_SYS_CD = '03'
+		THEN
+		(SELECT ORG_NM
+		FROM TB_STORG B
+		WHERE B.ORG_CD =
+		(SELECT HUPPER_ORG_CD
+		FROM TB_STORG A
+		WHERE A.ORG_CD =
+		TRECORD.CREAT_USER_ORG_CD
+		AND
+		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID
+		)
+		AND
+		B.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID
+		)
+		ELSE
+		(SELECT ORG_NM
+		FROM
+		TB_STORG B
+		WHERE B.ORG_CD =
+		(SELECT HUPPER_ORG_CD
+		FROM TB_STORG A
+		WHERE
+		A.ORG_CD = TRECORD.ORG_CD
+		AND
+		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID
+		)
+		AND
+		B.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID
+		)
+		END AS RECORD_ORG_NM,
+		CASE
+		WHEN TRECORD.CREAT_SYS_CD = '03'
+		THEN TRECORD.CREAT_USER_ID
+		ELSE NULL
+		END AS CREAT_USER_ID,
+		CASE
+		WHEN TRECORD.CREAT_SYS_CD = '03'
+		THEN
+		(SELECT
+		USER_NM
+		FROM TB_STUSER C
+		WHERE C.USER_ID=TRECORD.CREAT_USER_ID
+		)
+		ELSE NULL
+		END AS CREAT_USER_NM,
+		CASE
+		WHEN TRECORD.CREAT_SYS_CD = '03'
+		THEN
+		TRECORD.CREAT_USER_ORG_CD
+		ELSE NULL
+		END AS CREAT_USER_ORG_CD,
+		CASE
+		WHEN
+		TRECORD.CREAT_SYS_CD = '03'
+		THEN TRECORD.CREAT_USER_ORG_NM
+		ELSE NULL
+		END
+		AS CREAT_USER_ORG_NM,
+		CASE
+		WHEN TRECORD.CREAT_SYS_CD = '03'
+		THEN
+		TRECORD.CREAT_USER_POS_RANK_NM
+		ELSE NULL
+		END AS CREAT_USER_POS_RANK_NM
+		FROM TB_TKFOLDER TFOLDER
+		,TB_TKRECORD TRECORD
+		,TB_TKATTACHFILE TFILE
+		WHERE TFOLDER.RECORD_CENTER_ID = TRECORD.RECORD_CENTER_ID
+		AND
+		TFOLDER.FOLDER_TAKE_SEQ = TRECORD.FOLDER_TAKE_SEQ
+		AND
+		TRECORD.RECORD_CENTER_ID = TFILE.RECORD_CENTER_ID
+		AND
+		TRECORD.RECORD_TAKE_SEQ = TFILE.RECORD_TAKE_SEQ
+		AND
+		TFOLDER.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		TFOLDER.FOLDER_TAKE_SEQ = #folderTakeSeq:VARCHAR#
+		ORDER BY
+		TRECORD.RECORD_TAKE_SEQ, TFILE.REG_SEQ
+	</select>
+
+
+	<!-- UPDATE(인수 기록물철 바이러스 유무 체크) -->
+	<update id="updateTakeFolderVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_TKFOLDER
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME =
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_TAKE_SEQ = #folderTakeSeq:VARCHAR#
+	</update>
+
+	<!-- UPDATE(인수 기록물철 모니터링정보) -->
+	<update id="updateTakeFolderVirusMonitorInfo" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_TKMONITORINFO A
+		SET A.a0_cnt = NVL(A.a0_cnt,0) + 1
+		, A.a1_cnt
+		= NVL(A.a1_cnt,0)
+		+ (SELECT COUNT(1) FROM TB_TKRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_take_seq =
+		#folderTakeSeq:VARCHAR#
+		AND B.record_detl_type_cd = '01')
+		, A.a2_cnt =
+		NVL(A.a2_cnt,0)
+		+ (SELECT COUNT(1) FROM TB_TKRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_take_seq =
+		#folderTakeSeq:VARCHAR#
+		AND B.record_detl_type_cd = '02')
+		, A.a3_cnt =
+		NVL(A.a3_cnt,0)
+		+ (SELECT COUNT(1) FROM TB_TKRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_take_seq =
+		#folderTakeSeq:VARCHAR#
+		AND B.record_detl_type_cd = '04')
+		, A.a4_cnt =
+		NVL(A.a4_cnt,0)
+		+ (SELECT COUNT(1) FROM TB_TKRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_take_seq =
+		#folderTakeSeq:VARCHAR#
+		AND B.record_detl_type_cd = '03')
+		, A.file_cnt =
+		NVL(A.file_cnt,0)
+		+ (SELECT COUNT(1) FROM TB_TKRECORD B,
+		TB_TKATTACHFILE C
+		WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_take_seq = #folderTakeSeq:VARCHAR#
+		AND C.record_center_id
+		= B.record_center_id
+		AND C.record_take_seq = B.record_take_seq)
+		,
+		A.error_file_cnt = NVL(A.error_file_cnt,0)
+		+ (SELECT COUNT(1) FROM
+		TB_TKRECORD B, TB_TKATTACHFILE C
+		WHERE B.record_center_id =
+		#recordCenterId:VARCHAR#
+		AND B.folder_take_seq =
+		#folderTakeSeq:VARCHAR#
+		AND C.record_center_id = B.record_center_id
+		AND
+		C.record_take_seq = B.record_take_seq
+		AND C.virus_flag = '1')
+		WHERE
+		A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.monitor_id
+		= (
+		SELECT monitor_id
+		FROM TB_TKORGTAKEPLAN
+		WHERE ( record_center_id,
+		take_yyyy, take_org_cd, creat_sys_cd, take_sno )
+		= ( SELECT
+		record_center_id, take_yyyy, take_org_cd, creat_sys_cd,
+		take_sno
+		FROM
+		TB_TKFOLDER
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND
+		folder_take_seq = #folderTakeSeq:VARCHAR# )
+		)
+		AND A.monitor_div = '02'
+	</update>
+
+	<!-- UPDATE(인수 첨부파일 바이러스 유무 체크) -->
+	<update id="updateTakeAttachFileVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_TKATTACHFILE
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		,VIRUS_CLEAN_APPLY_FLAG = '0'
+		,VIRUS_CLEAN_FILE_PATH =
+		#virusCleanFilePath:VARCHAR#
+		,VIRUS_CLEAN_FILE_SIZE =
+		#virusCleanFileSize:VARCHAR#
+		,VIRUS_CLEAN_FLAG =
+		#virusCleanFlag:VARCHAR#
+		,VIRUS_INFECTION_CONT =
+		#virusInfectionCont:VARCHAR#
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RECORD_TAKE_SEQ = #recordTakeSeq:VARCHAR#
+		AND REG_SEQ = #regSeq:NUMBER#
+	</update>
+
+	<!-- UPDATE(처리과별 인수계획 [인수상태구분코드:접수완료]) -->
+	<update id="updateOrgTakePlanStateDivCd" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE
+		TB_TKORGTAKEPLAN
+		SET VIRUS_CHECK_FLAG = '1'
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND TAKE_YYYY = #takeYyyy:VARCHAR#
+		AND
+		TAKE_ORG_CD = #orgCd:VARCHAR#
+		AND CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		AND TAKE_SNO = #takeSno:NUMBER#
+	</update>
+
+	<!-- UPDATE(처리과별 인수계획 [모니터링정보:자동검사완료]) -->
+	<update id="updateOrgTakePlanVirusMonitorInfo" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_TKMONITORINFO
+		SET state = '15'
+		, end_dtime =
+		TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id
+		=
+		#recordCenterId:VARCHAR#
+		AND monitor_id = (SELECT monitor_id
+		FROM
+		TB_TKORGTAKEPLAN
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		TAKE_YYYY = #takeYyyy:VARCHAR#
+		AND TAKE_ORG_CD = #orgCd:VARCHAR#
+		AND
+		CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		AND TAKE_SNO = #takeSno:NUMBER#)
+		AND monitor_div = '02'
+	</update>
+
+
+	<!-- =======================기관간 인수인계 원문파일/문서보존파일/영구보존파일 바이러스 체크======================== -->
+
+	<resultMap id="transf-orgcd-group-folder-list-result" class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문파일 처리과코드 단위 조회) -->
+	<select id="findTransfOrgCdGroupFolderList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="transf-orgcd-group-folder-list-result">
+		SELECT RECORD_CENTER_ID
+		,ORG_CD
+		,FOLDER_ID
+		,CREAT_YYYY
+		FROM
+		TB_RDFOLDER
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND ORG_CD
+		= #orgCd:VARCHAR#
+		ORDER BY FOLDER_ID
+	</select>
+
+
+	<resultMap id="transf-folder-group-orign-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문파일 기록물철 단위 조회) -->
+	<select id="findTransfFolderGroupOrignFileList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="transf-folder-group-orign-file-list-result">
+		SELECT RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,RORIGN.ERECORD_FLAG
+		,OFILE.ORIGN_ID
+		,OFILE.ORIGN_FILE_ID
+		,OFILE.DOC_TYPE_CD
+		,OFILE.DOC_TYPE_SNO
+		,OFILE.FILE_NM
+		,OFILE.STORE_FILE_NM
+		,OFILE.STORE_FILE_ID
+		,OFILE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM
+		TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		OFILE.ORIGN_ID
+		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD,
+		OFILE.DOC_TYPE_SNO
+	</select>
+
+
+	<!-- UPDATE(기관간 인수인계 원문파일 바이러스 유무 체크) -->
+	<update id="updateTransfOrignFileVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNFILE
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME
+		= TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND ORIGN_FILE_ID = #orignFileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="transf-folder-group-orign-page-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="orignPageId" column="ORIGN_PAGE_ID" />
+		<result property="sno" column="SNO" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+		<result property="storePageFileNm" column="STORE_PAGE_FILE_NM" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문페이지 기록물철 단위 조회) -->
+	<select id="findTransfFolderGroupOrignPageList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="transf-folder-group-orign-page-list-result">
+		SELECT RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,RORIGN.ERECORD_FLAG
+		,OFILE.ORIGN_ID
+		,OFILE.ORIGN_FILE_ID
+		,OFILE.DOC_TYPE_CD
+		,OFILE.DOC_TYPE_SNO
+		,OFILE.FILE_NM
+		,OFILE.STORE_FILE_NM
+		,OFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		,OPAGE.ORIGN_PAGE_ID
+		,OPAGE.SNO
+		,OPAGE.ORIGN_PAGE_FILE_NM
+		,OPAGE.STORE_PAGE_FILE_NM
+		,OPAGE.FILE_PATH_RULE
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		,TB_STORIGNPAGE OPAGE
+		WHERE RDFOLDER.RECORD_CENTER_ID =
+		RDRECORD.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID
+		AND
+		RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND RORIGN.RECORD_CENTER_ID =
+		OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		AND
+		OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID =
+		MEDIUM.MEDIUM_ID
+		AND OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID
+		AND
+		RDFOLDER.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO, OPAGE.SNO
+	</select>
+
+	<!-- UPDATE(기관간 인수인계 원문페이지 바이러스 유무 체크) -->
+	<update id="updateTransfOrignPageVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNPAGE
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME
+		= TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE ORIGN_PAGE_ID =
+		#orignPageId:VARCHAR#
+	</update>
+
+
+	<resultMap id="transf-folder-group-orign-pdfa1-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문문서보존포맷파일 기록물철 단위 조회) -->
+	<select id="findTransfFolderGroupOrignPdfA1FileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="transf-folder-group-orign-pdfa1-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,PFILE.ORIGN_ID
+		,PFILE.PDF_A1_FILE_ID
+		,PFILE.DOC_TYPE_CD
+		,PFILE.DOC_TYPE_SNO
+		,PFILE.FILE_NM
+		,PFILE.STORE_FILE_ID
+		,PFILE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM
+		TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE PFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		PFILE.ORIGN_ID
+		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,
+		PFILE.DOC_TYPE_SNO
+	</select>
+
+	<!-- UPDATE(기관간 인수인계 원문문서보존포맷파일 바이러스 유무 체크) -->
+	<update id="updateTransfOrignPdfA1FileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNPDFA1FILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND PDF_A1_FILE_ID =
+		#pdfA1FileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="transf-folder-group-orign-pdfa1-page-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="pdfA1PageId" column="PDF_A1_PAGE_ID" />
+		<result property="sno" column="SNO" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문문서보존포맷페이지 기록물철 단위 조회) -->
+	<select id="findTransfFolderGroupOrignPdfA1pageList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="transf-folder-group-orign-pdfa1-page-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,PFILE.ORIGN_ID
+		,PFILE.PDF_A1_FILE_ID
+		,PFILE.DOC_TYPE_CD
+		,PFILE.DOC_TYPE_SNO
+		,PFILE.FILE_NM
+		,PFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		,PPAGE.PDF_A1_PAGE_ID
+		,PPAGE.SNO
+		,PPAGE.ORIGN_PAGE_FILE_NM
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE
+		PFILE
+		,TB_STMEDIUM MEDIUM
+		,TB_STORIGNPDFA1PAGE PPAGE
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		PFILE.ORIGN_ID
+		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND PFILE.PDF_A1_FILE_ID =
+		PPAGE.PDF_A1_FILE_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,
+		PFILE.DOC_TYPE_SNO, PPAGE.SNO
+	</select>
+
+	<!-- UPDATE(기관간 인수인계 원문문서보존포맷페이지 바이러스 유무 체크) -->
+	<update id="updateTransfOrignPdfA1PageVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNPDFA1PAGE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE PDF_A1_PAGE_ID =
+		#pdfA1PageId:VARCHAR#
+	</update>
+
+
+	<resultMap id="transf-folder-group-orign-neo-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignNeoFileId" column="ORIGN_NEO_FILE_ID" />
+		<result property="chngSno" column="CHNG_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문영구보존포맷파일 기록물철 단위 조회) -->
+	<select id="findTransfFolderGroupOrignNeoFileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="transf-folder-group-orign-neo-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,NFILE.ORIGN_ID
+		,NFILE.ORIGN_NEO_FILE_ID
+		,NFILE.CHNG_SNO
+		,NFILE.FILE_NM
+		,NFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNNEOFILE NFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = NFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		NFILE.ORIGN_ID
+		AND NFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		NFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, NFILE.CHNG_SNO
+	</select>
+
+	<!-- UPDATE(기관간 인수인계 원문영구보존포맷파일 바이러스 유무 체크) -->
+	<update id="updateTransfOrignNeoFileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNNEOFILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND ORIGN_NEO_FILE_ID
+		= #orignNeoFileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="transf-folder-group-folder-neo-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="folderNeoFileId" column="FOLDER_NEO_FILE_ID" />
+		<result property="chngSno" column="CHNG_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="neoTransState" column="NEO_TRANS_STATE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 기록물철영구보존포맷파일 기록물철 단위 조회) -->
+	<select id="findTransfFolderGroupFolderNeoFileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="transf-folder-group-folder-neo-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,FNFILE.FOLDER_NEO_FILE_ID
+		,FNFILE.CHNG_SNO
+		,FNFILE.FILE_NM
+		,FNFILE.STORE_FILE_ID
+		,FNFILE.NEO_TRANS_STATE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM
+		TB_RDFOLDER RDFOLDER
+		,TB_STFOLDERNEOFILE FNFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = FNFILE.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = FNFILE.FOLDER_ID
+		AND FNFILE.RECORD_CENTER_ID =
+		MEDIUM.RECORD_CENTER_ID
+		AND FNFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND
+		RDFOLDER.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY FNFILE.CHNG_SNO
+	</select>
+
+	<!-- UPDATE(기관간 인수인계 기록물철영구보존포맷파일 바이러스 유무 체크) -->
+	<update id="updateTransfFolderNeoFileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STFOLDERNEOFILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_NEO_FILE_ID
+		= #folderNeoFileId:VARCHAR#
+	</update>
+
+	<!-- UPDATE(기관간 인수인계 기록물철 바이러스 유무 체크) -->
+	<update id="updateTransfFolderVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_RDFOLDER
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME =
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+
+
+	<!-- UPDATE(기관간 인수인계 기록물철 품질검사완료 및 바이러스 유무 체크) -->
+	<update id="updateDfOrgTakoverListVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_DFORGTAKOVRLIST
+		SET QULTY_TEST_FLAG = '2'
+		,QULTY_TEST_ERROR_FLAG = #virusFlag:VARCHAR#
+		,QULTY_TEST_YMD =
+		TO_CHAR(SYSDATE, 'YYYYMMDD')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND TAKOVR_YYYY = TO_CHAR(SYSDATE, 'YYYY')
+		AND
+		FOLDER_ID = #folderId:VARCHAR#
+	</update>
+
+	<!-- UPDATE(기관간 인수인계 기록물철 품질검사완료 및 바이러스 유무 체크) -->
+	<update id="updateRdTaketakovrlistVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_RDTAKETAKOVRLIST
+		SET QULTY_TEST_RSLT_FLAG =
+		#virusFlag:VARCHAR#
+		,QULTY_TEST_REST_DTIME = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+		AND
+		TAKE_TAKOVR_MNG_NO =
+		#takeTakovrMngNo:VARCHAR#
+
+	</update>
+
+	<!-- =======================중앙기록물관리 이관 원문파일/문서보존파일/영구보존파일 바이러스 체크======================== -->
+
+	<resultMap id="dftransf-folder-group-orign-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(이관 원문파일 기록물철 단위 조회) -->
+	<select id="findDfTransfFolderGroupOrignFileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="dftransf-folder-group-orign-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,RORIGN.ERECORD_FLAG
+		,OFILE.ORIGN_ID
+		,OFILE.ORIGN_FILE_ID
+		,OFILE.DOC_TYPE_CD
+		,OFILE.DOC_TYPE_SNO
+		,OFILE.FILE_NM
+		,OFILE.STORE_FILE_NM
+		,OFILE.STORE_FILE_ID
+		,OFILE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID =
+		RDRECORD.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID
+		AND
+		RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND RORIGN.RECORD_CENTER_ID =
+		OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		AND
+		OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID =
+		MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD,
+		OFILE.DOC_TYPE_SNO
+	</select>
+
+
+	<!-- UPDATE(이관 원문파일 바이러스 유무 체크) -->
+	<update id="updateDfTransfOrignFileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNFILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		,VIRUS_INFECTION_CONT = #virusInfectionCont:VARCHAR#
+		,VIRUS_CLEAN_FLAG
+		= #virusCleanFlag:VARCHAR#
+		,VIRUS_CLEAN_DTIME =
+		DECODE(#virusCleanFlag:VARCHAR#, '', '', null, '', TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS'))
+		,VIRUS_CLEAN_FILE_PATH =
+		#virusCleanFilePath:VARCHAR#
+		,VIRUS_CLEAN_FILE_SIZE =
+		#virusCleanFileSize:VARCHAR#
+		,VIRUS_CLEAN_APPLY_FLAG = '0'
+		,VIRUS_CLEAN_APPLY_DTIME = ''
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND ORIGN_FILE_ID = #orignFileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="dftransf-folder-group-orign-page-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="orignPageId" column="ORIGN_PAGE_ID" />
+		<result property="sno" column="SNO" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+		<result property="storePageFileNm" column="STORE_PAGE_FILE_NM" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+	</resultMap>
+
+	<!-- SELECT(기관간 인수인계 원문페이지 기록물철 단위 조회) -->
+	<select id="findDfTransfFolderGroupOrignPageList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="dftransf-folder-group-orign-page-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,RORIGN.ERECORD_FLAG
+		,OFILE.ORIGN_ID
+		,OFILE.ORIGN_FILE_ID
+		,OFILE.DOC_TYPE_CD
+		,OFILE.DOC_TYPE_SNO
+		,OFILE.FILE_NM
+		,OFILE.STORE_FILE_NM
+		,OFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		,OPAGE.ORIGN_PAGE_ID
+		,OPAGE.SNO
+		,OPAGE.ORIGN_PAGE_FILE_NM
+		,OPAGE.STORE_PAGE_FILE_NM
+		,OPAGE.FILE_PATH_RULE
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		,TB_STORIGNPAGE OPAGE
+		WHERE RDFOLDER.RECORD_CENTER_ID =
+		RDRECORD.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID
+		AND
+		RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND RORIGN.RECORD_CENTER_ID =
+		OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		AND
+		OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID =
+		MEDIUM.MEDIUM_ID
+		AND OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID
+		AND
+		RDFOLDER.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO, OPAGE.SNO
+	</select>
+
+	<!-- UPDATE(이관 원문페이지 바이러스 유무 체크) -->
+	<update id="updateDfTransfOrignPageVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNPAGE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE ORIGN_PAGE_ID =
+		#orignPageId:VARCHAR#
+	</update>
+
+
+	<resultMap id="dftransf-folder-group-orign-pdfa1-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+	</resultMap>
+
+	<!-- SELECT(이관 원문문서보존포맷파일 기록물철 단위 조회) -->
+	<select id="findDfTransfFolderGroupOrignPdfA1FileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="dftransf-folder-group-orign-pdfa1-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,PFILE.ORIGN_ID
+		,PFILE.PDF_A1_FILE_ID
+		,PFILE.DOC_TYPE_CD
+		,PFILE.DOC_TYPE_SNO
+		,PFILE.FILE_NM
+		,PFILE.STORE_FILE_ID
+		,PFILE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM
+		TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE PFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		PFILE.ORIGN_ID
+		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,
+		PFILE.DOC_TYPE_SNO
+	</select>
+
+	<!-- UPDATE(이관 원문문서보존포맷파일 바이러스 유무 체크) -->
+	<update id="updateDfTransfOrignPdfA1FileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNPDFA1FILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		,VIRUS_INFECTION_CONT = #virusInfectionCont:VARCHAR#
+		,VIRUS_CLEAN_FLAG
+		= #virusCleanFlag:VARCHAR#
+		,VIRUS_CLEAN_DTIME =
+		DECODE(#virusCleanFlag:VARCHAR#, '', '', null, '', TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS'))
+		,VIRUS_CLEAN_FILE_PATH =
+		#virusCleanFilePath:VARCHAR#
+		,VIRUS_CLEAN_FILE_SIZE =
+		#virusCleanFileSize:VARCHAR#
+		,VIRUS_CLEAN_APPLY_FLAG = '0'
+		,VIRUS_CLEAN_APPLY_DTIME = ''
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND PDF_A1_FILE_ID = #pdfA1FileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="dftransf-folder-group-orign-pdfa1-page-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="pdfA1PageId" column="PDF_A1_PAGE_ID" />
+		<result property="sno" column="SNO" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+	</resultMap>
+
+	<!-- SELECT(이관 원문문서보존포맷페이지 기록물철 단위 조회) -->
+	<select id="findDfTransfFolderGroupOrignPdfA1pageList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="dftransf-folder-group-orign-pdfa1-page-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,PFILE.ORIGN_ID
+		,PFILE.PDF_A1_FILE_ID
+		,PFILE.DOC_TYPE_CD
+		,PFILE.DOC_TYPE_SNO
+		,PFILE.FILE_NM
+		,PFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		,PPAGE.PDF_A1_PAGE_ID
+		,PPAGE.SNO
+		,PPAGE.ORIGN_PAGE_FILE_NM
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE
+		PFILE
+		,TB_STMEDIUM MEDIUM
+		,TB_STORIGNPDFA1PAGE PPAGE
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		PFILE.ORIGN_ID
+		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND PFILE.PDF_A1_FILE_ID =
+		PPAGE.PDF_A1_FILE_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,
+		PFILE.DOC_TYPE_SNO, PPAGE.SNO
+	</select>
+
+	<!-- UPDATE(이관 원문문서보존포맷페이지 바이러스 유무 체크) -->
+	<update id="updateDfTransfOrignPdfA1PageVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNPDFA1PAGE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE PDF_A1_PAGE_ID =
+		#pdfA1PageId:VARCHAR#
+	</update>
+
+
+	<resultMap id="dftransf-folder-group-orign-neo-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignNeoFileId" column="ORIGN_NEO_FILE_ID" />
+		<result property="chngSno" column="CHNG_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(이관 원문영구보존포맷파일 기록물철 단위 조회) -->
+	<select id="findDfTransfFolderGroupOrignNeoFileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="dftransf-folder-group-orign-neo-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,NFILE.ORIGN_ID
+		,NFILE.ORIGN_NEO_FILE_ID
+		,NFILE.CHNG_SNO
+		,NFILE.FILE_NM
+		,NFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNNEOFILE NFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = NFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		NFILE.ORIGN_ID
+		AND NFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		NFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, NFILE.CHNG_SNO
+	</select>
+
+	<!-- UPDATE(이관 원문영구보존포맷파일 바이러스 유무 체크) -->
+	<update id="updateDfTransfOrignNeoFileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNNEOFILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND ORIGN_NEO_FILE_ID
+		= #orignNeoFileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="dftransf-folder-group-folder-neo-file-list-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="folderNeoFileId" column="FOLDER_NEO_FILE_ID" />
+		<result property="chngSno" column="CHNG_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="neoTransState" column="NEO_TRANS_STATE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(이관 기록물철영구보존포맷파일 기록물철 단위 조회) -->
+	<select id="findDfTransfFolderGroupFolderNeoFileList"
+		parameterClass="rms.orign.server.domain.HauriIntlk" resultMap="dftransf-folder-group-folder-neo-file-list-result">
+		SELECT
+		RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.ORG_CD
+		,RDFOLDER.FOLDER_ID
+		,RDFOLDER.CREAT_YYYY
+		,FNFILE.FOLDER_NEO_FILE_ID
+		,FNFILE.CHNG_SNO
+		,FNFILE.FILE_NM
+		,FNFILE.STORE_FILE_ID
+		,FNFILE.NEO_TRANS_STATE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM
+		TB_RDFOLDER RDFOLDER
+		,TB_STFOLDERNEOFILE FNFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = FNFILE.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = FNFILE.FOLDER_ID
+		AND FNFILE.RECORD_CENTER_ID =
+		MEDIUM.RECORD_CENTER_ID
+		AND FNFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND
+		RDFOLDER.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY FNFILE.CHNG_SNO
+	</select>
+
+	<!-- UPDATE(이관 기록물철영구보존포맷파일 바이러스 유무 체크) -->
+	<update id="updateDfTransfFolderNeoFileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STFOLDERNEOFILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_NEO_FILE_ID
+		= #folderNeoFileId:VARCHAR#
+	</update>
+
+	<!-- UPDATE(이관 기록물철 바이러스 유무 체크) -->
+	<update id="updateDfTransfFolderVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_RDFOLDER
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME =
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+
+	<update id="updateDfTransfHistVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		<!-- UPDATE TB_DFTRANSFHIST -->
+		UPDATE TB_DFRECVTRANSFLIST
+		SET QULTY_TEST_RSLT_FLAG =
+		#virusFlag:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+		AND TRANSF_YYYY =
+		#transfYyyy:VARCHAR#
+	</update>
+
+
+	<!-- 기관간인수 - 기록물철 목록 조회 -->
+	<resultMap id="findRcTakeFolderList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="takeRepCd" column="take_rep_cd" />
+		<result property="takeYyyy" column="take_yyyy" />
+		<result property="takeSno" column="take_sno" />
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="folderId" column="folder_id" />
+	</resultMap>
+	<select id="findRcTakeFolderList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeFolderList-result">
+		SELECT take_rep_cd, take_yyyy, take_sno, record_center_id,
+		folder_id
+		FROM TB_RCTAKEFOLDERLIST
+		WHERE take_rep_cd =
+		#takeRepCd:VARCHAR#
+		AND take_yyyy = #takeYyyy:VARCHAR#
+		AND take_sno =
+		#takeSno:NUMBER#
+		ORDER BY record_center_id, folder_id
+	</select>
+
+	<!-- 기관간인수 - 기록물철 NEO파일 목록 조회 -->
+	<resultMap id="findRcTakeFolderNeoFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="folderId" column="folder_id" />
+		<result property="folderNeoFileId" column="folder_neo_file_id" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findRcTakeFolderNeoFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeFolderNeoFileList-result">
+		SELECT record_center_id, folder_id, folder_neo_file_id,
+		file_path
+		FROM TB_RCFOLDERNEOFILE
+		WHERE record_center_id =
+		#recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+		ORDER BY
+		record_center_id, folder_id, chng_sno
+	</select>
+
+	<!-- 기관간인수 - 기록물건 NEO파일 목록 조회 -->
+	<resultMap id="findRcTakeRecordNeoFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="chngSno" column="chng_sno" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findRcTakeRecordNeoFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeRecordNeoFileList-result">
+		SELECT A.record_center_id, A.record_id, A.chng_sno,
+		A.file_path
+		FROM TB_RCORIGNNEOFILE A
+		, TB_RCRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_id =
+		#folderId:VARCHAR#
+		AND A.record_center_id = B.record_center_id
+		AND
+		A.record_id = B.record_id
+		ORDER BY A.record_center_id, A.record_id,
+		A.chng_sno
+	</select>
+
+	<!-- 기관간인수 - 기록물건 PDF파일 목록 조회 -->
+	<resultMap id="findRcTakeRecordPdfFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="docTypeCd" column="doc_type_cd" />
+		<result property="docTypeSno" column="doc_type_sno" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findRcTakeRecordPdfFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeRecordPdfFileList-result">
+		SELECT A.record_center_id, A.record_id, A.doc_type_cd,
+		A.doc_type_sno,
+		A.file_path
+		FROM TB_RCORIGNPDFA1FILE A
+		, TB_RCRECORD B
+		WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_id =
+		#folderId:VARCHAR#
+		AND A.record_center_id = B.record_center_id
+		AND
+		A.record_id = B.record_id
+		ORDER BY A.record_center_id, A.record_id,
+		A.doc_type_cd, A.doc_type_sno
+	</select>
+
+	<!-- 기관간인수 - 기록물건 원문파일 목록 조회 -->
+	<resultMap id="findRcTakeRecordOrignFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="docTypeCd" column="doc_type_cd" />
+		<result property="docTypeSno" column="doc_type_sno" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findRcTakeRecordOrignFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeRecordOrignFileList-result">
+		SELECT A.record_center_id, A.record_id, A.doc_type_cd,
+		A.doc_type_sno,
+		A.file_path
+		FROM TB_RCORIGNFILE A
+		, TB_RCRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_id =
+		#folderId:VARCHAR#
+		AND A.record_center_id = B.record_center_id
+		AND
+		A.record_id = B.record_id
+		ORDER BY A.record_center_id, A.record_id,
+		A.doc_type_cd, A.doc_type_sno
+	</select>
+
+	<!-- 기관간인수 - 기록물건 스캐닝파일 목록 조회 -->
+	<resultMap id="findRcTakeRecordScanFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="docTypeCd" column="doc_type_cd" />
+		<result property="docTypeSno" column="doc_type_sno" />
+		<result property="sno" column="sno" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findRcTakeRecordScanFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeRecordScanFileList-result">
+		SELECT A.record_center_id, A.record_id, A.doc_type_cd,
+		A.doc_type_sno,
+		A.sno, A.file_path
+		FROM TB_RCORIGNPAGE A
+		, TB_RCRECORD B
+		WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_id =
+		#folderId:VARCHAR#
+		AND A.record_center_id = B.record_center_id
+		AND
+		A.record_id = B.record_id
+		ORDER BY A.record_center_id, A.record_id,
+		A.doc_type_cd, A.doc_type_sno,
+		A.sno
+	</select>
+
+	<!-- 기관간인수 - 기록물건 스캐닝이력파일 목록 조회 -->
+	<resultMap id="findRcTakeRecordScanHistFileList-result"
+		class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="chngDtime" column="chng_dtime" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findRcTakeRecordScanHistFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findRcTakeRecordScanHistFileList-result">
+		SELECT A.record_center_id, A.record_id, A.chng_dtime,
+		A.file_path
+		FROM TB_RCORIGNPAGEHIST A
+		, TB_RCRECORD B
+		WHERE
+		B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.folder_id =
+		#folderId:VARCHAR#
+		AND A.record_center_id = B.record_center_id
+		AND
+		A.record_id = B.record_id
+		ORDER BY A.record_center_id, A.record_id,
+		A.chng_dtime
+	</select>
+
+	<!-- 기관간인수 - 기록물철 NEO파일 바이러스검사결과 저장 -->
+	<update id="updateRcTakeFolderNeoFileVirusScanning"
+		parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCFOLDERNEOFILE
+		SET virus_flag =
+		#virusFlag:VARCHAR#
+		, virus_dtime = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE
+		folder_neo_file_id = #folderNeoFileId:VARCHAR#
+	</update>
+
+	<!-- 기관간인수 - 기록물건 NEO파일 바이러스검사결과 저장 -->
+	<update id="updateRcTakeRecordNeoFileVirusScanning"
+		parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCORIGNNEOFILE
+		SET virus_flag =
+		#virusFlag:VARCHAR#
+		, virus_dtime = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE
+		record_center_id = #recordCenterId:VARCHAR#
+		AND record_id =
+		#recordId:VARCHAR#
+		AND chng_sno = #chngSno:NUMBER#
+	</update>
+
+	<!-- 기관간인수 - 기록물건 PDF파일 바이러스검사결과 저장 -->
+	<update id="updateRcTakeRecordPdfFileVirusScanning"
+		parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCORIGNPDFA1FILE
+		SET virus_flag =
+		#virusFlag:VARCHAR#
+		, virus_dtime = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE
+		record_center_id = #recordCenterId:VARCHAR#
+		AND record_id =
+		#recordId:VARCHAR#
+		AND doc_type_cd = #docTypeCd:VARCHAR#
+		AND
+		doc_type_sno = #docTypeSno:NUMBER#
+	</update>
+
+	<!-- 기관간인수 - 기록물건 원문파일 바이러스검사결과 저장 -->
+	<update id="updateRcTakeRecordOrignFileVirusScanning"
+		parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCORIGNFILE
+		SET virus_flag =
+		#virusFlag:VARCHAR#
+		, virus_dtime = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE
+		record_center_id = #recordCenterId:VARCHAR#
+		AND record_id =
+		#recordId:VARCHAR#
+		AND doc_type_cd = #docTypeCd:VARCHAR#
+		AND
+		doc_type_sno = #docTypeSno:NUMBER#
+	</update>
+
+	<!-- 기관간인수 - 기록물건 스캐닝파일 바이러스검사결과 저장 -->
+	<update id="updateRcTakeRecordScanFileVirusScanning"
+		parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCORIGNPAGE
+		SET virus_flag =
+		#virusFlag:VARCHAR#
+		, virus_dtime = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE
+		record_center_id = #recordCenterId:VARCHAR#
+		AND record_id =
+		#recordId:VARCHAR#
+		AND doc_type_cd = #docTypeCd:VARCHAR#
+		AND
+		doc_type_sno = #docTypeSno:NUMBER#
+		AND sno = #sno:NUMBER#
+	</update>
+
+	<!-- 기관간인수 - 기록물건 스캐닝이력파일 바이러스검사결과 저장 -->
+	<update id="updateRcTakeRecordScanHistFileVirusScanning"
+		parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCORIGNPAGEHIST
+		SET virus_flag =
+		#virusFlag:VARCHAR#
+		, virus_dtime = TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		WHERE
+		record_center_id = #recordCenterId:VARCHAR#
+		AND record_id =
+		#recordId:VARCHAR#
+		AND chng_dtime = #chngDtime:VARCHAR#
+	</update>
+
+	<!-- 기관간인수 - 기록물철별 바이러스검사결과 저장 -->
+	<update id="updateRcTakeFolderVirusScanning" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_RCFOLDER
+		SET virus_flag = #virusFlag:VARCHAR#
+		, virus_dtime =
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE
+		record_center_id =
+		#recordCenterId:VARCHAR#
+		AND folder_id =
+		#folderId:VARCHAR#
+	</update>
+
+	<!-- 기관간인수 - 인수계획의 바이러스검사 진행상태 저장 -->
+	<update id="updateRcTakePlanVirusScanning" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE TB_DFTAKEPLAN
+		SET auto_check_flag = '1'
+		WHERE take_rep_cd =
+		#takeRepCd:VARCHAR#
+		AND take_yyyy = #takeYyyy:VARCHAR#
+		AND take_sno =
+		#takeSno:VARCHAR#
+	</update>
+
+	<!-- 기관간인수인계 파일 등록 (기록물철 장기보존포맷파일) -->
+	<insert id="cerateTkVirusCheckHist" parameterClass="rms.orign.server.domain.VirusChkHist">
+		INSERT
+		INTO
+		TB_TKVIRUSCHECK
+		(
+		RECORD_CENTER_ID,
+		RECORD_TAKE_SEQ,
+		REG_SEQ,
+		ATTACH_FILE_TYPE,
+		VIRUS_HIST_SEQ,
+		VIRUS_CHECK_FLAG,
+		VIRUS_CHECK_DTIME,
+		VIRUS_INFECTION_FLAG,
+		VIRUS_INFECTION_DTIME,
+		VIRUS_INFECTION_CONT,
+		VIRUS_CLEAN_FLAG,
+		VIRUS_CLEAN_DTIME,
+		VIRUS_CLEAN_APPLY_FLAG,
+		VIRUS_CLEAN_APPLY_DTIME,
+		REQUEST_CORP_CD,
+		REQUEST_CORP_NM,
+		REQUEST_ORG_CD,
+		REQUEST_ORG_NM,
+		REQUEST_USER_ID,
+		REQUEST_USER_NM,
+		REQUEST_USER_POS_RANK_NM,
+		CREAT_SYS_CD,
+		ORG_CD,
+		CREAT_YYYY,
+		CREAT_REG_NO,
+		DTCH_REG_NO,
+		DOC_TYPE_CD,
+		DOC_TYPE_SNO
+		)
+		(SELECT #recordCenterId:VARCHAR#,
+		#recordTakeSeq:VARCHAR#,
+		#regSeq:NUMBER#,
+		#attachFileType:VARCHAR#,
+		(SELECT NVL(MAX(VIRUS_HIST_SEQ)+1,1)
+		FROM TB_TKVIRUSCHECK
+		WHERE
+		RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		AND
+		RECORD_TAKE_SEQ=#recordTakeSeq:VARCHAR#
+		AND REG_SEQ=#regSeq:NUMBER#
+		AND
+		ATTACH_FILE_TYPE=#attachFileType:VARCHAR#
+		),
+		#virusCheckFlag:VARCHAR#,
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+		#virusInfectionFlag:VARCHAR#,
+		DECODE(#virusInfectionFlag:VARCHAR#, '1', TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS'), ''),
+		#virusInfectionCont:VARCHAR#,
+		#virusCleanFlag:VARCHAR#,
+		DECODE(#virusCleanFlag:VARCHAR#, '1',
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), ''),
+		0,
+		NULL,
+		#recordOrgCd:VARCHAR#,
+		#recordOrgNm:VARCHAR#,
+		#userOrgCd:VARCHAR#,
+		#userOrgNm:VARCHAR#,
+		#userId:VARCHAR#,
+		#userNm:VARCHAR#,
+		#userPosRankNm:VARCHAR#,
+		#creatSysCd:VARCHAR#,
+		#orgCd:VARCHAR#,
+		#creatYyyy:VARCHAR#,
+		#creatRegNo:VARCHAR#,
+		#dtchRegNo:VARCHAR#,
+		#docTypeCd:VARCHAR#,
+		#docTypeSno:VARCHAR#
+		FROM DUAL
+		)
+	</insert>
+	<!-- COUNT(*) [원문ID 별 COUNT] -->
+	<select id="countTkVirusCheckHist" parameterClass="rms.orign.server.domain.VirusChkHist"
+		resultClass="int">
+		SELECT COUNT(*)
+		FROM TB_TKVIRUSCHECK
+		WHERE
+		RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		AND
+		RECORD_TAKE_SEQ=#recordTakeSeq:VARCHAR#
+		AND REG_SEQ=#regSeq:NUMBER#
+		AND
+		ATTACH_FILE_TYPE=#attachFileType:VARCHAR#
+	</select>
+
+	<select id="countRdFolderInfectOrignFile" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultClass="int">
+		SELECT (A.CNT + B.CNT) AS CNT
+		FROM (SELECT COUNT(*) AS CNT
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		OFILE.ORIGN_ID
+		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		AND OFILE.VIRUS_FLAG = '1') A
+		,(SELECT COUNT(*) AS CNT
+		FROM TB_RDFOLDER
+		RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE PFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE
+		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND
+		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		PFILE.ORIGN_ID
+		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RDFOLDER.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		AND PFILE.VIRUS_FLAG = '1') B
+	</select>
+
+	<!-- 기록물보존(기록물철) 첨부파일 조회 -->
+	<select id="findRdFolderGroupRecordIdList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultClass="java.lang.String">
+		SELECT RDRECORD.RECORD_ID
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		WHERE RDFOLDER.RECORD_CENTER_ID =
+		RDRECORD.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDFOLDER.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND
+		RDFOLDER.FOLDER_ID = #folderId:VARCHAR#
+		ORDER BY
+		RDRECORD.RECORD_CENTER_ID
+		,RDRECORD.CREAT_REG_DTIME
+		,RDRECORD.CREAT_REG_NO
+	</select>
+
+	<update id="updateRdFolderOrignFileVirusScanning"
+		parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE TB_STORIGNFILE
+		SET VIRUS_FLAG =
+		#virusFlag:VARCHAR#
+		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		,VIRUS_INFECTION_CONT = #virusInfectionCont:VARCHAR#
+		,VIRUS_CLEAN_FLAG
+		= #virusCleanFlag:VARCHAR#
+		,VIRUS_CLEAN_DTIME =
+		DECODE(#virusCleanFlag:VARCHAR#, '', '', null, '', TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS'))
+		,VIRUS_CLEAN_FILE_PATH =
+		#virusCleanFilePath:VARCHAR#
+		,VIRUS_CLEAN_FILE_SIZE =
+		#virusCleanFileSize:VARCHAR#
+		,VIRUS_CLEAN_APPLY_FLAG = '0'
+		,VIRUS_CLEAN_APPLY_DTIME = ''
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND ORIGN_FILE_ID = #orignFileId:VARCHAR#
+	</update>
+
+	<update id="updateRdFolderVirusScanning" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE
+		TB_RDFOLDER
+		SET VIRUS_FLAG = #virusFlag:VARCHAR#
+		,VIRUS_DTIME =
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+
+	<resultMap id="findRdRecordGroupOrignFileList-result" class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+	<select id="findRdRecordGroupOrignFileList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="findRdRecordGroupOrignFileList-result">
+		SELECT RDRECORD.RECORD_CENTER_ID
+		,RDRECORD.ORG_CD
+		,RDRECORD.FOLDER_ID
+		,RDRECORD.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,RORIGN.ERECORD_FLAG
+		,OFILE.ORIGN_ID
+		,OFILE.ORIGN_FILE_ID
+		,OFILE.DOC_TYPE_CD
+		,OFILE.DOC_TYPE_SNO
+		,OFILE.FILE_NM
+		,OFILE.STORE_FILE_NM
+		,OFILE.STORE_FILE_ID
+		,OFILE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM
+		TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDRECORD.RECORD_CENTER_ID =
+		RORIGN.RECORD_CENTER_ID
+		AND
+		RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND
+		RORIGN.RECORD_CENTER_ID =
+		OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID =
+		OFILE.ORIGN_ID
+		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND
+		OFILE.MEDIUM_ID =
+		MEDIUM.MEDIUM_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDRECORD.RECORD_ID = #recordId:VARCHAR#
+		AND OFILE.VIRUS_FLAG = '1'
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO
+	</select>
+
+	<resultMap id="findRdRecordGroupOrignPdfA1FileList-result"
+		class="rms.orign.server.domain.HauriIntlk">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orgCd" column="ORG_CD" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+	<select id="findRdRecordGroupOrignPdfA1FileList" parameterClass="rms.orign.server.domain.HauriIntlk"
+		resultMap="findRdRecordGroupOrignPdfA1FileList-result">
+		SELECT RDRECORD.RECORD_CENTER_ID
+		,RDRECORD.ORG_CD
+		,RDRECORD.FOLDER_ID
+		,RDRECORD.CREAT_YYYY
+		,RORIGN.RECORD_ID
+		,RORIGN.ERECORD_FLAG
+		,PFILE.ORIGN_ID
+		,PFILE.PDF_A1_FILE_ID
+		,PFILE.DOC_TYPE_CD
+		,PFILE.DOC_TYPE_SNO
+		,PFILE.FILE_NM
+		,PFILE.STORE_FILE_ID
+		,PFILE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE PFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID
+		AND
+		RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND RORIGN.RECORD_CENTER_ID =
+		PFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = PFILE.ORIGN_ID
+		AND
+		PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND PFILE.MEDIUM_ID =
+		MEDIUM.MEDIUM_ID
+		AND RDRECORD.RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RDRECORD.RECORD_ID = #recordId:VARCHAR#
+		AND PFILE.VIRUS_FLAG = '1'
+		ORDER BY RDRECORD.RECORD_ID,
+		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD, PFILE.DOC_TYPE_SNO
+	</select>
+
+	<update id="updateRdFolderVirusScanEnd" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE
+		TB_RDFOLDER
+		SET QULTY_TEST_STATE_FLAG = '2'
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+
+	<update id="updateRdRecordVirusScanEnd" parameterClass="rms.orign.server.domain.HauriIntlk">
+		UPDATE
+		TB_RDRECORD
+		SET QULTY_TEST_STATE_FLAG = '2'
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND RECORD_ID = #recordId:VARCHAR#
+	</update>
+
+	<insert id="cerateStOrignVirusCheckHist" parameterClass="rms.orign.server.domain.VirusChkHist">
+		INSERT
+		INTO TB_STORIGNVIRUSCHK
+		(
+		FILE_ID,
+		FILE_TYPE,
+		VIRUS_HIST_SEQ,
+		VIRUS_CHECK_FLAG,
+		VIRUS_CHECK_DTIME,
+		VIRUS_INFECTION_FLAG,
+		VIRUS_INFECTION_DTIME,
+		VIRUS_INFECTION_CONT,
+		VIRUS_CLEAN_FLAG,
+		VIRUS_CLEAN_DTIME,
+		VIRUS_CLEAN_APPLY_FLAG,
+		VIRUS_CLEAN_APPLY_DTIME,
+		REQUEST_CORP_CD,
+		REQUEST_CORP_NM,
+		REQUEST_ORG_CD,
+		REQUEST_ORG_NM,
+		REQUEST_USER_ID,
+		REQUEST_USER_NM,
+		REQUEST_USER_POS_RANK_NM
+		)
+		(SELECT
+		#fileId:VARCHAR#,
+		#fileType:VARCHAR#,
+		(SELECT
+		NVL(MAX(VIRUS_HIST_SEQ)+1,1)
+		FROM TB_STORIGNVIRUSCHK
+		WHERE
+		FILE_ID=#fileId:VARCHAR#
+		AND FILE_TYPE=#fileType:VARCHAR#
+		),
+		#virusCheckFlag:VARCHAR#,
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+		#virusInfectionFlag:VARCHAR#,
+		DECODE(#virusInfectionFlag:VARCHAR#, '1',
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), ''),
+		#virusInfectionCont:VARCHAR#,
+		#virusCleanFlag:VARCHAR#,
+		DECODE(#virusCleanFlag:VARCHAR#, '1', TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS'), ''),
+		'',
+		'',
+		REQUEST_CORP_CD,
+		(SELECT MAX(ORG_NM)
+		FROM TB_STORG Z
+		WHERE Z.ORG_CD = REQUEST_CORP_CD
+		) AS REQUEST_CORP_NM,
+		REQUEST_ORG_CD,
+		(SELECT ORG_NM
+		FROM TB_STORG Z
+		WHERE Z.ORG_CD =
+		REQUEST_ORG_CD
+		) AS REQUEST_ORG_NM,
+		'' AS REQUEST_USER_ID,
+		'' AS
+		REQUEST_USER_NM,
+		'' AS REQUEST_USER_POS_RANK_NM
+		FROM
+		(SELECT
+		(SELECT
+		HUPPER_ORG_CD
+		FROM TB_STORG Z
+		WHERE Z.ORG_CD = A.ORG_CD
+		AND
+		Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		) AS REQUEST_CORP_CD,
+		ORG_CD AS
+		REQUEST_ORG_CD
+		FROM TB_RDRECORD A,
+		TB_STRECORDORIGN B,
+		TB_STORIGNFILE C
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND
+		A.RECORD_ID=B.RECORD_ID
+		AND B.ORIGN_ID=C.ORIGN_ID
+		AND C.ORIGN_FILE_ID =
+		#fileId:VARCHAR#
+		)
+		)
+	</insert>
+
+</sqlMap>

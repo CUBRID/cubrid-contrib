@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.stndinfo">
+<resultMap id="stnd-orgcomstnd-result" class="rms.stnd.stndinfo.domain.OrgComStnd" >
+		<result property="stndMngTypeCd"	column="STND_MNG_TYPE_CD"/>
+		<result property="ver"			 	column="VER"/>
+		<result property="midNm"			column="BRM_MID_NM"/>
+		<result property="smlNm" 			column="BRM_SML_NM"/>
+		<result property="taskNm" 			column="TASK_NM"/>
+		<result property="presvTermCd"		column="PRESV_TERM_CD"/>
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>	
+		<result property="taskDescr" 		column="TASK_DESCR"/>				
+	</resultMap>
+	
+	<!-- 
+		COUNT
+	 -->
+	<select id="countOrgComStnd" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd" resultClass="long">
+		SELECT COUNT(1)
+		FROM TB_ZZORGCOMSTND A 		
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		<isNotEmpty prepend="AND" property="smlNm">
+				A.BRM_SML_NM = #smlNm:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="smlNm">
+				A.BRM_SML_NM = (SELECT MIN(BRM_SML_NM) FROM TB_ZZORGCOMSTND WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# )
+		</isEmpty>
+	</select>	
+		
+	<!-- 
+		SELECT
+	 -->
+	<select id="findOrgComStnd" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd" resultMap="stnd-orgcomstnd-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT A.STND_MNG_TYPE_CD
+		, A.VER
+		, A.BRM_MID_NM
+		, A.BRM_SML_NM
+		, A.PRESV_TERM_CD
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM
+		, A.TASK_DESCR
+		, A.TASK_NM
+		FROM TB_ZZORGCOMSTND A 		
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		<isNotEmpty prepend="AND" property="smlNm">
+				A.BRM_SML_NM = #smlNm:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="smlNm">
+				A.BRM_SML_NM = (SELECT MIN(BRM_SML_NM) FROM TB_ZZORGCOMSTND WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# )
+		</isEmpty>
+					) C
+						WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+					) B
+
+WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		CREATE
+	 -->
+	<insert id="createOrgComStnd" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd">
+		INSERT INTO TB_ZZORGCOMSTND(STND_SEQ, STND_MNG_TYPE_CD, VER, BRM_MID_NM, BRM_SML_NM, PRESV_TERM_CD, TASK_NM, TASK_DESCR, RECORD_CENTER_ID) 
+		VALUES ((SELECT NVL(MAX(TO_NUMBER(STND_SEQ)),0) FROM TB_ZZORGCOMSTND) + 1, #stndMngTypeCd#, #ver#, #midNm#, #smlNm#, #presvTermCd#, #taskNm#, #taskDescr#, #recordCenterId#)
+	</insert>
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findMidNm" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd" resultMap="stnd-orgcomstnd-result">
+		SELECT DISTINCT A.BRM_SML_NM
+		, '' STND_MNG_TYPE_CD
+		, '' VER
+		, '' BRM_MID_NM
+		, '' PRESV_TERM_CD
+		, '' PRESV_TERM_NM
+		, '' TASK_DESCR
+		, '' TASK_NM
+		FROM TB_ZZORGCOMSTND A 		
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		ORDER BY A.BRM_SML_NM
+	</select>
+	
+	<!-- 
+		DELETE
+	 -->	
+	<delete id="deleteOrgComStnd" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd">
+	  	DELETE 
+	  	FROM TB_ZZORGCOMSTND	  
+	  	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 	  
+	  	<dynamic>	 	 
+		  	<isEmpty prepend="AND" property="stndMngTypeCd">
+					STND_MNG_TYPE_CD = #stndMngTypeCd:VARCHAR#
+			</isEmpty>
+			<isEmpty prepend="AND" property="ver">
+					VER = #ver:VARCHAR#
+			</isEmpty> 
+		</dynamic>
+	</delete>	
+	
+	<!-- 
+		DELETE
+	 -->	
+	<delete id="deleteOrgComStndAll" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd">
+	  	DELETE 
+	  	FROM TB_ZZORGCOMSTND
+	  	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 	  	  
+	</delete>	
+</sqlMap>

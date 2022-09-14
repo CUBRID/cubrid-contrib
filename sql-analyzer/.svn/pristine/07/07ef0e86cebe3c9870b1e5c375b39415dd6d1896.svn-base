@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.sys">
+	
+	<resultMap id="user-detl-result" class="rms.sys.sys.domain.User">
+		<result property="userId" 			column="USER_ID"/>
+		<result property="loginUserId" 		column="LOGIN_USER_ID"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="userDivNm" 		column="USER_DIV_NM"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userPwd" 			column="USER_PWD"/>
+		<result property="pos" 				column="POS"/>
+		<result property="rank" 			column="RANK"/>
+		<result property="workFlag" 		column="WORK_FLAG"/>
+		<result property="workFlagNm" 		column="WORK_FLAG_NM"/>
+		<result property="residNo" 			column="RESID_NO"/>
+		<result property="telNo" 			column="TEL_NO"/>
+		<result property="addr" 			column="ADDR"/>
+		<result property="deptNm" 			column="DEPT_NM"/>
+		<result property="useFlag" 			column="USE_FLAG"/>
+		<result property="useFlagNm" 		column="USE_FLAG_NM"/>
+		<result property="ssoFlag" 			column="SSO_FLAG"/>
+		<result property="menuGrantGrpCd" column="MENU_GRANT_GRP_CD"/>
+		<result property="menuGrantGrpNm" column="MENU_GRANT_GRP_NM"/>
+	</resultMap>
+	<!--
+		사용자 상세정보를 조회한다.
+	-->
+	<select id="findUserDetl" parameterClass="rms.sys.sys.domain.User" resultMap="user-detl-result">
+		SELECT A.user_id
+		     , A.login_user_id
+		     , A.dept_cd
+		     , A.record_center_id
+		     , A.user_div
+		     , C.com_cd_nm user_div_nm
+		     , A.user_nm
+		     , A.user_pwd
+		     , A.pos
+		     , A.rank
+		     , A.work_flag
+		     , DECODE(A.work_flag,'0','전체','1','근무','2','퇴사') work_flag_nm
+		     , A.tel_no
+		     , A.addr
+		     , SUBSTR(A.resid_no, 0, 6) resid_no
+		     , A.dept_cd
+		     , B.dept_nm
+		     , A.use_flag
+		     , A.menu_grant_grp_cd
+		     , DECODE(A.use_flag,'0','미사용','1','사용') use_flag_nm
+		     , A.sso_flag
+		     , (select menu_grant_grp_nm from tb_stmenugrantgrp
+		        where a.record_center_id = record_center_id
+		        and a.menu_grant_grp_cd = menu_grant_grp_cd ) as menu_grant_grp_nm
+		 FROM TB_STUSER A
+		     , TB_STDEPT B
+		     , TB_ZZCOMCD C
+		 WHERE A.user_id = #userId:VARCHAR#
+		 AND A.dept_cd = B.dept_cd(+)
+		 AND A.user_div = C.com_cd(+)
+		 AND C.com_type_cd = 'ST01'
+	</select>
+	
+	<!--
+		사용자 비밀번호를 변경한다.
+	-->
+	<update id="updateUserPwd" parameterClass="rms.sys.sys.domain.User">
+		UPDATE TB_STUSER
+		SET user_pwd = #userPwd:VARCHAR#
+			<!--, reg_dtime = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			<!--cubrid-->
+			, reg_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE user_id = #userId:VARCHAR#
+	</update>
+	
+	<resultMap id="user-result" class="rms.sys.sys.domain.User">
+		<result property="userId" 			column="USER_ID"/>
+		<result property="loginUserId" 		column="LOGIN_USER_ID"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userPwd" 			column="USER_PWD"/>
+		<result property="pos" 				column="POS"/>
+		<result property="rank" 			column="RANK"/>
+		<result property="workFlag" 		column="WORK_FLAG"/>
+		<result property="residNo" 			column="RESID_NO"/>
+		<result property="telNo" 			column="TEL_NO"/>
+		<result property="addr" 			column="ADDR"/>
+	</resultMap>
+	<!-- 
+		시스템관리 사용자관리 사용자목록을 조회한다.
+	 -->
+	<select id="findUserPagedList" parameterClass="rms.sys.sys.domain.User" resultMap="user-result">
+		SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, A.*
+			FROM (
+				SELECT user_id
+				    , login_user_id
+				    , dept_cd
+				    , record_center_id
+				    , user_div
+				    , user_nm
+				    , user_pwd
+				    , pos
+				    , rank
+				    , work_flag
+				    , tel_no
+				    , addr
+				    , resid_no
+				FROM TB_STUSER
+				WHERE use_flag = '1'
+				<dynamic>
+					<isNotEmpty prepend="AND" property="recordCenterId">
+						record_center_id = #recordCenterId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="userDiv">
+						user_div = #userDiv:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="workFlag">
+						work_flag = #workFlag:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="deptCd">
+						dept_cd = #deptCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="pos">
+						pos LIKE #pos:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="rank">
+						rank LIKE #rank:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="loginUserId">
+						login_user_id LIKE #loginUserId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="userNm">
+						user_nm LIKE #userNm:VARCHAR#
+					</isNotEmpty>
+				</dynamic>
+				ORDER BY user_nm
+			) A
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 시스템관리 사용자관리 사용자목록을 조회한다.
+	 -->
+	<select id="countUserPagedList" parameterClass="rms.sys.sys.domain.User" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STUSER
+		WHERE use_flag = '1'
+		<dynamic>
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="userDiv">
+				user_div = #userDiv:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workFlag">
+				work_flag = #workFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="deptCd">
+				dept_cd = #deptCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="pos">
+				pos LIKE #pos:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="rank">
+				rank LIKE #rank:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="loginUserId">
+				login_user_id LIKE #loginUserId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="userNm">
+				user_nm LIKE #userNm:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자 등록시 사용자아이디 Max 값을 조회한다.
+	 -->
+	<select id="findMaxUserDetl" resultClass="java.lang.String">
+		SELECT LPAD(NVL(MAX(user_id),0)+ 1, 10, '0') user_id FROM TB_STUSER
+	</select>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자정보가 존재하는 지 확인
+	 -->
+	<select id="countUserMngDetl" parameterClass="rms.sys.sys.domain.User" resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM TB_STUSER WHERE USER_ID = #userId:VARCHAR#
+	</select>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자정보를 등록한다.
+	 -->
+	<insert id="createUserMngDetl" parameterClass="rms.sys.sys.domain.User">
+		INSERT INTO TB_STUSER (
+			record_center_id, user_id, dept_cd, user_div, user_nm, login_user_id, user_pwd, pos, rank, work_flag, tel_no, addr, resid_no, use_flag, reg_dtime, pki_name_check, sso_flag, menu_grant_grp_cd
+		) VALUES (
+			(SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = #deptCd:VARCHAR#)
+			, #userId:VARCHAR#
+			, #deptCd:VARCHAR#
+			, #userDiv:VARCHAR#
+			, #userNm:VARCHAR#
+			, #loginUserId:VARCHAR#
+			, #userPwd:VARCHAR#
+			, #pos:VARCHAR#
+			, #rank:VARCHAR#
+			, #workFlag:VARCHAR#
+			, #telNo:VARCHAR#
+			, #addr:VARCHAR#
+			, #residNo:VARCHAR#
+			, '1'
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, 'Y'
+			, #ssoFlag:VARCHAR#
+			, #menuGrantGrpCd:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자정보를 수정한다.
+	 -->
+	<update id="updateUserMngDetl" parameterClass="rms.sys.sys.domain.User">
+		UPDATE TB_STUSER
+		SET   user_div = #userDiv:VARCHAR#
+		     ,user_nm = #userNm:VARCHAR#
+		     ,dept_cd = #deptCd:VARCHAR#
+		     ,work_flag = #workFlag:VARCHAR#
+		     ,resid_no = #residNo:VARCHAR#
+		     ,tel_no = #telNo:VARCHAR#
+		     ,addr = #addr:VARCHAR#
+		     ,pos = #pos:VARCHAR#
+		     ,rank = #rank:VARCHAR#
+		     ,record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = #deptCd:VARCHAR# )
+		     ,sso_flag = #ssoFlag:VARCHAR#
+		     ,menu_grant_grp_cd = #menuGrantGrpCd:VARCHAR#
+		     <dynamic>
+				<isNotEmpty prepend="," property="userPwd">
+				     user_pwd = #userPwd:VARCHAR#
+				    <!--cubrid,reg_dtime = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+				    ,reg_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+				</isNotEmpty>
+			 </dynamic>
+		WHERE user_id = #userId:VARCHAR#
+	</update>
+
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자정보를 미사용으로 변경한다.	
+	 -->
+	<update id="deleteUserMngDetl" parameterClass="rms.sys.sys.domain.User">
+		UPDATE TB_STUSER SET use_flag = '0' WHERE user_id = #userId:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자 일괄등록시 이미 등록된 ID가 존재하는지 체크
+	 -->
+	<select id="findUserIdCount" parameterClass="rms.sys.sys.domain.User" resultClass="java.lang.Integer">
+		SELECT count(*) FROM TB_STUSER WHERE login_user_id = #loginUserId:VARCHAR# AND sso_flag in ('2','3')
+	</select>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자 일괄등록시 수정, 삭제할 사용자의 ID, 소속부서 를 조회한다.
+	 -->
+	<resultMap id="findUserInfo-result" class="rms.sys.sys.domain.User">
+		<result property="userId"			column="user_id"/>
+		<result property="deptCd"			column="dept_cd"/>
+	</resultMap>
+	<select id="findUserInfo" parameterClass="rms.sys.sys.domain.User" resultMap="findUserInfo-result">
+		SELECT user_id, dept_cd FROM TB_STUSER WHERE login_user_id = #loginUserId:VARCHAR# AND sso_flag in ('2','3')
+	</select>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자 일괄등록시 새로운 기록관ID 를 조회한다		
+	 -->
+	<select id="findRecordCenterId" parameterClass="rms.sys.sys.domain.User" resultClass="java.lang.String">
+		SELECT RECORD_CENTER_ID
+	  	FROM TB_STRECORDCENTER
+	 	WHERE RECORD_CENTER_CD = (SELECT HUPPER_ORG_CD FROM TB_STORG WHERE ORG_CD = #deptCd:VARCHAR#)
+	</select>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자 일괄등록을 한다.
+	 -->
+	<insert id="createUserBatchReg" parameterClass="rms.sys.sys.domain.User">
+		INSERT INTO TB_STUSER (
+				  user_id, record_center_id, dept_cd, user_div, user_nm
+				, login_user_id, user_pwd, pos, rank, work_flag
+				, use_flag, sso_flag, reg_dtime, menu_grant_grp_cd
+		) VALUES (
+			  #userId:VARCHAR#
+			, (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd=#deptCd:VARCHAR#)
+			, #deptCd:VARCHAR#, '1', #userNm:VARCHAR#
+			, #loginUserId:VARCHAR#, #userPwd:VARCHAR#, #pos:VARCHAR#, #rank:VARCHAR#, '1'
+			<!--cubrid , '1', '3', TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, '1', '3', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, (SELECT menu_grant_grp_cd FROM TB_STMENUGRANTGRP WHERE record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd=#deptCd:VARCHAR#) AND default_grant_div = '1')
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자 일괄수정을 한다.
+	 -->
+	<update id="updateUserBatchReg" parameterClass="rms.sys.sys.domain.User">
+		UPDATE TB_STUSER
+	   	SET    record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = #deptCd:VARCHAR#)
+		     , dept_cd = #deptCd:VARCHAR#
+		     , user_div = '1'
+		     , user_nm = #userNm:VARCHAR#
+		     , user_pwd = #userPwd:VARCHAR#
+		     , pos = #pos:VARCHAR#
+		     , rank = #rank:VARCHAR#
+		 WHERE user_id = #userId:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자권한일괄등록시 소속부서에 사용자가 존재하는지 확인한다.
+	 -->
+	<select id="findDeptUserIdCount" parameterClass="rms.sys.sys.domain.User" resultClass="java.lang.Integer">
+		SELECT count(*) FROM TB_STUSER WHERE login_user_id = #loginUserId:VARCHAR# AND DEPT_CD = #deptCd:VARCHAR#
+	</select>
+
+	<!-- 
+		시스템관리_사용자관리
+		: 사용자권한을 일괄등록한다 (UPDATE)
+	 -->
+	<update id="updateUserGrantBatchReg" parameterClass="rms.sys.sys.domain.User">
+		UPDATE TB_STUSER
+	    SET  USER_DIV = #userDiv:VARCHAR#
+	     	,MENU_GRANT_GRP_CD = #menuGrantGrpCd:VARCHAR#
+		WHERE USER_ID = #userId:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리 불법사용자차단(로그인 실패이력) 목록을 조회한다.
+	 --> 
+	<resultMap id="findSysUserPageList-result" class="rms.sys.sys.domain.User">
+		<result property="loginUserId" 		column="LOGIN_USER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="regDtime" 		column="REG_DTIME"/>
+		<result property="userId" 			column="USER_ID"/>
+	</resultMap>
+	<select id="findSysUserPageList" parameterClass="rms.sys.sys.domain.User" resultMap="findSysUserPageList-result">
+		SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, A.*
+			FROM (
+				SELECT LOGIN_USER_ID
+					, USER_NM
+				    , REG_DTIME
+				    , USER_ID
+				FROM TB_STUSER
+				WHERE LOGIN_ERROR_CNT >= #loginErrorCnt:VARCHAR#
+				<isEqual property="loginErrorCnt" compareValue="0">
+					AND 0 = 1
+				</isEqual>
+			) A
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!--
+		COUNT - 시스템관리 불법사용자차단(로그인 실패이력) 목록을 조회한다.
+	 -->
+	<select id="countFindSysUserPageList" parameterClass="rms.sys.sys.domain.User" resultClass="java.lang.Long">
+		SELECT COUNT(*)
+		FROM TB_STUSER
+		WHERE LOGIN_ERROR_CNT >= #loginErrorCnt:VARCHAR#
+		<isEqual property="loginErrorCnt" compareValue="0">
+		    AND 0 = 1
+		</isEqual>
+	</select>
+	
+	<!-- 
+		시스템관리_불법사용자차단
+		: 불법사용자 차단을 해지한다.
+	 -->
+	<update id="updateLoginErrorReset" parameterClass="rms.sys.sys.domain.User">
+		UPDATE TB_STUSER SET LOGIN_ERROR_CNT = 0 WHERE USER_ID = #userId:VARCHAR#
+	</update>
+</sqlMap>

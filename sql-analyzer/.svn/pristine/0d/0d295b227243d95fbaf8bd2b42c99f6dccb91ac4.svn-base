@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.tree">
+
+	<!-- 
+		생산부서 검색
+	 -->
+	<resultMap id="findOrgNm-resultMap" class="rms.common.tree.domain.TreeOrg">
+		<result property="recordCenterId"	column="RECORD_CENTER_ID" />
+		<result property="orgCd"			column="ORG_CD" />
+		<result property="orgNm"			column="ORG_NM" />
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM" />
+		<result property="upperOrgCd"		column="UPPER_ORG_CD" />
+		<result property="closeFlag"		column="CLOSE_FLAG" />
+		<result property="recordCenterFlag"	column="RECORD_CENTER_FLAG" />
+	</resultMap>
+	<select id="countOrgNm" parameterClass="rms.common.tree.domain.TreeOrg" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_STORG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				org_cd LIKE #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgNm">
+				org_nm LIKE #orgNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="closeFlag">
+				<isNotEqual prepend="AND" property="closeFlag" compareValue="3">
+					close_flag = #closeFlag:VARCHAR#
+				</isNotEqual>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findOrgNm" parameterClass="rms.common.tree.domain.TreeOrg" resultMap="findOrgNm-resultMap">
+		SELECT C.record_center_id
+			, C.org_cd
+			, C.org_nm
+			, C.org_abbr_nm
+			, C.upper_org_cd
+			, C.close_flag
+			, C.record_center_flag
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT record_center_id
+					, org_cd
+					, org_nm
+					, org_abbr_nm
+					, upper_org_cd
+					, (CASE WHEN close_flag='0' THEN '현존' ELSE '폐지' END) AS close_flag
+					, '' AS record_center_flag
+				FROM  TB_STORG
+				WHERE record_center_id = #recordCenterId:VARCHAR#
+				<dynamic>
+					<isNotEmpty prepend="AND" property="orgCd">
+						org_cd LIKE #orgCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="orgNm">
+						org_nm LIKE #orgNm:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty property="closeFlag">
+						<isNotEqual prepend="AND" property="closeFlag" compareValue="3">
+							close_flag = #closeFlag:VARCHAR#
+						</isNotEqual>
+					</isNotEmpty>
+				</dynamic>
+				ORDER BY full_org_nm, close_flag
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		생산부서 트리 검색 
+	-->
+	<select id="findOrgTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		SELECT A.record_center_id AS recordCenterId
+			, '1' AS treeType
+			, A.org_cd AS id
+			, A.org_abbr_nm AS text
+			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.upper_org_cd=A.org_cd) THEN 'closed'
+					ELSE 'open'
+				END) AS state 
+			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+					ELSE 'icon-folder_full_accept'
+				END) AS iconCls
+			, A.levl
+		FROM TB_STORG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isEqual prepend="AND" property="treeType" compareValue="0">
+				NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+			</isEqual>
+			<isNotEqual prepend="AND" property="treeType" compareValue="0">
+				A.upper_org_cd = #id:VARCHAR#
+			</isNotEqual>
+			<isNotEmpty property="delFlag">
+				<isNotEqual prepend="AND" property="delFlag" compareValue="3">
+					A.close_flag = #delFlag:VARCHAR#
+				</isNotEqual>
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+	</select>
+	<!-- 
+		기록관환경설정 기록관설정 기록관목록을 트리에 담는다.
+	 -->
+	<select id="findRecordCenterList" parameterClass="java.lang.String" resultClass="rms.multi.admin.domain.RmsTree">
+		SELECT 'RC_'||A.record_center_id AS recordCenterId
+			, A.record_center_id||'::'||A.record_center_cd AS id
+			, A.rep_org_nm AS text
+			, (CASE WHEN A.record_center_id=#recordCenterId:VARCHAR# THEN 'open'
+					ELSE 'closed' END) AS state
+			, 'icon-search' AS iconCls
+		FROM TB_STRECORDCENTER A
+		ORDER BY A.record_center_id
+	</select>
+	
+	<!-- 
+		기록관환경설정 기록관설정 기관코드 목록을 기록관트리에 담는다. 
+	-->
+	<select id="findMultiOrgTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.multi.admin.domain.RmsTree">
+		SELECT A.record_center_id AS recordCenterId
+			, A.record_center_id||'::'||A.org_cd AS id
+			, A.org_abbr_nm AS text
+			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+					ELSE 'open'
+				END) AS state 
+			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+					ELSE 'icon-folder_full_accept'
+				END) AS iconCls
+		FROM TB_STORG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isEmpty prepend="AND" property="id">
+				NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="id">
+				A.upper_org_cd = #id:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+	</select>
+	
+	<!-- 
+		기록관환경설정 기록관설정 기관코드 목록을 트리에 담는다. 
+	-->
+	<select id="findMultiOrgListTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.multi.admin.domain.RmsTree">
+		SELECT A.record_center_id AS recordCenterId
+			, A.record_center_id||'::'||A.org_cd AS id
+			, A.org_abbr_nm AS text
+			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+					ELSE 'open'
+				END) AS state 
+			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+					ELSE 'icon-folder_full_accept'
+				END) AS iconCls
+		FROM TB_STORG A
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				A.record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="id">
+				NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="id">
+				A.upper_org_cd = #id:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+	</select>
+</sqlMap>

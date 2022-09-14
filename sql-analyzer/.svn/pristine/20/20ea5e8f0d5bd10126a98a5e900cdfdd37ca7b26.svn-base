@@ -1,0 +1,1654 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.rangeresortopin">
+
+
+	<!-- 접근범위재분류 의견등록 -->
+	<resultMap id="rangeRangeOpinRegRecord-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		<result property="recordCenterId" 	    	column="RECORD_CENTER_ID"				nullValue="" />
+		<result property="recordId" 		    	column="RECORD_ID"						nullValue="" />
+		<result property="resortCase" 		    	column="RESORT_CASE"					nullValue="" />
+		<result property="orgOpin" 		        	column="ORG_OPIN"						nullValue="" />
+		<result property="orgOpinYmd" 		    	column="ORG_OPIN_YMD"					nullValue="" />
+		<result property="resortSeq" 		    	column="RESORT_SEQ"						nullValue="" />
+		<result property="title" 			    	column="TITLE"							nullValue="" />
+		<result property="subTitle" 			    column="SUB_TITLE"						nullValue="" />
+		<result property="operReadRangeBef" 		column="OPER_READ_RANGE_BEF"			nullValue="" />
+		<result property="operReadRangeAft" 		column="OPER_READ_RANGE_AFT"			nullValue="" />
+		<result property="orgCd"			 		column="ORG_CD"							nullValue="" />
+		<result property="creatYyyy" 		    	column="CREAT_YYYY"						nullValue="" />
+		<result property="corctTitle" 		    	column="CORCT_TITLE"					nullValue="" />
+		<result property="resortProgStateCd" 	    column="RESORT_PROG_STATE_CD"			nullValue="" />
+		<result property="resortProgStateNm" 	    column="RESORT_PROG_STATE_NM"			nullValue="" />
+		<result property="creatRegDtime"			column="CREAT_REG_DTIME"				nullValue="" />
+		<result property="clssId" 			    	column="CLSS_ID"						nullValue="" />
+		<result property="clssNm" 			    	column="CLSS_NM"						nullValue="" />
+		<result property="clssDivCd"		    	column="CLSS_DIV_CD"					nullValue="" />
+		<result property="handlOrgCd" 		    	column="HANDL_ORG_CD"					nullValue="" />
+		<result property="orgNm"	 		    	column="ORG_NM"							nullValue="" />
+		<result property="orgAbbrNm"	 		    column="ORG_ABBR_NM"					nullValue="" />
+		<result property="handlOrgNm" 		    	column="HANDL_ORG_NM"					nullValue="" />
+		<result property="handlOrgAbbrNm"			column="HANDL_ORG_ABBR_NM"				nullValue="" />
+		<result property="closeFlag"	 	    	column="CLOSE_FLAG"						nullValue="" />
+		<result property="openHistCnt"	 	    	column="OPEN_HIST_CNT"					nullValue="" />
+		<result property="folderTitle"	 	    	column="FOLDER_TITLE"					nullValue="" />
+		<result property="recordDetlTypeNm" 		column="RECORD_DETL_TYPE_NM"			nullValue="" />
+		<result property="operReadRangeBefNm" 		column="OPER_READ_RANGE_BEFNM"			nullValue="" />
+		<result property="operReadRangeAftNm" 		column="OPER_READ_RANGE_AFTNM"			nullValue="" />
+		<result property="takeMngNo" 				column="TAKE_MNG_NO"					nullValue="" />
+		<result property="regDtime" 				column="REG_DTIME"						nullValue="" />
+		<result property="lastReadResortYyyy" 		column="LAST_READ_RESORT_YYYY"			nullValue="" />
+		<result property="creatRegNo" 				column="CREAT_REG_NO"					nullValue="" />
+		<result property="dtchRegNo" 				column="DTCH_REG_NO"					nullValue="" />
+		<result property="creatSysCd" 				column="CREAT_SYS_CD"					nullValue="" />
+		<result property="folderRegSeq" 			column="FOLDER_REG_SEQ"					nullValue="" />
+		<result property="hoNo" 					column="HO_NO"							nullValue="" />
+		<result property="expertOperReadRangeAft"	column="EXPERT_OPER_READ_RANGE_AFT"		nullValue="" />
+		<result property="expertOpin"				column="EXPERT_OPIN"					nullValue="" />
+		<result property="expertOpinRegYmd"		 	column="EXPERT_OPIN_REG_YMD"			nullValue="" />
+		<result property="expertUserId"				column="EXPERT_USER_ID"					nullValue="" />
+		<result property="rsltRegYmd"				column="RSLT_REG_YMD"					nullValue="" />
+		<result property="confirmCd"				column="CONFIRM_CD"						nullValue="" />
+		<result property="rjctFlag"					column="RJCT_FLAG"						nullValue="" />
+		<result property="resortOpinCd"				column="RESORT_OPIN_CD"					nullValue="" />
+		<result property="takeYyyy"					column="TAKE_YYYY"						nullValue="" />
+		<result property="caseType"					column="CASE_TYPE"						nullValue="" />
+		<result property="befResortYyyy"			column="BEF_RESORT_YYYY"				nullValue="" />
+		<result property="excelDwnFlag"				column="EXCEL_DWN_FLAG"					nullValue="" />
+		<result property="centerSelFlag"			column="CENTER_SEL_FLAG"				nullValue="" />
+		<result property="docNoNm"					column="DOC_NO_NM"						nullValue="" />
+		<result property="histQty"					column="HIST_QTY"						nullValue="" />
+		<result property="folderKeepStateCd"		column="folder_keep_state_cd"			nullValue="" />
+	</resultMap>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 처리부서의견등록
+	 -->
+	<select id="findRangeResortHandlDeptOpinRegRecordPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeOpinRegRecord-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.record_id
+				, C.record_center_id
+				, C.resort_case
+				, C.org_opin
+				, C.org_opin_ymd
+				, C.resort_seq
+				, C.title
+				, C.sub_title
+				, C.take_yyyy
+				, C.case_type
+				, C.bef_resort_yyyy
+				, C.excel_dwn_flag
+				, C.center_sel_flag
+				, C.expert_oper_read_range_aft
+				, C.expert_opin
+				, C.expert_opin_reg_ymd
+				, C.expert_user_id
+				, C.rslt_reg_ymd
+				, C.confirm_cd
+				, C.rjct_flag
+				, C.resort_opin_cd
+				, C.oper_read_range_bef
+				, C.oper_read_range_aft
+				, C.org_cd
+				, C.creat_yyyy
+				, C.corct_title
+				, C.doc_no_nm
+				, C.resort_prog_state_cd
+				, C.folder_keep_state_cd
+				, C.resort_prog_state_nm
+			    , C.creat_reg_dtime
+			    , C.take_mng_no
+			    , C.reg_dtime
+			    , C.last_read_resort_yyyy
+			    , C.creat_reg_no
+			    , C.dtch_reg_no
+			    , C.creat_sys_cd
+			    , C.folder_reg_seq
+			    , C.ho_no
+			    , C.clss_id
+			    , C.clss_div_cd
+			    , C.org_cd as handl_org_cd
+			    , C.org_nm
+			    , C.handl_org_nm
+			    , C.handl_org_abbr_nm
+			    , C.close_flag
+			    , C.clss_nm
+				, C.open_hist_cnt
+				, C.folder_title
+				, C.record_detl_type_nm
+				, C.org_abbr_nm
+				, C.oper_read_range_befnm
+				, C.oper_read_range_aftnm
+				, C.hist_qty
+			FROM (
+				SELECT a.record_id
+					, a.record_center_id
+					, a.resort_case
+					, a.org_opin
+					, a.org_opin_ymd
+					, a.resort_seq
+					, b.title
+					, b.sub_title
+					, a.take_yyyy
+					, a.case_type
+					, a.bef_resort_yyyy
+					, a.excel_dwn_flag
+					, a.center_sel_flag
+					, a.expert_oper_read_range_aft
+					, a.expert_opin
+					, a.expert_opin_reg_ymd
+					, a.expert_user_id
+					, a.rslt_reg_ymd
+					, a.confirm_cd
+					, a.take_mng_no
+					, a.rjct_flag
+					, a.resort_opin_cd
+					, trim(b.oper_read_range_cd) as oper_read_range_bef
+					, trim(a.org_oper_range_aft) as oper_read_range_aft
+					, b.org_cd
+					, b.creat_yyyy
+					, b.corct_title
+					, b.doc_no_nm
+					, a.resort_prog_state_cd
+					, b.folder_keep_state_cd
+					, (CASE WHEN A.resort_prog_state_cd = '03' THEN '미등록'
+				      	 	WHEN A.resort_prog_state_cd = '04' THEN '등록'
+				        	WHEN A.resort_prog_state_cd = '06' THEN '반영'
+				        	ELSE '진행중'
+				       END) resort_prog_state_nm
+				    , substr(b.creat_reg_dtime,0,12)||'00' creat_reg_dtime
+				    , b.reg_dtime
+				    , b.last_read_resort_yyyy
+				    , b.creat_reg_no
+				    , b.dtch_reg_no
+				    , b.creat_sys_cd
+				    , b.folder_reg_seq
+				    , b.ho_no
+				    , b.clss_id
+				    , b.clss_div_cd
+				    , a.org_cd as handl_org_cd
+				    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_nm
+				    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = a.org_cd) as handl_org_nm
+				    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = a.org_cd) as handl_org_abbr_nm
+				    , (SELECT close_flag FROM tb_stdept WHERE org_cd = b.org_cd) as close_flag
+				    , (CASE	WHEN b.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = b.clss_id)
+						    WHEN b.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = b.record_center_id and unit_cd = b.clss_id)
+					   END) as clss_nm
+					, (SELECT COUNT(*) FROM tb_rdopenhist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as open_hist_cnt
+					, (SELECT title FROM tb_rdfolder WHERE record_center_id = a.record_center_id AND folder_id = a.folder_id) as folder_title
+					, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = b.record_detl_type_cd) as record_detl_type_nm
+					, (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_abbr_nm
+					, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_cd = trim(a.org_oper_range_bef) AND com_type_cd = 'RD53') as oper_read_range_befnm
+					, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_cd = trim(a.org_oper_range_aft) AND com_type_cd = 'RD53') as oper_read_range_aftnm
+					, (SELECT COUNT(1) FROM tb_rdrangeresorthist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as hist_qty
+				FROM tb_rdrangeresortopin a, (
+					SELECT r.record_center_id
+						, r.record_id
+						, r.title
+						, r.record_detl_type_cd
+						, r.take_mng_no
+						, r.open_grade
+						, r.open_limit_part
+						, r.part_open_rsn
+						, r.reg_dtime
+						, r.last_read_resort_yyyy
+						, r.org_cd
+						, r.creat_reg_no
+						, r.dtch_reg_no
+						, r.creat_yyyy
+						, r.creat_reg_dtime
+						, r.clss_div_cd
+						, r.open_div_cd
+						, r.sub_title
+						, r.clss_id
+						, r.corct_title
+						, r.oper_read_range_cd
+						, f.creat_sys_cd
+						, f.folder_reg_seq
+						, f.ho_no
+						, f.folder_keep_state_cd
+						, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+				                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+				                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+				                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+				                ELSE doc_no
+				            END) as doc_no_nm
+				    FROM tb_rdrecord r, tb_rdfolder f
+				    WHERE r.record_center_id = #recordCenterId:VARCHAR#
+				    AND	r.record_center_id = f.record_center_id
+				    AND	r.folder_id = f.folder_id
+				) b
+				WHERE a.record_center_id = #recordCenterId:VARCHAR#
+				AND a.record_center_id = b.record_center_id
+				AND a.record_id = b.record_id
+				AND trim(a.resort_prog_state_cd) between '03' and '07'
+				<isNotEmpty prepend="AND" property="resortCase">
+					a.resort_case = #resortCase:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="resortYyyy">
+					a.resort_yyyy = #resortYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					a.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="handlOrgCd">
+					a.org_cd = #handlOrgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(b.clss_div_cd = #clssDivCd:VARCHAR# AND b.clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					(b.title LIKE #title:VARCHAR# OR b.sub_title LIKE #title:VARCHAR# OR b.corct_title LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyF">
+					b.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgOperRangeBef">
+					b.oper_read_range_cd = #orgOperRangeBef:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgOperRangeAft">
+					a.org_oper_range_aft = #orgOperRangeAft:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="resortProgStateCd">
+					a.resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="openDivCd">
+					B.open_div_cd = #openDivCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="excelFlag">
+					<isEqual prepend="AND"  property="excelFlag" compareValue="Y">
+						a.resort_prog_state_cd != '07'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="excelDwnFlag">
+					a.excel_dwn_flag = #excelDwnFlag:VARCHAR#
+				</isNotEmpty>
+				AND a.org_cd IS not null
+				ORDER BY a.record_id
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 접근범위재분류 의견등록 처리부서의견등록
+	 -->
+	<select id="countRangeResortHandlDeptOpinRegRecordPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM tb_rdrangeresortopin a, (
+			SELECT r.record_center_id
+				, r.record_id
+				, r.title
+				, r.record_detl_type_cd
+				, r.take_mng_no
+				, r.open_grade
+				, r.open_limit_part
+				, r.part_open_rsn
+				, r.reg_dtime
+				, r.last_read_resort_yyyy
+				, r.org_cd
+				, r.creat_reg_no
+				, r.dtch_reg_no
+				, r.creat_yyyy
+				, r.creat_reg_dtime
+				, r.clss_div_cd
+				, r.open_div_cd
+				, r.sub_title
+				, r.clss_id
+				, r.corct_title
+				, r.oper_read_range_cd
+				, f.creat_sys_cd
+				, f.folder_reg_seq
+				, f.ho_no
+				, f.folder_keep_state_cd
+				, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+		                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+		                ELSE doc_no
+		            END) as doc_no_nm
+		    FROM tb_rdrecord r, tb_rdfolder f
+		    WHERE r.record_center_id = #recordCenterId:VARCHAR#
+		    AND	r.record_center_id = f.record_center_id
+		    AND	r.folder_id = f.folder_id
+		) b
+		WHERE a.record_center_id = #recordCenterId:VARCHAR#
+		AND a.record_center_id = b.record_center_id
+		AND a.record_id = b.record_id
+		AND trim(a.resort_prog_state_cd) between '03' and '07'
+		<isNotEmpty prepend="AND" property="resortCase">
+			a.resort_case = #resortCase:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resortYyyy">
+			a.resort_yyyy = #resortYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgCd">
+			a.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="handlOrgCd">
+			a.org_cd = #handlOrgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+			(b.clss_div_cd = #clssDivCd:VARCHAR# AND b.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(b.title LIKE #title:VARCHAR# OR b.sub_title LIKE #title:VARCHAR# OR b.corct_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			b.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgOperRangeBef">
+			b.oper_read_range_cd = #orgOperRangeBef:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgOperRangeAft">
+			a.org_oper_range_aft = #orgOperRangeAft:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resortProgStateCd">
+			a.resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="openDivCd">
+			B.open_div_cd = #openDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="excelFlag">
+			<isEqual prepend="AND"  property="excelFlag" compareValue="Y">
+				a.resort_prog_state_cd != '07'
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="excelDwnFlag">
+			a.excel_dwn_flag = #excelDwnFlag:VARCHAR#
+		</isNotEmpty>
+		AND a.org_cd IS not null
+	</select>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 처리부서의견등록(List)
+	 -->
+	<select id="findRangeResortHandlDeptOpinRegRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeOpinRegRecord-result">
+		SELECT C.record_id
+			, C.record_center_id
+			, C.resort_case
+			, C.org_opin
+			, C.org_opin_ymd
+			, C.resort_seq
+			, C.title
+			, C.sub_title
+			, C.take_yyyy
+			, C.case_type
+			, C.bef_resort_yyyy
+			, C.excel_dwn_flag
+			, C.center_sel_flag
+			, C.expert_oper_read_range_aft
+			, C.expert_opin
+			, C.expert_opin_reg_ymd
+			, C.expert_user_id
+			, C.rslt_reg_ymd
+			, C.confirm_cd
+			, C.rjct_flag
+			, C.resort_opin_cd
+			, C.oper_read_range_bef
+			, C.oper_read_range_aft
+			, C.org_cd
+			, C.creat_yyyy
+			, C.corct_title
+			, C.doc_no_nm
+			, C.resort_prog_state_cd
+			, C.folder_keep_state_cd
+			, C.resort_prog_state_nm
+		    , C.creat_reg_dtime
+		    , C.take_mng_no
+		    , C.reg_dtime
+		    , C.last_read_resort_yyyy
+		    , C.creat_reg_no
+		    , C.dtch_reg_no
+		    , C.creat_sys_cd
+		    , C.folder_reg_seq
+		    , C.ho_no
+		    , C.clss_id
+		    , C.clss_div_cd
+		    , C.org_cd as handl_org_cd
+		    , C.org_nm
+		    , C.handl_org_nm
+		    , C.handl_org_abbr_nm
+		    , C.close_flag
+		    , C.clss_nm
+			, C.open_hist_cnt
+			, C.folder_title
+			, C.record_detl_type_nm
+			, C.org_abbr_nm
+			, C.oper_read_range_befnm
+			, C.oper_read_range_aftnm
+			, C.hist_qty
+		FROM (
+			SELECT a.record_id
+				, a.record_center_id
+				, a.resort_case
+				, a.org_opin
+				, a.org_opin_ymd
+				, a.resort_seq
+				, b.title
+				, b.sub_title
+				, a.take_yyyy
+				, a.case_type
+				, a.bef_resort_yyyy
+				, a.excel_dwn_flag
+				, a.center_sel_flag
+				, a.expert_oper_read_range_aft
+				, a.expert_opin
+				, a.expert_opin_reg_ymd
+				, a.expert_user_id
+				, a.rslt_reg_ymd
+				, a.confirm_cd
+				, a.take_mng_no
+				, a.rjct_flag
+				, a.resort_opin_cd
+				, trim(b.oper_read_range_cd) as oper_read_range_bef
+				, trim(a.org_oper_range_aft) as oper_read_range_aft
+				, b.org_cd
+				, b.creat_yyyy
+				, b.corct_title
+				, b.doc_no_nm
+				, a.resort_prog_state_cd
+				, b.folder_keep_state_cd
+				, (CASE WHEN A.resort_prog_state_cd = '03' THEN '미등록'
+			      	 	WHEN A.resort_prog_state_cd = '04' THEN '등록'
+			        	WHEN A.resort_prog_state_cd = '07' THEN '반영'
+			        	ELSE '진행중'
+			       END) resort_prog_state_nm
+			    , substr(b.creat_reg_dtime,0,12)||'00' creat_reg_dtime
+			    , b.reg_dtime
+			    , b.last_read_resort_yyyy
+			    , b.creat_reg_no
+			    , b.dtch_reg_no
+			    , b.creat_sys_cd
+			    , b.folder_reg_seq
+			    , b.ho_no
+			    , b.clss_id
+			    , b.clss_div_cd
+			    , a.org_cd as handl_org_cd
+			    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_nm
+			    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = a.org_cd) as handl_org_nm
+			    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = a.org_cd) as handl_org_abbr_nm
+			    , (SELECT close_flag FROM tb_stdept WHERE org_cd = b.org_cd) as close_flag
+			    , (CASE	WHEN b.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = b.clss_id)
+					    WHEN b.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = b.record_center_id and unit_cd = b.clss_id)
+				   END) as clss_nm
+				, (SELECT COUNT(*) FROM tb_rdopenhist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as open_hist_cnt
+				, (SELECT title FROM tb_rdfolder WHERE record_center_id = a.record_center_id AND folder_id = a.folder_id) as folder_title
+				, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = b.record_detl_type_cd) as record_detl_type_nm
+				, (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_abbr_nm
+				, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_cd = trim(a.org_oper_range_bef) AND com_type_cd = 'RD53') as oper_read_range_befnm
+				, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_cd = trim(a.org_oper_range_aft) AND com_type_cd = 'RD53') as oper_read_range_aftnm
+				, (SELECT COUNT(1) FROM tb_rdrangeresorthist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as hist_qty
+			FROM tb_rdrangeresortopin a, (
+				SELECT r.record_center_id
+					, r.record_id
+					, r.title
+					, r.record_detl_type_cd
+					, r.take_mng_no
+					, r.open_grade
+					, r.open_limit_part
+					, r.part_open_rsn
+					, r.reg_dtime
+					, r.last_read_resort_yyyy
+					, r.org_cd
+					, r.creat_reg_no
+					, r.dtch_reg_no
+					, r.creat_yyyy
+					, r.creat_reg_dtime
+					, r.clss_div_cd
+					, r.open_div_cd
+					, r.sub_title
+					, r.clss_id
+					, r.corct_title
+					, r.oper_read_range_cd
+					, f.creat_sys_cd
+					, f.folder_reg_seq
+					, f.ho_no
+					, f.folder_keep_state_cd
+					, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+			                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+			                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+			                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+			                ELSE doc_no
+			            END) as doc_no_nm
+			    FROM tb_rdrecord r, tb_rdfolder f
+			    WHERE r.record_center_id = #recordCenterId:VARCHAR#
+			    AND	r.record_center_id = f.record_center_id
+			    AND	r.folder_id = f.folder_id
+			) b
+			WHERE a.record_center_id = #recordCenterId:VARCHAR#
+			AND a.record_center_id = b.record_center_id
+			AND a.record_id = b.record_id
+			AND trim(a.resort_prog_state_cd) between '03' and '07'
+			<isNotEmpty prepend="AND" property="resortCase">
+				a.resort_case = #resortCase:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="resortYyyy">
+				a.resort_yyyy = #resortYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				a.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="handlOrgCd">
+				a.org_cd = #handlOrgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="clssId">
+				(b.clss_div_cd = #clssDivCd:VARCHAR# AND b.clss_id = #clssId:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="title">
+				(b.title LIKE #title:VARCHAR# OR b.sub_title LIKE #title:VARCHAR# OR b.corct_title LIKE #title:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyF">
+				b.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgOperRangeBef">
+				b.oper_read_range_cd = #orgOperRangeBef:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgOperRangeAft">
+				a.org_oper_range_aft = #orgOperRangeAft:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="resortProgStateCd">
+				a.resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="openDivCd">
+				B.open_div_cd = #openDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="excelFlag">
+				<isEqual prepend="AND"  property="excelFlag" compareValue="Y">
+					a.resort_prog_state_cd != '07'
+				</isEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="excelDwnFlag">
+				a.excel_dwn_flag = #excelDwnFlag:VARCHAR#
+			</isNotEmpty>
+			AND a.org_cd IS not null
+			ORDER BY a.record_id
+		) C
+	</select>
+	<!-- 접근범위재분류 의견등록 등록된 처리부서의견 조회  -->
+	<select id="findRangeResortOrgOpinRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeOpinRegRecord-result">
+		SELECT a.record_id
+			, a.record_center_id
+			, a.resort_case
+			, a.org_opin
+			, a.org_opin_ymd
+			, a.resort_seq
+			, b.title
+			, b.sub_title
+			, a.take_yyyy
+			, a.case_type
+			, a.bef_resort_yyyy
+			, a.excel_dwn_flag
+			, a.center_sel_flag
+			, a.expert_oper_read_range_aft
+			, a.expert_opin
+			, a.expert_opin_reg_ymd
+			, a.expert_user_id
+			, a.rslt_reg_ymd
+			, a.confirm_cd
+			, a.take_mng_no
+			, a.rjct_flag
+			, a.resort_opin_cd
+			, trim(a.org_oper_range_bef) as oper_read_range_bef
+			, trim(a.org_oper_range_aft) as oper_read_range_aft
+			, b.org_cd
+			, b.creat_yyyy
+			, b.corct_title
+			, b.doc_no_nm
+			, a.resort_prog_state_cd
+			, b.folder_keep_state_cd
+			, (CASE WHEN A.resort_prog_state_cd = '04' THEN '미등록'
+		        	WHEN A.resort_prog_state_cd = '05' THEN '등록'
+		        	WHEN A.resort_prog_state_cd = '07' THEN '반영'
+		        	ELSE '진행중'
+		       END) resort_prog_state_nm
+		    , substr(b.creat_reg_dtime,0,12)||'00' creat_reg_dtime
+		    , b.take_mng_no
+		    , b.reg_dtime
+		    , b.last_read_resort_yyyy
+		    , b.creat_reg_no
+		    , b.dtch_reg_no
+		    , b.creat_sys_cd
+		    , b.folder_reg_seq
+		    , b.ho_no
+		    , b.clss_id
+		    , b.clss_div_cd
+		    , a.org_cd as handl_org_cd
+		    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_nm
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_abbr_nm
+		    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = a.org_cd) as handl_org_nm
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = a.org_cd) as handl_org_abbr_nm
+		    , (SELECT close_flag FROM tb_stdept WHERE org_cd = b.org_cd) as close_flag
+		    , (case when b.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = b.clss_id)
+		            when b.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = b.record_center_id and unit_cd = b.clss_id)
+		       end) as clss_nm
+		    , (SELECT COUNT(*) FROM tb_rdopenhist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as open_hist_cnt
+		    , (SELECT title FROM tb_rdfolder WHERE record_center_id = a.record_center_id AND folder_id = a.folder_id) as folder_title
+		    , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = b.record_detl_type_cd) as record_detl_type_nm
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_abbr_nm
+		    , (select com_cd_nm from tb_zzcomcd where com_cd = trim(a.org_oper_range_bef) and com_type_cd = 'RD53') as oper_read_range_befnm
+		    , (select com_cd_nm from tb_zzcomcd where com_cd = trim(a.org_oper_range_aft) and com_type_cd = 'RD53') as oper_read_range_aftnm
+		    , (SELECT COUNT(1) FROM tb_rdrangeresorthist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as hist_qty
+		FROM tb_rdrangeresortopin a, (
+			SELECT r.record_center_id
+				, r.record_id
+				, r.title
+				, r.record_detl_type_cd
+				, r.take_mng_no
+				, r.open_grade
+				, r.open_limit_part
+				, r.part_open_rsn
+				, r.reg_dtime
+				, r.last_read_resort_yyyy
+				, r.org_cd
+				, r.creat_reg_no
+				, r.dtch_reg_no
+				, r.creat_yyyy
+				, r.creat_reg_dtime
+				, r.clss_div_cd
+				, r.open_div_cd
+				, r.sub_title
+				, r.clss_id
+				, r.corct_title
+				, f.creat_sys_cd
+				, f.folder_reg_seq
+				, f.ho_no
+				, f.folder_keep_state_cd
+				, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+		                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+		                ELSE doc_no
+		           END) as doc_no_nm
+		   FROM tb_rdrecord r, tb_rdfolder f
+		   WHERE r.record_center_id = #recordCenterId:VARCHAR#
+		   AND r.record_center_id = f.record_center_id
+		   AND r.folder_id = f.folder_id
+		) b
+		WHERE a.record_center_id = #recordCenterId:VARCHAR#
+		AND a.record_center_id = b.record_center_id
+		AND	a.record_id = b.record_id
+		AND a.record_id    = #recordId:VARCHAR#
+		AND a.resort_seq   = #resortSeq:VARCHAR#
+	</select>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 전문요원의견등록
+	 -->
+	<select id="findRangeResortExpertOpinRegRecordPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeOpinRegRecord-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT a.record_id
+					, a.record_center_id
+					, a.resort_case
+					, a.org_opin
+					, a.org_opin_ymd
+					, a.resort_seq
+					, b.title
+					, b.sub_title
+					, a.take_yyyy
+					, a.case_type
+					, a.bef_resort_yyyy
+					, a.excel_dwn_flag
+					, a.center_sel_flag
+					, a.expert_oper_read_range_aft
+					, a.expert_opin
+					, a.expert_opin_reg_ymd
+					, a.expert_user_id
+					, a.rslt_reg_ymd
+					, a.confirm_cd
+					, a.rjct_flag
+					, a.resort_opin_cd
+					, trim(a.org_oper_range_bef) as oper_read_range_bef, trim(a.org_oper_range_aft) as oper_read_range_aft
+					, b.org_cd
+					, b.creat_yyyy
+					, b.corct_title
+					, b.doc_no_nm
+					, a.resort_prog_state_cd
+					, b.folder_keep_state_cd
+					, (CASE WHEN A.resort_prog_state_cd = '04' THEN '미등록'
+				            WHEN A.resort_prog_state_cd = '05' THEN '등록'
+				        	WHEN A.resort_prog_state_cd = '07' THEN '반영'
+				        	ELSE '진행중'
+				       END) resort_prog_state_nm
+				    , substr(b.creat_reg_dtime,0,12)||'00' creat_reg_dtime
+				    , b.take_mng_no
+				    , b.reg_dtime
+				    , b.last_read_resort_yyyy
+				    , b.creat_reg_no
+				    , b.dtch_reg_no
+				    , b.creat_sys_cd
+				    , b.folder_reg_seq
+				    , b.ho_no
+				    , b.clss_id
+				    , b.clss_div_cd
+				    , trim(a.org_cd) as handl_org_cd
+				    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = trim(b.org_cd)) as org_nm
+				    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = trim(b.org_cd)) as org_abbr_nm
+				    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = trim(a.org_cd)) as handl_org_nm
+				    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = trim(a.org_cd)) as handl_org_abbr_nm
+				    , (SELECT close_flag FROM tb_stdept WHERE org_cd = trim(b.org_cd)) as close_flag
+				    , (case when b.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = b.clss_id)
+				            when b.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = b.record_center_id and unit_cd = b.clss_id)
+				       end) as clss_nm
+				    , (SELECT COUNT(*) FROM tb_rdopenhist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as open_hist_cnt
+				    , (SELECT title FROM tb_rdfolder WHERE record_center_id = a.record_center_id AND folder_id = a.folder_id) as folder_title
+				    , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = b.record_detl_type_cd) as record_detl_type_nm
+				    , (select com_cd_nm from tb_zzcomcd where com_cd = trim(a.org_oper_range_bef) and com_type_cd = 'RD53') as oper_read_range_befnm
+				    , (select com_cd_nm from tb_zzcomcd where com_cd = trim(a.org_oper_range_aft) and com_type_cd = 'RD53') as oper_read_range_aftnm
+				    , (SELECT COUNT(1) FROM tb_rdrangeresorthist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as hist_qty
+				FROM tb_rdrangeresortopin a 
+					, (
+					SELECT r.record_center_id
+						, r.record_id
+						, r.title
+						, r.record_detl_type_cd
+						, r.take_mng_no
+						, r.open_grade
+						, r.open_limit_part
+						, r.part_open_rsn
+						, r.reg_dtime
+						, r.last_read_resort_yyyy
+						, r.org_cd
+						, r.creat_reg_no
+						, r.dtch_reg_no
+						, r.creat_yyyy
+						, r.creat_reg_dtime
+						, r.clss_div_cd
+						, r.open_div_cd
+						, r.sub_title
+						, r.clss_id
+						, r.corct_title
+						, f.creat_sys_cd
+						, f.folder_reg_seq
+						, f.ho_no
+						, f.folder_keep_state_cd
+						, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+				                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+				                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+				                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+				                ELSE doc_no
+				           END) as doc_no_nm
+					FROM tb_rdrecord r, tb_rdfolder f
+				    WHERE r.record_center_id = #recordCenterId:VARCHAR#
+				    AND	  r.record_center_id = f.record_center_id
+				    AND	  r.folder_id = f.folder_id
+				    ) b
+				WHERE	a.record_center_id = #recordCenterId:VARCHAR#
+				AND		a.record_center_id = b.record_center_id
+				AND 	a.record_id = b.record_id
+				<isNotEmpty prepend="AND" property="resortCase">
+					trim(a.resort_Case) = #resortCase:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					a.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="handlOrgCd">
+					trim(a.org_cd) = #handlOrgCd:VARCHAR#
+				</isNotEmpty>
+				<isEmpty prepend="AND" property="handlOrgCd">
+					a.org_cd is null
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(b.clss_div_cd = #clssDivCd:VARCHAR# AND b.clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					(b.title LIKE #title:VARCHAR# OR b.sub_title LIKE #title:VARCHAR# OR b.corct_title LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyF">
+					b.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgOperRangeBef">
+					a.ORG_OPER_RANGE_BEF = #orgOperRangeBef:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgOperRangeAft">
+					a.ORG_OPER_RANGE_AFT = #orgOperRangeAft:VARCHAR#
+				</isNotEmpty>
+				<isEmpty prepend="AND" property="resortProgStateCd">
+					a.resort_prog_state_cd in ('03','04', '05', '07')
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="resortProgStateCd">
+					a.resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="openDivCd">
+					B.open_Div_Cd = #openDivCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="excelFlag">
+					<isEqual prepend="AND"  property="excelFlag" compareValue="Y">
+						a.resort_prog_state_cd != '07'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="excelDwnFlag">
+					a.excel_dwn_flag = #excelDwnFlag:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="resortYyyy">
+					a.resort_yyyy = #resortYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="resortCase">
+					a.resort_case = #resortCase#
+				</isNotEmpty>
+				ORDER BY a.record_id
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 전문요원의견등록
+	 -->
+	<select id="countRangeResortExpertOpinRegRecordPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultClass="java.lang.Long">
+		SELECT COUNT(*)
+		FROM tb_rdrangeresortopin a 
+			, (
+			SELECT r.record_center_id
+				, r.record_id
+				, r.title
+				, r.record_detl_type_cd
+				, r.take_mng_no
+				, r.open_grade
+				, r.open_limit_part
+				, r.part_open_rsn
+				, r.reg_dtime
+				, r.last_read_resort_yyyy
+				, r.org_cd
+				, r.creat_reg_no
+				, r.dtch_reg_no
+				, r.creat_yyyy
+				, r.creat_reg_dtime
+				, r.clss_div_cd
+				, r.open_div_cd
+				, r.sub_title
+				, r.clss_id
+				, r.corct_title
+				, f.creat_sys_cd
+				, f.folder_reg_seq
+				, f.ho_no
+				, f.folder_keep_state_cd
+				, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+		                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+		                ELSE doc_no
+		           END) as doc_no_nm
+			FROM tb_rdrecord r, tb_rdfolder f
+		    WHERE r.record_center_id = #recordCenterId:VARCHAR#
+		    AND	  r.record_center_id = f.record_center_id
+		    AND	  r.folder_id = f.folder_id
+		    ) b
+		WHERE	a.record_center_id = #recordCenterId:VARCHAR#
+		AND		a.record_center_id = b.record_center_id
+		AND 	a.record_id = b.record_id
+		<isNotEmpty prepend="AND" property="resortCase">
+			trim(a.resort_Case) = #resortCase:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgCd">
+			a.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="handlOrgCd">
+			trim(a.org_cd) = #handlOrgCd:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="handlOrgCd">
+			a.org_cd is null
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+			(b.clss_div_cd = #clssDivCd:VARCHAR# AND b.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(b.title LIKE #title:VARCHAR# OR b.sub_title LIKE #title:VARCHAR# OR b.corct_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			b.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgOperRangeBef">
+			a.ORG_OPER_RANGE_BEF = #orgOperRangeBef:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgOperRangeAft">
+			a.ORG_OPER_RANGE_AFT = #orgOperRangeAft:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="resortProgStateCd">
+			a.resort_prog_state_cd in ('03','04', '05', '07')
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="resortProgStateCd">
+			a.resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="openDivCd">
+			B.open_Div_Cd = #openDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="excelFlag">
+			<isEqual prepend="AND"  property="excelFlag" compareValue="Y">
+				a.resort_prog_state_cd != '07'
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="excelDwnFlag">
+			a.excel_dwn_flag = #excelDwnFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resortYyyy">
+			a.resort_yyyy = #resortYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resortCase">
+			a.resort_case = #resortCase#
+		</isNotEmpty>
+	</select>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 전문요원의견등록(List)
+	 -->
+	<select id="findRangeResortExpertOpinRegRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeOpinRegRecord-result">
+		SELECT a.record_id
+			, a.record_center_id
+			, a.resort_case
+			, a.org_opin
+			, a.org_opin_ymd
+			, a.resort_seq
+			, b.title
+			, b.sub_title
+			, a.take_yyyy
+			, a.case_type
+			, a.bef_resort_yyyy
+			, a.excel_dwn_flag
+			, a.center_sel_flag
+			, a.expert_oper_read_range_aft
+			, a.expert_opin
+			, a.expert_opin_reg_ymd
+			, a.expert_user_id
+			, a.rslt_reg_ymd
+			, a.confirm_cd
+			, a.take_mng_no
+			, a.rjct_flag
+			, a.resort_opin_cd
+			, trim(a.org_oper_range_bef) as oper_read_range_bef, trim(a.org_oper_range_aft) as oper_read_range_aft
+			, b.org_cd
+			, b.creat_yyyy
+			, b.corct_title
+			, b.doc_no_nm
+			, a.resort_prog_state_cd
+			, b.folder_keep_state_cd
+			, (CASE WHEN A.resort_prog_state_cd = '04' THEN '미등록'
+		            WHEN A.resort_prog_state_cd = '05' THEN '등록'
+		        	WHEN A.resort_prog_state_cd = '07' THEN '반영'
+		        	ELSE '진행중'
+		       END) resort_prog_state_nm
+		    , substr(b.creat_reg_dtime,0,12)||'00' creat_reg_dtime
+		    , b.take_mng_no
+		    , b.reg_dtime
+		    , b.last_read_resort_yyyy
+		    , b.creat_reg_no
+		    , b.dtch_reg_no
+		    , b.creat_sys_cd
+		    , b.folder_reg_seq
+		    , b.ho_no
+		    , b.clss_id
+		    , b.clss_div_cd
+		    , trim(a.org_cd) as handl_org_cd
+		    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = trim(b.org_cd)) as org_nm
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = trim(b.org_cd)) as org_abbr_nm
+		    , (SELECT dept_nm FROM tb_stdept WHERE org_cd = trim(a.org_cd)) as handl_org_nm
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = trim(a.org_cd)) as handl_org_abbr_nm
+		    , (SELECT close_flag FROM tb_stdept WHERE org_cd = trim(b.org_cd)) as close_flag
+		    , (case when b.clss_div_cd = '1' then (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = b.clss_id)
+		            when b.clss_div_cd = '2' then (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = b.record_center_id and unit_cd = b.clss_id)
+		       end) as clss_nm
+		    , (SELECT COUNT(*) FROM tb_rdopenhist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as open_hist_cnt
+		    , (SELECT title FROM tb_rdfolder WHERE record_center_id = a.record_center_id AND folder_id = a.folder_id) as folder_title
+		    , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = b.record_detl_type_cd) as record_detl_type_nm
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = b.org_cd) as org_abbr_nm
+		    , (select com_cd_nm from tb_zzcomcd where com_cd = trim(a.org_oper_range_bef) and com_type_cd = 'RD53') as oper_read_range_befnm
+		    , (select com_cd_nm from tb_zzcomcd where com_cd = trim(a.org_oper_range_aft) and com_type_cd = 'RD53') as oper_read_range_aftnm
+		    , (SELECT COUNT(1) FROM tb_rdrangeresorthist WHERE record_center_id = a.record_center_id AND record_id = a.record_id) as hist_qty
+		FROM tb_rdrangeresortopin a 
+			, (
+			SELECT r.record_center_id
+				, r.record_id
+				, r.title
+				, r.record_detl_type_cd
+				, r.take_mng_no
+				, r.open_grade
+				, r.open_limit_part
+				, r.part_open_rsn
+				, r.reg_dtime
+				, r.last_read_resort_yyyy
+				, r.org_cd
+				, r.creat_reg_no
+				, r.dtch_reg_no
+				, r.creat_yyyy
+				, r.creat_reg_dtime
+				, r.clss_div_cd
+				, r.open_div_cd
+				, r.sub_title
+				, r.clss_id
+				, r.corct_title
+				, f.creat_sys_cd
+				, f.folder_reg_seq
+				, f.ho_no
+				, f.folder_keep_state_cd
+				, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))
+		                WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)
+		                ELSE doc_no
+		           END) as doc_no_nm
+			FROM tb_rdrecord r, tb_rdfolder f
+		    WHERE r.record_center_id = #recordCenterId:VARCHAR#
+		    AND	  r.record_center_id = f.record_center_id
+		    AND	  r.folder_id = f.folder_id
+		    ) b
+		WHERE	a.record_center_id = #recordCenterId:VARCHAR#
+		AND		a.record_center_id = b.record_center_id
+		AND 	a.record_id = b.record_id
+		<isNotEmpty prepend="AND" property="resortCase">
+			trim(a.resort_Case) = #resortCase:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgCd">
+			b.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="handlOrgCd">
+			trim(a.org_cd) = #handlOrgCd:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="handlOrgCd">
+			a.org_cd is null
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+			(b.clss_div_cd = #clssDivCd:VARCHAR# AND b.clss_id = #clssId:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			(b.title LIKE #title:VARCHAR# OR b.sub_title LIKE #title:VARCHAR# OR b.corct_title LIKE #title:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyF">
+			b.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgOperRangeBef">
+			a.ORG_OPER_RANGE_BEF = #orgOperRangeBef:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgOperRangeAft">
+			a.ORG_OPER_RANGE_AFT = #orgOperRangeAft:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="resortProgStateCd">
+			a.resort_prog_state_cd in ('03','04', '05', '07')
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="resortProgStateCd">
+			a.resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="openDivCd">
+			B.open_Div_Cd = #openDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="excelFlag">
+			<isEqual prepend="AND"  property="excelFlag" compareValue="Y">
+				a.resort_prog_state_cd != '07'
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="excelDwnFlag">
+			a.excel_dwn_flag = #excelDwnFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resortYyyy">
+			a.resort_yyyy = #resortYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="resortCase">
+			a.resort_case = #resortCase#
+		</isNotEmpty>
+		ORDER BY a.record_id
+	</select>
+	
+	<!-- 접근범위재분류 의견등록 등록된 전문요원의견 조회 -->
+	<resultMap id="rangeRangeExpOpinRecord-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		<result property="expertOpin" 		        column="expert_Opin"/>
+		<result property="expertOpinRegYmd" 		column="expert_Opin_Reg_Ymd"/>
+		<result property="expertOperReadRangeAftNm" column="oper_read_range_aftnm"/>
+		<result property="expertOperReadRangeAft"   column="expert_Oper_Read_Range_Aft"/>
+		<result property="confirmCd"				column="confirm_cd"/>
+	</resultMap>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 등록된 전문요원의견 조회
+	 -->
+	<select id="findRangeResortExpOpinRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeExpOpinRecord-result">
+		SELECT A.expert_Opin_Reg_Ymd
+			, trim(A.expert_Oper_Read_Range_Aft) as expert_Oper_Read_Range_Aft
+			, B.com_cd_nm AS oper_read_range_aftnm
+       		, A.expert_Opin
+       		, A.confirm_cd
+		FROM tb_rdrangeresortopin A join tb_zzcomcd B on B.com_cd = trim(A.expert_Oper_Read_Range_Aft) AND  B.com_type_cd = 'RD53'
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.record_id = #recordId:VARCHAR#
+		AND A.resort_seq = #resortSeq:VARCHAR#
+	</select>
+	
+	
+	<!-- 접근범위재분류 의견등록 의견일괄등록 목록 -->
+	<resultMap id="rangeRangeOpinBatchTrgtRegCurState-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		<result property="recordCenterId" 			column="record_center_id"		nullValue="" />
+		<result property="orgCd" 		    		column="org_cd"					nullValue="" />
+		<result property="orgNm" 		    		column="org_nm"					nullValue="" />
+		<result property="orgAbbrNm" 				column="org_abbr_nm"			nullValue="" />
+		<result property="totCnt" 		    		column="totcnt"					nullValue="0" />
+		<result property="resortProgState03" 		column="resort_prog_state03"	nullValue="0" />
+		<result property="resortProgState04" 		column="resort_prog_state04"	nullValue="0" />
+		<result property="resortProgState05" 		column="resort_prog_state05"	nullValue="0" />
+		<result property="resortProgState07" 		column="resort_prog_state07"	nullValue="0" />
+		<result property="dwnCnt" 					column="dwn_cnt"				nullValue="0" />
+		<result property="deptCnt" 					column="dept_cnt"				nullValue="0" />
+	</resultMap>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 의견일괄등록 목록
+	 -->
+	<select id="findRangeResortOpinBatchRegPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeOpinBatchTrgtRegCurState-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT RECORD_CENTER_ID
+					, TRIM(ORG_CD) AS ORG_CD
+					, (SELECT Z.ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.ORG_CD) ORG_NM
+					, (SELECT Z.ORG_ABBR_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.ORG_CD) ORG_ABBR_NM
+					, COUNT(*) AS TOTCNT
+					, SUM(RESORT_PROG_STATE03) RESORT_PROG_STATE03
+					, SUM(RESORT_PROG_STATE04) RESORT_PROG_STATE04
+					, SUM(RESORT_PROG_STATE05) RESORT_PROG_STATE05
+					, SUM(RESORT_PROG_STATE07) RESORT_PROG_STATE07
+					, SUM(DWN_CNT) DWN_CNT
+					, SUM(DEPT_CNT) DEPT_CNT
+				FROM (
+					SELECT A.RECORD_CENTER_ID
+						, A.ORG_CD
+						, CASE WHEN RESORT_PROG_STATE_CD = '03' THEN 1
+				               ELSE 0
+				          END AS RESORT_PROG_STATE03
+				        , CASE WHEN RESORT_PROG_STATE_CD BETWEEN '04' AND '05' AND A.ORG_CD IS NOT NULL THEN 1
+				               ELSE 0
+				          END AS RESORT_PROG_STATE04
+				        , CASE WHEN RESORT_PROG_STATE_CD ='05' THEN 1
+				               ELSE 0
+				          END AS RESORT_PROG_STATE05
+				        , CASE WHEN RESORT_PROG_STATE_CD ='06' THEN 1
+				               ELSE 0
+				          END AS RESORT_PROG_STATE07
+				        , CASE WHEN RESORT_PROG_STATE_CD IN ('03','04','05','06') AND EXCEL_DWN_FLAG = '1' THEN 1
+				               ELSE 0
+				          END AS DWN_CNT
+				        , CASE WHEN RESORT_PROG_STATE_CD = '03' THEN 1
+				               ELSE 0
+				          END AS DEPT_CNT
+				    FROM TB_RDRANGERESORTOPIN A, TB_RDRECORD B
+				    WHERE A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+				    AND A.RECORD_ID = B.RECORD_ID
+				    AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				    AND A.RESORT_PROG_STATE_CD BETWEEN '03' AND '06'
+				    <isNotEmpty prepend="AND" property="resortCase">
+				        trim(a.resort_Case) = #resortCase:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="resortYyyy">
+				        a.resort_yyyy = #resortYyyy:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="handlOrgCd">
+				        a.org_cd = #handlOrgCd:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="orgCd">
+				        a.org_cd = #orgCd:VARCHAR#
+				    </isNotEmpty>
+				) A
+				GROUP BY RECORD_CENTER_ID, ORG_CD
+				ORDER BY RECORD_CENTER_ID, ORG_CD
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 접근범위재분류 의견등록 의견일괄등록 목록
+	 -->
+	<select id="countRangeResortOpinBatchRegPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultClass="java.lang.Long">
+		SELECT count(*)
+		FROM (
+			select record_center_id
+				, org_cd
+				, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.org_cd) org_nm
+				, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.org_cd) org_abbr_nm
+				, totcnt
+				, resort_prog_state03
+				, resort_prog_state04
+				, resort_prog_state05
+			from (
+				SELECT A.record_center_id
+					, A.org_cd
+					, COUNT(1) AS totCnt
+					, (
+						SELECT COUNT(1)
+					  	FROM tb_rdrangeresortopin x, tb_rdrecord y
+					  	WHERE x.record_center_id   = #recordCenterId:VARCHAR#
+					  	AND x.record_id            = y.record_id
+					  	AND y.record_center_id     = #recordCenterId:VARCHAR#
+					  	AND x.resort_prog_state_cd ='03'
+					  	AND x.org_cd               =a.org_cd
+					    <isNotEmpty prepend="AND" property="resortCase">
+							trim(x.resort_Case) = #resortCase:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="resortYyyy">
+							x.resort_yyyy = #resortYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="handlOrgCd">
+							x.org_cd = #handlOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							x.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>) AS resort_prog_state03
+					, (
+						SELECT COUNT(1)
+					 	FROM tb_rdrangeresortopin x, tb_rdrecord y
+					  	WHERE x.record_center_id   = #recordCenterId:VARCHAR#
+					  	AND x.record_id            = y.record_id
+					  	AND y.record_center_id     = #recordCenterId:VARCHAR#
+				      	AND x.resort_prog_state_cd  ='04'
+					  	AND x.org_cd               =a.org_cd
+					  	<isNotEmpty prepend="AND" property="resortCase">
+							trim(x.resort_Case) = #resortCase:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="resortYyyy">
+							x.resort_yyyy = #resortYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="handlOrgCd">
+							x.org_cd = #handlOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							x.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>) AS resort_prog_state04<!--처리부서의견등록 -->
+					, (
+						SELECT COUNT(1)
+					  	FROM tb_rdrangeresortopin x, tb_rdrecord y
+					  	WHERE x.record_center_id   = #recordCenterId:VARCHAR#
+					  	AND x.record_id            = y.record_id
+					  	AND y.record_center_id     = #recordCenterId:VARCHAR#
+					  	AND x.resort_prog_state_cd ='05'
+					  	AND x.org_cd               =a.org_cd
+					  	<isNotEmpty prepend="AND" property="resortCase">
+							trim(x.resort_Case) = #resortCase:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="resortYyyy">
+							x.resort_yyyy = #resortYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="handlOrgCd">
+							x.org_cd = #handlOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							x.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>) AS resort_prog_state05<!-- 전문요원의견등록  -->
+					, (
+						SELECT COUNT(1)
+					  	FROM tb_rdrangeresortopin x, tb_rdrecord y
+					  	WHERE x.record_center_id   = #recordCenterId:VARCHAR#
+					  	AND x.record_id            = y.record_id
+					  	AND y.record_center_id     = #recordCenterId:VARCHAR#
+					  	AND x.resort_prog_state_cd ='07'
+					  	AND x.org_cd               =a.org_cd
+					  	<isNotEmpty prepend="AND" property="resortCase">
+							trim(x.resort_Case) = #resortCase:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="resortYyyy">
+							x.resort_yyyy = #resortYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="handlOrgCd">
+							x.org_cd = #handlOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							x.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>) AS resort_prog_state07<!-- 결과반영  -->
+					, (
+						SELECT COUNT(1)
+					  	FROM tb_rdrangeresortopin x, tb_rdrecord y
+					  	WHERE x.record_center_id   = #recordCenterId:VARCHAR#
+					  	AND x.record_id            = y.record_id
+					  	AND y.record_center_id     = #recordCenterId:VARCHAR#
+					  	AND x.resort_prog_state_cd in ('03','04','05','06')
+					  	AND x.excel_dwn_flag = '1'
+					  	AND x.org_cd               =a.org_cd
+					  	<isNotEmpty prepend="AND" property="resortCase">
+							trim(x.resort_Case) = #resortCase:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="resortYyyy">
+							x.resort_yyyy = #resortYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="handlOrgCd">
+							x.org_cd = #handlOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							x.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>)as dwn_cnt<!-- 다운로드받은 대상 수 -->
+					, (
+						SELECT COUNT(1)
+					  	FROM tb_rdrangeresortopin x, tb_rdrecord y
+					  	WHERE x.record_center_id   = #recordCenterId:VARCHAR#
+					  	AND x.record_id            = y.record_id
+					  	AND y.record_center_id     = #recordCenterId:VARCHAR#
+					  	AND x.resort_prog_state_cd = '03'
+					  	AND x.org_cd               =a.org_cd
+					  	<isNotEmpty prepend="AND" property="resortCase">
+							trim(x.resort_Case) = #resortCase:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="resortYyyy">
+							x.resort_yyyy = #resortYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="handlOrgCd">
+							x.org_cd = #handlOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							x.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>)as dept_cnt
+				FROM tb_rdrangeresortopin A, tb_rdrecord b
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND A.record_id          = b.record_id
+				AND b.record_center_id   = #recordCenterId:VARCHAR#
+				AND A.resort_prog_state_cd BETWEEN '03' AND '05'
+				<isNotEmpty prepend="AND" property="resortCase">
+					trim(a.resort_Case) = #resortCase:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="resortYyyy">
+					a.resort_yyyy = #resortYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="handlOrgCd">
+					a.org_cd = #handlOrgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					a.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				GROUP BY A.record_center_id, A.org_cd
+			)d
+		)
+	</select>
+	
+	
+	<!-- 
+		UPDATE - 접근범위재분류 의견등록 일괄등록 처리부서의견등록
+	 -->
+	 <update id="updateRangeResortHandlDeptOpinRegRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+	 UPDATE tb_rdrangeresortopin
+	 SET resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+	     ,org_opin = #orgOpin:VARCHAR#
+	     ,org_opin_ymd = #orgOpinYmd:VARCHAR#
+	     ,org_oper_range_aft = #orgOperRangeAft:VARCHAR#
+	     ,org_userid = #recordChrgrId#
+  	 WHERE  record_center_id = #recordCenterId:VARCHAR#
+  	 AND  record_id = #recordId:VARCHAR#
+     AND  resort_seq = #resortSeq:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 접근범위재분류 의견등록 처리부서의견등록
+	 -->
+	<update id="updateRangeResortHandlDeptOpinRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		UPDATE TB_RDRANGERESORTOPIN
+		SET RESORT_PROG_STATE_CD = #resortProgStateCd:VARCHAR#
+			<isEqual property="resortProgStateCd" compareValue="04">
+     			,ORG_OPIN = #orgOpin#
+     			,ORG_OPIN_YMD = to_char(sysdate, 'yyyymmdd')
+     			,ORG_OPER_RANGE_AFT = #orgOperRangeAft#
+     			,ORG_USERID = #recordChrgrId#
+     			,CONFIRM_CD = '1'
+     			,RJCT_FLAG = '0'
+    		</isEqual>
+    		<isEqual property="resortProgStateCd" compareValue="02">
+    			,ORG_OPIN = ''
+     			,ORG_OPIN_YMD = '00000000'
+     			,ORG_OPER_RANGE_AFT = ''
+     			,ORG_USERID = ''
+    			,ORG_CD = ''
+    			,RJCT_FLAG = '1'
+    		</isEqual>
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND record_id = #recordId:VARCHAR#
+		AND resort_seq = #resortSeq:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 접근범위재분류 의견등록 전문요원의견등록
+	 -->
+	<update id="updateRangeResortExpertOpinRegRecord" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		UPDATE tb_rdrangeresortopin
+		SET resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+	    	,expert_opin = #expertOpin:VARCHAR#
+	        ,expert_opin_reg_ymd = #expertOpinRegYmd:VARCHAR#
+	        ,expert_oper_read_range_aft = #expertOperReadRangeAft#
+	        ,expert_user_id = #recordChrgrId:VARCHAR#
+	        ,confirm_cd = '2'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+  	    AND record_id = #recordId:VARCHAR#
+        AND resort_seq = #resortSeq:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 접근범위재분류 의견등록 기록물건 상태값 update
+	 -->
+ 	<update id="updateRangeResortRecordOpinRegState" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		UPDATE TB_RDRECORD
+	    SET READ_RANGERESORT_PROG_STATE_CD = #readRangeResortProgStateCd:VARCHAR#
+	    WHERE RECORD_ID = #recordId:VARCHAR#
+	    AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		UPDATE - 접근범위재분류 의견등록 excelDwnFalg update
+	 -->
+	<update id="updateRangeResortExcelDwnFlag" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		UPDATE tb_rdrangeresortopin
+		SET excel_dwn_flag = #excelDwnFlag#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND record_id = #recordId:VARCHAR#
+		AND resort_seq = #resortSeq#
+	</update>
+	
+	
+	<!-- 접근범위재분류 의견등록 전문요원의견등록 -->
+	<resultMap id="rangeRangeExpertOpinRegCurState-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="orgCd" 		    		column="org_cd"/>
+		<result property="orgNm" 		    		column="org_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="totCnt" 		    		column="totcnt"/>
+		<result property="orgAft01" 				column="org_aft01"/>
+		<result property="orgAft02" 				column="org_aft02"/>
+		<result property="orgAft03" 				column="org_aft03"/>
+		<result property="expAft01" 				column="exp_aft01"/>
+		<result property="expAft02" 				column="exp_aft02"/>
+		<result property="expAft03" 				column="exp_aft03"/>
+		<result property="resortProgState03" 		column="resort_prog_state03"/>
+		<result property="resortProgState04" 		column="resort_prog_state04"/>
+		<result property="resortProgState05" 		column="resort_prog_state05"/>
+	</resultMap>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 전문요원의견등록
+	 -->
+	<select id="findRangeResortExpertOpinRegCurStatePagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeExpertOpinRegCurState-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT RECORD_CENTER_ID
+					, TRIM(ORG_CD) AS ORG_CD
+					, (SELECT Z.ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.ORG_CD) ORG_NM
+					, (SELECT Z.ORG_ABBR_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.ORG_CD) ORG_ABBR_NM
+					, COUNT(*) AS TOTCNT
+					, SUM(RESORT_PROG_STATE03) RESORT_PROG_STATE03
+					, SUM(ORG_AFT01) ORG_AFT01
+					, SUM(ORG_AFT02) ORG_AFT02
+					, SUM(ORG_AFT03) ORG_AFT03
+					, SUM(RESORT_PROG_STATE04) RESORT_PROG_STATE04
+					, SUM(EXP_AFT01) EXP_AFT01
+					, SUM(EXP_AFT02) EXP_AFT02
+					, SUM(EXP_AFT03) EXP_AFT03
+					, SUM(RESORT_PROG_STATE05) RESORT_PROG_STATE05 
+				FROM (
+					SELECT A.RECORD_CENTER_ID
+						, A.ORG_CD
+						, CASE WHEN RESORT_PROG_STATE_CD ='03' THEN 1 
+				               ELSE CASE WHEN A.ORG_CD IS NULL THEN 1 
+				                         ELSE 0 
+				                    END 
+				          END AS RESORT_PROG_STATE03
+				        , CASE WHEN RESORT_PROG_STATE_CD  BETWEEN '04' AND '05' AND ORG_OPER_RANGE_AFT = '01' THEN 1 
+				               ELSE 0 
+				          END AS ORG_AFT01
+				        , CASE WHEN RESORT_PROG_STATE_CD  BETWEEN '04' AND '05' AND ORG_OPER_RANGE_AFT = '02' THEN 1 
+				               ELSE 0 
+				          END AS ORG_AFT02
+				        , CASE WHEN RESORT_PROG_STATE_CD  BETWEEN '04' AND '05' AND ORG_OPER_RANGE_AFT = '03' THEN 1 
+				               ELSE 0
+				          END AS ORG_AFT03
+				        , CASE WHEN RESORT_PROG_STATE_CD BETWEEN '03' AND '05' AND EXPERT_OPER_READ_RANGE_AFT IS NULL THEN 1 
+				               ELSE 0 
+				          END AS RESORT_PROG_STATE04
+				        , CASE WHEN RESORT_PROG_STATE_CD ='05' AND EXPERT_OPER_READ_RANGE_AFT = '01' THEN 1 
+				               ELSE 0
+				          END AS EXP_AFT01
+				        , CASE WHEN RESORT_PROG_STATE_CD ='05' AND EXPERT_OPER_READ_RANGE_AFT = '02' THEN 1 
+				               ELSE 0 
+				          END AS EXP_AFT02
+				        , CASE WHEN RESORT_PROG_STATE_CD ='05' AND EXPERT_OPER_READ_RANGE_AFT = '03' THEN 1 
+				               ELSE 0 
+				          END AS EXP_AFT03
+				        , CASE WHEN RESORT_PROG_STATE_CD ='05' THEN 1
+				        	   ELSE 0 
+				          END AS RESORT_PROG_STATE05 
+				    FROM TB_RDRANGERESORTOPIN A, TB_RDRECORD B 
+				    WHERE A.RECORD_CENTER_ID=B.RECORD_CENTER_ID 
+				    AND A.RECORD_ID = B.RECORD_ID 
+				    AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				    AND A.RESORT_PROG_STATE_CD BETWEEN '03' AND '05' 
+				    <isNotEmpty prepend="AND" property="resortCase">
+				        trim(a.resort_Case) = #resortCase:VARCHAR#
+				    </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="resortYyyy">
+		                a.resort_yyyy = #resortYyyy:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="handlOrgCd">
+		                a.org_cd = #handlOrgCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                a.org_cd = #orgCd:VARCHAR#
+		            </isNotEmpty>
+				) A 
+				GROUP BY RECORD_CENTER_ID, ORG_CD 
+				ORDER BY RECORD_CENTER_ID, ORG_CD
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 접근범위재분류 의견등록 전문요원의견등록
+	 -->
+	<select id="countRangeResortExpertOpinRegCurStatePagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultClass="java.lang.Long">
+		SELECT count(1)
+		from(
+			select count(1)
+			FROM tb_rdrangeresortopin A, tb_rdrecord b
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND A.record_id          = b.record_id
+			AND b.record_center_id   = #recordCenterId:VARCHAR#
+			AND A.resort_prog_state_cd BETWEEN '03' AND '05'
+			<isNotEmpty prepend="AND" property="resortCase">
+				trim(a.resort_Case) = #resortCase:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="resortYyyy">
+				a.resort_yyyy = #resortYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="handlOrgCd">
+				a.org_cd = #handlOrgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				a.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			GROUP BY A.record_center_id,A.org_cd
+		)
+	</select>
+	
+	
+	<!-- 접근범위재분류 의견등록 기록물건 의견등록이력 -->
+	<resultMap id="rangeRangeExpertOpinRecordList-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinReg">
+		<result property="operReadRangeAft" 	column="OPER_READ_RANGE_AFT"/>
+		<result property="operReadRangeAftNm" 	column="oper_read_range_Aftnm"/>
+		<result property="chngUserId" 		    column="chng_user_id"/>
+		<result property="userNm" 		        column="user_nm"/>
+		<result property="chngOpin" 		    column="chng_opin"/>
+		<result property="chngYmd" 		        column="chng_ymd"/>
+		<result property="resortCaseNo" 		column="resort_case_no"/>
+		<result property="resortCase" 		    column="resort_case"/>
+		<result property="resortReason" 		column="resort_reason"/>
+	</resultMap>
+	<!-- 
+		SELECT - 접근범위재분류 의견등록 기록물건 의견등록이력
+	 -->
+	<select id="findRangeResortExpertOpinHistRecordList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="rangeRangeExpertOpinRecordList-result">
+		SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, A.*
+			FROM (
+				SELECT OPER_READ_RANGE_AFT
+					, z.com_cd_nm AS oper_read_range_aftnm
+					, CHNG_USER_ID
+					, u.user_nm
+					, decode(CHNG_YMD, '00000000', '', CHNG_YMD) as CHNG_YMD
+					, CHNG_OPIN
+					, r.resort_case_no
+					, r.resort_case
+					, s.resort_reason
+				FROM (
+					SELECT * FROM tb_rdrangeresorthist
+					WHERE record_center_id = #recordCenterId:VARCHAR#
+					AND record_id = #recordId:VARCHAR#
+				) r JOIN tb_rdrangeresortreason s
+						ON r.record_center_id = s.record_center_id
+						AND r.resort_case = s.resort_case
+						AND r.resort_case_no = s.resort_case_no
+					LEFT OUTER JOIN tb_zzcomcd z
+						ON z.com_type_cd = 'RD53'
+						AND lpad(trim(r.OPER_READ_RANGE_AFT),2,'0') = z.com_cd
+					LEFT OUTER JOIN tb_stuser u
+						ON r.CHNG_USER_ID = u.user_id
+			) A
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 접근범위재분류 의견등록 기록물건 의견등록이력
+	 -->
+	<select id="countRangeResortExpertOpinHistRecordList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultClass="java.lang.Long">
+		SELECT count(1)
+		FROM (
+			SELECT * FROM tb_rdrangeresorthist
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND record_id = #recordId:VARCHAR#
+		) r JOIN tb_rdrangeresortreason s
+				ON r.record_center_id = s.record_center_id
+				AND r.resort_case = s.resort_case
+				AND r.resort_case_no = s.resort_case_no
+			LEFT OUTER JOIN tb_zzcomcd z
+				ON z.com_type_cd = 'RD53'
+				AND lpad(trim(r.OPER_READ_RANGE_AFT),2,'0') = z.com_cd
+			LEFT OUTER JOIN tb_stuser u
+				ON r.CHNG_USER_ID = u.user_id
+	</select>
+	
+	
+	<!-- 접근번위재분류 의견등록 일괄등록 중 발생한 오류를 저장한 엑셀파일 조회 -->
+	<resultMap id="findRangeResortOpinRegOpinBatchErrorXls-result" class="java.util.HashMap">
+		<result property="fileNm" 			column="file_nm"/>
+		<result property="fileKey" 			column="file_key"/>
+	</resultMap>
+	<select id="findRangeResortOpinRegOpinBatchErrorXls" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultMap="findRangeResortOpinRegOpinBatchErrorXls-result">
+		SELECT file_nm
+			, file_key
+		FROM TB_ZZREQEXCELLIST
+		WHERE REQ_USER_ID = #reqUserId:VARCHAR#
+		AND REQ_MENU_ID = #menuId:VARCHAR#
+		AND REQ_INDEX = #reqIndex:VARCHAR#
+	</select>
+	
+	
+	<!-- 접근범위재분류 의견등록 일괄등록 결과반영상태여부체크 -->
+	<select id="countAlreadyRsltOpenResortOpin" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinReg" resultClass="int">
+		SELECT COUNT(*)
+		FROM tb_rdrangeresortopin
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND	record_id = #recordId:VARCHAR#
+		AND	resort_seq = #resortSeq#
+		AND	resort_prog_state_cd = '07'
+	</select>
+</sqlMap>

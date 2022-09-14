@@ -1,0 +1,67 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : countDiosOrignOrgPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd			FROM  TB_OPOPENLIST A			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state = '4'			 AND 				A.org_cd = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : findDiosOrignOrgPagedList
+
+        SELECT F.record_center_id            , F.org_cd            , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm            , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm            , NVL(SUM(F.keep_cnt),0) AS keep_cnt            , NVL(SUM(F.open_cnt),0) AS open_cnt            , NVL(SUM(F.orign_cnt),0) AS orign_cnt        FROM (            SELECT E.record_center_id                , E.org_cd                , (SELECT COUNT(1) FROM TB_RDFOLDER TA, TB_RDRECORD TB WHERE TA.record_center_id=E.record_center_id AND TA.org_cd=E.org_cd AND TB.record_center_id=TA.record_center_id AND TB.folder_id=TA.folder_id) AS keep_cnt                , (SELECT COUNT(1) FROM TB_OPOPENLIST TC WHERE TC.record_center_id=E.record_center_id AND TC.open_sys_cd=E.open_sys_cd AND TC.org_cd=E.org_cd AND TC.open_state='4') AS open_cnt                , (SELECT COUNT(1) FROM TB_OPORIGNPROVHIST TD WHERE TD.record_center_id=E.record_center_id AND TD.open_sys_cd=E.open_sys_cd AND TD.org_cd=E.org_cd					 AND  							(TD.req_dtime BETWEEN '1'||'000000' AND '1'||'240000')						                  ) AS orign_cnt            FROM (                SELECT D.record_center_id, D.open_sys_cd, D.org_cd                FROM (                    SELECT ROWNUM AS rnum                        , C.*                    FROM (                        SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd                        FROM  TB_OPOPENLIST A                        WHERE A.record_center_id = '1'                        AND   A.open_sys_cd = '01'                        AND   A.open_state = '4' AND 							A.org_cd = '1'						                         ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd                    ) C                    WHERE ROWNUM <= '1'                ) D                WHERE D.rnum >= '1'            ) E        ) F        GROUP BY F.record_center_id, F.org_cd        ORDER BY F.record_center_id, F.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : findDiosOrignOrgTotal
+
+		SELECT '1' AS record_center_id			, '' AS org_cd			, '°è' AS org_nm			, '°è' AS org_abbr_nm            , NVL(SUM(F.keep_cnt),0) AS keep_cnt            , NVL(SUM(F.open_cnt),0) AS open_cnt            , NVL(SUM(F.orign_cnt),0) AS orign_cnt        FROM (            SELECT E.record_center_id                , E.org_cd                , (SELECT COUNT(1) FROM TB_RDFOLDER TA, TB_RDRECORD TB WHERE TA.record_center_id=E.record_center_id AND TA.org_cd=E.org_cd AND TB.record_center_id=TA.record_center_id AND TB.folder_id=TA.folder_id) AS keep_cnt                , (SELECT COUNT(1) FROM TB_OPOPENLIST TC WHERE TC.record_center_id=E.record_center_id AND TC.open_sys_cd=E.open_sys_cd AND TC.org_cd=E.org_cd AND TC.open_state='4') AS open_cnt                , (SELECT COUNT(1) FROM TB_OPORIGNPROVHIST TD WHERE TD.record_center_id=E.record_center_id AND TD.open_sys_cd=E.open_sys_cd AND TD.org_cd=E.org_cd					 AND  							(TD.req_dtime BETWEEN '1'||'000000' AND '1'||'240000')						                  ) AS orign_cnt            FROM (				SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd				FROM  TB_OPOPENLIST A				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				AND   A.open_state = '4'				 AND 					A.org_cd = '1'				             ) E        ) F;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : countDiosOrignFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id			FROM  TB_OPOPENLIST A				, TB_RDFOLDER B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state = '4'			AND   A.org_cd = '1'			AND   B.record_center_id=A.record_center_id			AND   B.folder_id=A.folder_id			 AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : findDiosOrignFolderPagedList
+
+		SELECT G.record_center_id			, G.folder_id			, G.folder_title			, NVL(SUM(G.open_cnt),0) AS open_cnt			, NVL(SUM(G.orign_cnt),0) AS orign_cnt		FROM (			SELECT E.record_center_id				, E.open_sys_cd				, E.org_cd				, E.folder_id				, F.title AS folder_title                , (CASE WHEN E.open_state='4' THEN 1 ELSE 0 END) AS open_cnt	            , (SELECT COUNT(1) FROM TB_OPORIGNPROVHIST TD WHERE TD.record_center_id=E.record_center_id AND TD.open_sys_cd=E.open_sys_cd AND TD.org_cd=E.org_cd AND TD.folder_id=E.folder_id AND TD.record_id=E.record_id				 AND  						(TD.req_dtime BETWEEN '1'||'000000' AND '1'||'240000')  	          		) AS orign_cnt			FROM  TB_OPOPENLIST E				, TB_RDFOLDER F						WHERE			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title						FROM  TB_OPOPENLIST A							, TB_RDFOLDER B						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state = '4'						AND   A.org_cd = '1'						AND   B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id AND 							B.title LIKE '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, B.title					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd				AND   D.folder_id = E.folder_id			)			AND   E.open_state = '4'			AND   F.record_center_id = E.record_center_id			AND   F.folder_id = E.folder_id AND 				F.title LIKE '1'			 		) G		GROUP BY G.record_center_id, G.folder_id, G.folder_title		ORDER BY G.record_center_id, G.folder_title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : countDiosOrignRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id			FROM  TB_OPOPENLIST A				, TB_RDRECORD B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state = '4'			AND   A.org_cd = '1'			AND   A.folder_id = '1'			AND   B.record_center_id=A.record_center_id			AND   B.record_id=A.record_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : findDiosOrignRecordPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.record_title			, D.creat_reg_dtime			, D.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm			, D.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm			, D.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm			, D.open_dtime            , (SELECT COUNT(1) FROM TB_OPORIGNPROVHIST TD WHERE TD.record_center_id=D.record_center_id AND TD.open_sys_cd=D.open_sys_cd AND TD.org_cd=D.org_cd AND TD.folder_id=D.folder_id AND TD.record_id=D.record_id AND  					(TD.req_dtime BETWEEN '1'||'000000' AND '1'||'240000')				            		) AS orign_cnt		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.record_center_id					, A.open_sys_cd					, A.org_cd					, A.folder_id					, A.record_id					, A.open_state					, B.title AS record_title					, B.creat_reg_dtime					, B.record_reg_div_cd					, B.record_detl_type_cd					, B.open_div_cd					, A.open_dtime				FROM  TB_OPOPENLIST A					, TB_RDRECORD B				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				AND   A.open_state = '4'				AND   A.org_cd = '1'				AND   A.folder_id = '1'				AND   B.record_center_id = A.record_center_id				AND   B.record_id = A.record_id AND 					B.title LIKE '1'				 				ORDER BY A.record_center_id, A.open_sys_cd, B.title			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : countDiosOrignFilePagedList
+
+		SELECT COUNT(1)		FROM  TB_OPORIGNPROVHIST A		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.org_cd = '1'		AND   A.folder_id = '1'		AND   A.record_id = '1'		 AND  				(A.req_dtime BETWEEN '1'||'000000' AND '1'||'240000')			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml
+-- Query    : select
+-- Query Id : findDiosOrignFilePagedList
+
+		SELECT E.record_center_id			, E.req_dtime			, E.orign_file_id			, E.file_nm			, E.doc_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD21' AND Z.com_cd=E.doc_type_cd) doc_type_nm		FROM (			SELECT D.rnum				, D.record_center_id				, D.req_dtime				, D.orign_file_id				, (SELECT Z.file_nm FROM TB_STORIGNFILE Z WHERE Z.orign_file_id=D.orign_file_id) AS file_nm				, (SELECT Z.doc_type_cd FROM TB_STORIGNFILE Z WHERE Z.orign_file_id=D.orign_file_id) AS doc_type_cd			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.record_center_id						, A.open_sys_cd						, A.org_cd						, A.folder_id						, A.record_id						, A.orign_file_id						, A.req_dtime					FROM  TB_OPORIGNPROVHIST A					WHERE A.record_center_id = '1'					AND   A.open_sys_cd = '01'					AND   A.org_cd = '1'					AND   A.folder_id = '1'					AND   A.record_id = '1'					 AND  							(A.req_dtime BETWEEN '1'||'000000' AND '1'||'240000')						  					ORDER BY A.req_dtime DESC				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosOrign.xml

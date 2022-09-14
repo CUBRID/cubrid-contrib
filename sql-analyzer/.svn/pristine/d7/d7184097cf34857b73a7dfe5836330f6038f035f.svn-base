@@ -1,0 +1,1246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.disuseeval">
+
+
+	<!-- 평가폐기 폐기집행 폐기처리 -->
+	<resultMap id="disuseExcuteHandl-result" class="rms.eval.disuseeval.domain.DisuseExcute" >
+		<result property="folderId" 			column="folder_id"/>
+		<result property="handlOrgCd" 			column="handl_org_cd"/>
+		<result property="handlOrgNm" 			column="handl_org_nm"/>
+		<result property="handlOrgAbbrNm" 		column="handl_org_abbr_nm"/>
+		<result property="orgCd" 				column="org_cd"/>
+		<result property="orgNm" 				column="org_nm"/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"/>
+		<result property="clssId" 				column="clss_id"/>
+		<result property="clssNm" 				column="clss_nm"/>
+		<result property="title" 				column="title"/>
+		<result property="creatYyyy" 			column="creat_yyyy"/>
+		<result property="presvTermCd" 			column="presv_term_cd"/>
+		<result property="presvTermNm" 			column="presv_term_nm"/>
+		<result property="bisTermNm" 			column="bis_term_nm"/>		
+		<result property="disuseYmd" 			column="disuse_ymd"/>
+		<result property="disuseUserNm" 		column="disuse_user_nm"/>
+		<result property="disuseMethodCd" 		column="disuse_method_cd"/>
+		<result property="disuseMethodNm" 		column="disuse_method_nm"/>		
+		<result property="mfStatConfmFlag" 		column="mf_stat_confm_flag"/>
+		<result property="cdStatConfmFlag" 		column="cd_stat_confm_flag"/>
+		<result property="folderKeepStateCd" 	column="folder_keep_state_cd"/>
+		<result property="folderKeepStateNm" 	column="folder_keep_state_nm"/>	
+		<result property="discuReqFlag" 		column="DISCU_REQ_FLAG"/>
+	</resultMap>
+	<!-- 
+		SELECT - 평가폐기 폐기집행 폐기처리
+	 -->
+	<select id="findDisuseExcuteHandlPagedList" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultMap="disuseExcuteHandl-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.folder_id
+				 	, NVL(B.org_cd, A.org_cd) as handl_org_cd
+		      		, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd = NVL(B.org_cd, A.org_cd)) handl_org_nm
+		        	, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd= NVL(B.org_cd, A.org_cd)) handl_org_abbr_nm
+					, A.org_cd
+					, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd=A.org_cd) org_nm
+					, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd=A.org_cd) org_abbr_nm
+					, A.clss_id
+					, A.clss_nm
+					, A.title
+					, A.creat_yyyy
+					, A.presv_term_cd
+					, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd=A.presv_term_cd) presv_term_nm
+					, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z,TB_ZZBISCLSS Y WHERE Z.com_type_cd = 'RD07'AND Z.com_cd=A.presv_term_cd AND Y.bis_clss_id=A.clss_id) bis_term_nm
+					, A.disuse_ymd
+		      		, B.disuse_user_nm
+		      		, B.disuse_method_cd
+		      		, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD78' AND Z.com_cd = B.disuse_method_cd) disuse_method_nm			
+		      		, B.mf_stat_confm_flag
+		      		, B.cd_stat_confm_flag
+		      		, A.folder_keep_state_cd
+		      		, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD32' AND Z.com_cd = A.folder_keep_state_cd) folder_keep_state_nm	    
+					, b.DISCU_REQ_FLAG
+				FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B		
+				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		    	AND   A.FOLDER_ID = B.Folder_Id
+		    	AND   A.Disu_Div_Cd = '1'          					
+		   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#  
+		    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+		    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+		    		B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+		    	</isNotEmpty>
+		    	<isNotEmpty prepend="AND" property="discuReqFlag">
+			    	B.discu_req_flag = #discuReqFlag:VARCHAR#      	<!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+			    </isNotEmpty>
+			    <isNotEmpty prepend="AND" property="orgCd">
+			   		B.org_cd = #orgCd:VARCHAR#            		
+			    </isNotEmpty>
+			    <isEmpty prepend="AND" property="folderKeepStateCd">
+			    	A.folder_keep_state_cd in ('01','03','04')		
+			    </isEmpty>
+			    <isNotEmpty prepend="AND">
+					<isEqual property="disusePresv30yearDiv" compareValue="1">
+						A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+					</isEqual>
+					<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+						A.PRESV_TERM_CD in ('01', '03', '05', '10')
+					</isNotEqual>
+				</isNotEmpty>
+			    <isNotEmpty property="folderKeepStateCd">		
+					<isEqual  prepend="AND" property="folderKeepStateCd" compareValue="01">
+						A.folder_keep_state_cd in ('01','04')
+					</isEqual>
+					<isEqual  prepend="AND" property="folderKeepStateCd" compareValue="03">
+						A.folder_keep_state_cd in ('03')
+					</isEqual>
+				</isNotEmpty>
+				ORDER BY A.folder_id
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 평가폐기 폐기집행 폐기처리
+	 -->
+	<select id="countDisuseExcuteHandlPagedList" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+    	AND   A.FOLDER_ID = B.Folder_Id
+    	AND   A.Disu_Div_Cd = '1'          					
+   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+    		B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+    	</isNotEmpty>
+    	<isNotEmpty prepend="AND" property="discuReqFlag">
+	    	B.discu_req_flag = #discuReqFlag:VARCHAR#      	
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="orgCd">
+	   		B.org_cd = #orgCd:VARCHAR#            		
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>
+	    <isEmpty prepend="AND" property="folderKeepStateCd">
+	    	A.folder_keep_state_cd in ('01','03','04')		
+	    </isEmpty>
+	    <isNotEmpty property="folderKeepStateCd">		
+			<isEqual  prepend="AND" property="folderKeepStateCd" compareValue="01">
+				A.folder_keep_state_cd in ('01','04')
+			</isEqual>
+			<isEqual  prepend="AND" property="folderKeepStateCd" compareValue="03">
+				A.folder_keep_state_cd in ('03')
+			</isEqual>
+		</isNotEmpty>
+	</select>
+	<!--
+		폐기집행 폐기처리 철목록조회(COUNT) 폐기전 인것만
+	-->
+ 	<select id="countDisuseExcuteHandlforBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultClass="int">
+		SELECT COUNT(1)
+		FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+    	AND   A.FOLDER_ID = B.Folder_Id
+    	AND   A.Disu_Div_Cd = '1'          					
+    	AND   A.folder_keep_state_cd in ('01','04') 		
+   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+    		  B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#    
+    	</isNotEmpty>
+    	<isNotEmpty prepend="AND" property="discuReqFlag">
+	    	B.discu_req_flag = #discuReqFlag:VARCHAR#      	
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="orgCd">
+	   		B.org_cd = #orgCd:VARCHAR#            		
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>	
+	</select>
+	
+	
+	<!-- 폐기집행 전자파일삭제 -->
+	<resultMap id="disuseExcuteEfileDel-result" class="rms.eval.disuseeval.domain.DisuseExcute" >
+		<result property="folderId" 		column="folder_id"/>
+		<result property="handlOrgCd" 		column="handl_org_cd"/>
+		<result property="handlOrgNm" 		column="handl_org_nm"/>
+		<result property="handlOrgAbbrNm" 	column="handl_org_abbr_nm"/>
+		<result property="orgCd" 			column="org_cd"/>
+		<result property="orgNm" 			column="org_nm"/>
+		<result property="orgAbbrNm" 		column="org_abbr_nm"/>
+		<result property="clssId" 			column="clss_id"/>
+		<result property="clssNm" 			column="clss_nm"/>
+		<result property="title" 			column="title"/>
+		<result property="creatYyyy" 		column="creat_yyyy"/>
+		<result property="presvTermCd" 		column="presv_term_cd"/>
+		<result property="presvTermNm" 		column="presv_term_nm"/>
+		<result property="bisTermNm" 		column="bis_term_nm"/>
+		<result property="efileDelDtime" 	column="efile_del_dtime"/>
+		<result property="efileDelUserId" 	column="efile_del_user_id"/>
+		<result property="efileDelUserNm" 	column="efile_del_user_nm"/>
+		<result property="efileDelCd" 		column="efile_del_cd"/>
+		<result property="efileDelNm" 		column="efile_del_nm"/>
+	</resultMap>
+	<!-- 
+		SELECT - 폐기집행 전자파일삭제 철목록조회
+	 -->
+	<select id="findDisuseExcuteEfileDelPagedList" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultMap="disuseExcuteEfileDel-result">
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+				SELECT U.folder_id
+					, U.handl_org_cd
+		      		, U.handl_org_nm
+		        	, U.handl_org_abbr_nm
+					, U.org_cd
+					, U.org_nm
+					, U.org_abbr_nm
+					, U.clss_id
+					, U.clss_nm
+					, U.title
+					, U.creat_yyyy
+					, U.presv_term_cd
+					, U.presv_term_nm
+					, U.bis_term_nm
+					, U.efile_del_dtime
+					, U.efile_del_user_id
+		      		, U.efile_del_user_nm
+					, U.efile_del_cd
+					, U.efile_del_nm
+				FROM (
+					SELECT A.folder_id
+						, NVL(B.org_cd, A.org_cd) as handl_org_cd
+		      			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd = NVL(B.org_cd, A.org_cd)) handl_org_nm
+		        		, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd= NVL(B.org_cd, A.org_cd)) handl_org_abbr_nm
+						, A.org_cd
+						, (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id = A.record_center_id AND B.org_cd = A.org_cd) org_nm
+						, (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = A.record_center_id AND B.org_cd = A.org_cd) org_abbr_nm
+						, A.clss_id
+						, A.clss_nm
+						, A.title
+						, A.creat_yyyy
+						, A.presv_term_cd
+						, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm
+						, (SELECT C.com_cd_nm FROM TB_ZZBISCLSS D , TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=D.presv_term_cd AND D.bis_clss_id=A.clss_id) bis_term_nm
+						, B.efile_del_dtime
+						, B.efile_del_user_id
+			      		, (SELECT U.user_nm FROM TB_STUSER U WHERE U.user_id = B.efile_del_user_id) efile_del_user_nm
+						, A.efile_del_cd
+						, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD90' AND C.com_cd=A.efile_del_cd ) efile_del_nm
+					FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B			
+					WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			    	AND   A.FOLDER_ID = B.Folder_Id
+			    	AND   A.Disu_Div_Cd = '1'
+			    	AND   A.folder_keep_state_cd = '03'          					
+			   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+			    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+			    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+			    		B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+			    	</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="orgCd">
+				   		B.org_cd = #orgCd:VARCHAR#            		
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="discuReqFlag">
+						B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+					</isNotEmpty>
+					<isNotEmpty prepend="AND">
+						<isEqual property="disusePresv30yearDiv" compareValue="1">
+							A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+						</isEqual>
+						<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+							A.PRESV_TERM_CD in ('01', '03', '05', '10')
+						</isNotEqual>
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="efileDelCd">
+				        <isEqual property="efileDelCd" compareValue="01">
+				        	A.efile_del_cd NOT IN ('01','02','03','04') 
+				        </isEqual>
+				        <isNotEqual property="efileDelCd" compareValue="01">
+				        	A.efile_del_cd = #efileDelCd:VARCHAR#
+				        </isNotEqual>
+				    </isNotEmpty>
+				    UNION ALL
+				    SELECT A.folder_id
+						, NVL(B.org_cd, A.org_cd) as handl_org_cd
+			      		, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd = NVL(B.org_cd, A.org_cd)) handl_org_nm
+			        	, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd= NVL(B.org_cd, A.org_cd)) handl_org_abbr_nm
+						, A.org_cd
+						, (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id = A.record_center_id AND B.org_cd = A.org_cd) org_nm
+						, (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = A.record_center_id AND B.org_cd = A.org_cd) org_abbr_nm
+						, A.clss_id
+						, A.clss_nm
+						, A.title
+						, A.creat_yyyy
+						, A.presv_term_cd
+						, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm
+						, (SELECT C.com_cd_nm FROM TB_ZZBISCLSS D, TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=D.presv_term_cd AND D.bis_clss_id=A.clss_id) bis_term_nm
+						, B.efile_del_dtime
+						, B.efile_del_user_id
+			      		, (SELECT U.user_nm FROM TB_STUSER U WHERE U.user_id = B.efile_del_user_id) efile_del_user_nm
+						, A.efile_del_cd
+						, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD90' AND C.com_cd=A.efile_del_cd ) efile_del_nm
+					FROM  TB_NKFOLDER A, TB_DFDISUSEOPIN B			
+					WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			    	AND   A.FOLDER_ID = B.Folder_Id
+			    	AND   A.Disu_Div_Cd = '1'
+			    	AND   A.folder_keep_state_cd = '03'          					
+			   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+			    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+			    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+			    		B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+			    	</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="orgCd">
+				   		B.org_cd = #orgCd:VARCHAR#            		
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="discuReqFlag">
+						B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+					</isNotEmpty>
+					<isNotEmpty prepend="AND">
+						<isEqual property="disusePresv30yearDiv" compareValue="1">
+							A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+						</isEqual>
+						<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+							A.PRESV_TERM_CD in ('01', '03', '05', '10')
+						</isNotEqual>
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="efileDelCd">
+				        <isEqual property="efileDelCd" compareValue="01">
+				        	A.efile_del_cd NOT IN ('01','02','03','04') 
+				        </isEqual>
+				        <isNotEqual property="efileDelCd" compareValue="01">
+				        	A.efile_del_cd = #efileDelCd:VARCHAR#
+				        </isNotEqual>
+				    </isNotEmpty>
+			    ) U
+				ORDER BY U.efile_del_cd, U.efile_del_dtime
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 폐기집행 전자파일삭제 철목록조회
+	 -->
+	<select id="countDisuseExcuteEfileDelPagedList" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT A.folder_id
+			FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	    	AND   A.FOLDER_ID = B.Folder_Id
+	    	AND   A.Disu_Div_Cd = '1'
+	    	AND   A.folder_keep_state_cd = '03'          					
+	   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+	    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+	    		  B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+	    	</isNotEmpty>	    
+			<isNotEmpty prepend="AND" property="orgCd">
+				  B.org_cd = #orgCd:VARCHAR#            		<!-- 처리부서 -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="discuReqFlag">
+				  B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+			</isNotEmpty>
+	 		<isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="efileDelCd">
+		        <isEqual property="efileDelCd" compareValue="01">
+		        	efile_del_cd NOT IN ('01','02','03','04') 
+		        </isEqual>
+		        <isNotEqual property="efileDelCd" compareValue="01">
+		        	efile_del_cd = #efileDelCd:VARCHAR#
+		        </isNotEqual>
+		    </isNotEmpty>
+		    UNION ALL
+		    SELECT A.folder_id
+			FROM  TB_NKFOLDER A, TB_DFDISUSEOPIN B
+			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	    	AND   A.FOLDER_ID = B.Folder_Id
+	    	AND   A.Disu_Div_Cd = '1'
+	    	AND   A.folder_keep_state_cd = '03'          					
+	   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+	    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+	    		  B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+	    	</isNotEmpty>	    
+			<isNotEmpty prepend="AND" property="orgCd">
+				  B.org_cd = #orgCd:VARCHAR#            		<!-- 처리부서 -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="discuReqFlag">
+				  B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+			</isNotEmpty>
+	 		<isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="efileDelCd">
+		        <isEqual property="efileDelCd" compareValue="01">
+		        	efile_del_cd NOT IN ('01','02','03','04') 
+		        </isEqual>
+		        <isNotEqual property="efileDelCd" compareValue="01">
+		        	efile_del_cd = #efileDelCd:VARCHAR#
+		        </isNotEqual>
+		    </isNotEmpty>
+		)
+	</select>
+	<!-- 
+		SELECT - 폐기집행 전자파일삭제 엑셀저장
+	 -->
+	<select id="findExcelDocDisuseExcuteEfileDel" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultMap="disuseExcuteEfileDel-result">
+		SELECT A.folder_id
+			, NVL(B.org_cd, A.org_cd) as handl_org_cd
+      		, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd = NVL(B.org_cd, A.org_cd)) handl_org_nm
+        	, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd= NVL(B.org_cd, A.org_cd)) handl_org_abbr_nm
+			, A.org_cd
+			, (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id = A.record_center_id AND B.org_cd = A.org_cd) org_nm
+			, (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = A.record_center_id AND B.org_cd = A.org_cd) org_abbr_nm
+			, A.clss_id
+			, A.clss_nm
+			, A.title
+			, A.creat_yyyy
+			, A.presv_term_cd
+			, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm
+			,  NVL((SELECT C.com_cd_nm FROM TB_ZZBISCLSS D , TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=D.presv_term_cd AND D.bis_clss_id=A.clss_id),'-') as  bis_term_nm
+			, B.efile_del_dtime
+			, B.efile_del_user_id
+      		, (SELECT U.user_nm FROM TB_STUSER U WHERE U.user_id = B.efile_del_user_id) efile_del_user_nm
+			, A.efile_del_cd
+			, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD90' AND C.com_cd=A.efile_del_cd) efile_del_nm
+		FROM  TB_RDFOLDER A
+			, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+    	AND   A.FOLDER_ID = B.Folder_Id
+    	AND   A.Disu_Div_Cd = '1'
+    	AND   A.folder_keep_state_cd = '03'
+   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#
+    	<isNotEmpty prepend="AND" property="efileDelCd">
+	        <isEqual property="efileDelCd" compareValue="01">
+	        	A.efile_del_cd NOT IN ('01','02','03','04') 
+	        </isEqual>
+	        <isNotEqual property="efileDelCd" compareValue="01">
+	        	A.efile_del_cd = #efileDelCd:VARCHAR#
+	        </isNotEqual>
+	    </isNotEmpty>
+    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+    		B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+    	</isNotEmpty>
+	    <isNotEmpty prepend="AND" property="orgCd">
+	   		B.org_cd = #orgCd:VARCHAR#            		
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="discuReqFlag">
+			B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+		</isNotEmpty>
+		<isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>
+		ORDER BY A.folder_id
+	</select>
+	
+	
+	<!--
+		폐기집행 전자파일 삭제 철목록조회(COUNT) - 전자파일 삭제전 인 것만
+	-->
+	<select id="countDisuseExcuteEfileDelforBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultClass="int">
+		SELECT COUNT(1)
+		FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+    	AND   A.FOLDER_ID = B.Folder_Id
+    	AND   A.Disu_Div_Cd = '1'
+    	AND   A.folder_keep_state_cd = '03'
+    	AND   A.efile_del_cd IS NULL
+    	AND	  (A.efile_del_flag IS NULL OR A.efile_del_flag = '0')          					
+   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+    		  B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+    	</isNotEmpty>
+	    <isNotEmpty prepend="AND" property="orgCd">
+	   		  B.org_cd = #orgCd:VARCHAR#            		
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="discuReqFlag">
+			  B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+		</isNotEmpty>
+		<isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>
+	</select>
+	
+	
+	<!-- 평가폐기 폐기집행 폐기처리 기록물철 상세정보 -->
+	<resultMap id="dis-use-eval-folder-result" class="rms.eval.disuseeval.domain.DisuseFolder">
+		<result property="folderId"				column="FOLDER_ID" />
+		<result property="discuYyyy"			column="DISCU_YYYY" />
+		<result property="creatYyyy"			column="CREAT_YYYY" />
+		<result property="title"				column="TITLE" />
+		<result property="bisClssNm"			column="BIS_CLSS_NM" />
+		<result property="creatOrgCd"			column="CREAT_ORG_CD" />
+		<result property="handlOrgCd"			column="HANDL_ORG_CD" />
+		<result property="curPresvTermCd"		column="CUR_PRESV_TERM_CD" />
+		<result property="handlOrgDisuDivCd"	column="HANDL_ORG_DISU_DIV_CD" />
+		<result property="handlOrgDeferCd"		column="HANDL_ORG_DEFER_CD" />
+		<result property="handlOrgTermCd"		column="HANDL_ORG_TERM_CD" />
+		<result property="handlOrgRsn"			column="HANDL_ORG_RSN" />
+		<result property="expertDisuDivCd"		column="EXPERT_DISU_DIV_CD" />
+		<result property="expertDisuDeferCd"	column="EXPERT_DISU_DEFER_CD" />
+		<result property="expertDisuTermCd"		column="EXPERT_DISU_TERM_CD" />
+		<result property="expertDisuRsn"		column="EXPERT_DISU_RSN" />
+		<result property="reviewDivCd"			column="REVIEW_DIV_CD" />
+		<result property="reviewDeferCd"		column="REVIEW_DEFER_CD" />
+		<result property="reviewTermCd"			column="REVIEW_TERM_CD" />
+		<result property="reviewRsn"			column="REVIEW_RSN" />
+		<result property="discuReqFlag"			column="DISCU_REQ_FLAG" />
+		<result property="discuOrignTypeCd"		column="DISCU_ORIGN_TYPE_CD" />
+		<result property="creatOrgNm"			column="CREAT_ORG_NM" />
+		<result property="handlOrgNm"			column="HANDL_ORG_NM" />
+		<result property="curPresvTermNm"		column="CUR_PRESV_TERM_NM" />
+		<result property="handlOrgDisuDivNm"	column="HANDL_ORG_DISU_DIV_NM" />
+		<result property="handlOrgDeferNm"		column="HANDL_ORG_DEFER_NM" />
+		<result property="handlOrgTermNm"		column="HANDL_ORG_TERM_NM" />
+		<result property="expertDisuDivNm"		column="EXPERT_DISU_DIV_NM" />
+		<result property="expertDisuDeferNm"	column="EXPERT_DISU_DEFER_NM" />
+		<result property="expertDisuTermNm"		column="EXPERT_DISU_TERM_NM" />
+		<result property="reviewDivNm"			column="REVIEW_DIV_NM" />
+		<result property="reviewDeferNm"		column="REVIEW_DEFER_NM" />
+		<result property="reviewTermNm"			column="REVIEW_TERM_NM" />
+		<result property="discuReqFlagNm"		column="DISCU_REQ_FLAG_NM" />
+		<result property="discuOrignTypeNm"		column="DISCU_ORIGN_TYPE_NM" />
+	</resultMap>
+	<!-- 
+		SELECT - 평가폐기 폐기집행 폐기처리 기록물철 상세정보
+	 -->
+	<select id="findDisuseEvalFolder" parameterClass="rms.eval.disuseeval.domain.DisuseFolder"  resultMap="dis-use-eval-folder-result" >
+		SELECT U.*
+		FROM (
+			SELECT A.FOLDER_ID
+		    	, A.DISCU_YYYY
+		    	, B.CREAT_YYYY
+		     	, B.TITLE
+			 	, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)
+				    	WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)
+				   END) AS BIS_CLSS_NM
+		     	, B.ORG_CD	AS CREAT_ORG_CD
+		     	, A.ORG_CD AS HANDL_ORG_CD
+		     	, A.CUR_PRESV_TERM_CD
+		     	, A.HANDL_ORG_DISU_DIV_CD
+		     	, A.HANDL_ORG_DEFER_CD
+		     	, A.HANDL_ORG_TERM_CD
+		     	, A.HANDL_ORG_RSN
+		     	, A.EXPERT_DISU_DIV_CD
+		     	, A.EXPERT_DISU_DEFER_CD
+		     	, A.EXPERT_DISU_TERM_CD
+		     	, A.EXPERT_DISU_RSN
+		     	, A.REVIEW_DIV_CD
+		     	, A.REVIEW_DEFER_CD
+		     	, A.REVIEW_REFIX_AFT_PRESV_TERM AS REVIEW_TERM_CD
+		     	, A.REVIEW_REFIX_AFT_RSN AS REVIEW_RSN
+		     	, A.DISCU_REQ_FLAG
+		     	, A.DISCU_ORIGN_TYPE_CD
+		     	, (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND ORG_CD = B.ORG_CD) AS CREAT_ORG_NM
+		     	, (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND ORG_CD = A.ORG_CD) AS HANDL_ORG_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.CUR_PRESV_TERM_CD) AS CUR_PRESV_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.HANDL_ORG_DISU_DIV_CD) AS HANDL_ORG_DISU_DIV_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.HANDL_ORG_DEFER_CD) AS HANDL_ORG_DEFER_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.HANDL_ORG_TERM_CD) AS HANDL_ORG_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.EXPERT_DISU_DIV_CD) AS EXPERT_DISU_DIV_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.EXPERT_DISU_DEFER_CD) AS EXPERT_DISU_DEFER_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.EXPERT_DISU_TERM_CD) AS EXPERT_DISU_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.REVIEW_DIV_CD) AS REVIEW_DIV_NM          
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.REVIEW_DEFER_CD) AS REVIEW_DEFER_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.REVIEW_REFIX_AFT_PRESV_TERM) AS REVIEW_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = A.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF13' AND COM_CD = A.DISCU_ORIGN_TYPE_CD) AS DISCU_ORIGN_TYPE_NM
+		  	FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B
+		  	WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   	AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		   	AND A.FOLDER_ID = #folderId:VARCHAR#
+		   	AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		   	AND B.FOLDER_ID = A.FOLDER_ID
+		   	UNION ALL 
+		 	SELECT A.FOLDER_ID
+		     	, A.DISCU_YYYY
+		     	, B.CREAT_YYYY
+		     	, B.TITLE
+			 	, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)
+				    	WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)
+				   END) AS BIS_CLSS_NM
+		     	, B.ORG_CD	AS CREAT_ORG_CD
+		     	, A.ORG_CD AS HANDL_ORG_CD
+		     	, A.CUR_PRESV_TERM_CD
+		     	, A.HANDL_ORG_DISU_DIV_CD
+		     	, A.HANDL_ORG_DEFER_CD
+		     	, A.HANDL_ORG_TERM_CD
+		     	, A.HANDL_ORG_RSN
+		     	, A.EXPERT_DISU_DIV_CD
+		     	, A.EXPERT_DISU_DEFER_CD
+		     	, A.EXPERT_DISU_TERM_CD
+		     	, A.EXPERT_DISU_RSN
+		     	, A.REVIEW_DIV_CD
+		     	, A.REVIEW_DEFER_CD
+		     	, A.REVIEW_REFIX_AFT_PRESV_TERM AS REVIEW_TERM_CD
+		     	, A.REVIEW_REFIX_AFT_RSN AS REVIEW_RSN
+		     	, A.DISCU_REQ_FLAG
+		     	, A.DISCU_ORIGN_TYPE_CD
+		     	, (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND ORG_CD = B.ORG_CD) AS CREAT_ORG_NM
+		     	, (SELECT MAX(ORG_NM) FROM TB_STORG WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND ORG_CD = A.ORG_CD) AS HANDL_ORG_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.CUR_PRESV_TERM_CD) AS CUR_PRESV_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.HANDL_ORG_DISU_DIV_CD) AS HANDL_ORG_DISU_DIV_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.HANDL_ORG_DEFER_CD) AS HANDL_ORG_DEFER_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.HANDL_ORG_TERM_CD) AS HANDL_ORG_TERM_NM
+				, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.EXPERT_DISU_DIV_CD) AS EXPERT_DISU_DIV_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.EXPERT_DISU_DEFER_CD) AS EXPERT_DISU_DEFER_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.EXPERT_DISU_TERM_CD) AS EXPERT_DISU_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.REVIEW_DIV_CD) AS REVIEW_DIV_NM          
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.REVIEW_DEFER_CD) AS REVIEW_DEFER_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.REVIEW_REFIX_AFT_PRESV_TERM) AS REVIEW_TERM_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = A.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG_NM
+		     	, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF13' AND COM_CD = A.DISCU_ORIGN_TYPE_CD) AS DISCU_ORIGN_TYPE_NM
+		  	FROM TB_DFDISUSEOPIN A, TB_NKFOLDER B
+		 	WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   	AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		   	AND A.FOLDER_ID = #folderId:VARCHAR#
+		   	AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		   	AND B.FOLDER_ID = A.FOLDER_ID
+		) U
+	</select>
+	
+	
+	<!--  -->
+	<resultMap id="disuseExcuteFolder-result" class="rms.eval.disuseeval.domain.DisuseExcute" >
+		<result property="folderId" 		column="folder_id"/>
+	</resultMap>
+	<!-- 
+		SELECT - 폐기집행 폐기처리 처리(일괄) 시 철목록 조회
+	 -->
+	<select id="findDisuseExcuteHandlFolderListforBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultClass="java.lang.String">
+		SELECT A.folder_id
+		FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+    	AND   A.FOLDER_ID = B.Folder_Id
+    	AND   A.folder_keep_state_cd in ('01','04') 		<!-- 철보유상태(01:보유, 03:폐기, 04:기관간인수) -->
+    	AND   A.Disu_Div_Cd = '1'          					<!-- 폐기심의결과(1:폐기) -->
+   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# <!-- 기록관ID  -->
+    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	<!-- 폐기평가년도 -->
+    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+    		  B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     <!-- 심의서번호 -->
+    	</isNotEmpty>
+    	<isNotEmpty prepend="AND" property="discuReqFlag">
+	    	B.discu_req_flag = #discuReqFlag:VARCHAR#      	<!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="orgCd">
+	   		B.org_cd = #orgCd:VARCHAR#            			<!-- 처리부서 -->
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>
+	</select>
+	<!-- 
+		SELECT - 폐기집행 전자파일삭제 일괄삭제(삭제대상검색)
+	 -->
+	<select id="findDisuseExcuteEfileDelFolder" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultMap="disuseExcuteFolder-result">
+		SELECT A.folder_id
+		FROM  TB_RDFOLDER A
+			, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+    	AND   A.FOLDER_ID = B.Folder_Id
+    	AND   A.Disu_Div_Cd = '1'
+    	AND   A.folder_keep_state_cd = '03'
+    	AND   A.efile_del_cd IS NULL
+    	AND	  (A.efile_del_flag IS NULL OR A.efile_del_flag = '0')          					
+   		AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+    	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	
+    	<isNotEmpty prepend="AND" property="discuYyyySeq">
+    		  B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     
+    	</isNotEmpty>
+	    <isNotEmpty prepend="AND" property="orgCd">
+	   		  B.org_cd = #orgCd:VARCHAR#            		
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="discuReqFlag">
+			  B.discu_req_flag = #discuReqFlag:VARCHAR#     <!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+		</isNotEmpty>
+		<isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				A.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>
+		ORDER BY A.folder_id
+	</select>
+	
+	
+	<!-- 폐기집행 폐기처리 엑셀저장 -->
+	<resultMap id="disuseExcuteHandlExcelDoc-result" class="rms.eval.disuseeval.domain.DisuseExcute" >
+		<result property="folderId" 			column="folder_id"/>
+		<result property="handlOrgNm" 			column="handl_org_nm"/>
+		<result property="orgNm" 				column="org_nm"/>
+		<result property="clssNm" 				column="clss_nm"/>			
+		<result property="creatSysCd" 			column="creat_sys_cd"/>
+		<result property="orgCd" 				column="org_cd"/>	
+		<result property="clssId" 				column="clss_id"/>
+		<result property="folderRegSeq" 		column="folder_reg_seq"/>
+		<result property="hoNo" 				column="ho_no"/>
+		<result property="title" 				column="title"/>
+		<result property="creatYyyy" 			column="creat_yyyy"/>
+		<result property="takeYyyy" 			column="take_yyyy"/>
+		<result property="presvTermCd" 			column="presv_term_cd"/>
+		<result property="presvTermNm" 			column="presv_term_nm"/>
+		<result property="erecordFlag" 			column="ERECORD_FLAG"/>
+		<result property="erecordFlagNm" 		column="ERECORD_FLAG_NM"/>
+		<result property="discuReqFlag" 		column="discu_req_flag"/>
+		<result property="discuReqFlagNm" 		column="discu_req_flag_nm"/>
+		<result property="discuOrignTypeCd" 	column="discu_orign_type_cd"/>
+		<result property="discuOrignTypeNm" 	column="discu_orign_type_nm"/>
+		<result property="presvBoxId" 			column="presv_box_id"/>
+		<result property="mfId" 				column="mf_id"/>
+		<result property="mfLoc" 				column="mf_loc"/>
+		<result property="opId" 				column="op_id"/>
+		<result property="opLoc" 				column="op_loc"/>
+	</resultMap>
+	<!-- 
+		SELECT - 폐기집행 폐기처리 엑셀저장
+	 -->
+	<select id="findExcelDocDisuseExcuteHandl" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultMap="disuseExcuteHandlExcelDoc-result">
+		SELECT AA.*
+			, BB.mf_id
+		    , BB.mf_loc
+		    , CC.op_id
+		    , CC.op_loc
+		FROM (
+			SELECT A.RECORD_CENTER_ID
+		    	, A.folder_id
+		    	, NVL(B.org_cd, A.org_cd) as handl_org_cd
+		    	, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd = NVL(B.org_cd, A.org_cd)) handl_org_nm
+				, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = #recordCenterId:VARCHAR# AND Z.org_cd=A.org_cd) org_nm
+				, A.clss_nm
+		    	, A.creat_sys_cd
+		    	, A.org_cd
+		    	, A.clss_id
+		      	, A.folder_reg_seq
+		      	, A.ho_no
+			  	, A.title
+			  	, A.creat_yyyy
+		      	, A.take_yyyy
+			  	, A.presv_term_cd
+			  	, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd=A.presv_term_cd) presv_term_nm
+		      	, A.ERECORD_FLAG
+		      	, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD23' AND Z.com_cd=A.ERECORD_FLAG) ERECORD_FLAG_NM
+		      	, B.discu_req_flag
+		      	, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF14' AND Z.com_cd=B.discu_req_flag) discu_req_flag_nm
+		      	, B.discu_orign_type_cd
+		      	, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF13' AND Z.com_cd=B.discu_orign_type_cd) discu_orign_type_nm
+		      	, (case when presv_box_id is null then '미배치'
+		              	else substr(A.presv_box_id,1,3) ||'-'||substr(A.presv_box_id,4,3) ||'-'||substr(A.presv_box_id,7,3) ||'-'||substr(A.presv_box_id,10,3) ||'-'||substr(A.presv_box_id,13,3)  
+		           end) as presv_box_id 
+			FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		    AND   A.FOLDER_ID = B.Folder_Id
+		    AND   A.Disu_Div_Cd = '1'          					<!-- 폐기심의결과(1:폐기) -->
+		    AND   A.folder_keep_state_cd in ('01','04')			<!-- 철보유상태(01:보유, 03:폐기, 04:기관간인수) -->
+		   	AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# <!-- 기록관ID --> 
+		   	AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	<!-- 폐기평가년도 -->
+		    <isNotEmpty prepend="AND" property="discuYyyySeq">
+		    	B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     <!-- 심의서번호 -->
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="discuReqFlag">
+			    B.discu_req_flag = #discuReqFlag:VARCHAR#      <!-- 	폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+			   	B.org_cd = #orgCd:VARCHAR#            		<!-- 처리부서 -->
+			</isNotEmpty>
+		    <isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+		) AA LEFT OUTER JOIN (
+			SELECT record_center_id
+				, folder_id
+		      	, substr( max(sys_connect_by_path(mf_id,',')),2) as mf_id
+		      	, substr( max(sys_connect_by_path(mf_loc,',')),2) as mf_loc
+		    FROM ( 
+		    	SELECT MFd.folder_id
+		    		, MF.record_center_id
+		            , max(MF.record_center_id||'-'||lpad(MF.Pic_Sno,6,'0')) as mf_id
+		          	, max(lpad(mf_stakrm_id,3,'0')||'-'||lpad(mf_booksf_id,3,'0')||'-'||lpad(booksf_shelf_cno,3,'0')||'-'||lpad(booksf_shelf_rno,3,'0')||'-'||lpad(shelf_r_sno,3,'0')) as mf_loc
+		          	, row_number() over(partition by MFd.folder_id order by MFd.folder_id, MF.record_center_id, MF.pic_sno) as rnum
+		        FROM tb_rdfolder rdf , tb_srmfpicdetl MFd , tb_srmfpic MF
+		        where rdf.record_center_id = #recordCenterId:VARCHAR#
+		        and mfd.record_center_id = rdf.record_center_id
+		        and mfd.folder_id = rdf.folder_id
+		        and MFd.Record_Center_Id = MF.Record_Center_Id
+		        AND MFd.pic_sno = MF.pic_sno
+		        group by MFd.Folder_Id, MF.Record_Center_Id, MF.Pic_Sno
+		    ) aa   
+		    start with rnum = 1
+		    connect by prior  rnum= rnum-1
+		    group by Record_Center_Id, Folder_Id
+		) BB
+		ON BB.folder_id = AA.folder_id and BB.RECORD_CENTER_ID = AA.RECORD_CENTER_ID
+		LEFT OUTER JOIN (
+			select D.Record_Center_Id
+		        ,D.Folder_Id
+		        ,MAX(E.ORG_CD||'-'||lpad(E.SEQ,6,'0')||'('||E.SPLIT_TOT||')') as op_id
+		        ,MAX(case when BOOKSF_ARNG_FLAG = '0' then '미배치'
+		                  when BOOKSF_ARNG_FLAG = '1' OR BOOKSF_ARNG_FLAG = '2' then lpad(OPTIDISK_STAKRM_ID,3,'0')||'-'||lpad(OPTIDISK_BOOKSF_ID,3,'0')||'-'||lpad(FLOOR_NO,3,'0')||'-'||lpad(COL_NO,3,'0')
+		             end) as op_loc
+		    from TB_SROPTIDISK_FLD D, Tb_Sroptidisk_Mst E
+		    where D.ORG_CD = E.ORG_CD
+		    AND   D.SEQ = E.SEQ
+		    AND   D.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		    GROUP BY  D.Record_Center_Id,D.Folder_Id     
+		) CC
+		ON CC.folder_id = AA.folder_id and CC.RECORD_CENTER_ID = AA.RECORD_CENTER_ID
+		ORDER BY AA.folder_id
+	</select>
+	
+	
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리 시 보존상자 정보 정리
+	 -->
+	<update id="updateDisuseExcutePresvBoxInfo" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_SRPRESVBOX
+		SET ARNG_FOLDER_CNT = ARNG_FOLDER_CNT - 1
+			, USE_FLAG = DECODE(ARNG_FOLDER_CNT -1, 0, '0','1')
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+     	AND   PRESV_BOX_ID = (
+			SELECT A.PRESV_BOX_ID 
+            FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+            WHERE B.record_center_id = #recordCenterId:VARCHAR#
+            AND   B.DISCU_YYYY = #discuYyyy:VARCHAR#
+            AND   A.Record_Center_Id = B.RECORD_CENTER_ID
+            AND   A.Folder_Id = B.Folder_Id
+            AND   A.Disu_Div_Cd = '1'
+            AND   B.discu_orign_type_cd = '1'
+          	AND	  A.folder_id = #folderId:VARCHAR#
+        )
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리 시 tb_dfdisuseopin 폐기처분일자,페기처분 담당자 이름,폐기방법,MF상태확인여부,광디스크상태확인여부 값 update
+	 -->
+	<update id="updateDisuseExcuteHandlMethod" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_DFDISUSEOPIN
+		SET disuse_expt_ymd = #disuseYmd:VARCHAR#
+	    	, disuse_user_nm = #disuseUserNm:VARCHAR#
+	        , disuse_method_cd = case when discu_orign_type_cd = '1' then #disuseMethodCd:VARCHAR#
+	        					      else disuse_method_cd
+	                			 end                									 
+	        , mf_stat_confm_flag = case when discu_orign_type_cd = '1' then #mfStatConfmFlag:VARCHAR#
+	                					else mf_stat_confm_flag
+	                			   end
+	        , cd_stat_confm_flag = case when discu_orign_type_cd = '1' then #cdStatConfmFlag:VARCHAR#
+	                					else cd_stat_confm_flag
+	                			   end
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	    AND discu_yyyy = #discuYyyy:VARCHAR#
+	    AND ((DISCU_REQ_FLAG='0' AND review_div_cd = '1') OR (DISCU_REQ_FLAG='1' AND NAT_CMT_DIV_CD = '1'))
+	    AND DISCU_PROG_STATE_CD = '09'
+		AND	folder_id = #folderId:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리
+	 -->
+	<update id="updateDisuseExcuteHandl" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_RDFOLDER A
+		SET A.disuse_ymd = #disuseYmd:VARCHAR#
+			,A.folder_keep_state_cd = (
+				select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then '03'
+							when B.discu_req_flag||B.discu_orign_type_cd = '02' then '03'
+					   		else A.folder_keep_state_cd
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+	        ,A.Expt_Disuse_Yyyy = (
+	        	select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then null
+							when B.discu_req_flag||B.discu_orign_type_cd = '02' then null										          
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' AND TO_NUMBER(A.Presv_Term_Cd) <![CDATA[>=]]> 25 then null
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' AND TO_NUMBER(A.Presv_Term_Cd) <![CDATA[<]]> 25 then TO_NUMBER(A.creat_yyyy) + 1 + TO_NUMBER(A.Presv_Term_Cd)
+							else TO_NUMBER(A.Expt_Disuse_Yyyy)
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+	        , A.orign_dis_cd = (
+	        	select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then '1'
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' then '1'
+							else A.orign_dis_cd
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+	        , A.PRESV_BOX_ID = (
+	        	select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then null
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' then null
+							else A.PRESV_BOX_ID
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.last_eval_yyyy = #discuYyyy:VARCHAR#
+		AND   A.Disu_Div_Cd = '1'
+		AND	  A.folder_id = #folderId:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리 시 공개목록 내용 변경
+	 -->
+	<update id="updateDisuseExcuteOpenList" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_STOPENLIST
+		<!--cubrid SET DISUSE_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+	    	, CHNG_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		SET DISUSE_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+	    	, CHNG_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+			, CHNG_TYPE='03'
+			, DISUSE_DIV='01'			
+		    , OPENLIST_OFFER_FLAG='0'
+	    WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id IN (
+			SELECT A.folder_id 
+			FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+			WHERE B.record_center_id = #recordCenterId:VARCHAR#
+	        AND   B.DISCU_YYYY = #discuYyyy:VARCHAR#                            
+	        AND   A.Record_Center_Id = B.RECORD_CENTER_ID
+	        AND   A.Folder_Id = B.Folder_Id
+	        AND   A.Disu_Div_Cd = '1'
+	        AND   B.discu_req_flag = '0'  
+			AND	  A.folder_id = #folderId:VARCHAR#
+	    ) 
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리 시 보존상자 정보 정리(일괄)
+	 -->
+	<update id="updateDisuseExcutePresvBoxInfoBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_SRPRESVBOX
+		SET ARNG_FOLDER_CNT = ARNG_FOLDER_CNT - 1
+		    , USE_FLAG = DECODE(ARNG_FOLDER_CNT -1, 0, '0','1')
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+     	AND PRESV_BOX_ID IN (
+     		SELECT A.PRESV_BOX_ID 
+		    FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+		    WHERE B.record_center_id = #recordCenterId:VARCHAR#
+	        AND   B.DISCU_YYYY = #discuYyyy:VARCHAR#
+	        AND   A.Record_Center_Id = B.RECORD_CENTER_ID
+	        AND   A.Folder_Id = B.Folder_Id
+	        AND   A.Disu_Div_Cd = '1'
+	        AND   B.discu_orign_type_cd = '1'
+			AND A.folder_id IN (
+				SELECT A.folder_id
+				FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+				AND   A.FOLDER_ID = B.Folder_Id
+				AND   A.folder_keep_state_cd in ('01','04') 		<!-- 철보유상태(01:보유, 03:폐기, 04:기관간인수) -->
+				AND   A.Disu_Div_Cd = '1'          					<!-- 폐기심의결과(1:폐기) -->
+				AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# <!-- 기록관ID  -->
+				AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	<!-- 폐기평가년도 -->
+				<isNotEmpty prepend="AND" property="discuYyyySeq">
+					B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#       <!-- 심의서번호 -->
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="discuReqFlag">
+					B.discu_req_flag = #discuReqFlag:VARCHAR#      	<!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					B.org_cd = #orgCd:VARCHAR#            		    <!-- 처리부서 -->
+				</isNotEmpty>
+				<isNotEmpty prepend="AND">
+					<isEqual property="disusePresv30yearDiv" compareValue="1">
+						A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+					</isEqual>
+					<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+						A.PRESV_TERM_CD in ('01', '03', '05', '10')
+					</isNotEqual>
+				</isNotEmpty>
+	    	)
+        )
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리 시 tb_dfdisuseopin 폐기처분일자,페기처분 담당자 이름,폐기방법,MF상태확인여부,광디스크상태확인여부 값 update(일괄)
+	 -->
+	<update id="updateDisuseExcuteHandlMethodBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_DFDISUSEOPIN
+		SET disuse_expt_ymd = #disuseYmd:VARCHAR#
+	        , disuse_user_nm = #disuseUserNm:VARCHAR#
+	        , disuse_method_cd = case when discu_orign_type_cd = '1' then #disuseMethodCd:VARCHAR#
+	                				  else disuse_method_cd
+	                			 end                									 
+	        , mf_stat_confm_flag = case when discu_orign_type_cd = '1' then #mfStatConfmFlag:VARCHAR#
+	                					else mf_stat_confm_flag
+	                			   end
+	        , cd_stat_confm_flag = case when discu_orign_type_cd = '1' then #cdStatConfmFlag:VARCHAR#
+	                					else cd_stat_confm_flag
+	                			   end
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	    AND discu_yyyy = #discuYyyy:VARCHAR#
+	    AND ((DISCU_REQ_FLAG='0' AND review_div_cd = '1') OR (DISCU_REQ_FLAG='1' AND NAT_CMT_DIV_CD = '1'))
+		AND folder_id IN (
+			SELECT A.folder_id
+			FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			AND   A.FOLDER_ID = B.Folder_Id
+			AND   A.folder_keep_state_cd in ('01','04') 		<!-- 철보유상태(01:보유, 03:폐기, 04:기관간인수) -->
+			AND   A.Disu_Div_Cd = '1'          					<!-- 폐기심의결과(1:폐기) -->
+			AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# <!-- 기록관ID  -->
+			AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	<!-- 폐기평가년도 -->
+			<isNotEmpty prepend="AND" property="discuYyyySeq">
+				B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     	<!-- 심의서번호 -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="discuReqFlag">
+				B.discu_req_flag = #discuReqFlag:VARCHAR#      	<!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#            			<!-- 처리부서 -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+	    )
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리(일괄)
+	 -->
+	<update id="updateDisuseExcuteHandlBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_RDFOLDER A
+		SET A.disuse_ymd = #disuseYmd:VARCHAR#
+			,A.folder_keep_state_cd = (
+				select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then '03'
+							when B.discu_req_flag||B.discu_orign_type_cd = '02' then '03'
+							else A.folder_keep_state_cd
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+	        ,A.Expt_Disuse_Yyyy = (
+	        	select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then null
+							when B.discu_req_flag||B.discu_orign_type_cd = '02' then null										          
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' AND TO_NUMBER(A.Presv_Term_Cd) <![CDATA[>=]]> 25 then null
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' AND TO_NUMBER(A.Presv_Term_Cd) <![CDATA[<]]> 25 then TO_NUMBER(A.creat_yyyy) + 1 + TO_NUMBER(A.Presv_Term_Cd)
+							else TO_NUMBER(A.Expt_Disuse_Yyyy)
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+	        , A.orign_dis_cd = (
+	        	select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then '1'
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' then '1'
+							else A.orign_dis_cd
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+	        , A.PRESV_BOX_ID = (
+	        	select case when B.discu_req_flag||B.discu_orign_type_cd = '01' then null
+							when B.discu_req_flag||B.discu_orign_type_cd = '11' then null
+							else A.PRESV_BOX_ID
+					   end
+				from  tb_dfdisuseopin B 
+				where B.record_center_id = A.record_center_id
+				and   B.folder_id = A.folder_id
+				and   B.discu_yyyy = A.last_eval_yyyy
+			)
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	    AND A.last_eval_yyyy = #discuYyyy:VARCHAR#
+	    AND A.Disu_Div_Cd = '1'
+	    AND A.folder_id IN (
+			SELECT A.folder_id
+			FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			AND   A.FOLDER_ID = B.Folder_Id
+			AND   A.folder_keep_state_cd in ('01','04') 		<!-- 철보유상태(01:보유, 03:폐기, 04:기관간인수) -->
+			AND   A.Disu_Div_Cd = '1'          					<!-- 폐기심의결과(1:폐기) -->
+			AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# <!-- 기록관ID  -->
+			AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	<!-- 폐기평가년도 -->
+			<isNotEmpty prepend="AND" property="discuYyyySeq">
+				B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     	<!-- 심의서번호 -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="discuReqFlag">
+				B.discu_req_flag = #discuReqFlag:VARCHAR#      	<!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#            			<!-- 처리부서 -->
+			</isNotEmpty>
+			<isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					A.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+	    )
+	</update>
+	<!-- 
+		UPDATE - 폐기집행 폐기처리 폐기처리 시 공개목록 내용 변경(일괄)
+	 -->
+	<update id="updateDisuseExcuteOpenListBatch" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_STOPENLIST
+		<!--cubrid SET DISUSE_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+	        , CHNG_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		SET DISUSE_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+	        , CHNG_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+			, CHNG_TYPE='03'
+			, DISUSE_DIV='01'			
+		    , OPENLIST_OFFER_FLAG='0'
+	    WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id IN (
+			SELECT A.folder_id 
+			FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+			WHERE B.record_center_id = #recordCenterId:VARCHAR#
+	        AND B.DISCU_YYYY = #discuYyyy:VARCHAR#                            
+	        AND A.Record_Center_Id = B.RECORD_CENTER_ID
+	        AND A.Folder_Id = B.Folder_Id
+	        AND A.Disu_Div_Cd = '1'
+	        AND B.discu_req_flag = '0'  
+			AND A.folder_id IN (
+				SELECT A.folder_id
+				FROM  TB_RDFOLDER A, TB_DFDISUSEOPIN B
+				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+				AND   A.FOLDER_ID = B.Folder_Id
+				AND   A.folder_keep_state_cd in ('01','04') 		<!-- 철보유상태(01:보유, 03:폐기, 04:기관간인수) -->
+				AND   A.Disu_Div_Cd = '1'          					<!-- 폐기심의결과(1:폐기) -->
+				AND   B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# <!-- 기록관ID  -->
+				AND   B.discu_yyyy = #discuYyyy:VARCHAR#          	<!-- 폐기평가년도 -->
+				<isNotEmpty prepend="AND" property="discuYyyySeq">
+					B.discu_yyyy_seq = #discuYyyySeq:VARCHAR#     	<!-- 심의서번호 -->
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="discuReqFlag">
+					B.discu_req_flag = #discuReqFlag:VARCHAR#      	<!-- 폐기평가대상구분(0:보존기간만료, 1:대체보존) -->
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					B.org_cd = #orgCd:VARCHAR#            			<!-- 처리부서 -->
+				</isNotEmpty>
+				<isNotEmpty prepend="AND">
+					<isEqual property="disusePresv30yearDiv" compareValue="1">
+						A.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+					</isEqual>
+					<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+						A.PRESV_TERM_CD in ('01', '03', '05', '10')
+					</isNotEqual>
+				</isNotEmpty>
+	    	)
+	    ) 
+	</update>
+	
+	<!-- 
+		SELECT - 폐기집행 전자파일삭제 tb_nkefilelist 작업순번조회하기
+	 -->
+	<select id="findEfileListWorkSno" resultClass="java.lang.String">
+		SELECT NVL(MAX(work_sno),0) AS work_sno FROM TB_NKEFILELIST
+	</select>
+	
+	<!-- 
+		UPDATE - 폐기집행 전자파일삭제 tb_nkefilelist 에 삭제대상 정보 삽입
+	 -->
+	<insert id="creatEfileDelWork" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		INSERT INTO TB_NKEFILELIST
+		VALUES (#recordCenterId:VARCHAR#
+			, #folderId:VARCHAR#
+			, #reqDivCd:VARCHAR#
+			, (SELECT NVL(MAX(work_sno),0) FROM TB_NKEFILELIST) + 1
+			, #workStateCd:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE, 'yyyymmddhhmiss')-->
+			, TO_CHAR(sys_datetime, 'yyyymmddhhmiss')
+		)
+	</insert>
+	<!-- 
+		UPDATE - 폐기집행 전자파일삭제 삭제코드 update(기록물철 : 삭제대기)
+	 -->
+	<update id="updateEfileDelCd" parameterClass="rms.eval.disuseeval.domain.DisuseExcute">
+		UPDATE TB_RDFOLDER
+		SET efile_del_cd = '02'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		폐기집행 폐기처리 
+		: 공개목록변경 감사추적로그 등록
+	 -->
+	<resultMap id="findDisuseExcuteFolderTrace-result" class="rms.common.trace.domain.OpenListChng">
+		<result property="orgCd"			column="ORG_CD"/>
+		<result property="folderId"			column="FOLDER_ID"/>
+		<result property="chngRsn"			column="REVIEW_RSN"/>
+		<result property="disuseYmd"		column="REVIEW_YMD"/>
+		<result	property="folderKey" 		column="FOLDER_KEY"/>
+	</resultMap>
+	<select id="findDisuseExcuteFolderTrace" parameterClass="rms.eval.disuseeval.domain.DisuseExcute" resultMap="findDisuseExcuteFolderTrace-result">
+		SELECT A.ORG_CD
+		      ,A.FOLDER_ID
+		      ,B.REVIEW_RSN
+		      ,(CASE WHEN B.REVIEW_OPIN = '1' THEN (SELECT Z.DISUSE_YMD FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.FOLDER_ID = A.FOLDER_ID)
+		             WHEN B.REVIEW_OPIN = '2' THEN B.REVIEW_YMD
+		             WHEN B.REVIEW_OPIN = '3' THEN B.REVIEW_YMD
+		             ELSE ''
+		        END) AS REVIEW_YMD
+		      ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS FOLDER_KEY
+		FROM TB_RDFOLDER A, TB_DFDISUSEOPINHIST B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.FOLDER_ID = #folderId:VARCHAR#
+		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND A.FOLDER_ID = B.FOLDER_ID
+	</select>
+	
+</sqlMap>

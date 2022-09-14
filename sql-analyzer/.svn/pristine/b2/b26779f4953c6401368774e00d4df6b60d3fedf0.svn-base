@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.unitMng">
+
+    <!--처리과코드 존재유무 체크-->
+	<select id="findOrgCdCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_STORG
+		WHERE   record_center_id = #recordCenterId:VARCHAR# 
+		AND     org_cd = #orgCd:VARCHAR# 
+	</select>
+	
+	<!--보고기관(처리과코드)로 기록관코드리턴 SELECT -->
+	<select id="findRecordCenterId" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="string">
+		SELECT record_center_id
+		FROM   TB_STORG
+		WHERE  org_cd = #orgCd:VARCHAR#
+	</select>
+	
+	<!--신청순번 조회 SELECT -->
+	<select id="findReqSnoSeq" resultClass="string">
+		SELECT TO_CHAR(SYSDATE, 'YYYY') || LPAD((TB_ZZUNITREQ_SQ01.NEXTVAL), 6, '0')
+		FROM   DUAL
+	</select>
+	
+	<!-- 임시단위업무 채번 -->
+	<select id="findTempUnitCd" resultClass="string">
+		SELECT	LPAD(TB_ZZUNIT_TEMPCD_SQ01.NEXTVAL, 7, '0')
+		FROM	DUAL 
+	</select>
+	
+	
+	<!--CREATE 단위업무신청 insert-->
+	<insert id="creatZzUnitReqOrg" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+		INSERT INTO TB_ZZUNITREQ (
+   	   					  	record_center_id, 
+   	   					  	req_sno_id, 
+   	   					  	unit_req_type_cd, 
+   	   					  	req_dtime, 
+   	   					  	req_user_nm, 
+   	   					  	unit_req_state_cd, 
+   	   					  	online_flag,
+                            req_org_cd, 
+                            req_yyyy, 
+                            creat_sys_cd, 
+                            take_mng_no
+						 ) 
+				  VALUES ( 	#recordCenterId:VARCHAR#,
+				  			#reqSnoId:VARCHAR#, 
+	   						#unitReqTypeCd:VARCHAR#, 
+							<!--cubgrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+							TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+							#reqUserNm:VARCHAR#,
+							#unitReqStateCd:VARCHAR#,
+							#onlineFlag:VARCHAR#,
+                            #reqOrgCd:VARCHAR#, 
+                            #reqYyyy:VARCHAR#, 
+                            '02', 
+                            #takeMngNo:VARCHAR#
+					     )
+	</insert>
+	
+	
+	<!--전자문서 시스템에서의 단위업무 신청 내역 등록 Insert-->
+	<insert id="creatZzUnitReq" parameterClass="rms.stnd.unitMng.domain.UnitReq">
+		INSERT INTO TB_ZZUNITREQ (
+   	   					  	record_center_id, 
+   	   					  	req_sno_id, 
+   	   					  	unit_req_type_cd, 
+   	   					  	req_dtime, 
+   	   					  	req_user_nm, 
+   	   					  	unit_req_state_cd, 
+   	   					  	online_flag,
+                            req_org_cd, 
+                            req_yyyy, 
+                            creat_sys_cd, 
+                            take_mng_no,
+                            recv_file_nm,
+                            recv_rslt_cd
+						 ) 
+				  VALUES ( 	#recordCenterId:VARCHAR#,
+				  			#reqSnoId:VARCHAR#, 
+	   						#unitReqTypeCd:VARCHAR#, 
+							<!--cubgrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+							TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+							#reqUserNm:VARCHAR#,
+							#unitReqStateCd:VARCHAR#,
+							#onlineFlag:VARCHAR#,
+                            #reqOrgCd:VARCHAR#, 
+                            #reqYyyy:VARCHAR#, 
+                            #creatSysCd#, 
+                            #takeMngNo:VARCHAR#,
+                            #recvFileNm:VARCHAR#,
+                            '0' 
+					     )
+	</insert>
+	
+	
+	<!--CREATE 단위업무변경신청 insert-->
+<!--	<insert id="creatZzUnitMovReqOrg" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+		INSERT INTO TB_ZZUNITMOVEREQ (
+							record_center_id, 
+							req_sno_id, 
+							unit_req_type_cd, 
+							apply_stnd_ymd, 
+							chng_bef_org_cd, 
+							chng_aft_org_cd, 
+							chng_bef_unit_cd, 
+							chng_rsn,
+							unit_req_state_cd,
+							take_mng_no
+			 			) 
+				  VALUES (
+						  	#recordCenterId:VARCHAR#,
+						  	#reqSnoId:VARCHAR#,
+						  	#unitReqTypeCd:VARCHAR#,
+						  	#applyStndYmd:VARCHAR#,
+    						#chngBefOrgCd:VARCHAR#, 
+							#chngAftOrgCd:VARCHAR#,
+							#chngBefUnitCd:VARCHAR#,
+							#chngRsn:VARCHAR#,
+							#unitReqStateCd:VARCHAR#,
+							#takeMngNo:VARCHAR#
+					     )
+	</insert>
+-->
+	
+	<!--CREATE 단위업무소관부서변경 insert-->
+	<insert id="creatZzUnitMoveReqOrg" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+		INSERT INTO TB_ZZUNITMOVEREQ (
+							record_center_id, 
+							req_sno_id, 
+							unit_req_type_cd, 
+							apply_stnd_ymd, 
+							chng_bef_org_cd, 
+							chng_aft_org_cd, 
+							chng_bef_unit_cd, 
+							chng_rsn,
+							unit_req_state_cd,
+							take_mng_no
+			 			) 
+				  VALUES (
+						  	#recordCenterId:VARCHAR#,
+						  	#reqSnoId:VARCHAR#,
+						  	#unitReqTypeCd:VARCHAR#,
+						  	#applyStndYmd:VARCHAR#,
+    						#chngBefOrgCd:VARCHAR#, 
+							#chngAftOrgCd:VARCHAR#,
+							#chngBefUnitCd:VARCHAR#,
+							#chngRsn:VARCHAR#,
+							#unitReqStateCd:VARCHAR#,
+							#takeMngNo:VARCHAR#
+					     )
+	</insert>
+	
+	
+	<!--CREATE 단위업무처리과코드변경 insert-->
+	<insert id="creatZzUnitSetReqOrg" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+        INSERT INTO TB_ZZUNITSETREQ (
+                            record_center_id, 
+                            req_sno_id, 
+                            unit_req_type_cd, 
+                            apply_stnd_ymd, 
+                            chng_bef_org_cd,
+                            chng_aft_org_cd, 
+                            chng_rsn,
+                            unit_req_state_cd,
+                            take_mng_no
+                         ) 
+                  VALUES (
+                            #recordCenterId:VARCHAR#,
+                            #reqSnoId:VARCHAR#,
+                            #unitReqTypeCd:VARCHAR#,
+                            #applyStndYmd:VARCHAR#,
+                            #chngBefOrgCd:VARCHAR#,
+                            #chngAftOrgCd:VARCHAR#, 
+                            #chngRsn:VARCHAR#,
+                            #unitReqStateCd:VARCHAR#,
+                            #takeMngNo:VARCHAR#
+                         )
+	</insert>
+	
+	
+	<!--CREATE 단위업무폐지변경 insert-->
+	<insert id="creatZzUnitDelReqOrg" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+        INSERT INTO TB_ZZUNITDELREQ (
+                            record_center_id, 
+                            req_sno_id, 
+                            unit_req_type_cd, 
+                            apply_stnd_ymd, 
+                            chng_bef_org_cd, 
+                            chng_bef_unit_cd, 
+                            chng_rsn,
+                            unit_req_state_cd,
+                            take_mng_no
+                         ) 
+                  VALUES (
+                            #recordCenterId:VARCHAR#,
+                            #reqSnoId:VARCHAR#,
+                            #unitReqTypeCd:VARCHAR#,
+                            #applyStndYmd:VARCHAR#,
+                            #chngBefOrgCd:VARCHAR#, 
+                            #chngBefUnitCd:VARCHAR#,
+                            #chngRsn:VARCHAR#,
+                            #unitReqStateCd:VARCHAR#,
+                            #takeMngNo:VARCHAR#
+                         )
+	</insert>
+	
+	
+    <!--단위업무코드 존재유무 체크-->
+	<select id="findUnitCdCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_STORG a, TB_ZZORGUNIT b
+		WHERE   a.record_center_id = #recordCenterId:VARCHAR# 
+		AND     a.org_cd = #orgCd:VARCHAR#
+		AND     a.record_center_id = b.record_center_id
+		AND     a.org_cd = b.org_cd
+		AND     b.unit_cd = #unitCd:VARCHAR#
+	</select>
+	
+	
+	<!--CREATE 단위업무신설신청 insert-->
+	<insert id="creatZzUnitNewReq" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+		INSERT INTO TB_ZZUNITNEWREQ (
+   	   						record_center_id, 
+							req_sno_id, 
+							unit_req_type_cd, 
+							org_cd, 
+							temp_unit_cd, 
+							apply_stnd_ymd, 
+							temp_unit_nm,
+							unit_alias, 
+							task_descr, 
+							adm_duty_ref_term_cd, 
+							evi_data_validity_term_cd, 
+							histdata_presv_term_cd, 
+							presv_term_cd, 
+							presv_term_fix_rsn, 
+							presv_method_cd, 
+							presv_area_cd, 
+							funsh_record_flag, 
+							funsh_record_transf_ymd, 
+							main_read_usg, 
+							transf_read_expt_cnt, 
+							spcl_list_loc, 
+							spcl_list1, 
+							spcl_list2, 
+							spcl_list3, 
+							rel_law_duty_term,
+							unit_req_state_cd,
+							take_mng_no
+							) 
+				VALUES 		( 
+							#recordCenterId:VARCHAR#, 
+							#reqSnoId:VARCHAR#, 
+							#unitReqTypeCd:VARCHAR#,
+    						#orgCd:VARCHAR#, 
+							#tempUnitCd:VARCHAR#, 
+							#applyStndYmd:VARCHAR#,
+    						#tempUnitNm:VARCHAR#, 
+    						#unitAlias:VARCHAR#, 
+							#taskDescr:VARCHAR#, 
+							#admDutyRefTermCd:VARCHAR#,
+    						#eviDataValidityTermCd:VARCHAR#, 
+							#histdataPresvTermCd:VARCHAR#, 
+							#presvTermCd:VARCHAR#,
+    						#presvTermFixRsn:VARCHAR#, 
+							#presvMethodCd:VARCHAR#, 
+							#presvAreaCd:VARCHAR#,
+    						#funshRecordFlag:VARCHAR#, 
+							#funshRecordTransfYmd:VARCHAR#, 
+							#mainReadUsg:VARCHAR#,
+    						#transfReadExptCnt:VARCHAR#, 
+							#spclListLoc:VARCHAR#, 
+							#spclList1:VARCHAR#,
+    						#spclList2:VARCHAR#, 
+							#spclList3:VARCHAR#,
+							#relLawDutyTerm:VARCHAR#,
+							#unitReqStateCd:VARCHAR#,
+							#takeMngNo:VARCHAR#
+							)
+	</insert>
+	
+	<!--공통코드 존재유무 체크-->
+	<select id="findComCdCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_ZZCOMCD
+		WHERE   COM_TYPE_CD = #comTypeCd:VARCHAR#
+		AND     COM_CD = #comCd:VARCHAR#
+	</select>
+	
+	
+<!-- ====== 시범보급 수정 기능 BY JSM 2011.11.28 START ===== -->
+<!-- 미처리된 내역만 이미 접수된 내역인지 체크 하도록 수정 -->
+	
+	<!-- 
+		2011.12.08
+		단위업무신설신청 접수시 단위업무신청처리상태코드가 2번 수용불가 일 경우에만 같은 단위업무 코드를 입력 받음 
+	-->
+	<!--단위업무신설신청 접수시 이미 접수된 내역인지 체크-->
+	<select id="findUnitNewRecvCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_ZZUNITNEWREQ
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND     unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+		AND     org_cd = #orgCd:VARCHAR#
+		AND     temp_unit_cd = #tempUnitCd:VARCHAR#
+		AND     unit_req_state_cd IN  ('0', '1')
+	</select>
+	
+	
+	<!--단위업무소관부서변경 접수시 이미 접수된 내역인지 체크-->
+	<select id="findUnitMovRecvCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_ZZUNITMOVEREQ
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND     unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+		AND     chng_bef_org_cd = #chngBefOrgCd:VARCHAR#
+		AND     chng_aft_org_cd = #chngAftOrgCd:VARCHAR#
+		AND     chng_bef_unit_cd = #chngBefUnitCd:VARCHAR#
+		AND     unit_req_state_cd = '0'
+	</select>
+	
+	
+	<!--단위업무폐지신청 접수시 이미 접수된 내역인지 체크-->
+	<select id="findUnitDelRecvCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+        SELECT  COUNT(1) 
+        FROM    TB_ZZUNITDELREQ
+        WHERE   record_center_id = #recordCenterId:VARCHAR#
+        AND     unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+        AND     chng_bef_org_cd = #chngBefOrgCd:VARCHAR#
+        AND     chng_bef_unit_cd = #chngBefUnitCd:VARCHAR#
+        AND     unit_req_state_cd = '0'
+	</select>
+	
+	
+	<!--단위업무처리과코드변경신청 접수시 이미 접수된 내역인지 체크-->
+	<select id="findUnitSetRecvCheck" parameterClass="rms.stnd.unitMng.domain.GrClssLink" resultClass="int">
+        SELECT  COUNT(1) 
+        FROM    TB_ZZUNITSETREQ
+        WHERE   record_center_id = #recordCenterId:VARCHAR#
+        AND     unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+        AND     chng_bef_org_cd = #chngBefOrgCd:VARCHAR#
+		AND     chng_aft_org_cd = #chngAftOrgCd:VARCHAR#
+		AND     unit_req_state_cd = '0'
+	</select>
+
+<!-- ====== 시범보급 수정 기능 BY JSM 2011.11.28 END ====== -->
+
+<!-- ====== 시범보급 추가 기능 2011.11.29 START ===== -->
+    <!--단위업무수정신청시 코드 조회-->
+	<resultMap id="findZzUnitModReqCode-result" class="rms.stnd.unitMng.domain.Common" >
+		<result property="comCd"        column="COM_CD"        />
+		<result property="comCdNm"      column="COM_CD_NM"     />	
+		<result property="comTypeCd"    column="COM_TYPE_CD"   />
+	</resultMap>	    
+	<select id="findZzUnitModReqCode" resultMap="findZzUnitModReqCode-result">
+		SELECT COM_CD
+		    , COM_CD_NM
+		    , CASE 
+		        WHEN COM_CD = '04' THEN 'RD07'
+		        WHEN COM_CD = '05' THEN 'RD09'
+		        WHEN COM_CD = '06' THEN 'RD10'
+		        WHEN COM_CD = '07' THEN 'ZZ21'
+		        WHEN COM_CD = '09' THEN 'RD22'
+		        ELSE '0'
+		        END COM_TYPE_CD
+          FROM TB_ZZCOMCD
+         WHERE com_type_cd = 'ZZ30'
+         ORDER BY COM_CD
+	</select>
+<!-- ====== 시범보급 추가 기능 2011.11.29 END ====== -->		
+	
+	<!--CREATE 단위업무수정신청 insert-->
+	<insert id="creatZzUnitModReq" parameterClass="rms.stnd.unitMng.domain.GrClssLink">
+		INSERT INTO TB_ZZUNITCHNGREQ (
+   		  	   					record_center_id, 
+								req_sno_id, 
+								org_cd, 
+								unit_cd, 
+								unit_req_type_cd, 
+								apply_stnd_ymd, 
+								chng_bef_unit_nm, 
+								chng_aft_unit_nm, 
+								unit_nm_chng_rsn, 
+								chng_bef_unit_alias, 
+								chng_aft_unit_alias, 
+								unit_alias_chng_rsn, 
+								chng_bef_unit_descr, 
+								chng_aft_unit_descr, 
+								unit_descr_chng_rsn, 
+								chng_bef_presv_term_cd, 
+								chng_aft_presv_term_cd, 
+								presv_term_cd_chng_rsn, 
+								chng_bef_presv_method_cd, 
+								chng_aft_presv_method_cd, 
+								presv_method_cd_chng_rsn, 
+								chng_bef_presv_area_cd, 
+								chng_aft_presv_area_cd, 
+								presv_area_cd_chng_rsn, 
+								chng_bef_funsh_record_flag, 
+								chng_aft_funsh_record_flag, 
+								funsh_record_falg_chng_rsn, 
+								bef_funsh_record_transf_ymd, 
+								aft_funsh_record_transf_ymd, 
+								funsh_record_transf_ymd_rsn, 
+								chng_bef_spcl_list_loc, 
+								chng_aft_spcl_list_loc, 
+								spcl_list_loc_chng_rsn, 
+								chng_bef_spcl_list1, 
+								chng_aft_spcl_list1, 
+								spcl_list1_chng_rsn, 
+								chng_bef_spcl_list2, 
+								chng_aft_spcl_list2, 
+								spcl_list2_chng_rsn, 
+								chng_bef_spcl_list3, 
+								chng_aft_spcl_list3, 
+								spcl_list3_chng_rsn,
+								unit_req_state_cd,
+								take_mng_no
+								) 
+					    VALUES (#recordCenterId:VARCHAR#,
+								#reqSnoId:VARCHAR#,
+								#orgCd:VARCHAR#,
+								#unitCd:VARCHAR#,
+								#unitReqTypeCd:VARCHAR#,
+								#applyStndYmd:VARCHAR#,
+								#chngBefUnitNm:VARCHAR#,
+								#chngAftUnitNm:VARCHAR#,
+								#unitNmChngRsn:VARCHAR#,
+								#chngBefUnitAlias:VARCHAR#,
+								#chngAftUnitAlias:VARCHAR#,
+								#unitAliasChngRsn:VARCHAR#,
+								#chngBefUnitDescr:VARCHAR#,
+								#chngAftUnitDescr:VARCHAR#,
+								#unitDescrChngRsn:VARCHAR#,
+								#chngBefPresvTermCd:VARCHAR#,
+								#chngAftPresvTermCd:VARCHAR#,
+								#presvTermCdChngRsn:VARCHAR#,
+								#chngBefPresvMethodCd:VARCHAR#,
+								#chngAftPresvMethodCd:VARCHAR#,
+								#presvMethodCdChngRsn:VARCHAR#,
+								#chngBefPresvAreaCd:VARCHAR#,
+								#chngAftPresvAreaCd:VARCHAR#,
+								#presvAreaCdChngRsn:VARCHAR#,
+								#chngBefFunshRecordFlag:VARCHAR#,
+								#chngAftFunshRecordFlag:VARCHAR#,
+								#funshRecordFalgChngRsn:VARCHAR#,
+								#befFunshRecordTransfYmd:VARCHAR#,
+								#aftFunshRecordTransfYmd:VARCHAR#,
+								#funshRecordTransfYmdRsn:VARCHAR#,
+								#chngBefSpclListLoc:VARCHAR#,
+								#chngAftSpclListLoc:VARCHAR#,
+								#spclListLocChngRsn:VARCHAR#,
+								#chngBefSpclList1:VARCHAR#,
+								#chngAftSpclList1:VARCHAR#,
+								#spclList1ChngRsn:VARCHAR#,
+								#chngBefSpclList2:VARCHAR#,
+								#chngAftSpclList2:VARCHAR#,
+								#spclList2ChngRsn:VARCHAR#,
+								#chngBefSpclList3:VARCHAR#,
+								#chngAftSpclList3:VARCHAR#,
+								#spclList3ChngRsn:VARCHAR#,
+								#unitReqStateCd:VARCHAR#,
+								#takeMngNo:VARCHAR# 
+								)
+	</insert>
+	
+	
+	<!--기관코드로 기록관코드리턴 SELECT -->
+	<select id="findUnitRecordCenterId" parameterClass="string" resultClass="string">
+		SELECT record_center_id
+		FROM   TB_STORG
+		WHERE  org_cd = #value#
+	</select>
+	
+	
+	<!--기록관에서 전자문서시스템과의 연동모듈  저장디렉토리 정보 조회(02) SELECT -->
+	<select id="findUnitGrInfo02" parameterClass="string" resultClass="string">
+		SELECT 	link_server_path
+		FROM   	TB_STCONFIG
+		WHERE	record_center_id = #value#
+	</select>
+	
+	
+	<!--단위업무접수처리 > 접수성공시 TB_ZZUNITREQ 테이블에 성공여부 저장 UPDATE-->
+	<update id="updateUnitMngRecvRslt" parameterClass="rms.stnd.unitMng.domain.UnitReq">
+		UPDATE	TB_ZZUNITREQ
+		SET		recv_rslt_cd = '1'
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		req_sno_id = #reqSnoId:VARCHAR#
+		AND		unit_req_type_cd = #unitReqTypeCd:VARCHAR#
+	</update>
+</sqlMap>

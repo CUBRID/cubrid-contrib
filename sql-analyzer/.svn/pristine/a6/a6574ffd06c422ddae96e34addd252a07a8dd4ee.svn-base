@@ -1,0 +1,25 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeUser.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeUser.xml
+-- Query    : select
+-- Query Id : countUserNm
+
+		SELECT COUNT(1)		FROM  TB_STUSER A		WHERE A.record_center_id = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeUser.xml
+-- Query    : select
+-- Query Id : findUserNm
+
+		SELECT C.user_id			, C.user_nm			, C.login_user_id			, C.dept_nm			, C.dept_cd			, C.use_flag		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (			    SELECT A.user_id 					, A.user_nm					, A.login_user_id					, A.dept_cd					, (SELECT Z.dept_nm FROM TB_STDEPT Z WHERE Z.record_center_id=A.record_center_id AND Z.dept_cd=A.dept_cd) AS dept_nm					, (CASE WHEN A.use_flag='0' THEN '미사용' ELSE '사용' END) AS use_flag				FROM  TB_STUSER A				WHERE A.record_center_id = '1'				ORDER BY A.user_nm			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeUser.xml
+-- Query    : select
+-- Query Id : findUserTree
+
+		(			SELECT C.*			FROM (				SELECT A.record_center_id AS recordCenterId					, '2' AS treeType					, A.user_id AS id					, A.user_nm AS text					, 'open' AS state					, (CASE WHEN A.use_flag = '0' THEN 'icon-file_full_delete'							ELSE 'icon-file_full_accept'						END) AS iconCls				FROM  TB_STUSER A				WHERE A.record_center_id = '1'				AND   A.dept_cd = '1'			) C		)		UNION ALL		(			SELECT C.*			FROM (				SELECT A.record_center_id AS recordCenterId					, '1' AS treeType					, A.dept_cd AS id					, A.dept_abbr_nm AS text					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STDEPT B WHERE B.upper_dept_cd = A.dept_cd) THEN 'closed'							WHEN EXISTS (SELECT 1 FROM TB_STUSER B WHERE B.dept_cd = A.dept_cd) THEN 'closed'							ELSE 'open'						END) AS state 					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'							ELSE 'icon-folder_full_accept'						END) AS iconCls				FROM TB_STDEPT A				WHERE A.record_center_id = '1' 								ORDER BY A.close_flag, A.record_center_id, A.levl, A.dept_cd, A.apply_start_ymd, A.dept_abbr_nm			) C		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeUser.xml

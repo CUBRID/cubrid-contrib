@@ -1,0 +1,25 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+
+findOrgComStnd
+Syntax: In line 7, column 424 before '.rnum >= '1'	;'
+Syntax error: unexpected 'B', expecting SELECT or VALUE or VALUES or '(' [CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : select
+-- Query Id : findOrgComStnd
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT A.STND_MNG_TYPE_CD		, A.VER		, A.BRM_MID_NM		, A.BRM_SML_NM		, A.PRESV_TERM_CD		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM		, A.TASK_DESCR		, A.TASK_NM		FROM TB_ZZORGCOMSTND A 				WHERE A.RECORD_CENTER_ID = '1' 		 AND 				A.BRM_SML_NM = '1'		 					) C						WHERE ROWNUM <= '1'					) BWHERE B.rnum >= '1'	;
+
+createOrgComStnd
+The constraint of the foreign key 'tb_zzorgcomstnd_fk01' is invalid, due to value '{'1', '1', '1'}'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : insert
+-- Query Id : createOrgComStnd
+
+		INSERT INTO TB_ZZORGCOMSTND(STND_SEQ, STND_MNG_TYPE_CD, VER, BRM_MID_NM, BRM_SML_NM, PRESV_TERM_CD, TASK_NM, TASK_DESCR, RECORD_CENTER_ID) 		VALUES ((SELECT NVL(MAX(TO_NUMBER(STND_SEQ)),0) FROM TB_ZZORGCOMSTND) + 1, '1', '1', '1', '1', '1', '1', '1', '1');
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml

@@ -1,0 +1,214 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : select
+-- Query Id : countDiosChoiceOrgPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd			FROM  TB_OPOPENLIST A			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state IN ('0','1','2')			 AND 				A.org_cd = '1'			  AND 				A.creat_sys_cd = '1'			  AND 				A.creat_yyyy = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : select
+-- Query Id : findDiosChoiceOrgPagedList
+
+		SELECT F.record_center_id			, F.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm			, NVL(SUM(F.def_cnt),0)+NVL(SUM(F.cho_cnt),0)+NVL(SUM(F.exc_cnt),0) AS tot_cnt			, NVL(SUM(F.def_cnt),0) AS def_cnt			, NVL(SUM(F.cho_cnt),0) AS cho_cnt			, NVL(SUM(F.exc_cnt),0) AS exc_cnt		FROM (			SELECT E.record_center_id				, E.org_cd                , (CASE WHEN E.open_state='0' THEN 1 ELSE 0 END) AS def_cnt                , (CASE WHEN E.open_state='1' THEN 1 ELSE 0 END) AS cho_cnt                , (CASE WHEN E.open_state='2' THEN 1 ELSE 0 END) AS exc_cnt			FROM  TB_OPOPENLIST E						WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd						FROM  TB_OPOPENLIST A						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state IN ('0','1','2') AND 							A.org_cd = '1'						  AND 							A.creat_sys_cd = '1'						  AND 							A.creat_yyyy = '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd			)			AND   E.open_state IN ('0','1','2')			 AND 				E.creat_sys_cd = '1'			  AND 				E.creat_yyyy = '1'			 		) F		GROUP BY F.record_center_id, F.org_cd		ORDER BY F.record_center_id, F.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceOrg
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		AND   org_cd = '1' AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceOrgBatch
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		 AND 			org_cd = '1'		  AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceCancelOrg
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '1'		AND   org_cd = '1' AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceCancelOrgBatch
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '1'		 AND 			org_cd = '1'		  AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptOrg
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '2'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		AND   org_cd = '1' AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptOrgBatch
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '2'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		 AND 			org_cd = '1'		  AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptCancelOrg
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '2'		AND   org_cd = '1'		 AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptCancelOrgBatch
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '2'		 AND 			org_cd = '1'		  AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : select
+-- Query Id : countDiosChoiceFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id			FROM  TB_OPOPENLIST A				, TB_RDFOLDER B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state IN ('0','1','2')			AND   A.org_cd = '1'			 AND 				A.creat_sys_cd = '1'			  AND 				A.creat_yyyy = '1'			 			AND   B.record_center_id=A.record_center_id			AND   B.folder_id=A.folder_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : select
+-- Query Id : findDiosChoiceFolderPagedList
+
+		SELECT G.record_center_id			, G.folder_id			, G.folder_title			, NVL(SUM(G.def_cnt),0)+NVL(SUM(G.cho_cnt),0)+NVL(SUM(G.exc_cnt),0) AS tot_cnt			, NVL(SUM(G.def_cnt),0) AS def_cnt			, NVL(SUM(G.cho_cnt),0) AS cho_cnt			, NVL(SUM(G.exc_cnt),0) AS exc_cnt		FROM (			SELECT E.record_center_id				, E.folder_id				, F.title AS folder_title                , (CASE WHEN E.open_state='0' THEN 1 ELSE 0 END) AS def_cnt                , (CASE WHEN E.open_state='1' THEN 1 ELSE 0 END) AS cho_cnt                , (CASE WHEN E.open_state='2' THEN 1 ELSE 0 END) AS exc_cnt			FROM  TB_OPOPENLIST E				, TB_RDFOLDER F			WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title						FROM  TB_OPOPENLIST A							, TB_RDFOLDER B						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state IN ('0','1','2')						AND   A.org_cd = '1' AND 							A.creat_sys_cd = '1'						  AND 							A.creat_yyyy = '1'						 						AND   B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id AND 							B.title LIKE '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, B.title					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd				AND   D.folder_id = E.folder_id			)			AND   E.open_state IN ('0','1','2') AND 				E.creat_sys_cd = '1'			  AND 				E.creat_yyyy = '1'			 			AND   F.record_center_id = E.record_center_id			AND   F.folder_id = E.folder_id AND 				F.title LIKE '1'			 		) G		GROUP BY G.record_center_id, G.folder_id, G.folder_title		ORDER BY G.record_center_id, G.folder_title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceFolder
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		AND   folder_id = '1' AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceFolderBatch
+
+ 			UPDATE updateDiosChoiceFolderBatch_VIEW          SET open_state = '1'      WHERE record_center_id = '1'           AND org_cd = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceCancelFolder
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '1'		AND   folder_id = '1' AND 			creat_sys_cd = '1'  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceCancelFolderBatch
+
+ 			UPDATE updateDiosChoiceCancelFolderBatch_VIEW          SET open_state = '0'      WHERE record_center_id = '1'           AND org_cd = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptFolder
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '2'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		AND   folder_id = '1' AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptFolderBatch
+
+ 			UPDATE updateDiosExceptFolderBatch_VIEW      SET open_state = '2'      WHERE record_center_id = '1'           AND org_cd = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptCancelFolder
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '2'		AND   folder_id = '1' AND 			creat_sys_cd = '1'		  AND 			creat_yyyy = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptCancelFolderBatch
+
+ 			UPDATE updateDiosExceptCancelFolderBatch_VIEW      SET open_state = '0'      WHERE record_center_id = '1'           AND org_cd = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : select
+-- Query Id : countDiosChoiceRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id			FROM  TB_OPOPENLIST A				, TB_RDRECORD B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01' AND 				A.open_state = '1'			 			AND   A.folder_id = '1'			 AND 				A.creat_sys_cd = '1'			  AND 				A.creat_yyyy = '1'			 			AND   B.record_center_id=A.record_center_id			AND   B.record_id=A.record_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : select
+-- Query Id : findDiosChoiceRecordPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.open_state			, D.record_title			, D.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm			, D.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm			, D.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.record_center_id					, A.record_id					, A.open_state					, B.title AS record_title					, B.record_reg_div_cd					, B.record_detl_type_cd					, B.open_div_cd				FROM  TB_OPOPENLIST A					, TB_RDRECORD B				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				 AND 					A.open_state = '1'				 				AND   A.folder_id = '1'				 AND 					A.creat_sys_cd = '1'				  AND 					A.creat_yyyy = '1'				 				AND   B.record_center_id = A.record_center_id				AND   B.record_id = A.record_id AND 					B.title LIKE '1'				 				ORDER BY A.record_center_id, A.open_sys_cd, B.title			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceRecord
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		AND   record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceRecordBatch
+
+ 			UPDATE updateDiosChoiceRecordBatch_VIEW      SET open_state = '1'      WHERE record_center_id = '1'           AND folder_id = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceCancelRecord
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '1'		AND   record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosChoiceCancelRecordBatch
+
+ 			UPDATE updateDiosChoiceCancelRecordBatch_VIEW      SET open_state = '0'      WHERE record_center_id = '1'           AND folder_id = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptRecord
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '2'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '0'		AND   record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptRecordBatch
+
+ 		UPDATE updateDiosExceptRecordBatch_VIEW      SET open_state = '2'      WHERE record_center_id = '1'           AND folder_id = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptCancelRecord
+
+		UPDATE TB_OPOPENLIST		SET   open_state = '0'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_state = '2'		AND   record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml
+-- Query    : update
+-- Query Id : updateDiosExceptCancelRecordBatch
+
+ 			UPDATE updateDiosExceptCancelRecordBatch_VIEW      SET open_state = '0'      WHERE record_center_id = '1'           AND folder_id = '1'           AND title LIKE '1'            AND     					creat_sys_cd = '1'    		  AND     					creat_yyyy = '1'    		  ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosChoice.xml

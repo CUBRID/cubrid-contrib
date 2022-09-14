@@ -1,0 +1,683 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewOrgTakeSchedCheck
+
+		SELECT COUNT(1)		FROM  TB_TKORGTAKESCHED		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   TAKE_SCHED_SET_STATE IN ('1','3')		AND   NVL(ERECORD_TAKE_START_PLAN_YMD,'00010101') <= TO_CHAR(SYSDATE,'YYYYMMDD')		AND   NVL(ERECORD_TAKE_CLOSE_PLAN_YMD,'99991231') >= TO_CHAR(SYSDATE,'YYYYMMDD')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewOrgTakePlanCheck
+
+		SELECT TAKE_STATE_DIV_CD		FROM  TB_TKORGTAKEPLAN		WHERE RECORD_CENTER_ID 	= '1'		AND   TAKE_YYYY 		= '1'		AND   TAKE_ORG_CD 		= '1'		AND   CREAT_SYS_CD 		= '1'		AND   TAKE_SNO 			= ( 									SELECT MAX(TAKE_SNO) TAKE_SNO									FROM  TB_TKORGTAKEPLAN									WHERE RECORD_CENTER_ID 	= '1'									AND   TAKE_YYYY 		= '1'									AND   TAKE_ORG_CD 		= '1'									AND   CREAT_SYS_CD 		= '1'								  );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewOrgTakePlanTakeSno
+
+		SELECT MAX(TAKE_SNO) TAKE_SNO		FROM  TB_TKORGTAKEPLAN		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_ORG_CD = '1'		AND   TAKE_YYYY = '1'		AND   CREAT_SYS_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewOrgTakePlanTakeSno
+
+		INSERT INTO TB_TKORGTAKEPLAN		(			RECORD_CENTER_ID			, TAKE_YYYY			, TAKE_ORG_CD			, CREAT_SYS_CD			, TAKE_SNO			, TAKE_STATE_DIV_CD			, RECORD_RECV_YMD			, RECV_YMD			, RECV_DIV_CD			, RECV_FOLDER_CNT			, RECV_RECORD_CNT			, BEF_TAKE_STATE_DIV_CD			, VIRUS_CHECK_FLAG			, REG_DTIME			, RECV_FILE_NM			, recv_fin_state_cd			, monitor_id		)		VALUES		(			'1'			, '1'			, '1'			, '1'			, ( SELECT NVL(MAX(TAKE_SNO),0)+1 TAKE_SNO				FROM  TB_TKORGTAKEPLAN				WHERE RECORD_CENTER_ID = '1'				AND   TAKE_YYYY = '1'				AND   TAKE_ORG_CD = '1'				AND   CREAT_SYS_CD = '1' )			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDD')			, TO_CHAR(SYSDATE,'YYYYMMDD')			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')			, '1'			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewOrgTakePlanParentTakeSno
+
+		UPDATE tb_tkorgtakeplan A		    SET  					A.parent_take_sno = (SELECT B.parent_take_sno 										 FROM tb_tkorgtakeplan B										 WHERE B.record_center_id 	= A.record_center_id										 AND   B.take_yyyy 			= A.take_yyyy										 AND   B.take_org_cd 		= A.take_org_cd										 AND   B.creat_sys_cd 		= A.creat_sys_cd 										 AND   B.take_sno 			= (A.take_sno-1))		   				   		   		 WHERE A.record_center_id = '1'		   AND A.take_yyyy 		= '1'		   AND A.take_org_cd 	= '1'		   AND A.creat_sys_cd 	= '1'		   AND A.take_sno 		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewOrgTakePlanTakeSno
+
+		UPDATE TB_TKORGTAKEPLAN		SET   TAKE_STATE_DIV_CD 	= '1'			, RECORD_RECV_YMD 		= TO_CHAR(SYSDATE,'YYYYMMDD')			, RECV_YMD 				= TO_CHAR(SYSDATE,'YYYYMMDD')			, RECV_DIV_CD 			= '1'			, RECV_FOLDER_CNT 		= '1'			, RECV_RECORD_CNT 		= '1'			, BEF_TAKE_STATE_DIV_CD = TAKE_STATE_DIV_CD			, BEF_RECV_FOLDER_CNT 	= RECV_FOLDER_CNT			, BEF_RECV_RECORD_CNT 	= RECV_RECORD_CNT			, RECV_FILE_NM 			= '1'			, recv_fin_state_cd 	= '1'			, monitor_id 			= '1'		WHERE RECORD_CENTER_ID 	= '1'		AND   TAKE_YYYY 		= '1'		AND   TAKE_ORG_CD 		= '1'		AND   CREAT_SYS_CD		= '1'		AND   TAKE_SNO 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewOrgTakePlanIng
+
+		UPDATE tb_tkorgtakeplan		SET   take_state_div_cd = '1'		    , recv_fin_state_cd = '1'			, recv_folder_err_cnt = (NVL(recv_folder_err_cnt, 0) + '1')		    			, recv_record_err_cnt = (NVL(recv_record_err_cnt, 0) + '1')		    , recv_attach_cnt 	  = (NVL(recv_attach_cnt, 0) + '1')		    , recv_attach_err_cnt = (NVL(recv_attach_err_cnt, 0) + '1')		WHERE record_center_id 	= '1'		AND   take_yyyy 		= '1'		AND   take_org_cd 		= '1'		AND   creat_sys_cd 		= '1'		AND   take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewOrgTakePlanCommit
+
+		UPDATE TB_TKORGTAKEPLAN		SET   TAKE_STATE_DIV_CD = '04'		    , recv_fin_state_cd = '3'		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   CREAT_SYS_CD = '1'		AND   TAKE_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewVaccineFolderCommit
+
+		UPDATE TB_TKFOLDER		SET   virus_flag = '0'     		, virus_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   CREAT_SYS_CD = '1'		AND   TAKE_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewVaccineOrgTakePlanCommit
+
+		UPDATE TB_TKORGTAKEPLAN		SET   virus_check_flag = '1'		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   CREAT_SYS_CD = '1'		AND   TAKE_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewOrgTakePlanRollback
+
+		UPDATE TB_TKORGTAKEPLAN		SET   RECORD_RECV_YMD = TO_CHAR(SYSDATE,'YYYYMMDD')			, RECV_YMD = TO_CHAR(SYSDATE,'YYYYMMDD')			, RECV_DIV_CD = '1'			, TAKE_STATE_DIV_CD = '03'			, RECV_FOLDER_CNT = 0			, RECV_RECORD_CNT = 0			, RECV_ATTACH_CNT = 0			, BEF_TAKE_STATE_DIV_CD = ''			, BEF_RECV_FOLDER_CNT = 0			, BEF_RECV_RECORD_CNT = 0			, recv_fin_state_cd = '2'		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   CREAT_SYS_CD = '1'		AND   TAKE_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeRecordCenterId
+
+		SELECT NVL(record_center_id,'') FROM TB_STORG WHERE org_cd = '1' AND take_org_flag IS NULL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewRecvUndTakeFolder
+
+		SELECT DECODE((			   (SELECT COUNT(1) 				FROM  TB_RDFOLDER				WHERE record_center_id = '1'				AND   creat_sys_cd = '1'				AND   org_cd = '1'				AND   clss_id = '1'				AND   creat_yyyy = '1'				AND   folder_reg_seq = '1'				AND  ((period_from_dt BETWEEN '1' AND '1')				    OR (period_to_dt BETWEEN '1' AND '1')))				+			   (SELECT COUNT(1) 				FROM  TB_RDFOLDER				WHERE record_center_id = '1'				AND   creat_sys_folder_id = '1'				AND  ((period_from_dt BETWEEN '1' AND '1')				    OR (period_to_dt BETWEEN '1' AND '1')))				), 0,					DECODE((					   (SELECT COUNT(1)						FROM  TB_TKFOLDER						WHERE record_center_id = '1'						AND   creat_sys_cd = '1'						AND   org_cd = '1'						AND   clss_id = '1'						AND   creat_yyyy = '1'						AND   folder_reg_seq = '1'						AND   rjct_flag != '1'						AND  ((period_from_dt BETWEEN '1' AND '1')						    OR (period_to_dt BETWEEN '1' AND '1')))						+					   (SELECT COUNT(1)						FROM  TB_TKFOLDER						WHERE record_center_id = '1'						AND   creat_sys_folder_id = '1'						AND   rjct_flag != '1'						AND  ((period_from_dt BETWEEN '1' AND '1')						    OR (period_to_dt BETWEEN '1' AND '1')))						),0,0,1)				,2) CNT		FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewRecvUndTakeFolderTk
+
+		SELECT DISTINCT take_yyyy, take_org_cd, period_from_dt, period_to_dt, creat_sys_folder_id		FROM (			(				SELECT take_yyyy, take_org_cd, period_from_dt, period_to_dt, creat_sys_folder_id				FROM  TB_TKFOLDER				WHERE record_center_id = '1'				AND   creat_sys_cd = '1'				AND   org_cd = '1'				AND   clss_id = '1'				AND   creat_yyyy = '1'				AND   folder_reg_seq = '1'				AND   ( (period_from_dt BETWEEN '1' AND '1')						OR (period_to_dt BETWEEN '1' AND '1') )			)			UNION ALL			(				SELECT take_yyyy, take_org_cd, period_from_dt, period_to_dt, creat_sys_folder_id				FROM  TB_TKFOLDER				WHERE record_center_id = '1'				AND   creat_yyyy = '1'				AND   creat_sys_folder_id = '1'				AND   ( (period_from_dt BETWEEN '1' AND '1')						OR (period_to_dt BETWEEN '1' AND '1') )			)		)		WHERE ROWNUM = 1;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewRecvUndTakeFolderRd
+
+		SELECT DISTINCT take_yyyy, take_org_cd, period_from_dt, period_to_dt, creat_sys_folder_id		FROM (			(				SELECT take_yyyy, take_org_cd, period_from_dt, period_to_dt, creat_sys_folder_id				FROM  TB_RDFOLDER				WHERE record_center_id = '1'				AND   creat_sys_cd = '1'				AND   org_cd = '1'				AND   clss_id = '1'				AND   creat_yyyy = '1'				AND   folder_reg_seq = '1'				AND   ( (period_from_dt BETWEEN '1' AND '1')						OR (period_to_dt BETWEEN '1' AND '1') )			)			UNION ALL			(				SELECT take_yyyy, take_org_cd, period_from_dt, period_to_dt, creat_sys_folder_id				FROM  TB_RDFOLDER				WHERE record_center_id = '1'				AND   creat_yyyy = '1'				AND   creat_sys_folder_id = '1'				AND   ( (period_from_dt BETWEEN '1' AND '1')						OR (period_to_dt BETWEEN '1' AND '1') )			)		)		WHERE ROWNUM = 1;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewRecvUndTakeRecordTk
+
+		SELECT B.take_org_cd			 , B.take_yyyy			 , B.folder_reg_seq			 , B.period_from_dt			 , B.period_to_dt			 , A.creat_sys_record_id		FROM  TB_TKRECORD A			, TB_TKFOLDER B		WHERE A.record_center_id = '1'		AND   A.creat_sys_cd = '1'		AND   A.org_cd = '1'		AND   A.creat_yyyy = '1'		AND   A.creat_reg_no = '1'		AND   A.dtch_reg_no = '1'		AND   A.record_center_id = B.record_center_id		AND   A.folder_take_seq = B.folder_take_seq	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewRecvUndTakeRecordRd
+
+		SELECT B.take_org_cd			 , B.take_yyyy			 , B.folder_reg_seq			 , B.period_from_dt			 , B.period_to_dt			 , A.creat_sys_record_id		FROM  TB_RDRECORD A			, TB_RDFOLDER B		WHERE A.record_center_id = '1'		AND   A.creat_sys_cd = '1'		AND   A.org_cd = '1'		AND   A.creat_yyyy = '1'		AND   A.creat_reg_no = '1'		AND   A.dtch_reg_no = '1'		AND   A.record_center_id = B.record_center_id		AND   A.folder_id = B.folder_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewFolderTakeSeq
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKFOLDER_SQ01.nextval), 15, '0') FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewFolderHoNo
+
+		SELECT LPAD(NVL(MAX(TO_NUMBER(ho_no)),0)+1,3,'0')		FROM  TB_RDFOLDER		WHERE record_center_id = '1'		AND   creat_sys_cd = '1'		AND   org_cd = '1'		AND   clss_id = '1'		AND   creat_yyyy = '1'		AND   folder_reg_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeFolder
+
+		INSERT INTO TB_TKFOLDER		(			RECORD_CENTER_ID, FOLDER_TAKE_SEQ, CREAT_SYS_CD, TAKE_ORG_CD, CLSS_DIV_CD			, CLSS_ID, CREAT_YYYY, FOLDER_REG_SEQ, HO_NO, TAKE_YYYY			, TAKE_SNO, CLSS_NM, TITLE, FOLDER_TYPE_DIV_CD, FOLDER_DETL_TYPE_CD			, CREAT_PURPS, SUMRY, FOLDER_SIZE, RECORD_TOT_PAGE_CNT, RECORD_REG_CNT			, EFILE_CNT, NEW_DIV_CD, CHNG_FLAG, FOLDER_BISPJT_DIV_CD, FOLDER_START_DTIME			, FOLDER_CLOSE_DTIME, PRESV_TERM_CD, PRESV_METHOD_CD, PRESV_AREA_CD, READ_RANGE			, TAKE_TAKOVR_DIV_CD, CREAT_USER_ID, CREAT_USER_NM, CREAT_DTIME, ERECORD_FLAG			, CREAT_SYS_FOLDER_ID, ERROR_FLAG, RJCT_FLAG, TAKE_FIN_FLAG, REG_DTIME			, TAKE_TYPE_CD, TRANSF_APROV_USER_ID, TRANSF_APROV_USER_NM, TRANSF_APROV_DTIME			, ORG_CD, EXAM_RSLT_CD, GROUP_PRESV_TERM_CD, PRESV_TERM_FIX_RSN			, PERIOD_FROM_DT, PERIOD_TO_DT, TRANS_DTIME		)		VALUES		(			'1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', (SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = '1'), '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', DECODE('1','00','01','1'), '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')			, '1', '1', '1', '1'			, '1', '1', DECODE('1','00','00'), DECODE('1','00','생산시스템의 보존기간 누락에 따라 기록물인수시 기록관리시스템에서 보존기간을 1년으로 책정함')			, '1', '1', '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeFolderPjtClss
+
+		INSERT INTO TB_TKFOLDERPJTCLSS		(			RECORD_CENTER_ID			, FOLDER_TAKE_SEQ			, SNO			, PJT_CLSS_ID		)		VALUES		(			'1'			, '1'			, (SELECT NVL(MAX(SNO),0)+1 SNO			   FROM  TB_TKFOLDERPJTCLSS			   WHERE RECORD_CENTER_ID = '1'			   AND   FOLDER_TAKE_SEQ = '1')			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeFolderRel
+
+		INSERT INTO TB_TKFOLDERREL		(			RECORD_CENTER_ID			, FOLDER_TAKE_SEQ			, REL_TYPE_CD			, REL_SEQ			, REL_TRGT_ID			, REL_DESCR			, REG_DTIME		)		VALUES		(			'1'			, '1'			, '1'			, (SELECT NVL(MAX(REL_SEQ),0)+1 REL_SEQ			   FROM  TB_TKFOLDERREL			   WHERE RECORD_CENTER_ID = '1'			   AND   FOLDER_TAKE_SEQ = '1'			   AND   REL_TYPE_CD = '1')			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeFolderCreat
+
+		INSERT INTO TB_TKFOLDERCREAT		(			RECORD_CENTER_ID			, FOLDER_TAKE_SEQ			, AGENT_SNO			, AGENT_TYPE_CD			, AGENT_ID			, AGENT_NM			, AGENT_ORG_CD			, AGENT_ORG_NM			, AGENT_POS_RANK_NM			, OPIN			, DUTY_TYPE_CD			, DUTY_ACT_DTIME			, REG_DTIME		)		VALUES		(			'1'			, '1'			, (SELECT NVL(MAX(AGENT_SNO),0)+1 AGENT_SNO			   FROM TB_TKFOLDERCREAT			   WHERE RECORD_CENTER_ID = '1'			   AND   FOLDER_TAKE_SEQ = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeFolderTakeTakovr
+
+		INSERT INTO TB_TKFOLDERTAKETAKOVR		(			RECORD_CENTER_ID			, FOLDER_TAKE_SEQ			, SNO			, TAKE_TAKOVR_DIV_CD			, TAKE_TAKOVR_CREAT_DTIME			, TAKE_TAKOVR_ORG_CD			, TAKE_TAKOVR_ORG_NM			, TAKE_TAKOVR_CLSS_ID			, TAKE_TAKOVR_FOLDER_ID			, TAKE_TAKOVR_FOLDER_TITLE			, REG_DTIME		)		VALUES		(			'1'			, '1'			, (SELECT NVL(MAX(SNO),0)+1 SNO			   FROM  TB_TKFOLDERTAKETAKOVR			   WHERE RECORD_CENTER_ID = '1'			   AND   FOLDER_TAKE_SEQ = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeFolderErrorInfo
+
+		UPDATE TB_TKFOLDER		SET   ERROR_FLAG = '1'		    , EXAM_CONT = '1'		WHERE RECORD_CENTER_ID = '1'		AND   FOLDER_TAKE_SEQ = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeRecordErrorInfo
+
+		UPDATE TB_TKRECORD		SET   ERROR_FLAG = '1'		    , EXAM_CONT = '1'		WHERE RECORD_CENTER_ID = '1'		AND   RECORD_TAKE_SEQ = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewRecordTakeSeq
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkrecord_sq01.nextval), 15, '0') FROM dual	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeRecord
+
+		INSERT INTO TB_TKRECORD		(			RECORD_CENTER_ID, RECORD_TAKE_SEQ, FOLDER_TAKE_SEQ, CREAT_SYS_CD, ORG_CD			, CREAT_YYYY, TITLE, RECORD_REG_DIV_CD, RECORD_DETL_TYPE_CD, RECORD_SIZE			, RECORD_PAGE_CNT, ERECORD_FLAG, READ_RANGE, OPEN_DIV_CD, OPEN_GRADE			, PART_OPEN_RSN, FOLDER_CLSS_NO, SPCL_RECORD_TYPE, ORIGN_COPY_FLAG, NEW_DIV_CD			, CHNG_FLAG, RJCT_FLAG, DOC_NO, CREAT_SYS_RECORD_ID, ERROR_FLAG			, TAKE_FIN_FLAG, REG_DTIME, RECORD_SUMRY, CREAT_REG_NO, DTCH_REG_NO			, EXAM_RSLT_CD, ATTACH_CNT, RECORD_SNO, CREAT_REG_DTIME, ENFORC_DOCNO			, PROD_TYPE_CD, CLOSE_TYPE_CD, DISTRIBUTE_NO, DISTRIBUTE_DT, RECALL_TYPE_CD			, AUDVIS_RECORD_TYPE, AUDVIS_RECORD_SUMRY, CREAT_ORG_REG_NO, ENFORC_YMD, NONELECT_REG_DTIME			, DOC_NO_ORG_NM, OPEN_LIMIT_DATE, OPEN_LIMIT_PART		) VALUES		(			'1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createUndTakeNewBmsRecordDtchReg
+
+		INSERT INTO TB_TKRECORD		(			RECORD_CENTER_ID, RECORD_TAKE_SEQ, FOLDER_TAKE_SEQ, CREAT_SYS_CD, ORG_CD			, CREAT_YYYY, TITLE, RECORD_REG_DIV_CD, RECORD_DETL_TYPE_CD, RECORD_SIZE			, RECORD_PAGE_CNT, ERECORD_FLAG, READ_RANGE, OPEN_DIV_CD, OPEN_GRADE			, PART_OPEN_RSN, FOLDER_CLSS_NO, SPCL_RECORD_TYPE, ORIGN_COPY_FLAG, NEW_DIV_CD			, CHNG_FLAG, RJCT_FLAG, DOC_NO, CREAT_SYS_RECORD_ID, ERROR_FLAG			, TAKE_FIN_FLAG, REG_DTIME, RECORD_SUMRY, CREAT_REG_NO, DTCH_REG_NO			, EXAM_RSLT_CD, ATTACH_CNT, RECORD_SNO, CREAT_REG_DTIME, ENFORC_DOCNO			, PROD_TYPE_CD, CLOSE_TYPE_CD, DISTRIBUTE_NO, DISTRIBUTE_DT, RECALL_TYPE_CD			, AUDVIS_RECORD_TYPE, AUDVIS_RECORD_SUMRY, CREAT_ORG_REG_NO, ENFORC_YMD, NONELECT_REG_DTIME			, DOC_NO_ORG_NM, OPEN_LIMIT_DATE, OPEN_LIMIT_PART		) VALUES		(			'1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeRecordRel
+
+		INSERT INTO TB_TKRECORDREL		(			RECORD_CENTER_ID			, RECORD_TAKE_SEQ			, REL_TYPE_CD			, REL_SEQ			, REL_TRGT_ID			, REL_DESCR			, REG_DTIME		)		VALUES		(			'1'			, '1'			, '1'			, (SELECT NVL(MAX(REL_SEQ),0)+1 REL_SEQ			   FROM  TB_TKRECORDREL			   WHERE RECORD_CENTER_ID = '1'			   AND   RECORD_TAKE_SEQ = '1'			   AND   REL_TYPE_CD = '1')			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewSpclListTakeSeq
+
+		SELECT LPAD((TB_TKSPCLLIST_SQ01.nextval), 15, '0') FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeSpclList
+
+		INSERT INTO TB_TKSPCLLIST		(			RECORD_CENTER_ID			, SPCL_LIST_TAKE_SEQ			, RECORD_TAKE_SEQ			, SPCL_LIST_LOC			, SEQ			, SPCL_LIST1			, TAKE_YYYY			, REG_DTIME		)		VALUES		(			'1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeRecordInfoSrcSno
+
+		SELECT NVL(MAX(INFO_SRC_SNO),0)+1 INFO_SRC_SNO		FROM  TB_TKRECORDINFOSRC		WHERE record_center_id = '1'		AND   record_take_seq = '1'		AND   info_src_type_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeRecordInfoSrc
+
+		INSERT INTO TB_TKRECORDINFOSRC		(			RECORD_CENTER_ID			, RECORD_TAKE_SEQ			, INFO_SRC_TYPE_CD			, INFO_SRC_SNO			, INFO_SRC_TITLE			, INFO_SRC_ID			, REG_DTIME		)		VALUES		(			'1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeAttachFile
+
+		INSERT INTO TB_TKATTACHFILE		(			RECORD_CENTER_ID			, RECORD_TAKE_SEQ			, REG_SEQ			, ORG_CD			, CREAT_YYYY			, ATTACH_FILE_PAGE_CNT			, DOC_TYPE_CD			, DOC_TYPE_SNO			, FILE_NM			, FILE_SIZE 	    	, VER		 			, ATTACH_FILE_PATH			, REG_DTIME			, ATTACH_FILE_TYPE		 			, REL_FILE_KEY		 		)		VALUES		(			'1'			, '1'			, (SELECT NVL(MAX(REG_SEQ),0)+1 REG_SEQ			   FROM TB_TKATTACHFILE			   WHERE RECORD_CENTER_ID = '1'			   AND   RECORD_TAKE_SEQ = '1')			, '1'			, '1'			, '000000'			, '1'			, '1'			, '1'			, '1'		 			, '1'		 			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')			, '01'		 			, '1'		 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeRecordCreatAgentSno
+
+		SELECT NVL(MAX(AGENT_SNO),0)+1 agent_sno		FROM  TB_TKRECORDCREAT		WHERE record_center_id = '1'		AND   record_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeRecordCreat
+
+		INSERT INTO TB_TKRECORDCREAT		(			RECORD_CENTER_ID			, RECORD_TAKE_SEQ			, AGENT_SNO			, AGENT_TYPE_CD			, AGENT_ID			, AGENT_NM			, AGENT_ORG_CD			, AGENT_ORG_NM			, AGENT_POS_RANK_NM			, REQ_STATE_VAL			, DUTY_TYPE_CD			, DUTY_ACT_DTIME			, OPIN_DTIME			, HANDL_RSLT			, REG_DTIME			, AGENT_DUTY_TYPE_CD			, OPIN		)		VALUES		(			'1'			, '1' 			, '1'		 			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeFolderRecordCountInfo
+
+		UPDATE TB_TKRECORD A		SET   A.record_size = ( SELECT NVL(SUM(C.file_size),0)								FROM TB_TKRECORD B								   , TB_TKATTACHFILE C								WHERE B.record_center_id = A.record_center_id								AND   B.record_take_seq = A.record_take_seq								AND   B.record_center_id = C.record_center_id(+)								AND   B.record_take_seq = C.record_take_seq(+) )		    , A.attach_cnt =  ( SELECT COUNT(1)								FROM TB_TKRECORD B								   , TB_TKATTACHFILE C								WHERE B.record_center_id = A.record_center_id								AND   B.record_take_seq = A.record_take_seq								AND   B.record_center_id = C.record_center_id								AND   B.record_take_seq = C.record_take_seq )		WHERE A.record_center_id = '1'		AND   A.folder_take_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeFolderCountInfo
+
+		UPDATE TB_TKFOLDER A		SET   A.folder_size = ( SELECT NVL(SUM(C.record_size),0)								FROM TB_TKFOLDER B								   , TB_TKRECORD C								WHERE B.record_center_id = A.record_center_id								AND   B.folder_take_seq = A.folder_take_seq								AND   B.record_center_id = C.record_center_id(+)								AND   B.folder_take_seq = C.folder_take_seq(+) )		    , A.efile_cnt  =  ( SELECT LPAD(NVL(SUM(C.attach_cnt),0),6,'0')								FROM TB_TKFOLDER B								   , TB_TKRECORD C								WHERE B.record_center_id = A.record_center_id								AND   B.folder_take_seq = A.folder_take_seq								AND   B.record_center_id = C.record_center_id(+)								AND   B.folder_take_seq = C.folder_take_seq(+) )		WHERE A.record_center_id = '1'		AND   A.folder_take_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeFolderErecordInfo
+
+		UPDATE TB_TKFOLDER A		SET  A.erecord_flag = ( SELECT DECODE(SUM(DECODE(C.erecord_flag,'1',1,0)),0,'2',DECODE(SUM(DECODE(C.erecord_flag,'2',1,0)),0,'1','3'))								FROM TB_TKFOLDER B								   , TB_TKRECORD C								WHERE B.record_center_id = A.record_center_id								AND   B.folder_take_seq = A.folder_take_seq								AND   B.record_center_id = C.record_center_id(+)								AND   B.folder_take_seq = C.folder_take_seq(+) )		WHERE A.record_center_id = '1'		AND   A.folder_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeMonitorId
+
+		SELECT TB_TKMONITOR_SQ01.nextval FROM dual	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeMonitor
+
+		INSERT INTO TB_TKMONITOR		(			record_center_id, monitor_id, creat_sys_cd, period_yyyy, period_from_dt			, period_to_dt, start_dtime, org_cd, a0_cnt, a1_cnt			, a2_cnt, a3_cnt, a4_cnt, monitor_sys_cd, state			, reg_dtime		)		VALUES		(		    '1', '1', '1', '1', '1'			, '1', '1', '1', '1' , '1'			, '1', '1', '1', '1', '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeMonitorEnd
+
+		UPDATE TB_TKMONITOR A		SET A.state = '1'		,   A.end_dtime = '1'		WHERE A.record_center_id = '1'		AND   A.monitor_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeMonitorInfo
+
+		INSERT INTO TB_TKMONITORINFO		(			record_center_id, monitor_id, monitor_div, period_from_dt, period_to_dt			, org_cd, start_dtime, state, reg_dtime		)		VALUES		(		    '1', '1', '1', '1', '1'			, '1', '1', '1', TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeMonitorInfo
+
+		UPDATE TB_TKMONITORINFO A		SET A.a0_cnt = ( NVL(A.a0_cnt,0) + NVL('1',0) )		,   A.a1_cnt = ( NVL(A.a1_cnt,0) + NVL('1',0) )		,   A.a2_cnt = ( NVL(A.a2_cnt,0) + NVL('1',0) )		,   A.a3_cnt = ( NVL(A.a3_cnt,0) + NVL('1',0) )		,   A.a4_cnt = ( NVL(A.a4_cnt,0) + NVL('1',0) )		,   A.file_cnt = ( NVL(A.file_cnt,0) + NVL('1',0) )		WHERE A.record_center_id = '1'		AND   A.monitor_id = '1'		AND   A.monitor_div = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeMonitorInfoEnd
+
+		UPDATE TB_TKMONITORINFO A		SET A.state = '1'		,   A.end_dtime = '1'		WHERE A.record_center_id = '1'		AND   A.monitor_id = '1'		AND   A.monitor_div = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeMonitorInfoVirusEnd
+
+		UPDATE TB_TKMONITORINFO A		SET   ( A.a0_cnt, A.a1_cnt, A.a2_cnt, A.a3_cnt, A.a4_cnt, A.file_cnt, A.state, A.end_dtime )			= ( SELECT B.a0_cnt, B.a1_cnt, B.a2_cnt, B.a3_cnt, B.a4_cnt, B.file_cnt, '1', '1'			    FROM TB_TKMONITORINFO B			    WHERE B.record_center_id = A.record_center_id			    AND   B.monitor_id = A.monitor_id			    AND   B.monitor_div = '01' )		WHERE A.record_center_id = '1'		AND   A.monitor_id = '1'		AND   A.monitor_div = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeFolderCheckAttachFile
+
+		SELECT attach_file_path		FROM  TB_TKATTACHFILE		WHERE record_center_id = '1'		AND   record_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeFolderCheckRecordCnt
+
+		SELECT COUNT(1)		FROM  TB_TKRECORD		WHERE record_center_id = '1'		AND   folder_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeOrgTakeError
+
+		SELECT DISTINCT xml_file_nm, error_cont		FROM  TB_TKORGTAKEERROR		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeOrgRecvError
+
+		SELECT 	take_file_nm, recv_error_rsn 		FROM 	tb_tkorgrecverror 		WHERE 	record_center_id = '1'		AND 	take_yyyy = '1'		AND 	take_org_cd = '1'		AND 	creat_sys_cd = '1'		AND 	take_sno = '1'		AND 	file_div_cd IN ('START', 'FILEEND', 'A0', 'A1', 'A2', 'A3', 'A4');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeOrgTakeError
+
+		INSERT INTO TB_TKORGTAKEERROR		(			record_center_id			, take_yyyy			, take_org_cd			, creat_sys_cd			, take_sno			, error_sno			, recv_file_nm			, xml_file_nm			, error_cont			, reg_dtime		)		VALUES		(			'1'			, '1'			, '1'			, '1'			, '1'			, (SELECT NVL(MAX(error_sno),0)+1 error_sno			   FROM TB_TKORGTAKEERROR			   WHERE record_center_id = '1'			   AND   take_yyyy = '1'			   AND   take_org_cd = '1'			   AND   creat_sys_cd = '1'			   AND   take_sno = '1')			, (SELECT recv_file_nm			   FROM TB_TKORGTAKEPLAN			   WHERE record_center_id = '1'			   AND   take_yyyy = '1'			   AND   take_org_cd = '1'			   AND   creat_sys_cd = '1'			   AND   take_sno = '1')			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeFolderError
+
+		INSERT INTO TB_TKFOLDERERROR		(			record_center_id			, folder_take_seq			, error_sno			, error_type_cd			, error_cont			, reg_dtime		)		VALUES		(			'1'			, '1'			, (SELECT NVL(MAX(error_sno),0)+1 error_sno			   FROM TB_TKFOLDERERROR			   WHERE record_center_id = '1'			   AND   folder_take_seq = '1')			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createNewUndTakeRecordError
+
+		INSERT INTO TB_TKRECORDERROR		(			record_center_id			, record_take_seq			, error_sno			, error_type_cd			, error_cont			, reg_dtime		)		VALUES		(			'1'			, '1'			, (SELECT NVL(MAX(error_sno),0)+1 error_sno			   FROM TB_TKRECORDERROR			   WHERE record_center_id = '1'			   AND   record_take_seq = '1')			, '1'			, '1'			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeCheckRjctInfrmRecvFileNm
+
+		SELECT recv_file_nm		FROM   TB_TKORGTAKEPLAN		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeCheckRjctInfrmInfo
+
+		SELECT B.link_ip recv_ip		     , B.link_port recv_port		FROM  TB_STORG A		    , (SELECT * 		       FROM TB_STLINKTRGT 		       WHERE creat_sys_cd = '1') B 		WHERE A.record_center_id = '1'		AND   A.org_cd = '1'		AND   A.link_trgt_id = B.link_trgt_id(+)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeCheckRjctInfrmInfoList
+
+		SELECT folder_reg_seq		     , rjct_cont		FROM  TB_TKFOLDER		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'		AND   rjct_flag = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeCheckRjctInfrmFile
+
+		UPDATE TB_TKORGTAKEPLAN		SET   rjct_rsn = '1'		    , infrm_file_nm = '1'		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeCheckRjctInfrm
+
+		UPDATE TB_TKORGTAKEPLAN		SET   take_state_div_cd = '07'		    , rjct_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		    , infrm_div_cd = '1'		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeCheckTakeInfrmRecvFileNm
+
+		SELECT recv_file_nm		FROM   TB_TKORGTAKEPLAN		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeCheckTakeInfrmInfo
+
+		SELECT B.link_ip recv_ip		     , B.link_port recv_port		FROM  TB_STORG A		    , (SELECT * 		       FROM TB_STLINKTRGT 		       WHERE creat_sys_cd = '1') B 		WHERE A.record_center_id = '1'		AND   A.org_cd = '1'		AND   A.link_trgt_id = B.link_trgt_id(+)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeCheckTakeInfrmFile
+
+		UPDATE TB_TKORGTAKEPLAN		SET   take_user_nm = '1'		    , takovr_user_nm = '1'		    , infrm_file_nm = '1'		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeCheckTakeInfrm
+
+		UPDATE TB_TKORGTAKEPLAN		SET   take_state_div_cd = '08'		    , take_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		    , infrm_div_cd = '1'		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeCheckTakeInfrmCreatReport
+
+		UPDATE TB_CRREPORT A		SET   A.state_div_cd = '08'		    , A.take_user_nm = '1'		    , A.takovr_user_nm = '1'		    , A.take_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		    , A.recv_ymd = ( SELECT B.recv_ymd FROM TB_TKORGTAKEPLAN B		                     WHERE  B.record_center_id = A.record_center_id		                     AND    B.take_yyyy = A.cr_report_yyyy		                     AND    B.take_org_cd = A.cr_report_org_cd		                     AND    B.creat_sys_cd = A.creat_sys_cd		                     AND    B.take_sno = A.cr_report_sno )		    , A.recv_div_cd = ( SELECT B.recv_div_cd FROM TB_TKORGTAKEPLAN B		                     	WHERE  B.record_center_id = A.record_center_id		                     	AND    B.take_yyyy = A.cr_report_yyyy		                     	AND    B.take_org_cd = A.cr_report_org_cd		                     	AND    B.creat_sys_cd = A.creat_sys_cd		                     	AND    B.take_sno = A.cr_report_sno )		WHERE A.record_center_id = '1'		AND   A.cr_report_yyyy = '1'		AND   A.cr_report_org_cd = '1'		AND   A.creat_sys_cd = '1'		AND   A.cr_report_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewRecvUndTakeFolderHoNo
+
+		SELECT ho_no		FROM  TB_RDFOLDER		WHERE record_center_id = '1'		AND   creat_sys_cd = '1'		AND   org_cd = '1'		AND   clss_id = '1'		AND   creat_yyyy = '1'		AND   folder_reg_seq = '1'		AND   period_from_dt = '1'		AND   period_to_dt = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordAttachFile
+
+		DELETE FROM TB_TKATTACHFILE		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordChngHist
+
+		DELETE FROM TB_TKRECORDCHNGHIST		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordCreat
+
+		DELETE FROM TB_TKRECORDCREAT		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordSpclList
+
+		DELETE FROM TB_TKSPCLLIST		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		)		AND   spcl_list_loc = '2'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordRel
+
+		DELETE FROM TB_TKRECORDREL		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordInfoSrc
+
+		DELETE FROM TB_TKRECORDINFOSRC		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecordError
+
+		DELETE FROM TB_TKRECORDERROR		WHERE		( record_center_id, record_take_seq )		IN 		(			SELECT A.record_center_id, B.record_take_seq			FROM   TB_TKFOLDER A			     , TB_TKRECORD B			WHERE  A.record_center_id = '1'			AND    A.creat_sys_cd = '1'			AND    A.org_cd = '1'			AND    A.clss_id = '1'			AND    A.creat_yyyy = '1'			AND    A.folder_reg_seq = '1'			AND    A.ho_no = '1'			AND    A.record_center_id = B.record_center_id			AND    A.folder_take_seq = B.folder_take_seq		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRecord
+
+		DELETE FROM TB_TKRECORD		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderChngHist
+
+		DELETE FROM TB_TKFOLDERCHNGHIST		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderCreat
+
+		DELETE FROM TB_TKFOLDERCREAT		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderTakeTakovr
+
+		DELETE FROM TB_TKFOLDERTAKETAKOVR		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderSpclList
+
+		DELETE FROM TB_TKSPCLLIST		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)		AND   spcl_list_loc = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderRel
+
+		DELETE FROM TB_TKFOLDERREL		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderError
+
+		DELETE FROM TB_TKFOLDERERROR		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolderPjtClss
+
+		DELETE FROM TB_TKFOLDERPJTCLSS		WHERE		( record_center_id, folder_take_seq )		IN 		(			SELECT record_center_id, folder_take_seq			FROM   TB_TKFOLDER			WHERE  record_center_id = '1'			AND    creat_sys_cd = '1'			AND    org_cd = '1'			AND    clss_id = '1'			AND    creat_yyyy = '1'			AND    folder_reg_seq = '1'			AND    ho_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : delete
+-- Query Id : deleteNewRecvUndTakeFolder
+
+		DELETE FROM TB_TKFOLDER		WHERE  record_center_id = '1'		AND    creat_sys_cd = '1'		AND    org_cd = '1'		AND    clss_id = '1'		AND    creat_yyyy = '1'		AND    folder_reg_seq = '1'		AND    ho_no = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeFolderBisClssId
+
+		SELECT COUNT(1) FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeFolderBisClssIdTermCd
+
+		SELECT COUNT(1) FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = '1' AND PRESV_TERM_STATE = '4'   	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findNewUndTakeFolderBisClssIdTermCd
+
+		SELECT NVL(PRESV_TERM_CD,'') FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = '1' AND PRESV_TERM_STATE = '4' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeOrgCd
+
+		SELECT COUNT(1) FROM tb_storg WHERE record_center_id = '1' AND org_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeDocNo
+
+      SELECT COUNT(1)        FROM  TB_TKRECORD A            , TB_TKFOLDER B        WHERE A.record_center_id = '1'        AND   A.creat_sys_cd = '1'        AND   A.org_cd = '1'        AND   A.creat_yyyy = '1'		AND   A.doc_no = '1'        AND   A.dtch_reg_no = '1'        AND   A.record_center_id = B.record_center_id        AND   A.folder_take_seq = B.folder_take_seq    			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeDocNoInFolder
+
+      SELECT COUNT(1)        FROM  TB_TKRECORD A            , TB_TKFOLDER B        WHERE A.record_center_id = '1'        AND   A.creat_sys_cd = '1'        AND   A.org_cd = '1'        AND   A.creat_yyyy = '1'		AND   A.doc_no = '1'        AND   A.dtch_reg_no = '1'        AND   A.folder_take_seq = '1'        AND   A.record_center_id = B.record_center_id        AND   A.folder_take_seq = B.folder_take_seq    		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeCreatSysRecordIdInFolder
+
+      SELECT COUNT(1)        FROM  TB_TKRECORD A            , TB_TKFOLDER B        WHERE A.record_center_id = '1'        AND   A.creat_sys_cd = '1'        AND   A.org_cd = '1'        AND   A.creat_yyyy = '1'		AND   A.CREAT_SYS_RECORD_ID = '1'        AND   A.dtch_reg_no = '1'        AND   A.folder_take_seq = '1'        AND   A.record_center_id = B.record_center_id        AND   A.folder_take_seq = B.folder_take_seq    		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : countNewUndTakeCreatSysRecordId
+
+      SELECT COUNT(1)        FROM  TB_TKRECORD A            , TB_TKFOLDER B        WHERE A.record_center_id = '1'        AND   A.creat_sys_cd = '1'        AND   A.org_cd = '1'        AND   A.creat_yyyy = '1'		AND   A.CREAT_SYS_RECORD_ID = '1'        AND   A.dtch_reg_no = '1'        AND   A.record_center_id = B.record_center_id        AND   A.folder_take_seq = B.folder_take_seq    			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findTakeRecvDtime
+
+		SELECT reg_dtime  		  FROM tb_tkorgtakeplan 		 WHERE record_center_id = '1' 		   AND take_yyyy   		= '1' 		   AND take_org_cd 		= '1' 		   AND creat_sys_cd 	= '1' 		   AND take_sno			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : creatUndTakeRecvErrorDesc
+
+		INSERT INTO tb_tkorgrecverror (record_center_id, take_yyyy, take_org_cd, creat_sys_cd, take_sno									  ,recv_dtime, take_file_nm, file_div_cd, line_no, folder_clss_no									  ,folder_title, folder_take_seq, record_take_seq, record_reg_no, record_title									  ,recv_error_flag, recv_error_rsn)		VALUES('1', '1', '1', '1', '1'		      ,'1', '1', '1', '1', '1'		      ,'1', '1', '1', '1', '1'		      ,'1', '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateTkOrgTakePlan
+
+		UPDATE	TB_TKORGTAKEPLAN 		SET     take_state_div_cd 		= NVL(bef_take_state_div_cd,'03') 			   ,bef_take_state_div_cd 	= '' 			   ,recv_fin_state_cd 		= '2' 		WHERE  	record_center_id 	= '1' 		AND	    take_yyyy 			= '1' 		AND		take_org_cd 		= '1' 		AND		creat_sys_cd 		= '1' 		AND     take_sno 			= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : update
+-- Query Id : updateNewUndTakeFolderRecvReFlag
+
+		UPDATE tb_tkfolder 		   SET recv_re_flag = '1'		 WHERE record_center_id = '1'		   AND org_cd 			= '1'		   AND clss_id 			= '1'		   AND creat_yyyy 		= '1'		   AND folder_reg_seq 	= '1'		   AND ho_no 			= '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findVirusFileList
+
+		SELECT   attach_file_path file_nm		        ,(SELECT Z.org_cd||'-'||Z.clss_id||'-'||Z.creat_yyyy||'-'||Z.folder_reg_seq||'-'||Z.ho_no FROM tb_tkfolder z WHERE Z.folder_take_seq = (SELECT Y.folder_take_seq FROM tb_tkrecord y WHERE Y.record_take_seq = A.record_take_seq)) folder_clss_no		        ,(SELECT Z.title FROM tb_tkfolder z WHERE Z.folder_take_seq = (SELECT Y.folder_take_seq FROM tb_tkrecord y WHERE Y.record_take_seq = A.record_take_seq)) folder_title		        ,(SELECT Z.org_cd||'-'||Z.creat_yyyy||'-'||(CASE WHEN Z.record_detl_type_cd = '01' THEN Z.doc_no WHEN (Z.record_detl_type_cd = '02' OR Z.record_detl_type_cd = '03' OR Z.record_detl_type_cd = '04') THEN Z.creat_sys_record_id END)||'-'||Z.dtch_reg_no FROM tb_tkrecord Z WHERE Z.record_take_seq = A.record_take_seq) record_reg_no		        ,(SELECT Z.title FROM tb_tkrecord z WHERE Z.record_take_seq = A.record_take_seq) record_title		        ,(SELECT Z.folder_take_seq FROM tb_tkrecord Z WHERE Z.record_take_seq = A.record_take_seq) folder_take_seq 		        ,record_take_seq		FROM tb_tkattachfile A		WHERE (record_center_id, record_take_seq) 		IN (		    SELECT  B.record_center_id, B.record_take_seq		    FROM    TB_TKFOLDER a, TB_TKRECORD b		    WHERE   A.record_center_id	=     '1'		    AND     A.take_yyyy         =     '1'		    AND     A.take_org_cd       =     '1'		    AND     A.creat_sys_cd      =     '1'		    AND     A.take_sno          BETWEEN (SELECT Z.parent_take_sno                                                    FROM tb_tkorgtakeplan Z                                                   WHERE Z.record_center_id 	= '1'                                                     AND Z.take_yyyy 		= '1'                                                     AND Z.take_org_cd 		= '1'                                                     AND Z.creat_sys_cd 		= '1'                                                    AND Z.take_sno 			= '1') AND '1'		    AND     A.record_center_id  = B.record_center_id(+)		    AND     A.folder_take_seq   = B.folder_take_seq(+)		    GROUP BY B.record_center_id, B.record_take_seq		)		AND virus_flag = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findPeerInfo
+
+		SELECT link_ip, link_port		FROM   tb_stlinktrgt 		WHERE  link_trgt_id = (SELECT link_trgt_id 		                       FROM  tb_storg 		                       WHERE record_center_id 	= '1' 		                       AND   org_cd 			= '1')		AND    creat_sys_cd = '04' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : select
+-- Query Id : findTakeStartFileNm
+
+		SELECT recv_file_nm 		FROM tb_tkorgtakeplan		WHERE record_center_id	= '1'		AND   take_yyyy 		= '1'		AND   take_org_cd 		= '1'		AND   creat_sys_cd 		= '1'		AND   take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml
+-- Query    : insert
+-- Query Id : createUndTakeNewBmsRecordChngHist
+
+		INSERT INTO TB_TKRECORDOPENHIST (			RECORD_CENTER_ID, RECORD_TAKE_SEQ, CHNG_HIST_NO, OPEN_DIV_CD, OPEN_LIMIT_PART			, PART_OPEN_RSN, OPEN_LIMIT_DATE, CHNG_DTIME, CHNG_RSN, CHNG_USER_NM		) VALUES (			'1', '1'			, (SELECT NVL(MAX(CHNG_HIST_NO),0)+1			    FROM TB_TKRECORDOPENHIST			   WHERE RECORD_CENTER_ID = '1'			     AND RECORD_TAKE_SEQ = '1')			, '1', '1'			, '1', '1'			, '1', '1', '1'		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\export\sqlmap\rms\default\rms\take\undTake\UndTakeNewBms.xml

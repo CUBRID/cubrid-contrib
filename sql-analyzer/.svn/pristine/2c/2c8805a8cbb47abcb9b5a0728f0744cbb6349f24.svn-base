@@ -1,0 +1,116 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : insert
+-- Query Id : createVolume
+
+		INSERT INTO TB_STVOLM		(RECORD_CENTER_ID		,VOLM_ID		,VOLM_NM		,VOLM_DIV_CD		,DEL_FLAG		,REG_DTIME		,CHNG_DTIME		,REMK)		VALUES ('1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		,'1'		,'1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : findVolumeList
+
+		SELECT RECORD_CENTER_ID		,VOLM_ID		,VOLM_NM		,VOLM_DIV_CD		,DEL_FLAG		,REG_DTIME		,CHNG_DTIME		,REMK		FROM TB_STVOLM		WHERE RECORD_CENTER_ID = '1' AND 			VOLM_ID = '1'		  AND 			NVL(VOLM_DIV_CD,'1') = '1'		  AND 			DEL_FLAG = '1'		 		ORDER BY RECORD_CENTER_ID, VOLM_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : findVolumeSize
+
+		SELECT RECORD_CENTER_ID		,VOLM_ID		,VOLM_NM		,VOLM_DIV_CD		,DEL_FLAG		,REG_DTIME		,CHNG_DTIME		,REMK		,(SELECT NVL(SUM(TOT_SIZE),0) FROM TB_STMEDIUM		WHERE RECORD_CENTER_ID = '1' AND 			VOLM_ID = '1'		  AND 			DEL_FLAG = '1'		 		) TOT_SIZE		,(SELECT NVL(SUM(USE_SIZE),0) FROM TB_STMEDIUM		WHERE RECORD_CENTER_ID = '1'		 AND 			VOLM_ID = '1'		  AND 			DEL_FLAG = '1'		 		) USE_SIZE		FROM TB_STVOLM		WHERE RECORD_CENTER_ID = '1'		 AND 			VOLM_ID = '1'		  AND 			DEL_FLAG = '1'		 		ORDER BY RECORD_CENTER_ID, VOLM_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : update
+-- Query Id : setDelflagVolume
+
+		UPDATE TB_STVOLM		SET DEL_FLAG = '1'		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND VOLM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : delete
+-- Query Id : deleteVolume
+
+		DELETE		FROM TB_STVOLM		WHERE RECORD_CENTER_ID = '1'		AND VOLM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : update
+-- Query Id : updateVolume
+
+		UPDATE TB_STVOLM		SET		VOLM_NM = '1'		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		,REMK = '1'		WHERE RECORD_CENTER_ID = '1'		AND VOLM_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : countVolume
+
+		SELECT NVL(MAX(VOLM_ID),0)		FROM TB_STVOLM		WHERE		RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : insert
+-- Query Id : createMedium
+
+		INSERT INTO TB_STMEDIUM		(RECORD_CENTER_ID		,MEDIUM_ID		,VOLM_ID		,MEDIUM_NM		,MEDIUM_CD		,MEDIUM_DETAIL_CD		,MEDIUM_PATH		,TOT_SIZE		,USE_SIZE		,DEL_FLAG		,REG_DTIME		,CHNG_DTIME		,REMK)		VALUES ('1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,'1'		,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		,'1'		,'1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : findMediumList
+
+		SELECT RECORD_CENTER_ID		,MEDIUM_ID		,VOLM_ID		,MEDIUM_NM		,MEDIUM_CD		,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST24' AND COM_CD =		MEDIUM_CD) AS MEDIUM_CD_NM		,MEDIUM_DETAIL_CD		,( CASE WHEN MEDIUM_CD='01' THEN '일반스토리지'		WHEN MEDIUM_CD='02' THEN (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE		COM_TYPE_CD = 'ST25' AND COM_CD = MEDIUM_DETAIL_CD)		WHEN MEDIUM_CD='03' THEN (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE		COM_TYPE_CD = 'ST26' AND COM_CD = MEDIUM_DETAIL_CD)		END ) AS MEDIUM_DETAIL_CD_NM		,MEDIUM_PATH		,TOT_SIZE		,USE_SIZE		,DEL_FLAG		,REG_DTIME		,CHNG_DTIME		,REMK		FROM TB_STMEDIUM		WHERE RECORD_CENTER_ID = '1'		 AND 			MEDIUM_ID = '1'		  AND 			VOLM_ID = '1'		  AND 			DEL_FLAG = '1'		 		ORDER BY MEDIUM_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : findStorageMediumList
+
+		SELECT RECORD_CENTER_ID ,		MEDIUM_ID ,		VOLM_ID ,		MEDIUM_NM ,		MEDIUM_CD ,		(SELECT COM_CD_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'ST24'		AND COM_CD = MEDIUM_CD		) AS MEDIUM_CD_NM ,		MEDIUM_DETAIL_CD ,		(		CASE		WHEN MEDIUM_CD='01'		THEN '일반스토리지'		WHEN MEDIUM_CD='02'		THEN		(SELECT COM_CD_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'ST25'		AND COM_CD = MEDIUM_DETAIL_CD		)		WHEN MEDIUM_CD='03'		THEN		(SELECT COM_CD_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'ST26'		AND COM_CD = MEDIUM_DETAIL_CD		)		END		) AS MEDIUM_DETAIL_CD_NM ,		MEDIUM_PATH ,		TOT_SIZE ,		USE_SIZE ,		DEL_FLAG ,		REG_DTIME ,		CHNG_DTIME ,		REMK		FROM TB_STMEDIUM C		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID =		(SELECT MIN(MEDIUM_ID) AS MEDIUM_ID		FROM TB_STVOLM A,		TB_STMEDIUM B		WHERE A.VOLM_ID=B.VOLM_ID		AND A.RECORD_CENTER_ID=B.RECORD_CENTER_ID		AND A.RECORD_CENTER_ID=C.RECORD_CENTER_ID		AND A.VOLM_DIV_CD = '1'		AND TOT_SIZE-USE_SIZE > 0		AND A.DEL_FLAG='0'		AND B.DEL_FLAG='0'		)		ORDER BY MEDIUM_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : update
+-- Query Id : setDelflagMedium
+
+		UPDATE TB_STMEDIUM		SET DEL_FLAG = '1'		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : delete
+-- Query Id : deleteMedium
+
+		DELETE		FROM TB_STMEDIUM		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : update
+-- Query Id : setUseSizeMedium
+
+		UPDATE TB_STMEDIUM		SET USE_SIZE = '1' +		(SELECT USE_SIZE FROM TB_STMEDIUM		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID = '1'		AND DEL_FLAG = '1')		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID = '1'		AND DEL_FLAG = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : update
+-- Query Id : updateMedium
+
+		UPDATE TB_STMEDIUM		SET VOLM_ID = '1'		,MEDIUM_NM = '1'		,MEDIUM_CD = '1'		,MEDIUM_DETAIL_CD = '1'		,MEDIUM_PATH= '1'		,TOT_SIZE = '1'		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		,REMK = '1'		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : countMedium
+
+		SELECT NVL(MAX(MEDIUM_ID),0)		FROM TB_STMEDIUM		WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml
+-- Query    : select
+-- Query Id : countMediumIdOrignFile
+
+		SELECT COUNT(1)		FROM TB_STORIGNFILE		WHERE RECORD_CENTER_ID = '1'		AND MEDIUM_ID = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\MediumDao.xml

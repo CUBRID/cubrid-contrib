@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.detail">
+	
+	<!--
+		기록물철 상세정보 : 공통 정보 조회 (인수전 기록물)
+	-->
+	<resultMap id="findCrFolderHead-result" class="rms.common.detail.domain.Folder">
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="folderRecvSeq"			column="folder_recv_seq" />
+		<result property="creatSysCd"				column="creat_sys_cd" />
+		<result property="orgTitle"					column="org_title" />
+		<result property="title"					column="title" />
+		<result property="clssId"					column="clss_id" />
+	</resultMap>
+	<select id="findCrFolderHead" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderHead-result">
+		SELECT A.record_center_id
+			, A.folder_recv_seq
+			, A.creat_sys_cd
+			, A.title AS org_title
+			, A.title
+			, A.clss_id
+	    FROM  TB_CRFOLDER A
+	    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	    AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+	</select>
+	
+	<!--
+		기록물철 상세정보 : 기록물철 정보
+	-->
+	<resultMap id="findCrFolderInfo-result" class="rms.common.detail.domain.Folder">
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="folderRecvSeq"			column="folder_recv_seq" />
+		<result property="creatSysCd"				column="creat_sys_cd" />
+		<result property="creatSysNm"				column="creat_sys_nm" />
+		<result property="folderDetlTypeCd"			column="folder_detl_type_cd" />
+		<result property="folderDetlTypeNm"			column="folder_detl_type_nm" />
+		<result property="orgTitle"					column="org_title" />
+		<result property="title"					column="title" />
+		<result property="creatPurps"				column="creat_purps" />
+		<result property="sumry"					column="sumry"	jdbcType="CLOB"	javaType="java.lang.String" />
+		<result property="folderBispjtDivCd"		column="folder_bispjt_div_cd" />
+		<result property="folderBispjtDivNm"		column="folder_bispjt_div_nm" />
+		<result property="orgCd"					column="org_cd" />
+		<result property="orgNm"					column="org_nm" />
+		<result property="orgAbbrNm"				column="org_abbr_nm" />
+		<result property="readRange"				column="read_range" />
+		<result property="readRangeNm"				column="read_range_nm" />
+		<result property="operReadRangeCd"			column="oper_read_range_cd" />
+		<result property="operReadRangeNm"			column="oper_read_range_nm" />
+		<result property="presvTermCd"				column="presv_term_cd" />
+		<result property="presvTermNm"				column="presv_term_nm" />
+		<result property="clssId"					column="clss_id" />
+		<result property="clssNm"					column="clss_nm" />
+		<result property="folderTypeDivCd"			column="folder_type_div_cd" />
+		<result property="folderTypeDivNm"			column="folder_type_div_nm" />
+		<result property="subTitle"					column="sub_title" />
+		<result property="creatYyyy"				column="creat_yyyy" />
+		<result property="closeYyyy"				column="close_yyyy" />
+		<result property="folderRegSeq"				column="folder_reg_seq" />
+		<result property="hoNo"						column="ho_no" />
+		<result property="oldFolderCreatOrgNm"		column="old_folder_creat_org_nm" />
+		<result property="oldFolderClssNo"			column="old_folder_clss_no" />
+		<result property="groupPresvTermCd"			column="group_presv_term_cd" />
+		<result property="groupPresvTermNm"			column="group_presv_term_nm" />
+		<result property="presvTermFixRsn"			column="presv_term_fix_rsn" />
+		<result property="presvMethodNm"			column="presv_method_nm" />
+		<result property="presvAreaCd"				column="presv_area_cd" />
+		<result property="presvAreaNm"				column="presv_area_nm" />
+		<result property="presvLoc"					column="presv_loc" />
+		<result property="funshEndDtime"			column="funsh_end_dtime" />
+		<result property="funshRsn"					column="funsh_rsn" />
+		<result property="takeOrgCd"				column="take_org_cd" />
+		<result property="takeYyyy"					column="take_yyyy" />
+		<result property="takeSno"					column="take_sno" />
+		<result property="folderSize"				column="folder_size" />
+		<result property="recordTotPageCnt"			column="record_tot_page_cnt" />
+		<result property="recordRegCnt"				column="record_reg_cnt" />
+		<result property="electRecordRegCnt"		column="elect_record_reg_cnt" />
+		<result property="nonelectRecordRegCnt"		column="nonelect_record_reg_cnt" />
+		<result property="efileCnt"					column="efile_cnt" />
+		<result property="adjstDescr"				column="adjst_descr" />
+		<result property="damgCont"					column="damg_cont" />
+		<result property="damgHandlRslt"			column="damg_handl_rslt" />
+		<result property="creatUserNm"				column="creat_user_nm" />
+		<result property="creatUserOrgNm"			column="creat_user_org_nm" />
+		<result property="creatUserPosRankNm"		column="creat_user_pos_rank_nm" />
+		<result property="creatDtime"				column="creat_dtime" />
+		<result property="scanProgStateCd"			column="scan_prog_state_cd" />
+		<result property="scanProgStateNm"			column="scan_prog_state_nm" />
+		<result property="optiDiskStoreStateCd"		column="opti_disk_store_state_cd" />
+		<result property="optiDiskStoreStateNm"		column="opti_disk_store_state_nm" />
+		<result property="mfPicStateCd"				column="mf_pic_state_cd" />
+		<result property="mfPicStateNm"				column="mf_pic_state_nm" />
+		<result property="neoTransState"			column="neo_trans_state" />
+		<result property="neoTransStateNm"			column="neo_trans_state_nm" />
+		<result property="stakrmMngNo"				column="stakrm_mng_no" />
+		<result property="erecordFlag"				column="erecord_flag" />
+		<result property="erecordFlagNm"			column="erecord_flag_nm" />
+		<result property="accsFlag"					column="accs_flag" />
+		<result property="hoNoCnt"      			column="ho_no_cnt" />
+	</resultMap>
+	<select id="findCrFolderInfo" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderInfo-result">
+		SELECT A.record_center_id
+			, A.folder_recv_seq
+		    , A.creat_sys_cd
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=A.creat_sys_cd) creat_sys_nm
+		    , A.folder_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD41' AND Z.com_cd=A.folder_detl_type_cd) folder_detl_type_nm
+		    , A.title AS org_title
+		    , A.title
+		    , A.creat_purps
+			, A.sumry
+			, A.folder_bispjt_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD20' AND Z.com_cd=A.folder_bispjt_div_cd) folder_bispjt_div_nm
+			, A.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_abbr_nm
+			, A.read_range
+			, NVL((SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD43' AND Z.com_cd=A.read_range),(SELECT org_abbr_nm FROM TB_STORG WHERE record_center_id=A.record_center_id AND org_cd=A.read_range)) read_range_nm
+			, A.chk_oper_read_range_cd oper_read_range_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=A.chk_oper_read_range_cd) oper_read_range_nm
+			, A.presv_term_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=DECODE(A.presv_term_cd, '20', '25', A.presv_term_cd)) presv_term_nm
+			, A.clss_id
+			, A.clss_nm
+			, A.folder_type_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd) folder_type_div_nm
+		    , A.sub_title
+		    , A.creat_yyyy
+		    , SUBSTR(RPAD(A.folder_close_dtime,14,'0'),1,4) close_yyyy
+		    , A.folder_reg_seq
+		    , A.ho_no
+			, A.old_folder_creat_org_nm
+			, A.old_folder_clss_no
+			, A.group_presv_term_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=DECODE(A.group_presv_term_cd, '20', '25', A.group_presv_term_cd)) group_presv_term_nm
+			, A.presv_term_fix_rsn
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD09' AND Z.com_cd=A.presv_method_cd) presv_method_nm
+			, A.presv_area_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD10' AND Z.com_cd=A.presv_area_cd) presv_area_nm
+			, A.presv_loc
+			, RPAD(A.funsh_end_dtime,14,'0') funsh_end_dtime
+			, A.funsh_rsn
+			, A.cr_report_org_cd take_org_cd
+			, A.cr_report_yyyy take_yyyy
+			, A.cr_report_sno take_sno
+			, NVL(A.folder_size,0) folder_size
+			, TO_NUMBER(NVL(A.record_tot_page_cnt,'0')) record_tot_page_cnt
+			, TO_NUMBER(NVL(A.record_reg_cnt,'0')) record_reg_cnt
+			, (SELECT COUNT(1) FROM TB_CRRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_recv_seq=A.folder_recv_seq AND R.erecord_flag='1') elect_record_reg_cnt
+			, (SELECT COUNT(1) FROM TB_CRRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_recv_seq=A.folder_recv_seq AND R.erecord_flag='2') nonelect_record_reg_cnt
+			, TO_NUMBER(NVL(A.efile_cnt,'0')) efile_cnt
+			, '' adjst_descr
+			, '' damg_cont
+			, '' damg_handl_rslt
+			, A.creat_user_nm
+			, A.creat_user_org_nm
+			, A.creat_user_pos_rank_nm
+			, RPAD(A.creat_dtime,14,'0') creat_dtime
+			, '' scan_prog_state_cd
+			, '' scan_prog_state_nm
+			, '' opti_disk_store_state_cd
+			, '' opti_disk_store_state_nm
+			, '' mf_pic_state_cd
+			, '' mf_pic_state_nm
+			, '' neo_trans_state
+			, '' neo_trans_state_nm
+			, '' stakrm_mng_no
+			, A.erecord_flag
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=A.erecord_flag) erecord_flag_nm
+			, '1' accs_flag
+	         , (SELECT COUNT(*)
+			  FROM TB_CRFOLDER
+ 				WHERE CREAT_SYS_CD = A.CREAT_SYS_CD
+ 				AND ORG_CD = A.ORG_CD
+ 				AND CLSS_ID = A.CLSS_ID
+ 				AND CREAT_YYYY = A.CREAT_YYYY
+ 				AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS ho_no_cnt
+		FROM (
+			SELECT A.*
+			     , DECODE(A.creat_sys_cd,'01',DECODE( A.read_range,'0','03','1','01'
+					                                              ,DECODE( (SELECT COUNT(1) FROM TB_STORG WHERE record_center_id=A.record_center_id AND upper_org_cd=A.read_range)
+					                                                        ,0,'02','01') )
+								        ,'02','01'
+								        ,'04',DECODE( A.read_range,'0','03','1','01'
+					                                              ,DECODE( (SELECT COUNT(1) FROM TB_STORG WHERE record_center_id=A.record_center_id AND upper_org_cd=A.read_range)
+					                                                        ,0,'02','01') )
+								        ,A.read_range) chk_oper_read_range_cd
+			FROM  TB_CRFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		) A
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 기록물건 목록
+	 -->
+	<resultMap id="findCrFolderRecordList-result" class="rms.common.detail.domain.Record">
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="recordRecvSeq"			column="record_recv_seq" />
+		<result property="title"					column="title" />
+		<result property="recordDetlTypeCd"			column="record_detl_type_cd" />
+		<result property="recordDetlTypeNm"			column="record_detl_type_nm" />
+		<result property="creatRegDtime"			column="creat_reg_dtime" />
+		<result property="dutyChrgrNm"				column="duty_chrgr_nm" />
+		<result property="erecordFlag"				column="erecord_flag" />
+		<result property="erecordFlagNm"			column="erecord_flag_nm" />
+		<result property="operReadRangeCd"			column="oper_read_range_cd" />
+		<result property="operReadRangeNm"			column="oper_read_range_nm" />
+   	 	<result property="recordRegDivCd"			column="record_reg_div_cd" />
+   	 	<result property="recordRegDivNm"			column="record_reg_div_nm" />
+   	 	<result property="openDivCd"			    column="open_div_cd" />
+   	 	<result property="openDivNm"			    column="open_div_nm" />
+   	 	<result property="prodTypeCd"				column="prod_type_cd" />
+   	 	<result property="accsFlag"				    column="accs_flag" />
+	</resultMap>
+	 <select id="countCrFolderRecordPagedList" parameterClass="rms.common.detail.domain.FindFolder" resultClass="long">
+		SELECT COUNT(1)
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		<isNotEmpty prepend="AND" property="recordTitle">
+			A.title LIKE #recordTitle:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findCrFolderRecordPagedList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderRecordList-result">
+		SELECT E.record_center_id
+			, E.record_recv_seq
+			, E.title
+			, E.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=E.record_detl_type_cd) record_detl_type_nm
+			, RPAD(E.creat_reg_dtime,14,'0') creat_reg_dtime
+			, E.duty_chrgr_nm
+			, E.erecord_flag
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm
+			, E.oper_read_range_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm
+			, E.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=E.record_reg_div_cd) record_reg_div_nm
+			, E.open_div_cd
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm
+<!-- 			, (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN 0 ELSE 1 END) prod_type_cd -->
+			, (CASE WHEN E.prod_type_cd is not null THEN E.prod_type_cd ELSE (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END) prod_type_cd			
+			, '1' AS accs_flag
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT /*+ index(A, TB_CRRECORD_IX10) */ A.*
+			        FROM   TB_CRRECORD A
+			        WHERE  A.record_center_id = #recordCenterId:VARCHAR#
+			        AND    A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+					<isNotEmpty prepend="AND" property="recordTitle">
+						A.title LIKE #recordTitle:VARCHAR#
+					</isNotEmpty>
+					ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	<select id="findExcelCrFolderRecordPagedList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderRecordList-result">
+		SELECT E.record_center_id
+			, E.record_recv_seq
+			, E.title
+			, E.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=E.record_detl_type_cd) record_detl_type_nm
+			, RPAD(E.creat_reg_dtime,14,'0') creat_reg_dtime
+			, E.duty_chrgr_nm
+			, E.erecord_flag
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm
+			, E.oper_read_range_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm
+			, E.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=E.record_reg_div_cd) record_reg_div_nm
+			, E.open_div_cd
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm
+<!-- 			, DECODE((CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN 0 ELSE 1 END),'0','생산','접수') prod_type_cd -->
+			, DECODE((CASE WHEN E.prod_type_cd is not null THEN E.prod_type_cd ELSE (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END),'0','생산','접수') prod_type_cd
+			, 'O' AS accs_flag
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT /*+ index(A, TB_CRRECORD_IX10) */ A.*
+			        FROM   TB_CRRECORD A
+			        WHERE  A.record_center_id = #recordCenterId:VARCHAR#
+			        AND    A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+					<isNotEmpty prepend="AND" property="recordTitle">
+						A.title LIKE #recordTitle:VARCHAR#
+					</isNotEmpty>
+					ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 과제실적
+	 -->
+	<resultMap id="findCrFolderTaskPagedList-result" class="rms.common.detail.domain.Record">
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="recordRecvSeq"			column="record_recv_seq" />
+		<result property="creatRegDtime"			column="creat_reg_dtime" />
+		<result property="recordDetlTypeCd"			column="record_detl_type_cd" />
+		<result property="recordDetlTypeNm"			column="record_detl_type_nm" />
+		<result property="dutyChrgrNm"				column="duty_chrgr_nm" />
+		<result property="orgCd"					column="org_cd" />
+		<result property="orgNm"					column="org_nm" />
+		<result property="orgAbbrNm"				column="org_abbr_nm" />
+		<result property="title"					column="title" />
+		<result property="attachCnt"				column="attach_cnt" />
+		<result property="operReadRangeCd"			column="oper_read_range_cd" />
+	</resultMap>
+	<select id="countCrFolderTaskPagedList" parameterClass="rms.common.detail.domain.FindFolder" resultClass="long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT /*+ index(A, TB_CRRECORD_IX10) */
+			       A.record_center_id
+			     , A.record_recv_seq
+			     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime
+			     , A.creat_reg_no
+				 , A.record_detl_type_cd
+				 , DECODE(A.record_detl_type_cd,'01','문서','02','메모','03','회의','') record_detl_type_nm
+				 , A.duty_chrgr_nm 
+				 , A.org_cd
+                 , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_nm
+                 , (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_abbr_nm
+				 , A.title
+				 , TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt
+				 , A.oper_read_range_cd
+			FROM  TB_CRRECORD A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+			<isEqual prepend="AND" property="prodTypeCd" compareValue="1">
+				A.prod_type_cd = '1'
+			</isEqual>
+			<isNotEqual prepend="AND" property="prodTypeCd" compareValue="1">
+				(A.prod_type_cd IS NULL OR A.prod_type_cd = '0')
+			</isNotEqual>
+			<dynamic prepend="AND" open="(" close=")">
+				<isNotEqual prepend="OR" property="recordDetlTypeCd01" compareValue="N">
+				A.record_detl_type_cd = '01'
+				</isNotEqual>
+				<isNotEqual prepend="OR" property="recordDetlTypeCd02" compareValue="N">
+				A.record_detl_type_cd = '02'
+				</isNotEqual>
+				<isNotEqual prepend="OR" property="recordDetlTypeCd03" compareValue="N">
+				A.record_detl_type_cd = '03'
+				</isNotEqual>
+			</dynamic>
+		) B
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="title">
+			B.title LIKE #title:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatRegDtimeFrom">
+			B.creat_reg_dtime <![CDATA[>=]]> #creatRegDtimeFrom:VARCHAR#||'000000'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatRegDtimeTo">
+			B.creat_reg_dtime <![CDATA[<=]]> #creatRegDtimeTo:VARCHAR#||'240000'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="dutyChrgrNm">
+			B.duty_chrgr_nm LIKE #dutyChrgrNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgAbbrNm">
+			B.org_abbr_nm LIKE #orgAbbrNm:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findCrFolderTaskPagedList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderTaskPagedList-result">
+		SELECT E.record_center_id
+		     , E.record_recv_seq
+		     , E.creat_reg_dtime
+		     , E.record_detl_type_cd
+		     , E.record_detl_type_nm
+		     , E.duty_chrgr_nm
+		     , E.org_cd
+		     , E.org_nm
+		     , E.org_abbr_nm
+		     , E.title
+		     , E.attach_cnt
+		     , E.oper_read_range_cd
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT B.*
+					FROM (
+						SELECT /*+ index(A, TB_CRRECORD_IX10) */
+						       A.record_center_id
+						     , A.record_recv_seq
+						     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime
+						     , A.creat_reg_no
+							 , A.record_detl_type_cd
+							 , DECODE(A.record_detl_type_cd,'01','문서','02','메모','03','회의','') record_detl_type_nm
+							 , A.duty_chrgr_nm 
+							 , A.org_cd
+			                 , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_nm
+			                 , (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_abbr_nm
+							 , A.title
+							 , TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt
+							 , A.oper_read_range_cd
+						FROM  TB_CRRECORD A
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+						<isEqual prepend="AND" property="prodTypeCd" compareValue="1">
+							A.prod_type_cd = '1'
+						</isEqual>
+						<isNotEqual prepend="AND" property="prodTypeCd" compareValue="1">
+							(A.prod_type_cd IS NULL OR A.prod_type_cd = '0')
+						</isNotEqual>
+						<dynamic prepend="AND" open="(" close=")">
+							<isNotEqual prepend="OR" property="recordDetlTypeCd01" compareValue="N">
+							A.record_detl_type_cd = '01'
+							</isNotEqual>
+							<isNotEqual prepend="OR" property="recordDetlTypeCd02" compareValue="N">
+							A.record_detl_type_cd = '02'
+							</isNotEqual>
+							<isNotEqual prepend="OR" property="recordDetlTypeCd03" compareValue="N">
+							A.record_detl_type_cd = '03'
+							</isNotEqual>
+						</dynamic>
+					) B
+					<dynamic prepend="WHERE">
+						<isNotEmpty prepend="AND" property="title">
+						B.title LIKE #title:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatRegDtimeFrom">
+						B.creat_reg_dtime <![CDATA[>=]]> #creatRegDtimeFrom:VARCHAR#||'000000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatRegDtimeTo">
+						B.creat_reg_dtime <![CDATA[<=]]> #creatRegDtimeTo:VARCHAR#||'240000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="dutyChrgrNm">
+						B.duty_chrgr_nm LIKE #dutyChrgrNm:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgAbbrNm">
+						B.org_abbr_nm LIKE #orgAbbrNm:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 지시사항
+	 -->
+	<resultMap id="findCrFolderTaskOrderList-result" class="rms.common.detail.domain.Record">
+		<result property="recordRecvSeq"			column="record_recv_seq" />
+		<result property="creatRegDtime"			column="creat_reg_dtime" />
+		<result property="dutyChrgrNm"				column="duty_chrgr_nm" />
+		<result property="title"					column="title" />
+		<result property="operReadRangeCd"			column="oper_read_range_cd" />
+	</resultMap>
+	<select id="findCrFolderTaskOrderList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderTaskOrderList-result">
+		SELECT A.record_recv_seq
+		     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime
+			 , A.duty_chrgr_nm 
+			 , A.title
+			 , A.oper_read_range_cd
+		FROM  TB_CRRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		AND   A.record_detl_type_cd = '04'
+		<isEqual prepend="AND" property="prodTypeCd" compareValue="1">
+			A.prod_type_cd = '1'
+		</isEqual>
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 분류체계 정보
+	 -->
+	<resultMap id="findCrFolderClssList-result" class="rms.common.detail.domain.FolderClss">
+		<result property="bisClssId"				column="bis_clss_id" />
+		<result property="bisClssNm"				column="bis_clss_nm" />
+		<result property="levl"						column="levl" />
+	</resultMap>
+	<select id="findCrFolderClssBisList" parameterClass="java.lang.String" resultMap="findCrFolderClssList-result">
+		SELECT bis_clss_id, bis_clss_nm, levl
+		FROM  TB_ZZBISCLSS
+		START WITH bis_clss_id = #value#
+		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id 
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 분류체계 정보
+	 -->
+	<select id="findCrFolderClssPjtList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderClssList-result">
+		SELECT bis_clss_id, bis_clss_nm, levl
+		FROM TB_ZZBISCLSS
+		START WITH bis_clss_id IN ( SELECT C.bis_clss_id
+		                            FROM TB_CRFOLDER A, TB_CRFOLDERPJTCLSS B, TB_ZZPJTMAPPNG C
+		                            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+									AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+									AND   B.record_center_id = A.record_center_id
+									AND   B.folder_recv_seq = A.folder_recv_seq
+									AND   C.pjt_clss_id = B.pjt_clss_id )
+		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id 
+	</select>
+	
+	<!-- 
+		기록물철 (단위과제카드 표제부) - 관리정보(관련 단위과제)
+	 -->
+	<select id="findCrFolderClssRelList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderClssList-result">
+		SELECT bis_clss_id, bis_clss_nm, levl
+		FROM  TB_ZZBISCLSS
+		START WITH bis_clss_id IN ( SELECT B.rel_trgt_id
+		                            FROM  TB_CRFOLDER A, TB_CRFOLDERREL B
+		                            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+									AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+									AND   B.record_center_id = A.record_center_id
+									AND   B.folder_recv_seq = A.folder_recv_seq
+									AND   B.rel_type_cd = '03' )
+		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id 
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 기록물철 변경이력 
+	 -->
+	<resultMap id="findCrFolderChngHistList-result" class="rms.common.detail.domain.FolderChngHist">
+		<result property="chngYmd"					column="chng_ymd" />
+		<result property="chngUserNm"				column="chng_user_nm" />
+		<result property="chngRsn"					column="chng_rsn" />
+		<result property="titleBef"					column="title_bef" />
+		<result property="titleAft"					column="title_aft" />
+		<result property="folderTypeDivCdBef"		column="folder_type_div_cd_bef" />
+		<result property="folderTypeDivCdBefNm"		column="folder_type_div_cd_bef_nm" />
+		<result property="folderTypeDivCdAft"		column="folder_type_div_cd_aft" />
+		<result property="folderTypeDivCdAftNm"		column="folder_type_div_cd_aft_nm" />
+	</resultMap>
+	<select id="findCrFolderChngHistList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderChngHistList-result">
+	    SELECT A.chng_ymd
+	         , A.chng_user_nm
+	         , A.chng_rsn
+		     , A.title_bef
+		     , A.title_aft
+		     , A.folder_type_div_cd_bef
+			 , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd_bef) AS folder_type_div_cd_bef_nm
+		     , A.folder_type_div_cd_aft
+			 , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd_aft) AS folder_type_div_cd_aft_nm
+	    FROM  TB_CRFOLDERCHNGHIST A
+	    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	    AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		ORDER BY A.record_center_id, A.folder_recv_seq, A.chng_hist_no
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 기록물철 인수인계정보
+	 -->
+	<resultMap id="findCrFolderTakeTakovrList-result" class="rms.common.detail.domain.FolderTakeTakovr">
+		<result property="takeTakovrSno"                column="take_takovr_sno" />
+		<result property="takeTakovrTypeNm"				column="take_takovr_type_nm" />
+		<result property="takeTakovrDivNm"				column="take_takovr_div_nm" />
+		<result property="takeTakovrOrgCd"				column="take_takovr_org_cd" />
+		<result property="takeTakovrOrgNm"				column="take_takovr_org_nm" />
+		<result property="takeTakovrClssId"             column="take_takovr_clss_id" />
+		<result property="takeTakovrClssNm"             column="take_takovr_clss_nm" />
+        <result property="takeTakovrFolderId"           column="take_takovr_folder_id" />
+        <result property="takeTakovrFolderTitle"        column="take_takovr_folder_title" />
+		<result property="takeTakovrDt"					column="take_takovr_dt" />
+	</resultMap>
+	<select id="findCrFolderTakeTakovrList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderTakeTakovrList-result">
+		SELECT ROWNUM AS take_takovr_sno, take_takovr_type_nm, take_takovr_div_nm, take_takovr_org_cd, take_takovr_org_nm
+			, take_takovr_clss_id, take_takovr_clss_nm, take_takovr_folder_id, take_takovr_folder_title, take_takovr_dt
+		FROM (
+			SELECT '생산기관간 인수인계' take_takovr_type_nm
+				, (CASE WHEN take_takovr_div_cd='1' THEN '인수' WHEN take_takovr_div_cd='2' THEN '인계' END) take_takovr_div_nm
+				, A.take_takovr_org_cd
+				, A.take_takovr_org_nm
+				, A.TAKE_TAKOVR_CLSS_ID
+				, NVL((SELECT Z.BIS_CLSS_NM FROM TB_ZZBISCLSS Z WHERE Z.BIS_CLSS_ID = A.TAKE_TAKOVR_CLSS_ID), 
+					(SELECT Z.UNIT_NM FROM TB_ZZUNIT Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.UNIT_CD = A.TAKE_TAKOVR_CLSS_ID)) AS TAKE_TAKOVR_CLSS_NM
+				, A.TAKE_TAKOVR_FOLDER_ID
+				, A.TAKE_TAKOVR_FOLDER_TITLE
+				, SUBSTR(A.take_takovr_creat_dtime,1,8) take_takovr_dt
+			FROM  TB_CRFOLDERTAKETAKOVR A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+			AND   A.take_takovr_div_cd IN ('1','2')
+			ORDER BY A.record_center_id, A.folder_recv_seq, A.take_takovr_creat_dtime
+		)
+	</select>
+	
+	<!-- 
+		반려이력 
+	 -->
+	<resultMap id="findCrFolderRjctHistList-result" class="rms.common.detail.domain.FolderRjctHist">
+		<result property="takeStateCdNm"		column="take_state_cd_nm" />
+		<result property="rjctDtime"			column="rjct_dtime" />
+		<result property="folderErrYn"			column="folder_err_yn" />
+		<result property="recordCnt"			column="record_cnt" />
+		<result property="fileCnt"				column="file_cnt" />
+		<result property="examCont"				column="exam_cont" />
+		<result property="rjctCont"				column="rjct_cont" />
+	</resultMap>
+	<select id="findCrFolderRjctHistList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderRjctHistList-result">
+		SELECT (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'TK22' AND Z.com_cd = A.take_state_cd) take_state_cd_nm
+			   ,A.rjct_dtime
+		       ,(CASE WHEN A.folder_err_flag = '1' THEN 'Y' 
+		              ELSE 'N'
+		         END) folder_err_yn
+		       ,A.record_err_cnt||'/'||A.record_tot_cnt record_cnt
+		       ,A.file_err_cnt||'/'||A.file_tot_cnt file_cnt
+		       ,A.exam_cont
+		       ,A.rjct_cont 
+		  FROM TB_CRFOLDERTAKEHIST A
+		 <!--cubrid WHERE (A.RECORD_CENTER_ID, A.CREAT_SYS_CD, A.ORG_CD, A.CLSS_ID, A.CREAT_YYYY, A.FOLDER_REG_SEQ, A.HO_NO)
+		    IN (
+		        SELECT B.RECORD_CENTER_ID, B.CREAT_SYS_CD, B.ORG_CD, B.CLSS_ID, B.CREAT_YYYY, B.FOLDER_REG_SEQ, B.HO_NO -->
+		 WHERE 
+		    EXISTS (
+		        SELECT 1
+		          FROM TB_CRFOLDER B 
+		         WHERE B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		           AND B.FOLDER_TAKE_SEQ = #folderRecvSeq:VARCHAR#
+			   <!--cubrid-->
+			   AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			   AND B.CREAT_SYS_CD = A.CREAT_SYS_CD
+			   AND B.ORG_CD = A.ORG_CD
+			   AND B.CLSS_ID = A.CLSS_ID
+			   AND B.CREAT_YYYY = A.CREAT_YYYY
+			   AND B.FOLDER_REG_SEQ = A.FOLDER_REG_SEQ
+			   AND B.HO_NO = A.HO_NO
+		       )
+		   AND TAKE_STATE_CD IN ('02','03')
+		ORDER BY hist_sno
+	</select>
+	
+	<!-- 
+		기록물철 상세정보 : 검색어
+	 -->
+	<resultMap id="findCrFolderKeywdList-result" class="rms.common.detail.domain.FolderKeywd">
+		<result property="keywd"					column="keywd" />
+	</resultMap>
+	<select id="findCrFolderKeywdList" parameterClass="rms.common.detail.domain.FindFolder" resultMap="findCrFolderKeywdList-result">
+		SELECT A.spcl_list1 keywd
+		FROM  TB_CRSPCLLIST A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.folder_recv_seq = #folderRecvSeq:VARCHAR#
+		AND   A.spcl_list_loc = '1'
+	</select>
+	
+</sqlMap>

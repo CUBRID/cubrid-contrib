@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.rfid">
+	
+	<!-- 
+		RFID관리_RFID관리
+		: RFID 관리 태그프린터 목록을 조회한다.
+	 -->
+	 <resultMap id="findRfidTagprintPagedList-result" class="rms.presv.rfid.domain.RfidTagprint">
+	 	<result property="tagprintId" 			column="TAGPRINT_ID"/>
+		<result property="setupPlace" 			column="SETUP_PLACE"/>
+		<result property="setupIp" 				column="SETUP_IP"/>
+		<result property="setupPort" 			column="SETUP_PORT"/>
+		<result property="remk" 				column="REMK"/>
+		<result property="useFlag" 				column="USE_FLAG"/>
+		<result property="regDtime" 			column="REG_DTIME"/>
+		<result property="row" 					column="rnum"/>
+	 </resultMap>
+	 <select id="countRfidTagprintPagedList" parameterClass="rms.presv.rfid.domain.RfidTagprint" resultClass="java.lang.Long">
+		 SELECT COUNT(1)
+         FROM  TB_RFTABPRINT        
+         WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+         <isNotEmpty prepend="AND" property="useFlag">
+             USE_FLAG = #useFlag:VARCHAR#
+         </isNotEmpty>
+         <isNotEmpty prepend="AND" property="setupPlace">
+             SETUP_PLACE LIKE #setupPlace:VARCHAR#
+         </isNotEmpty>
+         <isNotEmpty prepend="AND" property="tagprintId">
+             TAGPRINT_ID = #tagprintId:VARCHAR#
+         </isNotEmpty>
+	 </select>
+	 <select id="findRfidTagprintPagedList" parameterClass="rms.presv.rfid.domain.RfidTagprint" resultMap="findRfidTagprintPagedList-result">
+	 	SELECT E.tagprint_id
+	          ,E.setup_place
+	          ,E.setup_ip
+	          ,E.setup_port
+	          ,E.remk
+	          ,(CASE E.USE_FLAG WHEN '1' THEN '미사용' WHEN '0' THEN '사용' END) AS USE_FLAG
+	          ,E.reg_dtime
+	          ,E.rnum 
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , C.*
+		        FROM (
+		            SELECT TAGPRINT_ID  
+		                   ,SETUP_PLACE 
+		                   ,SETUP_IP 
+		                   ,SETUP_PORT
+		                   ,REMK    
+		                   ,USE_FLAG
+		                   ,REG_DTIME
+		                   ,ROWNUM 
+		            FROM  TB_RFTABPRINT        
+		            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <isNotEmpty prepend="AND" property="useFlag">
+		                USE_FLAG = #useFlag:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="setupPlace">
+		                SETUP_PLACE LIKE #setupPlace:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="tagprintId">
+		                TAGPRINT_ID = #tagprintId:VARCHAR#
+		            </isNotEmpty>
+		            ORDER BY TAGPRINT_ID ASC
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	 </select>
+	 
+	 <!-- 
+		RFID관리_RFID관리
+		: RFID 관리 고정형리더기 목록을 조회한다.
+	 -->
+	 <resultMap id="findRfidFixreaderPagedList-result" class="rms.presv.rfid.domain.RfidFixreder">
+	 	<result property="fixrederId"         		column="FIXREDER_ID"/>
+		<result property="setupUseCd"         		column="SETUP_USE_CD"/>
+		<result property="setupPlace"         		column="SETUP_PLACE"/>
+		<result property="useState"           		column="USE_STATE"/>
+		<result property="fixrederIp"         		column="FIXREDER_IP"/>
+		<result property="fixrederPort"       		column="FIXREDER_PORT"/>
+		<result property="chrgrId"            		column="CHRGR_ID"/>
+		<result property="chrgrDeptId"        		column="CHRGR_DEPT_ID"/>    
+		<result property="secuIp"             		column="SECU_IP"/>
+		<result property="secuPort"           		column="SECU_PORT"/>
+		<result property="runState"           		column="RUN_STATE"/>
+		<result property="runStatechngRsn"    		column="RUN_STATECHNG_RSN"/>
+		<result property="regDtime"           		column="REG_DTIME"/>
+		<result property="row"                		column="rnum"/>
+		<result property="remk"               		column="REMK"/>
+		<result property="setupUseCdFlag"           column="SETUP_USE_CD_FLAG"/>
+	 </resultMap>
+	 <select id="countRfidFixreaderPagedList" parameterClass="rms.presv.rfid.domain.RfidFixreder" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+        FROM TB_RFFIXREDER
+        WHERE RECORD_CENTER_ID = #recordCenterId#
+        <isNotEmpty prepend="AND" property="runState">
+            RUN_STATE = #runState:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="setupPlace">
+            SETUP_PLACE LIKE #setupPlace:VARCHAR#
+        </isNotEmpty>
+	 </select>
+	 <select id="findRfidFixreaderPagedList" parameterClass="rms.presv.rfid.domain.RfidFixreder" resultMap="findRfidFixreaderPagedList-result">
+	 	SELECT E.fixreder_id
+		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_cd = E.setup_use_cd AND com_type_cd = 'RF13') AS setup_use_cd
+		      ,E.setup_place
+		      ,E.use_state
+		      ,E.fixreder_ip
+		      ,E.fixreder_port
+		      ,E.chrgr_id
+		      ,E.chrgr_dept_id
+		      ,E.secu_ip
+		      ,E.secu_port
+		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RF04' AND com_cd = E.run_state) AS run_state
+		      ,E.run_statechng_rsn
+		      ,E.reg_dtime
+		      ,E.remk
+		      ,E.rnum
+		      ,E.setup_use_cd AS setup_use_cd_flag
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , C.*
+		        FROM (
+		            SELECT fixreder_id, setup_use_cd, setup_place, use_state, fixreder_ip
+		                        , fixreder_port, chrgr_id, chrgr_dept_id, secu_ip, secu_port
+		                        , run_state, run_statechng_rsn, reg_dtime, remk, ROWNUM
+		            FROM TB_RFFIXREDER
+		            WHERE RECORD_CENTER_ID = #recordCenterId#
+		            <isNotEmpty prepend="AND" property="runState">
+		                RUN_STATE = #runState:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="setupPlace">
+		                SETUP_PLACE LIKE #setupPlace:VARCHAR#
+		            </isNotEmpty>
+		            ORDER BY FIXREDER_ID
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	 </select>
+	 
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 태그프린터 ID MAX 값 추출
+	-->
+	<resultMap id="tagprint-max-result" class="rms.presv.rfid.domain.RfidTagprint" >
+		<result property="tagprintId" 			column="TAGPRINT_ID"/>
+	</resultMap>	
+	<select id="findTagprintMaxCount" parameterClass="rms.presv.rfid.domain.RfidTagprint" resultMap="tagprint-max-result">
+		SELECT LPAD(NVL(MAX(A.MAXNUM),0)+ 1, 3, '0') AS TAGPRINT_ID
+		FROM (
+			SELECT TO_NUMBER(TAGPRINT_ID) MAXNUM
+			FROM TB_RFTABPRINT
+			WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		) A
+	</select>
+	
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 태그프린터 등록
+	 -->
+	<insert id="createTagprint" parameterClass="rms.presv.rfid.domain.RfidTagprint">
+		INSERT INTO TB_RFTABPRINT 
+		(
+			RECORD_CENTER_ID, TAGPRINT_ID, SETUP_PLACE, SETUP_IP, SETUP_PORT, REMK, USE_FLAG, REG_DTIME
+		)
+		VALUES 
+		(
+			#recordCenterId#,#tagprintId#,#setupPlace#,#setupIp#,#setupPort#,#remk#,#useFlag#
+			<!--cubrid ,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 태그프린터 수정
+	-->
+	<update id="updateTagprint" parameterClass="rms.presv.rfid.domain.RfidTagprint">
+		UPDATE TB_RFTABPRINT
+		SET  SETUP_PLACE = #setupPlace#
+		    ,SETUP_IP = #setupIp#
+		    ,SETUP_PORT = #setupPort#
+		    ,REMK = #remk#
+		    ,USE_FLAG = #useFlag#
+		WHERE RECORD_CENTER_ID = #recordCenterId#
+			AND	TAGPRINT_ID  = #tagprintId#
+	 </update>
+	 
+	<select id="countTagPubHis" parameterClass="rms.presv.rfid.domain.RfidTagprint" resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM TB_RFTABPUBHIST
+		WHERE TAGPRINT_ID = #tagprintId:VARCHAR#
+	</select>
+	
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 태그프린터 삭제
+	-->
+	<delete id="deleteTagprint" parameterClass="rms.presv.rfid.domain.RfidTagprint">
+		DELETE TB_RFTABPRINT
+	    WHERE RECORD_CENTER_ID = #recordCenterId#
+	    	AND	TAGPRINT_ID  = #tagprintId#
+	</delete>
+	
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 고정형리더기 ID MAX 값 추출
+	-->
+	<resultMap id="fixreder-max-result" class="rms.presv.rfid.domain.RfidFixreder" >
+		<result property="fixrederId"         		column="FIXREDER_ID"/>
+	</resultMap>	
+	<select id="findFixrederMaxCount" parameterClass="rms.presv.rfid.domain.RfidFixreder" resultMap="fixreder-max-result">
+		SELECT LPAD(NVL(MAX(A.MAXNUM),0)+ 1, 3, '0') AS FIXREDER_ID
+		FROM (
+			SELECT TO_NUMBER(FIXREDER_ID) MAXNUM
+			FROM TB_RFFIXREDER
+			WHERE RECORD_CENTER_ID = #recordCenterId#
+		) A
+	</select>
+	
+	<!--
+		보존 > RFID관리 > RFID관리 > 고정형리더기 등록
+	-->
+	<insert id="createFixreder" parameterClass="rms.presv.rfid.domain.RfidFixreder">
+		INSERT INTO TB_RFFIXREDER 
+		(
+		  RECORD_CENTER_ID, FIXREDER_ID, SETUP_USE_CD, SETUP_PLACE, USE_STATE, FIXREDER_IP, FIXREDER_PORT, CHRGR_ID, CHRGR_DEPT_ID, SECU_IP, SECU_PORT, RUN_STATE, RUN_STATECHNG_RSN, REMK, REG_DTIME, LAMP_IP, LAMP_PORT
+		)
+		  VALUES 
+		(
+		  #recordCenterId#, #fixrederId#, #setupUseCd#, #setupPlace#, #useState#, #fixrederIp#, #fixrederPort#, #chrgrId#, #chrgrDeptId#, #secuIp#, #secuPort#, #runState#, #runStatechngRsn#, #remk#
+		<!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'), #lampIp#, #lampPort#-->
+		, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS'), #lampIp#, #lampPort#
+		)
+	</insert>
+	
+	<!--
+		보존 > RFID관리 > RFID관리 > 고정형리더기 수정
+	-->
+	<update id="updateFixreder" parameterClass="rms.presv.rfid.domain.RfidFixreder">
+		UPDATE TB_RFFIXREDER
+		SET FIXREDER_ID = #fixrederId#
+			,SETUP_USE_CD = #setupUseCd#
+			,SETUP_PLACE = #setupPlace#
+			,USE_STATE = #useState#
+			,FIXREDER_IP = #fixrederIp#
+			,FIXREDER_PORT = #fixrederPort#
+			,CHRGR_ID = #chrgrId#
+			,CHRGR_DEPT_ID = #chrgrDeptId#
+			,SECU_IP = #secuIp#
+			,SECU_PORT = #secuPort#
+			,RUN_STATE = #runState#
+			,RUN_STATECHNG_RSN = #runStatechngRsn#
+			<!--cubrid ,REG_DTIME = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			,REG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+			,REMK = #remk#
+			,LAMP_IP = #lampIp#
+			,LAMP_PORT = #lampPort#          
+		WHERE RECORD_CENTER_ID = #recordCenterId#
+			AND FIXREDER_ID = #fixrederId:VARCHAR#    
+	</update>
+
+	<!--
+		보존 > RFID관리 > RFID관리 > 고정형리더기 삭제
+	-->
+	<delete id="deleteFixrederList" parameterClass="rms.presv.rfid.domain.RfidFixreder">
+		DELETE TB_RFFIXREDER
+		WHERE RECORD_CENTER_ID = #recordCenterId#
+			AND FIXREDER_ID = #fixrederId:VARCHAR#
+	</delete>	
+	
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 태그프린터 조회 (COUNT)
+	-->
+	<select id="countTagPrintList" parameterClass="rms.presv.rfid.domain.RfidTagprint" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_RFTABPRINT
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="useFlag">
+			  USE_FLAG = #useFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="setupPlace">
+			  SETUP_PLACE LIKE #setupPlace:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tagprintId">
+	        TAGPRINT_ID = #tagprintId:VARCHAR#
+	    </isNotEmpty>
+	</select>
+	
+	<!-- 
+		보존 > RFID관리 > RFID관리 > 태그프린터 조회
+	 -->
+	<resultMap id="tagprint-addRownum-result" class="rms.presv.rfid.domain.RfidTagprint" >
+		<result property="tagprintId" 			column="TAGPRINT_ID"/>
+		<result property="setupPlace" 			column="SETUP_PLACE"/>
+		<result property="setupIp" 				column="SETUP_IP"/>
+		<result property="setupPort" 			column="SETUP_PORT"/>
+		<result property="remk" 				column="REMK"/>
+		<result property="useFlag" 				column="USE_FLAG"/>
+		<result property="regDtime" 			column="REG_DTIME"/>
+		<result property="row" 					column="ROWNUM"/>
+	</resultMap>	 
+	<select id="findTagprintList" parameterClass="rms.presv.rfid.domain.RfidTagprint" resultMap="tagprint-addRownum-result">
+		SELECT TAGPRINT_ID  
+			   ,SETUP_PLACE 
+			   ,SETUP_IP 
+			   ,SETUP_PORT
+			   ,REMK	
+			   ,CASE USE_FLAG
+			   		WHEN '1' THEN '미사용' 
+					WHEN '0' THEN '사용'
+				END AS USE_FLAG
+			   ,REG_DTIME
+			   ,ROWNUM 
+		FROM  TB_RFTABPRINT		
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="useFlag">
+			USE_FLAG = #useFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="setupPlace">
+			SETUP_PLACE LIKE #setupPlace:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tagprintId">
+			TAGPRINT_ID = #tagprintId:VARCHAR#
+		</isNotEmpty>
+		ORDER BY TAGPRINT_ID ASC
+	</select>
+	 
+</sqlMap>

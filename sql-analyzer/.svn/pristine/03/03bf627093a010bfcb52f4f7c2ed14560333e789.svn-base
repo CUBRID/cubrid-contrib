@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.file.scanView">
+	
+	<!-- 
+		파일 정보 조회
+	 -->
+	<resultMap id="findOrignFileList-result" class="rms.common.file.domain.OrignFile">
+		<result property="orignFileId"		column="orign_file_id"/>
+		<result property="orignFileNm"		column="orign_file_nm"/>
+	</resultMap>
+	<select id="findOrignFileList" parameterClass="rms.common.file.domain.OrignFile" resultMap="findOrignFileList-result">
+                <!--cubrid select-->
+		SELECT B.orign_file_id
+			, B.file_nm AS orign_file_nm
+		FROM  TB_RDRECORD A
+			, TB_STORIGNFILE B
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_id = #recordId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.orign_id = B.orign_id
+		<!--ORDER BY ROWNUM DESC-->
+	</select>
+	
+	<!-- 
+		파일을 다운로드 하기 전 암호화 모듈에서 요청한 공개구분코드, 기록물 구분코드 가져오기
+	 -->
+	<resultMap id="findDetailRdRecordDRM-result" class="rms.common.detail.domain.Record">
+		<result property="openDivCd"					column="open_div_cd"/>
+		<result property="erecordFlag"					column="erecord_flag"/>
+	</resultMap>
+	<select id="findDetailRdRecordDRM" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findDetailRdRecordDRM-result">
+		SELECT A.open_div_cd
+			, A.erecord_flag
+		FROM  TB_RDRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_id = #recordId:VARCHAR#
+	</select>
+</sqlMap>

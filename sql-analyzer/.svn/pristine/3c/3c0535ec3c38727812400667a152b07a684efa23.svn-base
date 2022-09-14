@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.clssdiv">
+	
+	<!-- 
+		건제목변경_건제목변경
+		: 기록물 건 목록을 조회한다.
+	 -->
+	<resultMap id="findRecordTitleModPagedList-result" class="rms.presv.clssdiv.domain.RecordMod">
+		<result property="folderId" 			column="FOLDER_ID"/>		
+		<result property="recordId" 			column="RECORD_ID"/>
+		<result property="orgCd"		 		column="ORG_CD"/>
+		<result property="orgNm"		 		column="ORG_NM"/>
+		<result property="orgAbbrNm"	 		column="ORG_ABBR_NM"/>
+		<result property="title" 				column="TITLE"/>
+		<result property="folderTitle" 			column="FOLDER_TITLE"/>
+		<result property="recordRegDivNm" 		column="RECORD_REG_DIV_NM"/>
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>
+		<result property="recordClssNm" 		column="RECORD_CLSS_NM"/>
+		<result property="takeMngNo" 			column="TAKE_MNG_NO"/>	
+	</resultMap>
+	<select id="countRecordTitleModPagedList" parameterClass="rms.presv.clssdiv.domain.RecordMod" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDRECORD A, TB_RDFOLDER B
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+        AND A.FOLDER_ID = B.FOLDER_ID
+        AND A.ERECORD_FLAG = '2'
+        AND A.RECORD_CLSS_CD IS NOT NULL    
+        <isNotEmpty prepend="AND" property="title">
+            A.TITLE LIKE #title:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="creatSysCd">
+            A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="recordRegDivCd">
+            A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="creatYyyyF">
+            <isEmpty property="creatYyyyT">
+                A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+            </isEmpty>
+            <isNotEmpty property="creatYyyyT">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="recordClssCd">
+            A.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>        
+	</select>
+	<select id="findRecordTitleModPagedList" parameterClass="rms.presv.clssdiv.domain.RecordMod" resultMap="findRecordTitleModPagedList-result">
+		SELECT E.record_id
+		      ,E.folder_id
+		      ,E.org_cd
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id  AND Z.org_cd = E.org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id  AND Z.org_cd = E.org_cd) AS org_abbr_nm
+		      ,E.title
+		      ,E.folder_title
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' ANd Z.com_cd = E.record_reg_div_cd) AS record_reg_div_nm
+		      ,E.creat_yyyy
+		      ,DECODE(E.record_clss_cd,'','',(SELECT Z.com_cd_nm 
+		      								  FROM TB_ZZCOMCD Z 
+		      								  WHERE Z.com_type_cd = (SELECT Y.sub_com_type_cd 
+		      								  						 FROM TB_ZZCOMCD Y 
+		      								  						 WHERE Y.com_type_cd = 'RD02' 
+		      								  						 AND Y.com_cd = E.record_reg_div_cd) 
+		      								  AND Z.com_cd = E.record_clss_cd)) AS record_clss_nm
+		      ,E.take_mng_no
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID, A.RECORD_ID, A.FOLDER_ID, A.ORG_CD, A.TITLE
+		                  ,B.TITLE AS FOLDER_TITLE, A.CREAT_YYYY, A.TAKE_MNG_NO, A.RECORD_CLSS_CD, A.RECORD_REG_DIV_CD
+		            FROM TB_RDRECORD A, TB_RDFOLDER B
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            AND A.FOLDER_ID = B.FOLDER_ID
+		            AND A.ERECORD_FLAG = '2'
+		            AND A.RECORD_CLSS_CD IS NOT NULL    
+		            <isNotEmpty prepend="AND" property="title">
+		                A.TITLE LIKE #title:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="creatSysCd">
+		                A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="recordRegDivCd">
+		                A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="creatYyyyF">
+		                <isEmpty property="creatYyyyT">
+		                    A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+		                </isEmpty>
+		                <isNotEmpty property="creatYyyyT">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="recordClssCd">
+		                A.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                A.ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>        
+		            ORDER BY A.RECORD_CENTER_ID, A.CREAT_REG_DTIME, A.CREAT_REG_NO
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	<!-- 
+		건제목변경_건제목변경
+		: 기록물건 제목수정
+	-->
+	<update id="updateRecordTitle" parameterClass="rms.presv.clssdiv.domain.RecordMod">
+		UPDATE TB_RDRECORD
+		   SET TITLE = #newTitle:VARCHAR#      
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND RECORD_ID = #recordId:VARCHAR#
+	</update>
+	
+	<!--  
+		건제목변경_건제목변경
+		: 기록물건 제목수정 이력 번호생성 
+	-->
+	<select id="findChngHistNo" parameterClass="rms.presv.clssdiv.domain.RecordMod" resultClass="java.lang.Integer">
+		SELECT NVL(MAX(CHNG_HIST_NO)+1,1) AS CHNG_HIST_NO
+		  FROM TB_RDRECORDTITLEHIST
+		 WHERE RECORD_ID = #recordId:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#	
+	</select>
+	
+	<!--  
+		건제목변경_건제목변경
+		: 기록물건 제목수정 이력 
+	-->
+	<insert id="createRecordTitleHist" parameterClass="rms.presv.clssdiv.domain.RecordMod">
+		INSERT INTO TB_RDRECORDTITLEHIST(
+				RECORD_CENTER_ID
+				,RECORD_ID
+				,CHNG_HIST_NO
+				,TITLE_BEF
+				,CHNG_YMD
+				,CHNG_RSN
+				,CHNG_USER_ID     
+				,CHNG_USER_NM         
+				,REG_DTIME
+				,TAKE_MNG_NO 
+			)
+			VALUES(
+				 #recordCenterId:VARCHAR#
+				,#recordId:VARCHAR#
+				,#chngHistNo:NUMBER#
+				,#title:VARCHAR#
+				,TO_CHAR(SYSDATE,'YYYYMMDD')
+				,#chngRsn:VARCHAR#
+				,#regUserId:VARCHAR#
+				,#regUserNm:VARCHAR#
+				<!--cubrid ,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')	-->
+				,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')	
+				,#takeMngNo:VARCHAR#
+			) 
+	</insert>
+	
+	
+</sqlMap>

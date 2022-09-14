@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="User">
+
+    <!-- 부서 코드로 부서 테이블에서  부서 존재 수 반환 -->
+ 	<select id="countStDept" parameterClass="common.domain.User" resultClass="int">
+		SELECT COUNT(1) 
+		FROM  TB_STDEPT
+		WHERE dept_cd = #deptCd:VARCHAR#
+	</select>
+
+    <!-- 온나라 id 로 user 정보 조회 -->
+    <select id="countStUserOnNaraUserId" parameterClass="common.domain.User" resultClass="int">
+		SELECT COUNT(1) 
+		FROM  TB_STUSER 
+		WHERE sso_flag = '2'
+		AND   onnara_userid = #userId:VARCHAR#
+	</select>
+
+	<!-- 사용자 정보 갱신  -->
+	<update id="updateStUser" parameterClass="common.domain.User">
+		UPDATE TB_STUSER 
+		SET   record_center_id = (SELECT NVL(record_center_id,'') FROM TB_STDEPT WHERE dept_cd = #deptCd:VARCHAR#)
+			, dept_cd = #deptCd:VARCHAR#
+			, user_nm = #userNm:VARCHAR#
+			, login_user_id = #loginUserId:VARCHAR#
+			<isNotEmpty property="userPwd">
+			, user_pwd = #userPwd:VARCHAR#
+			</isNotEmpty>
+			, pos = #pos:VARCHAR#
+			, rank = #RANK:VARCHAR#
+			, work_flag = #workFlag:VARCHAR#
+			, tel_no = #telNo:VARCHAR#
+			, resid_no = #residNo:VARCHAR#
+			, reg_dtime=#regDtime:VARCHAR#
+		WHERE sso_flag = '2'
+		AND   onnara_userid = #userId:VARCHAR#
+	</update>
+
+	<!-- 사용자 추가 -->
+	<insert id="insertStUser" parameterClass="common.domain.User">
+		INSERT INTO TB_STUSER (
+			user_id 
+			,record_center_id 
+			,dept_cd 
+			,user_div 
+			,user_nm 
+			,login_user_id 
+			,user_pwd 
+			,pos 
+			,rank 
+			,work_flag 
+			,tel_no 
+			,addr 
+			,resid_no 
+			,use_flag 
+			,reg_dtime 
+			,sso_flag 
+			,onnara_userid
+			,MENU_GRANT_GRP_CD
+		) VALUES (
+			(SELECT LPAD(NVL(MAX(user_id),0)+1, 10,'0') FROM TB_STUSER)
+			,(SELECT NVL(record_center_id,'') FROM  TB_STDEPT WHERE dept_cd = #deptCd:VARCHAR#)
+			,#deptCd:VARCHAR#
+			,'1'
+			,#userNm:VARCHAR#
+			,#loginUserId:VARCHAR#
+			,#userPwd:VARCHAR#
+			,#pos:VARCHAR#
+			,#RANK:VARCHAR#
+			,#workFlag:VARCHAR#
+			,#telNo:VARCHAR#
+			,#addr:VARCHAR# 
+			,#residNo:VARCHAR#
+			,'1'
+			,#regDtime:VARCHAR# <!-- ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')  -->
+			,'2' 
+			,#userId:VARCHAR#
+			,'001'
+		) 
+	</insert>
+
+
+    <!-- 사용자의 메뉴 권한 부여 하는 부분 -->
+	<insert id="insertStUserMenuGrant" parameterClass="common.domain.User">
+		INSERT INTO TB_STUSERMENUGRANT
+		(user_id, record_center_id, menu_id, menu_nm,reg_dtime)
+		(
+			SELECT A.user_id
+				,A.record_center_id
+				,B.menu_id
+				,B.menu_nm
+				,A.reg_dtime
+			FROM TB_STUSER A
+				,TB_STMENU B 
+			WHERE A.record_center_id = B.record_center_id 
+			AND A.onnara_userid = #userId:VARCHAR#
+			AND A.sso_flag = '2'
+			AND B.menu_grant_levl IN ('0','1') 
+		)
+	</insert>
+	
+	
+    <!-- 등록된 온나라 사용자 수량 -->
+    <select id="countUserCountState" parameterClass="common.domain.User" resultClass="long">
+		SELECT COUNT(1) 
+		FROM  TB_STUSER 
+		WHERE sso_flag = '2'
+		AND   onnara_userid IS NOT NULL
+	</select>
+	
+	<!-- 등록된 온나라 사용자 중 최근 갱신일 -->
+    <select id="selectUserRegDtimeState" parameterClass="common.domain.User" resultClass="String">
+		SELECT MAX(reg_dtime)
+		FROM  TB_STUSER 
+		WHERE sso_flag = '2'
+		AND   onnara_userid IS NOT NULL
+	</select>
+	
+	
+	
+	
+    <!-- user table 의 로그인 아이디 반환 -->
+    <resultMap id="StUser-result" class="common.domain.User" >
+	    <result property="loginUserId" 	column="Login_user_id"/>
+    </resultMap>
+    <!-- 로그인 정보 전체 조회 -->
+	<select id="getStUser" resultClass="common.domain.User" resultMap="StUser-result">
+		SELECT Login_user_id FROM tb_stuser
+	</select>
+	
+    <!-- user table 의 총수 조회 -->
+	<select id="getStUserCount"  resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM TB_STUSER
+	</select>
+	
+	
+    <!-- SSO 연동 flag 가 2인 것 모두삭제 -->
+	<delete id="deleteStUserAll" parameterClass="common.domain.User">
+			DELETE FROM tb_stuser WHERE     sso_flag = '2'
+	</delete>
+
+
+    <!-- SSO 연동 flag 가 2인 것 모두 메뉴 권한 삭제 -->
+	<delete id="deleteStUserMenuGrant" parameterClass="common.domain.User">
+  		
+     DELETE FROM 
+  		TB_STUSERMENUGRANT 
+  		WHERE
+	    user_id in 
+	    (
+	       SELECT user_id 
+	       FROM 
+	       TB_STUSER 
+	       WHERE sso_flag='2'	    
+	    )
+
+	</delete>
+	
+    <!-- SSO 연동 flag 가 2인 것 모두 로그인 정보 삭제 -->
+	<delete id="deleteStUserLoginAll" parameterClass="common.domain.User">
+            DELETE FROM tb_stuserlogin
+            WHERE
+	        user_id in 
+	       (
+	         SELECT user_id 
+	         FROM 
+	         TB_STUSER 
+	         WHERE sso_flag='2'	    
+	       ) 
+
+    </delete>
+    
+
+	
+	
+	<!-- 사용자 부서가 없는 경우 null로 넣는 부분 -->
+	<insert id="insertStUser4" parameterClass="common.domain.User">
+		INSERT INTO TB_STUSER 
+        ( 
+            user_id, record_center_id 
+            , dept_cd, user_div, user_nm, 
+			login_user_id, user_pwd 
+            , pos, rank, work_flag, tel_no, addr 
+            , resid_no, use_flag, reg_dtime, sso_flag 
+
+
+        ) 
+        VALUES 
+        ( 
+            (select LPAD(nvl(max(user_id),0)+1, 10,'0') from tb_stuser)
+             ,'0000001'
+            , null, '1',#userNm#,#loginUserId#,#userPwd#
+            , #pos#, #RANK#, #workFlag#, #telNo#, #addr# 
+            , #residNo#, '1', #regDtime#, '2' 
+        ) 
+    
+	</insert>
+	
+	
+   <!-- 사용자 정보 삭제  -->
+	<delete id="deleteStUser" parameterClass="common.domain.User">
+			DELETE FROM tb_stuser 
+			WHERE    
+			login_user_id=#loginUserId#
+			AND 
+			sso_flag = '2'
+	</delete>
+	
+
+	
+		
+
+	
+    <!-- 사용자의 메뉴 권한 삭제 -->
+	<delete id="deleteStUserMenuGrantUserid" parameterClass="common.domain.User">
+			DELETE FROM tb_stusermenugrant  
+			WHERE    
+			user_id=(SELECT userid FROM onnara_userid=#userId#)
+	</delete>
+
+
+</sqlMap>

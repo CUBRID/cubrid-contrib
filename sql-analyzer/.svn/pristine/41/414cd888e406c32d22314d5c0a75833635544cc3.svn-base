@@ -1,0 +1,25 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+
+UpdatePdf_StOrignFile
+Semantic: UPDATE is not authorized on updatepdf_storignfile_view. update UpdatePdf_StOrignFile_view C set C.PDF_A1_TRANS_STATE...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_StOrignFile
+
+		UPDATE UpdatePdf_StOrignFile_view C		SET C.PDF_A1_TRANS_STATE = (CASE WHEN C.REQUEST_STATUS = 'C' THEN '4' WHEN C.REQUEST_STATUS = 'D' THEN '5' ELSE C.PDF_A1_TRANS_STATE END)		WHERE C.ORIGN_FILE_ID		    IN (		        SELECT SRC_FILE_ID		        FROM  TB_STREQRESULT		        WHERE RECORD_CENTER_ID = '1'		          AND JOB_ID = '1'		    )	;
+
+UpdatePdf_RdRecord
+Syntax: before '     WHEERE E.RECORD_ID = '1'    AND E.JOB_ID = '1';'
+invalid relational operator [CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_RdRecord
+
+    UPDATE UpdatePdf_RdRecord_view inner join TB_RDRECORD F ON F.RECORD_CENTER_ID = '1' AND F.RECORD_ID = '1'    SET F.PDF_A1_TRANS_STATE = E.NEW_STATE    WHEERE E.RECORD_ID = '1'    AND E.JOB_ID = '1';
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-ResultPdf.xml

@@ -1,0 +1,60 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : findUnitInqPagedList
+
+		SELECT A.RECORD_CENTER_ID		    , A.UNIT_CD		    , A.ORG_CD		    , B.UNIT_NM		    , B.CREAT_STND_YMD		    , (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD07' AND Z.COM_CD=DECODE(B.PRESV_TERM_CD, '20', '25', B.PRESV_TERM_CD)) AS PRESV_TERM_CD		    , (CASE WHEN A.USE_FLAG='1' THEN '사용' WHEN A.USE_FLAG='0' THEN '폐지' ELSE '' END) AS USE_FLAG		    , B.SML_CD		    , (SELECT Z.ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.ORG_CD) AS ORG_NM		    , B.LRG_NM||(CASE WHEN B.MID_NM IS NULL THEN '' ELSE '>'||B.MID_NM END)||(CASE WHEN B.SML_NM IS NULL THEN '' ELSE '>'||B.SML_NM END) AS CLSS_PATH_NM		FROM  TB_ZZORGUNIT A		    , TB_ZZUNIT B		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.UNIT_CD = B.UNIT_CD		AND ROWNUM BETWEEN '1' AND '1'		 AND 			A.RECORD_CENTER_ID = '1'    		  AND 			A.ORG_CD = '1'    		  AND 			A.UNIT_CD = '1'		  AND 			A.USE_FLAG = '1'		  AND 			B.CREAT_STND_YMD >= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		  AND 			B.CREAT_STND_YMD <= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : countUnitInqList
+
+		SELECT COUNT(1)		FROM  TB_ZZORGUNIT A		    , TB_ZZUNIT B		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.UNIT_CD = B.UNIT_CD		 AND 			A.RECORD_CENTER_ID = '1'    		  AND 			A.ORG_CD = '1'    		  AND 			A.UNIT_CD = '1'		  AND 			A.USE_FLAG = '1'		  AND 			B.CREAT_STND_YMD >= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		  AND 			B.CREAT_STND_YMD <= to_char(to_date('1','yyyy-mm-dd'),'yyyymmdd') 		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : findUnitInqInfo
+
+		SELECT A.UNIT_CD		, A.UNIT_NM		, A.UNIT_DESCR		, (SELECT COM_CD_NM FROM TB_ZZCOMCD B WHERE B.COM_TYPE_CD='RD57' AND B.COM_CD = A.PRESV_TERM_CD) PRESV_TERM_CD		, A.PRESV_TERM_FIX_RSN		, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD='RD09' AND C.COM_CD=A.PRESV_METHOD_CD) PRESV_METHOD_CD		, (SELECT D.COM_CD_NM FROM TB_ZZCOMCD D WHERE D.COM_TYPE_CD='RD10' AND D.COM_CD=A.PRESV_AREA_CD) PRESV_AREA_CD		, (SELECT E.COM_CD_NM FROM TB_ZZCOMCD E WHERE E.COM_TYPE_CD='ZZ21' AND E.COM_CD=A.FUNSH_RECORD_FLAG) FUNSH_RECORD_FLAG		, A.FUNSH_RECORD_TRANSF_YMD		, decode(A.MAIN_READ_USG,'1','학술연구','2','행정참고','3','민원증빙','4','사업정보','5','기타','') MAIN_READ_USG		, decode(A.TRANSF_READ_EXPT_CNT,'1','높음','2','중간','3','낮음','') TRANSF_READ_EXPT_CNT		, decode(A.SPCL_LIST_LOC,'0','없음','1','기록물철','2','기록물건','') SPCL_LIST_LOC		, A.SPCL_LIST1		, A.SPCL_LIST2		, A.SPCL_LIST3		, decode(A.STATE_CD,'1','신설','2','폐지','3','변경','') STATE_CD		, ('1') RECORD_CENTER_ID		, (SELECT F.ORG_NM FROM TB_STORG F WHERE F.RECORD_CENTER_ID = '1' and F.ORG_CD = '1') ORG_NM		, ('1') ORG_CD		, (A.LRG_NM||decode(A.MID_NM,null,'',('>'||A.MID_NM))||decode(A.SML_NM,null,'',('>'||A.SML_NM))) CLSS_PATH_NM		FROM TB_ZZUNIT A		WHERE A.RECORD_CENTER_ID = '1'					AND A.UNIT_CD = '1'			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : countfindUnitInqInfo
+
+				SELECT 			count(1)		FROM TB_ZZUNIT A		WHERE A.RECORD_CENTER_ID = '1'					AND A.UNIT_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : findUnitInqInfoView
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT 	A.UNIT_CD				, (SELECT B.UNIT_NM FROM TB_ZZUNIT B WHERE B.RECORD_CENTER_ID = '1' and B.UNIT_CD = '1') UNIT_NM				, A.ORG_CD				, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = '1' and C.ORG_CD = A.ORG_CD) ORG_NM				, (SELECT E.COM_CD_NM FROM TB_ZZCOMCD E WHERE E.COM_TYPE_CD='ZZ29' AND E.COM_CD=A.WORK_TYPE_CD)WORK_TYPE_CD				, SUBSTR(A.WORK_DTIME,1,8) WORK_DTIME				, APPLY_STND_YMD		FROM 	TB_ZZORGUNITWORKHIST A		WHERE 	A.RECORD_CENTER_ID = '1'				AND 	A.UNIT_CD = '1'				) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : countUnitInqInfoView
+
+				SELECT 	count(1)		FROM 	TB_ZZORGUNITWORKHIST A		WHERE 	A.RECORD_CENTER_ID = '1'				AND 	A.UNIT_CD = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : findUnitInqInfoHist
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT A.UNIT_CD		, (SELECT B.UNIT_NM FROM TB_ZZUNIT B WHERE B.RECORD_CENTER_ID = '1' and B.UNIT_CD = '1') UNIT_NM		, A.CHNG_YMD		, (SELECT E.COM_CD_NM FROM TB_ZZCOMCD E WHERE E.COM_TYPE_CD='ZZ30' AND E.COM_CD=A.CHNG_ITEM_CD)CHNG_ITEM_CD		, A.CHNG_BEF_VAL		, A.CHNG_AFT_VAL		, A.CHNG_RSN		FROM TB_ZZUNITCHNGHIST A		WHERE A.RECORD_CENTER_ID = '1'					AND A.UNIT_CD = '1'					) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml
+-- Query    : select
+-- Query Id : countUnitInqInfoHist
+
+				SELECT 			count(1)		FROM TB_ZZUNITCHNGHIST A		WHERE A.RECORD_CENTER_ID = '1'					AND A.UNIT_CD = '1'		;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitInq.xml

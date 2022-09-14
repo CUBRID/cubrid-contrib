@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace.FolderTrace">
+	
+	<resultMap id="accs-foldertrace-result" class="rms.accs.trace.domain.FolderTrace" >
+		<result property="folderId" 	column="FOLDER_ID"/>
+		<result property="userId" 		column="USER_ID"/>
+		<result property="userNm" 		column="USER_NM"/>
+		<result property="deptNm" 		column="DEPT_NM"/>
+		<result property="workTypeCd" 	column="WORK_TYPE_CD"/>
+		<result property="workDtime" 	column="WORK_DTIME"/>
+		<result property="connIp" 		column="CONN_IP"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm" 		column="ORG_ABBR_NM"/>
+		<result property="rank" 		column="RANK"/>
+		<result property="userDivNm"	column="USER_DIV_NM"/>
+		<result property="creatYyyy"	column="CREAT_YYYY"/>
+	</resultMap>
+		
+	<resultMap id="accs-traceuser-result" class="rms.accs.trace.domain.FolderTrace" >
+		<result property="userId" 		column="USER_ID"/>
+		<result property="userNm" 		column="USER_NM"/>
+		<result property="deptNm" 		column="DEPT_NM"/>
+		<result property="rank" 		column="RANK"/>
+		<result property="userDivNm"	column="USER_DIV_NM"/>
+	</resultMap>
+		
+	<!--
+		COUNT
+	-->
+	<select id="countFolderTraceForRecordChrgr" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1'
+ <!--   20150623.박성우.기존 기록관담장자 혹은 공동형 관리자 조회를 기록관담당자만 조회하게 수정 	 -->
+<!-- 	AND (B.USER_DIV ='3' OR B.USER_DIV ='4')  --> 
+		AND B.USER_DIV ='3'		
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="userId">
+				A.USER_ID = #userId:VARCHAR#
+			</isNotEmpty>			
+			<isEmpty property="userId">
+				<isNotEmpty prepend="AND" property="userNm">
+					B.USER_NM LIKE #userNm:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="deptCd">
+				B.DEPT_CD = #deptCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="deptCd">
+				<isNotEmpty prepend="AND" property="deptNm">
+					B.DEPT_CD IN (SELECT DEPT_CD FROM TB_STDEPT WHERE DEPT_NM LIKE #deptNm:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 
+		SELECT
+	 -->
+	 
+	 <!-- 	20150623.박성우.기존 기록관담장자 혹은 공동형 관리자 조회를 기록관담당자만 조회하게 수정 	 -->
+     <!-- 	AND (B.USER_DIV ='3' OR B.USER_DIV ='4')  -->
+	<select id="findFolderTraceForRecordChrgr" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-foldertrace-result">
+		SELECT A.USER_ID
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 	
+		, B.USER_NM
+		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.WORK_DTIME
+		, A.CONN_IP
+		, '' TITLE
+		, '' ORG_NM
+		, '' ORG_ABBR_NM
+		, '' RANK
+		, '' USER_DIV_NM
+		, '' CREAT_YYYY
+		, '' FOLDER_ID
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1'
+		AND B.USER_DIV ='3'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="userId">
+				A.USER_ID = #userId:VARCHAR#
+			</isNotEmpty>			
+			<isEmpty property="userId">
+				<isNotEmpty prepend="AND" property="userNm">
+					B.USER_NM LIKE #userNm:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="deptCd">
+				B.DEPT_CD = #deptCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="deptCd">
+				<isNotEmpty prepend="AND" property="deptNm">
+					B.DEPT_CD IN (SELECT DEPT_CD FROM TB_STDEPT WHERE DEPT_NM LIKE #deptNm:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="docFlag">
+				A.DOC_FLAG = '0'
+		        AND    
+		        <![CDATA[
+		            A.TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+		        ]]>
+			</isNotEmpty>				
+				ORDER BY A.WORK_DTIME
+				<!-- 
+			<isNotEqual property="order" compareValue="2">
+				ORDER BY B.USER_NM
+			</isNotEqual>
+			<isEqual property="order" compareValue="2">
+				ORDER BY A.WORK_DTIME
+			</isEqual>
+			 -->
+		</dynamic>		
+	</select>
+	
+	
+	<!--
+		COUNT
+	-->
+	<!-- 	20150623.박성우.기존 사용자 구분코드 0,1,2로 조회 하게 되어있었던 것을 기록관 담당자를 제외한 사용자가 조회 되도록 수정	 -->
+    <!-- 	AND (B.USER_DIV = '0' OR B.USER_DIV = '1' OR B.USER_DIV = '2')   -->
+	<select id="countFolderTraceForNomlUser" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1'
+		AND B.USER_DIV != '3' 		
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="userId">
+				A.USER_ID = #userId:VARCHAR#
+			</isNotEmpty>			
+			<isEmpty property="userId">
+				<isNotEmpty prepend="AND" property="userNm">
+					B.USER_NM LIKE #userNm:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="deptCd">
+				B.DEPT_CD = #deptCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="deptCd">
+				<isNotEmpty prepend="AND" property="deptNm">
+					B.DEPT_CD IN (SELECT DEPT_CD FROM TB_STDEPT WHERE DEPT_NM LIKE #deptNm:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 
+		SELECT
+	 -->
+	 <!-- 	20150623.박성우.기존 사용자 구분코드 0,1,2로 조회 하게 되어있었던 것을 기록관 담당자를 제외한 사용자가 조회 되도록 수정	 -->
+     <!-- 	AND (B.USER_DIV = '0' OR B.USER_DIV = '1' OR B.USER_DIV = '2')   -->	
+	<select id="findFolderTraceForNomlUser" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-foldertrace-result">
+		SELECT A.USER_ID
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		, B.USER_NM
+		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.WORK_DTIME
+		, A.CONN_IP
+		, (SELECT TITLE FROM TB_RDFOLDER WHERE FOLDER_ID = A.TRGT_ID AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) TITLE
+		, '' ORG_NM
+		, '' ORG_ABBR_NM
+		, '' RANK
+		, '' USER_DIV_NM
+		, '' CREAT_YYYY
+		, A.TRGT_ID FOLDER_ID
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1' 
+		AND B.USER_DIV != '3'   	  	  	
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="userId">
+				A.USER_ID = #userId:VARCHAR#
+			</isNotEmpty>			
+			<isEmpty property="userId">
+				<isNotEmpty prepend="AND" property="userNm">
+					B.USER_NM LIKE #userNm:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="deptCd">
+				B.DEPT_CD = #deptCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="deptCd">
+				<isNotEmpty prepend="AND" property="deptNm">
+					B.DEPT_CD IN (SELECT DEPT_CD FROM TB_STDEPT WHERE DEPT_NM LIKE #deptNm:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="docFlag">
+				A.DOC_FLAG = '0'
+		        AND    
+		        <![CDATA[
+		            A.TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+		        ]]>
+			</isNotEmpty>	
+			ORDER BY A.WORK_DTIME
+			<!-- 
+			<isNotEqual property="order" compareValue="2">
+				ORDER BY B.USER_NM
+			</isNotEqual>
+			<isEqual property="order" compareValue="2">
+				ORDER BY A.WORK_DTIME
+			</isEqual>	
+			-->
+		</dynamic>		
+	</select>
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findTraceUser" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-traceuser-result">
+		SELECT A.USER_ID
+		, A.USER_NM
+		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = A.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.RANK
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ST01' AND USE_FLAG = '1' AND COM_CD = A.USER_DIV ) USER_DIV_NM
+		FROM TB_STUSER A
+		WHERE A.USER_ID = #userId:VARCHAR#  	
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#				
+	</select>
+	
+	
+	<!--
+		COUNT
+	-->
+	<select id="countFolderTraceForRecordChrgrDetl" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM   TB_ZZTRACE A, TB_RDFOLDER B
+		WHERE  A.TRGT_ID = B.FOLDER_ID AND A.TRGT_DIV_CD = '1' AND A.USER_ID = #userId:VARCHAR#	
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#		
+	</select>
+	
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findFolderTraceForRecordChrgrDetl" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-foldertrace-result">
+		SELECT A.TRGT_ID AS FOLDER_ID
+				, '' USER_ID
+				, '' USER_NM
+				, '' DEPT_NM
+				, '' CONN_IP
+				, '' RANK
+				, '' USER_DIV_NM
+				, '' CREAT_YYYY			
+				,A.WORK_DTIME
+				, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		   
+				,B.TITLE
+				,(SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_NM
+				,(SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_ABBR_NM
+		FROM   TB_ZZTRACE A, TB_RDFOLDER B
+		WHERE  A.TRGT_ID = B.FOLDER_ID AND A.TRGT_DIV_CD = '1' AND A.USER_ID = #userId:VARCHAR#	
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#	
+	</select>
+	
+	<!-- 
+	,DECODE(A.TRGT_DIV_CD,'1',(SELECT TITLE FROM TB_RDFOLDER WHERE FOLDER_ID = A.TRGT_ID),
+	                       '2',(SELECT TITLE FROM TB_RDRECORD WHERE RECORD_ID = A.TRGT_ID),
+							'3',(SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = A.TRGT_ID)) TRGT_NM
+	-->			
+
+	
+	<!--
+		COUNT
+	-->
+	<select id="countFolderTrace" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="title">
+				(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyStart">
+				<![CDATA[
+					C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyEnd">
+				<![CDATA[
+					C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="userDiv" compareValue="1">
+				B.USER_DIV ='3'
+			</isEqual>
+			<isEqual prepend="AND" property="userDiv" compareValue="2">
+				B.USER_DIV != '3'
+			</isEqual>
+			<isNotEmpty prepend="AND" property="folderTypeDivCd">
+				<![CDATA[
+					C.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+				]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findFolderTrace" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-foldertrace-result">
+		SELECT A.TRGT_ID AS FOLDER_ID
+		, '' USER_ID
+		, B.USER_NM
+		, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.WORK_DTIME
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		, '' CONN_IP
+		, C.TITLE
+		, '' ORG_NM
+		, '' ORG_ABBR_NM
+		, '' RANK
+		, '' USER_DIV_NM
+		, C.CREAT_YYYY
+		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="title">
+				(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyStart">
+				<![CDATA[
+					C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyEnd">
+				<![CDATA[
+					C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="userDiv" compareValue="1">
+				B.USER_DIV ='3'
+			</isEqual>
+			<isEqual prepend="AND" property="userDiv" compareValue="2">
+				B.USER_DIV != '3'
+			</isEqual>
+			<isNotEmpty prepend="AND" property="folderTypeDivCd">
+				<![CDATA[
+					C.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="docFlag">
+				A.DOC_FLAG = '0'
+		        AND    
+		        <![CDATA[
+		            A.TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+		        ]]>
+			</isNotEmpty>				
+			ORDER BY A.WORK_DTIME	
+			<!-- 
+			<isNotEqual property="order" compareValue="2">
+				ORDER BY C.TITLE
+			</isNotEqual>
+			<isEqual property="order" compareValue="2">
+				ORDER BY A.WORK_DTIME
+			</isEqual>	
+			 -->	
+		</dynamic>		
+	</select>	
+	
+	<!--
+		COUNT
+	-->
+	<select id="countFolderTraceDetl" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = #folderId:VARCHAR# AND A.TRGT_DIV_CD='1'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findFolderTraceDetl" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-foldertrace-result">
+		SELECT '' FOLDER_ID
+		, '' USER_ID
+		, B.USER_NM
+		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.WORK_DTIME
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		, '' CONN_IP
+		, '' TITLE
+		, '' ORG_NM
+		, '' ORG_ABBR_NM
+		, '' RANK
+		, '' USER_DIV_NM
+		, '' CREAT_YYYY
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = #folderId:VARCHAR# AND A.TRGT_DIV_CD='1'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+</sqlMap>

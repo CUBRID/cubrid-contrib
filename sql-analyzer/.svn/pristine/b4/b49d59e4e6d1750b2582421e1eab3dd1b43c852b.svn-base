@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.rcTakovr">
+
+	<!-- 기관간인계 기록물인계 인계처리 대상 목록을 조회한다. -->
+	<resultMap id="findRcTakovrHandlPagedList-result" class="rms.transf.rcTakovr.domain.RcTakovrHandl">
+		<result property="takovrMngNo"			column="TAKOVR_MNG_NO"/>
+		<result property="takovrRepCd"			column="TAKOVR_REP_CD"/>
+		<result property="takovrRepNm"			column="TAKOVR_REP_NM"/>
+		<result property="takeRepCd"			column="TAKE_REP_CD"/>
+		<result property="takeRepNm"			column="TAKE_REP_NM"/>
+		<result property="takovrProgStateCd"	column="TAKOVR_PROG_STATE_CD"/>
+		<result property="takovrProgStateNm"	column="TAKOVR_PROG_STATE_NM"/>
+		<result property="takovrFileStateCd"	column="TAKOVR_FILE_STATE_CD"/>
+		<result property="takovrFileStateNm"	column="TAKOVR_FILE_STATE_NM"/>
+		<result property="folderCnt"			column="FOLDER_CNT"/>
+		<result property="recordCnt"			column="RECORD_CNT"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기관간인계 기록물인계 인계처리 대상 목록을 조회한다.
+	 -->
+	<select id="findRcTakovrHandlPagedList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrHandl" resultMap="findRcTakovrHandlPagedList-result">
+		SELECT C.takovr_rep_cd||'-'||C.takovr_yyyy||'-'||LPAD(C.takovr_sno, 6, '0') takovr_mng_no
+		     , C.takovr_rep_cd
+		     , C.takovr_rep_nm
+		     , C.take_rep_cd
+		     , C.take_rep_nm
+		     , (SELECT COUNT(1) FROM TB_DFTAKOVRFOLDERLIST Z WHERE Z.takovr_rep_cd = C.takovr_rep_cd AND Z.takovr_yyyy = C.takovr_yyyy AND Z.takovr_sno = C.takovr_sno) folder_cnt
+		     , (SELECT NVL(SUM(Z.record_reg_cnt), '0') FROM TB_RDFOLDER Z, TB_DFTAKOVRFOLDERLIST X WHERE X.takovr_rep_cd = C.takovr_rep_cd AND X.takovr_yyyy = C.takovr_yyyy AND X.takovr_sno = C.takovr_sno AND Z.record_center_id = X.record_center_id AND Z.folder_id = X.folder_id) record_cnt
+		     , C.takovr_prog_state_cd
+		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF06' AND Z.com_cd = C.takovr_prog_state_cd) takovr_prog_state_nm
+		     , C.takovr_file_state_cd
+		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF11' AND Z.com_cd = C.takovr_file_state_cd) takovr_file_state_nm
+		FROM (
+	    	SELECT ROWNUM AS rnum
+		        , B.*
+		    FROM (
+		    	SELECT A.*
+				FROM  TB_DFTAKOVRPLAN A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+				<dynamic>
+				    <isNotEmpty prepend="AND" property="takeRepCd">
+				        A.take_rep_cd = #takeRepCd:VARCHAR#
+				    </isNotEmpty>
+					<isEmpty prepend="AND" property="takovrProgStateCd">
+						A.takovr_prog_state_cd IN ('02','03','04','05')
+					</isEmpty>
+					<isNotEmpty prepend="AND" property="takovrProgStateCd">
+						A.takovr_prog_state_cd = #takovrProgStateCd:VARCHAR#
+					</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="takovrFileStateCd">
+				        A.takovr_file_state_cd = #takovrFileStateCd:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="takeRepNm">
+				        A.take_rep_nm like #takeRepNm:VARCHAR#
+				    </isNotEmpty>
+				</dynamic>
+				ORDER BY A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno
+		    ) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		ORDER BY C.rnum
+	</select>
+	<!-- 
+		COUNT - 기관간인계 기록물인계 인계처리 대상 목록을 조회한다.
+	 -->
+	<select id="countRcTakovrHandlPagedList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrHandl" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_DFTAKOVRPLAN A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="takeRepCd">
+		        A.take_rep_cd = #takeRepCd:VARCHAR#
+		    </isNotEmpty>
+			<isEmpty prepend="AND" property="takovrProgStateCd">
+				A.takovr_prog_state_cd IN ('02','03','04','05')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="takovrProgStateCd">
+				A.takovr_prog_state_cd = #takovrProgStateCd:VARCHAR#
+			</isNotEmpty>
+		    <isNotEmpty prepend="AND" property="takovrFileStateCd">
+		        A.takovr_file_state_cd = #takovrFileStateCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="takeRepNm">
+		        A.take_rep_nm like #takeRepNm:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		기록물인계_인계처리
+		: 인계파일 생성요청 (인계계획상태변경_인계처리, 파일생성요청)
+	 -->
+	<update id="updateRcTakovrHandlState" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		UPDATE TB_DFTAKOVRPLAN
+		   SET takovr_prog_state_cd = #takovrProgStateCd:VARCHAR#
+	   		<dynamic>
+		   		<isNotEmpty prepend="," property="takovrFileStateCd">
+			   		takovr_file_state_cd = #takovrFileStateCd:VARCHAR#
+		   		</isNotEmpty> 
+		   		<isNotEmpty prepend="," property="takeUserNm">
+			   		take_user_nm = #takeUserNm:VARCHAR#
+		   		</isNotEmpty> 
+		   		<isNotEmpty prepend="," property="takovrUserNm">
+			   		takovr_user_nm = #takovrUserNm:VARCHAR#
+		   		</isNotEmpty> 
+				<isNotEmpty prepend="," property="takovrEndYmd">
+			   		takovr_end_dtime = #takovrEndYmd:VARCHAR#||'0000'
+		   		</isNotEmpty> 
+	   		</dynamic>
+		 WHERE takovr_rep_cd = #takovrRepCd:VARCHAR#
+		   AND takovr_yyyy = #takovrYyyy:VARCHAR#
+		   AND takovr_sno = #takovrSno:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인계_인계처리
+		: 인계파일 생성요청 (기록물철 파일생성상태변경_ 미생성으로)
+	 -->
+	<update id="updateRcTakovrFileState" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		UPDATE TB_DFTAKOVRFOLDERLIST
+		   SET creat_error_flag = ''
+		 WHERE takovr_rep_cd = #takovrRepCd:VARCHAR#
+		   AND takovr_yyyy = #takovrYyyy:VARCHAR#
+		   AND takovr_sno = #takovrSno:VARCHAR#
+		   <dynamic>
+		   	<isNotEmpty property="takovrFileCreatType">
+		   		<isEqual prepend="AND" property="takovrFileCreatType" compareValue="1"> <!-- 오류목록만 재생성 -->
+		   			creat_error_flag = '1'
+		   		</isEqual>
+		   	</isNotEmpty>
+		   </dynamic>
+	</update>
+	
+	<!-- 
+		기록물인계_인계처리
+		: 인계파일 생성요청 (스케쥴 등록)
+	 -->
+	<insert id="createRcTakovrHandlFileCreateSchedule" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan">
+		INSERT INTO tb_stschedule (
+			seq, record_center_id, job_type, job_state, job_req_dtime, job_param
+		) 
+		VALUES (
+			<!--cubrid TB_STSCHEDULE_SQ01.NEXTVAL, #recordCenterId:VARHCAR#, #jobType:VARCHAR#, '0', TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #jobParam:VARCHAR#-->
+			TB_STSCHEDULE_SQ01.NEXTVAL, #recordCenterId:VARHCAR#, #jobType:VARCHAR#, '0', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), #jobParam:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		기록물인계_인계처리
+		: 기록물철의 상태를 변경한다 (기관간인계상태로)
+	 -->
+	<update id="updateRcFolderFolderKeepState" parameterClass="rms.transf.rcTakovr.domain.RcTakovrHandl">
+		UPDATE TB_RDFOLDER A 
+		SET folder_keep_state_cd = #folderKeepStateCd:VARCHAR# 
+		<!--cubrid WHERE (A.record_center_id, A.folder_id) IN (
+		    SELECT B.record_center_id, B.folder_id -->
+		WHERE EXISTS (
+		    SELECT 1
+		    FROM TB_DFTAKOVRFOLDERLIST B
+		    WHERE B.takovr_rep_cd   = #takovrRepCd:VARCHAR#
+		    AND B.takovr_yyyy       = #takovrYyyy:VARCHAR#
+		    AND B.takovr_sno        = #takovrSno:NUMBER#
+		    AND EXISTS (
+		        SELECT 1 FROM TB_RDFOLDER C
+		        WHERE C.record_center_id = B.record_center_id
+		        AND   C.folder_id = B.folder_id
+		        AND   C.folder_keep_state_cd IN ('01','04') 
+		    )
+		    AND B.record_center_id = A.record_center_id
+		    AND B.folder_id = A.folder_id
+		)
+	</update>
+	
+	<!-- 
+		기록물인계_인계처리
+		: 인계대상 기록물철ID 목록을 조회한다. (감사추적 등록용)
+	 -->
+	<select id="findRcTakovrHandlFolderList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultClass="java.lang.String">
+		SELECT B.folder_id
+		FROM  TB_DFTAKOVRPLAN A
+		    , TB_DFTAKOVRFOLDERLIST B
+		    , TB_RDFOLDER C
+		WHERE A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+		AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND   A.takovr_sno = #takovrSno:NUMBER#
+		AND   B.takovr_rep_cd = A.takovr_rep_cd
+		AND   B.takovr_yyyy = A.takovr_yyyy
+		AND   B.takovr_sno = A.takovr_sno
+		AND   C.record_center_id = B.record_center_id
+		AND   C.folder_id = B.folder_id
+		ORDER BY B.folder_id
+	</select>
+	
+	
+	<!-- 기관간인계 기록물인계 인계처리 인계대상 철목록을 조회한다. -->
+	<resultMap id="findRcTakovrHandlFolderPagedList-result" class="rms.transf.rcTakovr.domain.RcTakovrHandlFolder">
+	 	<result property="takovrMngNo"			column="TAKOVR_MNG_NO"/>
+	 	<result property="creatYyyy"			column="CREAT_YYYY"/>
+	 	<result property="orgCd"				column="ORG_CD"/>
+	 	<result property="orgNm"				column="ORG_NM"/>
+	 	<result property="title"				column="TITLE"/>
+	 	<result property="folderId"				column="FOLDER_ID"/>
+	 	<result property="takovrProgStateCd"	column="TAKOVR_PROG_STATE_CD"/>
+	 	<result property="takovrProgStateNm"	column="TAKOVR_PROG_STATE_NM"/>
+	 	<result property="takovrFileStateCd"	column="TAKOVR_FILE_STATE_CD"/>
+	 	<result property="creatErrorFlag"		column="creat_error_flag"/>
+	 	<result property="creatErrorFlagNm"		column="creat_error_flag_nm"/>
+	 	<result property="creatErrorCont"		column="creat_error_cont"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기관간인계 기록물인계 인계처리 인계대상 철목록을 조회한다.
+	 -->
+	<select id="findRcTakovrHandlFolderPagedList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultMap="findRcTakovrHandlFolderPagedList-result">
+	 	SELECT E.takovr_rep_cd||'-'||E.takovr_yyyy||'-'||LPAD(E.takovr_sno, 6, '0') AS takovr_mng_no
+		     , E.creat_yyyy
+		     , E.org_cd
+		     , E.folder_id
+		     , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id AND Z.org_cd = E.org_cd) AS org_nm
+		     , E.title
+		     , E.takovr_prog_state_cd
+		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF06' AND Z.com_cd = E.takovr_prog_state_cd) AS takovr_prog_state_nm
+		     , E.takovr_file_state_cd
+		     , (case when E.creat_error_flag is null then '2' else E.creat_error_flag end) AS creat_error_flag
+		     , (case when E.creat_error_flag = '1' then '생성오류' when E.creat_error_flag = '0' then '생성완료' else '미생성' end) AS creat_error_flag_nm
+		     , E.creat_error_cont
+		FROM (
+	    	SELECT ROWNUM AS rnum
+		        , D.*
+		    FROM (
+		    	SELECT A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno, A.takovr_prog_state_cd, A.takovr_file_state_cd
+		    		, C.record_center_id, C.folder_id, C.creat_yyyy, C.org_cd, C.title
+		    		, B.creat_error_flag, B.creat_error_cont
+				FROM  TB_DFTAKOVRPLAN A
+				    , TB_DFTAKOVRFOLDERLIST B
+				    , TB_RDFOLDER C
+				WHERE A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+				AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+				AND   A.takovr_sno = #takovrSno:NUMBER#
+				<dynamic>
+				    <isNotEmpty prepend="AND" property="creatErrorFlag">
+				    	<isEqual property="creatErrorFlag" compareValue="2">
+				    		B.creat_error_flag is null 
+				    	</isEqual>
+				    	<isNotEqual property="creatErrorFlag" compareValue="2">
+				    		B.creat_error_flag = #creatErrorFlag:VARCHAR# 
+				    	</isNotEqual>
+				    </isNotEmpty>
+				</dynamic>
+				AND   B.takovr_rep_cd = A.takovr_rep_cd
+				AND   B.takovr_yyyy = A.takovr_yyyy
+				AND   B.takovr_sno = A.takovr_sno
+				AND   C.record_center_id = B.record_center_id
+				AND   C.folder_id = B.folder_id
+				ORDER BY C.record_center_id, C.title
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		ORDER BY E.rnum
+	</select>
+	<!-- 
+		COUNT - 기관간인계 기록물인계 인계처리 인계대상 철목록을 조회한다.
+	 -->
+	<select id="countRcTakovrHandlFolderPagedList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+		FROM  TB_DFTAKOVRPLAN A
+		    , TB_DFTAKOVRFOLDERLIST B
+		WHERE A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+		AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND   A.takovr_sno = #takovrSno:NUMBER#
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="creatErrorFlag">
+		    	<isEqual property="creatErrorFlag" compareValue="2">
+		    		B.creat_error_flag is null 
+		    	</isEqual>
+		    	<isNotEqual property="creatErrorFlag" compareValue="2">
+		    		B.creat_error_flag = #creatErrorFlag:VARCHAR# 
+		    	</isNotEqual>
+		    </isNotEmpty>
+		</dynamic>
+		AND   B.takovr_rep_cd = A.takovr_rep_cd
+		AND   B.takovr_yyyy = A.takovr_yyyy
+		AND   B.takovr_sno = A.takovr_sno
+	</select>
+	
+	<!-- 기관간인계 기록물인계 인계처리 대상 인계계획정보를 조회한다. -->
+	<resultMap id="findRcTakovrHandlPlanInf-result" class="rms.transf.rcTakovr.domain.RcTakovrPlan">
+	 	<result	property="takovrMngNo" 			column="TAKOVR_MNG_NO"/>
+	 	<result	property="takovrRepCd" 			column="TAKOVR_REP_CD"/>
+	 	<result	property="takovrYyyy" 			column="TAKOVR_YYYY"/>
+	 	<result	property="takovrSno" 			column="TAKOVR_SNO"/>
+	 	<result	property="takovrRepCd" 			column="TAKE_REP_CD"/>
+	 	<result	property="takeRepNm" 			column="TAKE_REP_NM"/>
+	 	<result	property="takovrRepNm" 			column="TAKOVR_REP_NM"/>
+	 	<result	property="takovrRsn" 			column="TAKOVR_RSN"/>
+	</resultMap>
+	<!-- 기관간인계 기록물인계 인계처리 대상 인계계획정보를 조회한다. -->
+	<select id="findRcTakovrPlanInf" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultMap="findRcTakovrHandlPlanInf-result">
+	 	SELECT takovr_rep_cd||'-'||takovr_yyyy||'-'||LPAD(takovr_sno, 6, '0') takovr_mng_no
+	 		 , takovr_rep_cd
+	 		 , takovr_rep_nm
+	 		 , take_rep_cd
+	 		 , take_rep_nm
+	 		 , takovr_yyyy
+	 		 , takovr_sno
+	 		 , takovr_rsn
+	 	FROM  TB_DFTAKOVRPLAN
+	 	WHERE takovr_rep_cd = #takovrRepCd:VARCHAR#
+	 	AND   takovr_yyyy = #takovrYyyy:VARCHAR#
+	 	AND   takovr_sno = #takovrSno:NUMBER# 
+	</select>
+	
+	<!-- 
+		기관간인계 기록물인계 공개목록변경 감사추적 등록 내용을 조회한다.
+	 -->
+	<resultMap id="findRcTakovrHandlFolderTraceList-result" class="rms.common.trace.domain.OpenListChng">
+	 	<result	property="orgCd" 				column="ORG_CD"/>
+	 	<result	property="folderId" 			column="FOLDER_ID"/>
+	 	<result	property="takovrOrgCd" 			column="TAKOVR_REP_CD"/>
+	 	<result	property="takovrOrgNm" 			column="TAKOVR_REP_NM"/>
+	 	<result	property="takeOrgCd" 			column="TAKE_REP_CD"/>
+	 	<result	property="takeOrgNm" 			column="TAKE_REP_NM"/>
+	 	<result	property="folderKey" 			column="FOLDER_KEY"/>
+	</resultMap>
+	<select id="findRcTakovrHandlFolderTraceList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrPlan" resultMap="findRcTakovrHandlFolderTraceList-result">
+	 	SELECT (SELECT Z.ORG_CD FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS ORG_CD
+		      ,B.FOLDER_ID
+		      ,A.TAKOVR_REP_CD
+		      ,A.TAKOVR_REP_NM
+		      ,A.TAKE_REP_CD
+		      ,A.TAKE_REP_NM
+		      ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS FOLDER_KEY
+		FROM TB_DFTAKOVRPLAN A, TB_DFTAKOVRFOLDERLIST B
+		WHERE A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+		AND A.takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND A.takovr_sno = #takovrSno:NUMBER#
+		AND A.TAKOVR_REP_CD = B.TAKOVR_REP_CD
+		AND A.TAKOVR_YYYY = B.TAKOVR_YYYY
+		AND A.TAKOVR_SNO = B.TAKOVR_SNO
+	</select>
+	
+</sqlMap>

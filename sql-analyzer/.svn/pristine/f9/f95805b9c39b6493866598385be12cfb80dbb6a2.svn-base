@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.StringMatchFilter">
+			<param name="StringToMatch" value="Result" />
+			<param name="AcceptOnMatch" value="false" />
+		</filter>
+	</appender>
+
+	<appender name="error" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="euc_kr" />
+		<param name="file" value="C:/DevEnv/rmsUserSync/logs/system/error.log" />
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+
+	<!-- log all logs to a separate log file every day -->
+	<appender name="daemon" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="euc_kr" />
+		<param name="file" value="C:/DevEnv/rmsUserSync/logs/receive/receive.log" />
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %C{6} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+	<appender name="sql" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="euc_kr" />
+		<param name="file" value="C:/DevEnv/rmsUserSync/logs/receive/query.log" />
+		<param name="datePattern" value="'.'yyyy-MM-dd" />
+		<param name="append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d%n %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="daemon" additivity="false">
+		<!-- 
+		<level value="ERROR" />
+		 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console" />
+		<appender-ref ref="daemon" />
+	</logger>
+
+	<logger name="com.ibatis" additivity="false">
+		<level value="ERROR" />
+	</logger>
+	<logger name="java.sql" additivity="false">
+		<level value="DEBUG" />
+		<appender-ref ref="sql" />
+	</logger>
+
+	<!-- 
+	<logger name="jdbc.sqltiming" additivity="false">
+		<level value="INFO" />
+		<level value="ERROR" />
+		<appender-ref ref="sql" />
+	</logger>
+	 -->
+
+	<root>
+		<level value="ERROR" />
+		<appender-ref ref="console" />
+		<appender-ref ref="error" />
+	</root>
+</log4j:configuration>

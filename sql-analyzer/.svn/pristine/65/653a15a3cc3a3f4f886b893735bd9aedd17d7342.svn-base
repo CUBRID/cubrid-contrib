@@ -1,0 +1,60 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : findFolderTrace
+
+		SELECT AA.FOLDER_ID			, '' USER_ID			, AA.USER_NM			, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = AA.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM			, AA.WORK_DTIME			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = AA.WORK_TYPE_CD ) WORK_TYPE_CD 			, '' CONN_IP			, AA.TITLE			, '' RANK			, '' USER_DIV_NM			, AA.CREAT_YYYY			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD07' AND Z.COM_CD = AA.PRESV_TERM_CD) AS PRESV_TERM_NM         	, (SELECT Z.ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = '1' AND Z.ORG_CD = AA.ORG_CD) AS ORG_NM         	, (SELECT Z.ORG_ABBR_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = '1' AND Z.ORG_CD = AA.ORG_CD) AS ORG_ABBR_NM         	, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD17' AND Z.COM_CD = AA.CREAT_SYS_CD) AS CREAT_SYS_NM         	, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD01' AND Z.COM_CD = AA.FOLDER_TYPE_DIV_CD) AS FOLDER_TYPE_DIV_NM		FROM (			SELECT Z.*			FROM (				SELECT ROWNUM AS rnum					, Y.*				FROM (					SELECT A.TRGT_ID AS FOLDER_ID						, B.USER_NM						, B.DEPT_CD						, A.WORK_DTIME						, A.WORK_TYPE_CD 						, C.TITLE						, C.CREAT_YYYY						, C.PRESV_TERM_CD                        , C.ORG_CD                        , C.CREAT_SYS_CD                        , C.FOLDER_TYPE_DIV_CD					FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C					WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'					AND A.RECORD_CENTER_ID = '1'					AND B.RECORD_CENTER_ID = '1'					AND C.RECORD_CENTER_ID = '1'  							ORDER BY A.WORK_DTIME						  				) Y				WHERE ROWNUM <= '1'			) Z			WHERE z.rnum >= '1'		) AA		ORDER BY AA.rnum		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : countFolderTrace
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		AND C.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : countFolderDetlTraceList
+
+		SELECT COUNT(1)         FROM TB_ZZTRACE A, TB_STUSER B        WHERE A.USER_ID = B.USER_ID         AND A.TRGT_ID = '1'         AND A.TRGT_DIV_CD='1'        AND A.RECORD_CENTER_ID = '1'        AND B.RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : findFolderDetlTraceList
+
+		SELECT E.work_dtime		    ,E.user_nm		    ,E.dept_nm		    ,E.work_type_cd		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		             ,C.*		        FROM (		            SELECT B.USER_NM		                ,(SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		                ,A.WORK_DTIME		                ,(SELECT COM_CD_NM    FROM TB_ZZCOMCD    WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		            FROM TB_ZZTRACE A, TB_STUSER B		            WHERE A.USER_ID = B.USER_ID 		            AND A.TRGT_ID = '1' 		            AND A.TRGT_DIV_CD='1'		            AND A.RECORD_CENTER_ID = '1'		            AND B.RECORD_CENTER_ID = '1'		        ) C		        WHERE ROWNUM <= '1'		    ) D		WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : findRecordTrace
+
+		SELECT AA.RECORD_ID			, AA.USER_NM			, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = AA.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM			, AA.WORK_DTIME			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = AA.WORK_TYPE_CD ) WORK_TYPE_CD 			, AA.TITLE			, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = '1') ORG_NM			, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = '1') ORG_ABBR_NM			, AA.CREAT_YYYY			, AA.DUTY_CHRGR_NM			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD23' AND Z.COM_CD = AA.ERECORD_FLAG) AS ERECORD_FLAG_NM			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD05' AND Z.COM_CD = AA.OPEN_DIV_CD) AS OPEN_DIV_NM		FROM (			SELECT Z.*			FROM (				SELECT ROWNUM AS rnum					, Y.*				FROM (					SELECT A.TRGT_ID AS RECORD_ID						, B.USER_NM						, B.DEPT_CD						, A.WORK_DTIME						, A.WORK_TYPE_CD 						, C.TITLE						, C.ORG_CD						, C.CREAT_YYYY						, C.DUTY_CHRGR_NM						, C.ERECORD_FLAG						, C.OPEN_DIV_CD					FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C					WHERE A.RECORD_CENTER_ID = '1'					AND A.TRGT_DIV_CD='2'						AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID					AND B.USER_ID = A.USER_ID					AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID					AND C.RECORD_ID = A.TRGT_ID   							ORDER BY A.WORK_DTIME						  				) Y				WHERE ROWNUM <= '1'			) Z			WHERE z.rnum >= '1'		) AA		ORDER BY AA.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : countRecordTrace
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.RECORD_ID AND A.TRGT_DIV_CD='2'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		AND C.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : countRecordDetlTraceList
+
+		SELECT COUNT(1)         FROM TB_ZZTRACE A, TB_STUSER B        WHERE A.USER_ID = B.USER_ID         AND A.TRGT_ID = '1'         AND A.TRGT_DIV_CD='2'        AND A.RECORD_CENTER_ID = '1'        AND B.RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml
+-- Query    : select
+-- Query Id : findRecordDetlTraceList
+
+		SELECT E.work_dtime		    ,E.user_nm		    ,E.dept_nm		    ,E.work_type_cd		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		            ,C.*		        FROM (		            SELECT B.USER_NM		                ,(SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		                ,A.WORK_DTIME		                ,(SELECT COM_CD_NM    FROM TB_ZZCOMCD    WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		            FROM TB_ZZTRACE A, TB_STUSER B		            WHERE A.USER_ID = B.USER_ID 		            AND A.TRGT_ID = '1' 		            AND A.TRGT_DIV_CD='2'		            AND A.RECORD_CENTER_ID = '1'		            AND B.RECORD_CENTER_ID = '1'		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\DocTrace.xml

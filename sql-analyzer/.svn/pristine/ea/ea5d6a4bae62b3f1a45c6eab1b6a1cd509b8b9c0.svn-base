@@ -1,0 +1,109 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : findSerFormatPki
+
+		SELECT	seq			, issuer			, pki			, pki_usg			, validity_date_from			, validity_date_to			, creat_user_id			, creat_user_nm			, creat_user_org_cd			, creat_user_org_nm			, reg_flag			, reg_dtime		FROM	TB_STFORMATPKI		WHERE	pki_usg = 'svr';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : findOrgFormatPki
+
+		SELECT	record_center_id			, record_center_cd			, record_center_nm			, rep_org_cd			, (SELECT seq FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') seq			, (SELECT pki_usg FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') pki_usg			, (SELECT reg_flag FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') reg_flag			, (SELECT issuer FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') issuer			, (SELECT pki FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') pki			, (SELECT creat_user_id FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_id			, (SELECT creat_user_nm FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_nm			, (SELECT creat_user_org_cd FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_org_cd			, (SELECT creat_user_org_nm FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') creat_user_org_nm			, (SELECT reg_dtime FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') reg_dtime			, (SELECT validity_date_from FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') validity_date_from			, (SELECT validity_date_to FROM TB_STFORMATPKI B where B.record_center_id = A.record_center_id AND B.record_center_cd = A.record_center_cd AND B.pki_usg='org') validity_date_to		FROM    TB_STRECORDCENTER A		ORDER BY record_center_cd;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createFormatOrgPKI
+
+		INSERT INTO TB_STFORMATPKI (			seq, record_center_id, pki, pki_usg, validity_date_from		   ,validity_date_to, reg_flag, creat_user_id, creat_user_nm, creat_user_org_cd		   ,creat_user_org_nm, reg_dtime, record_center_cd, record_center_nm		)		VALUES (			TB_STFORMATPKI_SQ01.nextVal, '1', '1', '1', '1'		   ,'1', 'Y', '1', '1', '1'		   ,(SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'), TO_CHAR(SYSDATE, 'YYYYMMDD'), '1', (SELECT record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_cd = '1')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createFormatSvrPKI
+
+		INSERT INTO TB_STFORMATPKI (			seq, pki, pki_usg, validity_date_from, validity_date_to, reg_flag, creat_user_id, creat_user_nm, creat_user_org_cd, creat_user_org_nm, reg_dtime		)		VALUES (			TB_STFORMATPKI_SQ01.nextVal, '1', '1', '1', '1', 'Y', '1',			'1', '1',			(SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'),			TO_CHAR(SYSDATE, 'YYYYMMDD')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : update
+-- Query Id : updateFormatOrgPKI
+
+		UPDATE 	TB_STFORMATPKI		SET		pki = '1', record_center_id = '1', 				validity_date_from = '1', validity_date_to = '1',				creat_user_id = '1', creat_user_nm = '1', creat_user_org_cd = '1',				creat_user_org_nm = (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'),				reg_dtime = TO_CHAR(SYSDATE, 'YYYYMMDD')		WHERE	seq = '1'		AND		record_center_cd = '1'		AND		record_center_id = '1'  		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : update
+-- Query Id : updateFormatSvrPKI
+
+		UPDATE 	TB_STFORMATPKI		SET		pki = '1', validity_date_from = '1', validity_date_to = '1',				creat_user_id = '1', creat_user_nm = '1', creat_user_org_cd = '1',				creat_user_org_nm = (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'),				reg_dtime = TO_CHAR(SYSDATE, 'YYYYMMDD')		WHERE	seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createFormatPKIHist
+
+		INSERT INTO TB_STFORMATPKIHIST (			seq, record_center_id, pki, pki_usg, validity_date_from, validity_date_to, creat_user_id, creat_user_nm,			creat_user_org_cd, creat_user_org_nm, reg_dtime, record_center_cd, record_center_nm		)		VALUES (			TB_STFORMATPKIHIST_SQ01.nextVal, '1', '1', '1', '1', '1', '1',			'1', '1', (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'), TO_CHAR(SYSDATE, 'YYYYMMDD'),			'1', (SELECT record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_cd = '1')		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : countFormatPKIHist
+
+		SELECT COUNT(1)		FROM TB_STFORMATPKIHIST A		WHERE A.pki_usg = '1'		 AND  		        A.record_center_cd = '1'		      AND 		        A.record_center_cd = '1'		      AND 		        A.record_center_id = '1'		      		ORDER BY seq	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : findFormatPKIHist
+
+		SELECT ROWNUM AS rnum			  ,seq		      ,record_center_id		      ,record_center_cd		      ,record_center_nm		       , 		          (SELECT rep_org_cd FROM TB_STRECORDCENTER B WHERE B.record_center_cd = A.record_center_cd) rep_org_cd		       		      ,pki		      ,pki_usg		      ,validity_date_from		      ,validity_date_to		      ,creat_user_id		      ,creat_user_nm		      ,creat_user_org_cd		      ,creat_user_org_nm		      ,reg_dtime		FROM TB_STFORMATPKIHIST A		WHERE A.pki_usg = '1'		 AND  		        A.record_center_cd = '1'		      AND 		        A.record_center_cd = '1'		      AND 		        A.record_center_id = '1'		      		ORDER BY seq	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : findRcrateList
+
+		SELECT B.record_center_id			, B.RECORD_CENTER_CD			, B.RECORD_CENTER_NM			, NVL(A.RECORD_CENTER_RATE,0) as rcrate		FROM tb_strecordcenter B		LEFT OUTER JOIN TB_STWFLBRCRATE A		ON B.record_center_id = A.record_center_id		ORDER BY B.record_center_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : countRcRate
+
+		SELECT COUNT(1)		FROM TB_STWFLBRCRATE		WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createRcRate
+
+		INSERT INTO TB_STWFLBRCRATE			(record_center_id, record_center_rate)		VALUES 			('1', '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : update
+-- Query Id : updateRcRate
+
+		UPDATE TB_STWFLBRCRATE		 SET   RECORD_CENTER_RATE = '1'		WHERE  RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : findFileExtList
+
+		SELECT record_center_id			, file_ext			, file_ext_nm			, file_ext_desc			, file_trans_flag			, work_user_id		FROM TB_STFILEEXTMNG		WHERE record_center_id = '1' AND  				file_trans_flag = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : update
+-- Query Id : updateFileTransFlag
+
+		UPDATE TB_STFILEEXTMNG		SET  file_trans_flag = '1'			,work_user_id = '1'		WHERE record_center_id = '1'		AND   file_ext = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml

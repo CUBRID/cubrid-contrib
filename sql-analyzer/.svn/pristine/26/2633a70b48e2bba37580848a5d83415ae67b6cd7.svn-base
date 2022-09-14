@@ -1,0 +1,249 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findOrgCdApplyPagedList
+
+		SELECT C.org_cd			, C.org_nm			, C.org_abbr_nm			, C.full_org_nm			, C.hupper_org_cd			, C.upper_org_cd			, C.levl			, C.org_seq			, C.close_flag			, DECODE(C.close_flag,'1','폐지','현존') close_flag_nm			, C.apply_start_ymd			, C.apply_close_ymd		FROM (			SELECT B.*			FROM (				SELECT ROWNUM AS rnum					, A.*				FROM (					SELECT org_cd						, org_nm						, org_abbr_nm						, full_org_nm						, hupper_org_cd						, upper_org_cd						, levl						, org_seq						, close_flag						, apply_start_ymd						, apply_close_ymd					FROM TB_STORG WHERE  							record_center_id = '1'						  AND 							record_center_id = '1'						  AND 							org_cd = '1'						  AND 							org_nm LIKE '1'						  					ORDER BY close_flag, COALESCE(nullif(upper_org_cd, '0'), org_cd), org_cd				) A				WHERE ROWNUM <= '1'			) B			WHERE B.rnum >= '1'		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : countOrgCdApplyPagedList
+
+		SELECT COUNT(1)		FROM TB_STORG WHERE  				record_center_id = '1'			  AND 				record_center_id = '1'			  AND 				org_cd = '1'			  AND 				org_nm LIKE '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : deleteOrgCd
+
+	    UPDATE TB_STORG 	    SET  CLOSE_FLAG='1'	    	,APPLY_CLOSE_YMD=TO_CHAR(SYSDATE,'YYYYMMDD')        WHERE RECORD_CENTER_ID='1'        AND ORG_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findUnitApplyPagedList
+
+		SELECT E.unit_cd			, E.creat_stnd_ymd			, E.unit_nm			, E.unit_descr			, E.org_cd			, (SELECT F.org_nm FROM TB_STORG F	WHERE F.record_center_id = '1' AND F.org_cd=E.org_cd) org_nm			, E.use_flag			, DECODE(E.use_flag,'1','사용','0','미사용','') use_nm		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.unit_cd						, A.creat_stnd_ymd						, A.unit_nm						, A.unit_descr						, B.org_cd						, B.use_flag					FROM TB_ZZUNIT A					   , TB_ZZORGUNIT B					WHERE A.UNIT_CD=B.UNIT_CD				    AND A.RECORD_CENTER_ID='1'				    AND B.RECORD_CENTER_ID='1'					 AND  							A.unit_nm LIKE '1'						  AND 							A.unit_nm LIKE '1'						  AND 							B.org_cd = '1'						  				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : countUnitApplyPagedList
+
+		SELECT COUNT(1)		FROM TB_ZZUNIT A		   , TB_ZZORGUNIT B		WHERE A.UNIT_CD=B.UNIT_CD		AND A.RECORD_CENTER_ID='1'		AND B.RECORD_CENTER_ID='1' AND  				A.unit_nm LIKE '1'			  AND 				A.unit_nm LIKE '1'			  AND 				B.org_cd = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findBisClss
+
+		SELECT A.BIS_CLSS_ID CLSS_ID			,A.BIS_CLSS_NM CLSS_NM			,A.LEVL			,A.SORT_SNO			,(SELECT BIS_CLSS_PATH_NM FROM (SELECT BIS_CLSS_ID, SYS_CONNECT_BY_PATH(BIS_CLSS_NM,'>') BIS_CLSS_PATH_NM 			  FROM (SELECT * FROM TB_ZZBISCLSS) 			  START WITH BIS_CLSS_ID = '00000000000000000000000000000000000' 			  CONNECT BY PRIOR BIS_CLSS_ID = UPPER_BIS_CLSS_ID)			  WHERE BIS_CLSS_ID = '1') CLSS_PATH_NM			,A.TASK_DESCR DESCR			,A.START_DTIME			,A.CLOSE_DTIME		FROM TB_ZZBISCLSS A		WHERE BIS_CLSS_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findPjtClss
+
+		SELECT A.PJT_CLSS_ID CLSS_ID			, A.PJT_CLSS_NM CLSS_NM			, A.LEVL			, A.SORT_SNO			, (SELECT PJT_CLSS_PATH_NM FROM (SELECT PJT_CLSS_ID, SYS_CONNECT_BY_PATH(PJT_CLSS_NM,'>') PJT_CLSS_PATH_NM 			   FROM (SELECT * FROM TB_ZZPJTCLSS) 			   START WITH PJT_CLSS_ID = '00000000000000000000000000000000000' 			   CONNECT BY PRIOR PJT_CLSS_ID = UPPER_PJT_CLSS_ID)			   WHERE PJT_CLSS_ID = '1') CLSS_PATH_NM			, A.START_DTIME			, A.CLOSE_DTIME			, '' DESCR		FROM TB_ZZPJTCLSS A		WHERE PJT_CLSS_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findTreeBisClss
+
+		SELECT B.*		FROM (			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType				, A.bis_clss_id AS id				, A.bis_clss_nm AS text				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'				   ELSE 'open'				   END) AS state				, (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete'				        WHEN A.levl = '0' THEN 'icon-search'				        ELSE 'icon-folder_full_accept'				   END) AS iconCls				, levl AS levl			FROM  TB_ZZBISCLSS A			 WHERE  					A.upper_bis_clss_id = '1'				  AND 					A.upper_bis_clss_id = '1'				  AND 					A.DEL_FLAG IN('0', '1')				  AND 					A.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 				                    FROM TB_ZZBISORG				                    WHERE ORG_CD ='1')				  			ORDER BY A.levl, A.sort_sno		) B;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : delete
+-- Query Id : deleteOrgCdApplyTemp
+
+		DELETE TB_STORGTEMP	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createOrgCdApplyTemp
+
+		INSERT INTO TB_STORGTEMP			(org_cd, org_nm,org_abbr_nm,full_org_nm , hupper_org_cd			, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd			, apply_close_ymd)		VALUES			('1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findOrgCdApplyMaxLevl
+
+		SELECT NVL(MAX(levl),0)		FROM  TB_STORGTEMP;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createOrgCdApply
+
+		INSERT INTO TB_STORG		(			record_center_id, org_cd, org_nm, org_abbr_nm, full_org_nm			, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag			, apply_start_ymd, apply_close_ymd, link_trgt_id		)		(			SELECT E.record_center_id				 , E.org_cd			     , replace(NVL(TRIM(SUBSTR(E.FULL_ORG_NM, DECODE(INSTR(E.FULL_ORG_NM, 																	       (SELECT B.rep_org_nm																			FROM TB_STRECORDCENTER B																			WHERE B.record_center_id=E.record_center_id))																	,1,LENGTH((SELECT B.rep_org_nm																			FROM TB_STRECORDCENTER B																			WHERE B.record_center_id=E.record_center_id))+1,0) )),E.FULL_ORG_NM),'"','')				 , replace(E.org_abbr_nm,'"','')				 , replace(E.full_org_nm,'"','')				 , E.hupper_org_cd				 , E.upper_org_cd				 , E.levl				 , E.org_seq				 , E.close_flag				 , E.apply_start_ymd				 , E.apply_close_ymd				 , E.link_trgt_id			FROM (				SELECT NVL(B.record_center_id,C.record_center_id) record_center_id					 , A.org_cd				     , A.org_nm					 , A.org_abbr_nm					 , A.full_org_nm					 , A.hupper_org_cd					 , DECODE(A.upper_org_cd,'0000000','0',A.upper_org_cd) upper_org_cd					 , A.levl					 , A.org_seq					 , A.close_flag					 , A.apply_start_ymd					 , A.apply_close_ymd					 , NVL(B.link_trgt_id,D.link_trgt_id) link_trgt_id				FROM  TB_STORGTEMP A				    , (SELECT * FROM TB_STORG WHERE RECORD_CENTER_ID = '1') B					, (SELECT MIN(record_center_id) record_center_id FROM TB_STRECORDCENTER) C					, (SELECT MIN(link_trgt_id) link_trgt_id FROM TB_STLINKTRGT) D				WHERE A.upper_org_cd = B.org_cd(+)				AND   (B.upper_org_cd IS NULL OR B.upper_org_cd != 'ZZZZZZZ')				AND   A.levl = '1'				AND   A.org_cd NOT IN (SELECT org_cd FROM TB_STORG WHERE RECORD_CENTER_ID = '1') 			) E		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateOrgCdApply
+
+		UPDATE TB_STORG A		SET  A.org_seq= (SELECT B.org_seq		                  FROM  TB_STORGTEMP B		                  WHERE B.org_cd = A.org_cd);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateOrgCdApplyDel
+
+		UPDATE TB_STORG A		SET   (A.close_flag, A.apply_close_ymd)		               = (SELECT B.close_flag		                       , B.apply_close_ymd 		                  FROM TB_STORGTEMP B		                  WHERE  B.org_cd = A.org_cd)		WHERE (A.upper_org_cd IS NULL OR A.upper_org_cd != 'ZZZZZZZ')		AND   A.org_cd IN (SELECT org_cd FROM TB_STORGTEMP);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateDeptCdApplyDel
+
+		UPDATE TB_STDEPT A		SET   (A.close_flag, A.apply_close_ymd)		               = (SELECT B.close_flag		                       , B.apply_close_ymd 		                  FROM TB_STORGTEMP B		                  WHERE  B.org_cd = A.org_cd)		WHERE (A.upper_dept_cd IS NULL OR A.upper_dept_cd != 'ZZZZZZZ')		AND   EXISTS (SELECT 1 FROM TB_STORGTEMP where org_cd = A.org_cd);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createOrgCdApplyDeptCd
+
+		INSERT INTO TB_STDEPT		(record_center_id, dept_cd, org_cd, dept_nm, dept_abbr_nm, hupper_dept_cd, upper_dept_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd)		(			SELECT record_center_id, org_cd, org_cd, org_nm, org_abbr_nm, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd			FROM  TB_STORG			WHERE NOT EXISTS (SELECT 1 FROM TB_STDEPT where dept_cd = org_cd)			AND   org_cd != 'ZZZZZZZ'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateDeptCdApply
+
+		UPDATE TB_STDEPT A		SET  A.UPPER_DEPT_CD = (SELECT B.UPPER_ORG_CD		                  FROM  TB_STORGTEMP B		                  WHERE B.ORG_CD = A.DEPT_CD)		WHERE A.DEPT_CD in (SELECT DEPT_CD FROM TB_STDEPT WHERE UPPER_DEPT_CD IS NULL)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateUpperOrgCdApply
+
+		UPDATE TB_STORG A		SET  A.UPPER_ORG_CD = (SELECT B.UPPER_ORG_CD		                  FROM  TB_STORGTEMP B		                  WHERE B.ORG_CD = A.ORG_CD)		WHERE A.ORG_CD in (SELECT ORG_CD FROM TB_STORG WHERE UPPER_ORG_CD IS NULL)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createOrgCdApplyOrgUnit
+
+		INSERT INTO TB_ZZORGUNIT		      (record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag,COM_UNIT_FLAG)		(			SELECT *			FROM 			(				SELECT DISTINCT A.record_center_id, B.org_cd, A.unit_cd, '0', A.reg_dtime, DECODE(A.state_cd,'2','0','1'),'1'				FROM TB_ZZUNIT A				   , TB_STORG B				WHERE A.record_center_id = B.record_center_id				AND   (A.unit_cd LIKE 'ZZ%' OR A.COM_UNIT_FLAG='1') 				AND NOT EXISTS (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZORGUNIT WHERE record_center_id = A.record_center_id AND org_cd = b.org_cd AND unit_cd =  a.unit_cd)							) C			WHERE 			     C.org_cd NOT IN (SELECT record_center_cd FROM TB_STRECORDCENTER)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateLevelOrgCdApply
+
+		UPDATE TB_STORG A        SET A.LEVL =(SELECT COUNT(1) FROM TB_STORG B START WITH B.ORG_CD = A.ORG_CD CONNECT BY PRIOR B.UPPER_ORG_CD=B.ORG_CD and prior B.RECORD_CENTER_ID = B.RECORD_CENTER_ID);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateLevelDeptCdApply
+
+		UPDATE TB_STDEPT A        SET A.LEVL =(SELECT COUNT(1) FROM TB_STDEPT B START WITH B.DEPT_CD = A.DEPT_CD CONNECT BY PRIOR B.UPPER_DEPT_CD=B.DEPT_CD);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateComUnitFlagDel
+
+		UPDATE TB_ZZORGUNIT 		   SET USE_FLAG='0'		 WHERE ORG_CD IN (SELECT ORG_CD 		                    FROM TB_STORG		                   WHERE CLOSE_FLAG='1')		   AND (UNIT_CD LIKE 'ZZ%' OR COM_UNIT_FLAG='1')		   AND USE_FLAG='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : countUnitApply
+
+		SELECT COUNT(1)		FROM TB_ZZUNIT A		   , TB_ZZORGUNIT B		WHERE A.UNIT_CD=B.UNIT_CD		AND A.RECORD_CENTER_ID='1'		AND B.RECORD_CENTER_ID='1' AND  				A.unit_nm LIKE '1'			  AND 				A.unit_nm LIKE '1'			  AND 				B.org_cd = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findUnitApply
+
+		SELECT A.unit_cd		     , A.creat_stnd_ymd			 , A.unit_nm			 , A.unit_descr			 , B.org_cd			 , (SELECT C.org_nm			    FROM TB_STORG C				WHERE C.record_center_id = '1'				AND   C.org_cd=B.org_cd) org_nm			 , B.use_flag			 , DECODE(B.use_flag,'1','사용','0','미사용','') use_nm		FROM TB_ZZUNIT A		   , TB_ZZORGUNIT B		WHERE A.UNIT_CD=B.UNIT_CD	    AND A.RECORD_CENTER_ID='1'	    AND B.RECORD_CENTER_ID='1' AND  				A.unit_nm LIKE '1'			  AND 				A.unit_nm LIKE '1'			  AND 				B.org_cd = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : delete
+-- Query Id : deleteUnitApplyTemp
+
+		DELETE FROM TB_ZZUNITTEMP	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createUnitApplyTemp
+
+		INSERT INTO TB_ZZUNITTEMP			( record_center_id, org_cd, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd			, lrg_cd, lrg_nm, mid_cd, mid_nm, sml_cd			, sml_nm, unit_cd, unit_nm, unit_descr, presv_term_cd			, presv_term_fix_rsn, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd			, main_read_usg, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2			, spcl_list3, state_cd, take_flag, reg_user_id, reg_dtime )		(			SELECT record_center_id, org_cd, '1', '1', '1'				, '1', '1', '1', '1', '1'				, '1', '1', '1', '1', '1'				, '1', '1', '1', '1', '1'				, '1', '1', '1', '1', '1'				, '1', '1', '0', '1', '1'			FROM 			(				(SELECT record_center_id, org_cd				   FROM TB_STORG				  WHERE org_cd = '1'				)				UNION ALL				(				SELECT '0000000','1' FROM DUAL				WHERE ( SELECT COUNT(1) FROM TB_STORG WHERE org_cd = '1' ) = 0				)			)		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findUnitApplyOrgCheck
+
+		SELECT DISTINCT A.org_cd		FROM TB_ZZUNITTEMP A		WHERE 		NOT EXISTS (SELECT 1 FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.org_cd)		ORDER BY A.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createUnitApplyTempZZ
+
+		INSERT INTO TB_ZZUNITTEMP			( record_center_id, org_cd, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd			, lrg_cd, lrg_nm, mid_cd, mid_nm, sml_cd			, sml_nm, unit_cd, unit_nm, unit_descr, presv_term_cd			, presv_term_fix_rsn, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd			, main_read_usg, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2			, spcl_list3, state_cd, take_flag, reg_user_id, reg_dtime )		(			SELECT DISTINCT B.record_center_id, B.org_cd, A.nars_handl_dtime, A.creat_stnd_ymd, A.temp_unit_cd				, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm, A.sml_cd				, A.sml_nm, A.unit_cd, A.unit_nm, A.unit_descr, A.presv_term_cd				, A.presv_term_fix_rsn, A.presv_method_cd, A.presv_area_cd, A.funsh_record_flag, A.funsh_record_transf_ymd				, A.main_read_usg, A.transf_read_expt_cnt, A.spcl_list_loc, A.spcl_list1, A.spcl_list2				, A.spcl_list3, A.state_cd, A.take_flag, A.reg_user_id, A.reg_dtime			FROM (SELECT * FROM TB_ZZUNITTEMP WHERE unit_cd LIKE 'ZZ%') A				, TB_STORG B			WHERE A.org_cd = B.hupper_org_cd					  AND   NOT EXISTS (SELECT 1 FROM TB_ZZUNITTEMP AAA WHERE B.record_center_id = AAA.record_center_id AND B.org_cd = AAA.org_cd AND A.unit_cd = AAA.unit_cd)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createUnitApply
+
+		INSERT INTO TB_ZZUNIT		( 		    record_center_id, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd, lrg_cd			, lrg_nm, mid_cd, mid_nm, sml_cd, sml_nm			, unit_cd, unit_nm, unit_descr, presv_term_cd, presv_term_fix_rsn			, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg			, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3			, state_cd, take_flag, reg_user_id, reg_dtime		)		(		    SELECT DISTINCT record_center_id, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd, lrg_cd		        	, lrg_nm, mid_cd, mid_nm, sml_cd, sml_nm		        	, unit_cd, unit_nm, unit_descr, presv_term_cd, presv_term_fix_rsn		        	, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg		        	, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3		        	, state_cd, take_flag, reg_user_id, reg_dtime		    FROM (		        SELECT RANK() OVER (PARTITION BY record_center_id, unit_cd ORDER BY state_cd DESC, creat_stnd_ymd DESC, org_cd) rank		            , record_center_id, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd, lrg_cd		        	, lrg_nm, mid_cd, mid_nm, sml_cd, sml_nm		        	, unit_cd, unit_nm, unit_descr, presv_term_cd, presv_term_fix_rsn		        	, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg		        	, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3		        	, state_cd, take_flag, reg_user_id, reg_dtime, org_cd		        FROM TB_ZZUNITTEMP		    ) AA		    WHERE rank = '1'		  AND   NOT EXISTS (SELECT 1 FROM TB_ZZUNITTEMP AAA WHERE AA.record_center_id = AAA.record_center_id AND AA.unit_cd = AAA.unit_cd)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateUnitApplyMod
+
+		UPDATE TB_ZZUNIT A		SET ( A.unit_nm, A.unit_descr, A.nars_handl_dtime, A.creat_stnd_ymd, A.temp_unit_cd			, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm, A.sml_cd			, A.sml_nm, A.presv_term_cd, A.presv_term_fix_rsn, A.presv_method_cd, A.presv_area_cd			, A.funsh_record_flag, A.funsh_record_transf_ymd, A.main_read_usg, A.transf_read_expt_cnt, A.spcl_list_loc			, A.spcl_list1, A.spcl_list2, A.spcl_list3, A.state_cd, A.take_flag			, A.reg_user_id, A.reg_dtime )			= ( SELECT DISTINCT B.unit_nm, B.unit_descr, B.nars_handl_dtime, B.creat_stnd_ymd, B.temp_unit_cd					, B.lrg_cd, B.lrg_nm, B.mid_cd, B.mid_nm, B.sml_cd					, B.sml_nm, B.presv_term_cd, B.presv_term_fix_rsn, B.presv_method_cd, B.presv_area_cd					, B.funsh_record_flag, B.funsh_record_transf_ymd, B.main_read_usg, B.transf_read_expt_cnt, B.spcl_list_loc					, B.spcl_list1, B.spcl_list2, B.spcl_list3, A.state_cd, B.take_flag					, B.reg_user_id, B.reg_dtime				FROM  TB_ZZUNITTEMP B				WHERE B.record_center_id = A.record_center_id				AND   B.unit_cd = A.unit_cd				AND   B.state_cd = '3'				AND   DECODE(B.NARS_HANDL_DTIME, NULL, B.CREAT_STND_YMD,  B.NARS_HANDL_DTIME ) = (SELECT MAX(NVL(NARS_HANDL_DTIME, CREAT_STND_YMD)) FROM TB_ZZUNITTEMP WHERE record_center_id = B.record_center_id AND unit_cd = B.unit_cd AND state_cd = '3')			)		WHERE 		EXISTS 		(			SELECT C.record_center_id, C.unit_cd			FROM  TB_ZZUNITTEMP C			WHERE C.record_center_id = A.record_center_id			AND   C.unit_cd = A.unit_cd			AND   C.state_cd = '3'		)		AND   A.creat_stnd_ymd  <=  (SELECT MAX(NVL(creat_stnd_ymd,'00000000')) FROM TB_ZZUNITTEMP WHERE record_center_id = A.record_center_id AND unit_cd = A.unit_cd AND state_cd = '3')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateUnitApplyDel
+
+		UPDATE TB_ZZUNIT A		SET ( A.unit_nm, A.unit_descr, A.nars_handl_dtime, A.creat_stnd_ymd, A.temp_unit_cd			, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm, A.sml_cd			, A.sml_nm, A.presv_term_cd, A.presv_term_fix_rsn, A.presv_method_cd, A.presv_area_cd			, A.funsh_record_flag, A.funsh_record_transf_ymd, A.main_read_usg, A.transf_read_expt_cnt, A.spcl_list_loc			, A.spcl_list1, A.spcl_list2, A.spcl_list3, A.state_cd, A.take_flag			, A.reg_user_id, A.reg_dtime )			= ( SELECT B.unit_nm, B.unit_descr, B.nars_handl_dtime, A.creat_stnd_ymd, B.temp_unit_cd					, B.lrg_cd, B.lrg_nm, B.mid_cd, B.mid_nm, B.sml_cd					, B.sml_nm, B.presv_term_cd, B.presv_term_fix_rsn, B.presv_method_cd, B.presv_area_cd					, B.funsh_record_flag, B.funsh_record_transf_ymd, B.main_read_usg, B.transf_read_expt_cnt, B.spcl_list_loc					, B.spcl_list1, B.spcl_list2, B.spcl_list3, A.state_cd, B.take_flag					, B.reg_user_id, B.reg_dtime				FROM  TB_ZZUNITTEMP B				WHERE B.record_center_id = A.record_center_id				AND   B.unit_cd = A.unit_cd				AND   B.state_cd = '2'				AND   ROWNUM = 1			)		WHERE 		EXISTS 		(			SELECT C.record_center_id, C.unit_cd			FROM  TB_ZZUNITTEMP C			WHERE C.record_center_id = A.record_center_id			AND   C.unit_cd = A.unit_cd			AND   C.state_cd = '2'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : insert
+-- Query Id : createUnitApplyOrgUnit
+
+		INSERT INTO TB_ZZORGUNIT		(		    record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag		)		(		    SELECT DISTINCT record_center_id, org_cd, unit_cd, '0', reg_dtime, DECODE(state_cd,'2','0','1')		    FROM (		        SELECT RANK() OVER (PARTITION BY record_center_id, org_cd, unit_cd ORDER BY state_cd DESC, creat_stnd_ymd DESC) rank		            , record_center_id, org_cd, unit_cd, '0', reg_dtime, state_cd		        FROM TB_ZZUNITTEMP		    )AA		    WHERE rank = '1'		  AND   NOT EXISTS (SELECT 1 FROM TB_ZZUNITTEMP AAA WHERE AA.record_center_id = AAA.record_center_id AND AA.unit_cd = AAA.unit_cd AND AA.org_cd = AAA.org_cd)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : updateUnitApplyOrgUnitDel
+
+		UPDATE TB_ZZORGUNIT A		SET    A.use_flag = '0'		WHERE 		EXISTS		(			SELECT 1			FROM  TB_ZZUNITTEMP C			WHERE C.record_center_id = A.record_center_id			AND   C.org_cd = A.org_cd			AND   C.unit_cd = A.unit_cd			AND   C.state_cd = '2'                        AND   C.record_center_id = A.record_center_id                        AND   C.org_cd = A.org_cd                        AND   C.unit_cd = A.unit_cd 		)		AND A.use_flag != '0';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : select
+-- Query Id : findHupperOrgCd
+
+		SELECT RECORD_CENTER_CD 		FROM TB_STRECORDCENTER;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml
+-- Query    : update
+-- Query Id : deletOrgCd
+
+	    UPDATE TB_STORG 	    SET CLOSE_FLAG='1',APPLY_CLOSE_YMD=TO_CHAR(SYSDATE,'YYYYMMDD')        WHERE RECORD_CENTER_ID='1'        AND ORG_CD='1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\CodeApply.xml

@@ -1,0 +1,522 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRecordCenterId
+
+		SELECT record_center_id		FROM  TB_DFTAKEPLAN 		WHERE take_rep_cd = '1'		AND   take_yyyy = '1'		AND   take_sno = '1'	 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeHandlPagedList
+
+		SELECT C.*	    FROM (	        SELECT ROWNUM AS rnum	            , B.*	        FROM (			SELECT C.take_mng_no			      ,C.take_rep_cd			      ,C.take_rep_nm			      ,C.take_yyyy			      ,C.take_sno			      ,C.record_center_id			      ,C.takovr_rep_cd			      ,C.takovr_rep_nm			      ,C.take_prog_state_cd			      ,C.take_prog_state_nm			      ,C.take_state_div_cd			      ,C.real_take_state_div_cd			      ,C.take_state_div_nm			      ,C.tot_folder_cnt			      ,C.tot_record_cnt			      ,C.rcv_folder_cnt			      ,C.rcv_record_cnt			      ,C.rcv_folder_err_cnt			      ,C.rcv_record_err_cnt			      ,C.auto_check_flag			FROM (			    SELECT A.take_rep_cd||'-'||A.take_yyyy||'-'||LPAD(A.take_sno, 6, '0') take_mng_no			          ,A.take_rep_cd			          ,A.take_rep_nm			          ,A.take_yyyy			          ,A.take_sno			          ,A.record_center_id			          ,A.takovr_rep_cd			          ,A.takovr_rep_nm			          ,A.take_prog_state_cd			          ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'DF05' AND Z.com_cd = A.take_prog_state_cd) take_prog_state_nm			          ,(CASE WHEN TO_NUMBER(A.take_state_div_cd) > 5 THEN '05' ELSE A.take_state_div_cd END) take_state_div_cd			          ,A.take_state_div_cd as real_take_state_div_cd			          ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'DF10' AND Z.com_cd = (CASE WHEN TO_NUMBER(A.take_state_div_cd) > 5 THEN '05' ELSE A.take_state_div_cd END)) take_state_div_nm			          ,tot_folder_cnt			          ,tot_record_cnt			          ,(SELECT COUNT(1) FROM TB_RCTAKEFOLDERLIST Z WHERE Z.take_rep_cd = A.take_rep_cd AND Z.take_yyyy = A.take_yyyy AND Z.take_sno = A.take_sno) rcv_folder_cnt			          ,(SELECT COUNT(1) FROM TB_RCTAKERECORDLIST Y WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Z WHERE Z.take_rep_cd = A.take_rep_cd AND Z.take_yyyy = A.take_yyyy AND Z.take_sno = A.take_sno AND Z.record_center_id = Y.record_center_id AND Z.folder_id = Y.folder_id)) rcv_record_cnt			          ,(SELECT COUNT(1) FROM TB_RCTAKEFOLDERLIST Z WHERE Z.take_rep_cd = A.take_rep_cd AND Z.take_yyyy = A.take_yyyy AND Z.take_sno = A.take_sno AND Z.error_flag = 'Y') rcv_folder_err_cnt	                  	  ,(SELECT COUNT(1) FROM TB_RCTAKERECORDLIST Z WHERE Z.take_rep_cd = A.take_rep_cd AND Z.take_yyyy = A.take_yyyy AND Z.take_sno = A.take_sno AND Z.error_flag = 'Y') rcv_record_err_cnt			          ,A.auto_check_flag			    FROM  TB_DFTAKEPLAN A			    WHERE A.record_center_id = '1'			    AND   A.take_yyyy = '1'			) C WHERE  			        C.takovr_rep_cd = '1'			      AND 			        C.takovr_rep_cd = '1'			      AND 			        C.takovr_rep_nm like '1'			      AND 			        C.take_state_div_cd = '1'			      			ORDER BY C.take_rep_cd, C.take_yyyy, C.take_sno			) B	        WHERE ROWNUM <= '1'	    ) C	    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : countRcTakeHandlPagedList
+
+		SELECT COUNT(1)		FROM (		    SELECT A.take_rep_cd		          ,A.take_rep_nm		          ,A.take_yyyy		          ,A.take_sno		          ,A.takovr_rep_cd		          ,A.takovr_rep_nm		          ,(CASE WHEN TO_NUMBER(A.take_state_div_cd) > 5 THEN '05' ELSE A.take_state_div_cd END) take_state_div_cd		    FROM  TB_DFTAKEPLAN A		    WHERE A.record_center_id = '1'		    AND   A.take_yyyy = '1'		) C		 WHERE  		        C.takovr_rep_cd = '1'		      AND 		        C.takovr_rep_cd = '1'		      AND 		        C.takovr_rep_nm like '1'		      AND 		        C.take_state_div_cd = '1'		      ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeMngInf
+
+		SELECT A.take_rep_cd||'-'||A.take_yyyy||'-'||LPAD(A.take_sno, 6, 0) take_mng_no		    ,A.take_rep_cd		    ,A.take_rep_nm		    ,A.take_yyyy		    ,A.take_sno		    ,A.takovr_rep_cd		    ,A.takovr_rep_nm		    ,A.take_rsn		    ,A.takovr_mng_no		FROM TB_DFTAKEPLAN A		WHERE A.take_rep_cd = '1'		AND A.take_yyyy = '1'		AND A.take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findTakeTakovrList
+
+		SELECT takovr_mng_no 		FROM   TB_DFTAKEPLAN 		WHERE  take_rep_cd = '1'		AND    take_yyyy = '1'		AND    take_sno = '1'		AND    take_prog_state_cd != '01';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : update
+-- Query Id : updateTbDfTakeHandlState
+
+		UPDATE TB_DFTAKEPLAN 		   SET take_state_div_cd = '1'		 WHERE take_rep_cd = '1'		 AND   take_yyyy = '1'		 AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeHandlTakeStateDivCd
+
+		SELECT take_state_div_cd 		FROM TB_DFTAKEPLAN 		WHERE take_rep_cd 	= '1'		AND   take_yyyy  	= '1'		AND   take_sno 		= '1' 		AND   record_center_id = '1'		AND   takovr_mng_no = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findTakePlanCnt
+
+		SELECT COUNT(1)		FROM  TB_DFTAKEPLAN		WHERE take_rep_cd = '1'		AND   take_yyyy = '1'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : insertRcTakeErrorDesc
+
+		INSERT INTO TB_DFTAKEERROR (take_err_seq, take_rep_cd, take_yyyy, take_sno, record_center_id, take_err_file_path, take_err_rsn, reg_dtime)		VALUES(			TB_DFTAKEERROR_SQ01.NEXTVAL, '1', '1', '1', '1', '1', '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeTbStOrg
+
+         INSERT INTO TB_STORG        (            record_center_id,   org_cd,             org_nm,             org_abbr_nm,             full_org_nm,        hupper_org_cd,      upper_org_cd,       levl,             org_seq,            close_flag,         apply_start_ymd,    apply_close_ymd,             take_org_flag,      take_takovr_mng_no         )        (           SELECT 	'1'		            , '1' 		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'		            , '1'             FROM 	DUAL            WHERE 	NOT EXISTS (SELECT 	1			                    FROM    TB_STORG			                    WHERE   record_center_id = '1'			                    AND     org_cd = '1')        );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeTbZzUnit
+
+        INSERT INTO TB_ZZUNIT		(			  record_center_id, unit_cd, unit_nm, unit_descr, nars_handl_dtime			, creat_stnd_ymd, temp_unit_cd, lrg_cd, lrg_nm, mid_cd			, mid_nm, sml_cd, sml_nm, presv_term_cd, presv_term_fix_rsn			, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg			, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3			, state_cd, take_flag, reg_user_id, presvterm_state_cd, com_unit_flag			, presvterm_chng_rsn_cd, take_mng_no, unit_alias, reg_dtime		)		(			SELECT '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1'				, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')			FROM DUAL			WHERE NOT EXISTS (SELECT 1			                  FROM   TB_ZZUNIT			                  WHERE  record_center_id = '1'			                  AND    unit_cd = '1')  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeTbZzBisClss
+
+        INSERT INTO TB_ZZBISCLSS 		(			  bis_clss_id, bis_clss_nm, upper_bis_clss_id, levl, sort_sno			, bis_type, start_dtime, close_dtime, del_flag, law_basis			, presv_term_cd, presv_term_handl_state, presv_term_file_creat_state, presv_term_fix_ymd, presv_term_fix_rsn			, record_center_confm_flag, work_dtime, publ_flag, publ_prd, open_detl_stnd			, read_range_detl_stnd, funsh_record, write_flag, task_descr, task_remk			, take_flag, unit_cd_trans_flag, trans_unit_cd, link_dtime, presv_term_state			)		(			SELECT '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'				 , '1', '1', '1', '1', '1'			 	 , '1', '1', '1', '1', '1'			FROM DUAL			WHERE NOT EXISTS (SELECT 1			                  FROM   TB_ZZBISCLSS			                  WHERE  bis_clss_id  = '1')  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeZzBisClss
+
+		SELECT 	NVL(bis_clss_nm,'') AS bis_clss_nm		FROM 	TB_ZZBISCLSS 		WHERE 	bis_clss_id = '1'    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeZzOrgUnit
+
+		SELECT	unit_nm		FROM    tb_zzunit		WHERE   record_center_id = '1'		AND     unit_cd = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeFolderId
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_RCFOLDER_SQ01.nextval), 10, '0') FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolder
+
+		INSERT INTO TB_RCFOLDER (			 record_center_id			,folder_id			,take_org_cd			,take_yyyy			,take_yyyy_sno			,creat_sys_cd			,org_cd			,clss_div_cd			,clss_id			,new_clss_div_cd			,new_clss_id			,new_clss_nm			,creat_yyyy			,folder_reg_seq			,ho_no			,title			,sub_title			,corct_title			,folder_type_div_cd			,etc_folder_type			,folder_detl_type_cd			,creat_purps			,sumry			,media_format			,medium			,folder_size			,record_tot_page_cnt			,record_reg_cnt			,efile_cnt			,new_div_cd			,chng_flag			,old_folder_creat_org_nm			,old_folder_clss_no			,folder_bispjt_div_cd			,bis_clss_path_nm			,pjt_clss_path_nm			,folder_start_dtime			,folder_close_dtime			,funsh_end_dtime			,funsh_rsn			,presv_term_cd			,presv_term_fix_rsn			,presv_method_cd			,presv_area_cd			,presv_loc			,presv_duty_chrgr_nm			,secu_clss_cd			,secu_clss_rsn			,read_range			,open_div_cd			,take_takovr_div_cd			,take_takovr_org_cd			,take_takovr_clss_id			,take_takovr_creat_yyyy			,take_takovr_folder_reg_seq			,take_takovr_ho_no			,take_takovr_ymd			,creat_user_id			,creat_user_nm			,creat_user_org_cd			,creat_user_org_nm			,creat_user_pos_rank_nm			,creat_dtime			,creat_sys_folder_id			,old_presv_term_cd			,read_cnt			,oper_read_range_cd			,pdf_a1_trans_state			,neo_trans_state			,folder_neo_file_id			,record_neo_trans_state			,damg_flag			,damg_cont			,damg_handl_cd			,damg_handl_rslt			,scan_req_type_cd			,cur_keep_org_cd			,apply_clss_id			,disuse_state_cd			,disuse_eval_prog_flag			,expt_disuse_yyyy			,disuse_ymd			,transf_state_cd			,expt_transf_yyyy			,transf_ymd			,last_check_yyyy			,opti_disk_store_state_cd			,mf_pic_state_cd			,adjst_flag			,adjst_descr			,adjst_dtime			,efile_del_flag			,erecord_flag			,scan_prog_state_cd			,transf_aprov_user_id			,transf_aprov_user_nm			,transf_aprov_dtime			,restr_handl_ymd			,restr_user_info			,mig_flag			,label_flag			,group_presv_term_cd			,folder_take_seq			,ext_sys_cd			,chng_dtime			,openlist_set_cd			,opensearchlist_offer_flag			,period_from_dt			,period_to_dt			,read_range_mng_fin_flag			,read_range_state_cd			,last_eval_yyyy			,disu_delay_cd			,disu_div_cd			,presv_type_cd			,opti_disk_neo_store_state_cd			,opti_disk_scn_store_state_cd			,mf_req_type_cd			,orign_dis_cd			,vrms_flag			,folder_keep_state_cd			,take_mng_no			,clss_nm			,reg_dtime		) VALUES  (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime,  'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderList
+
+  		INSERT INTO TB_RCTAKEFOLDERLIST (  			 take_rep_cd, take_yyyy, take_sno, record_center_id, folder_id  			,error_flag, exam_cont, cur_keep_org_flag  		) VALUES (  			'1', '1', '1', '1', '1'  		   ,'1', '1', '0'  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderChngHist
+
+	    INSERT INTO TB_RCFOLDERCHNGHIST (	          record_center_id	        , folder_id	        , chng_hist_no	        , org_cd	        , clss_id	        , creat_yyyy	        , folder_reg_seq	        , ho_no	        , title_bef	        , title_aft	        , folder_type_div_cd_bef	        , folder_type_div_cd_aft	        , chng_ymd	        , chng_rsn	        , chng_user_nm	        , reg_dtime	        , take_mng_no	    ) VALUES (	          '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , '1'	        , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')  	        , '1'  	    )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderRel
+
+		INSERT INTO TB_RCFOLDERREL(			RECORD_CENTER_ID			,FOLDER_ID			,REL_TYPE_CD			,REL_SEQ			,REL_TRGT_ID			,REL_DESCR			,TAKE_MNG_NO			,REG_DTIME		)VALUES(			 '1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'						,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderCreat
+
+		INSERT INTO TB_RCFOLDERCREAT (			  record_center_id			, folder_id			, agent_sno			, agent_type_cd			, agent_nm			, agent_id			, agent_org_cd			, agent_org_nm			, agent_pos_rank_nm			, opin			, duty_type_cd			, duty_act_dtime			, take_mng_no			, reg_dtime		) VALUES (			 '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')					) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderKeywd
+
+	    INSERT INTO TB_RCFOLDERKEYWD (			  RECORD_CENTER_ID			, FOLDER_ID			, KEYWD_LEVL			, KEYWD			, TAKE_MNG_NO			, REG_DTIME		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderPjtClss
+
+		INSERT INTO TB_RCFOLDERPJTCLSS (			RECORD_CENTER_ID			,FOLDER_ID			,SNO			,PJT_CLSS_ID			,TAKE_MNG_NO		) VALUES (			'1'			,'1'			,'1'			,'1'			,'1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderTakeTakovr
+
+        INSERT INTO TB_RCFOLDERTAKETAKOVR		(			RECORD_CENTER_ID			, FOLDER_ID			, SNO			, TAKE_TAKOVR_DIV_CD			, TAKE_TAKOVR_CREAT_DTIME			, TAKE_TAKOVR_ORG_CD			, TAKE_TAKOVR_ORG_NM			, TAKE_TAKOVR_CLSS_ID			, TAKE_TAKOVR_CREAT_YYYY			, TAKE_TAKOVR_FOLDER_REG_SEQ			, TAKE_TAKOVR_HO_NO			, TAKE_MNG_NO			, REG_DTIME		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderTakeTakovrTake
+
+	    INSERT INTO TB_RCFOLDERTAKETAKOVR         (              record_center_id            , folder_id            , sno            , take_takovr_div_cd            , take_takovr_creat_dtime            , take_takovr_org_cd            , take_takovr_org_nm            , take_mng_no            , reg_dtime            )        VALUES        (              '1'            , '1'            , (SELECT   NVL(MAX(sno),0)+1 sno               FROM    	TB_RCFOLDERTAKETAKOVR               WHERE   	record_center_id = '1'               AND     	folder_id = '1')            , '1'            , '1'			,(SELECT 	takovr_rep_cd              FROM    	TB_DFTAKEPLAN              WHERE   	take_rep_cd = '1'              AND       take_yyyy = '1'              AND       take_sno = '1')            ,(SELECT 	B.org_abbr_nm              FROM    	TB_DFTAKEPLAN A, TB_STORG B              WHERE   	A.take_rep_cd = '1'              AND       A.take_yyyy = '1'              AND       A.take_sno = '1'              AND     	A.record_center_id = B.record_center_id              AND     	A.take_rep_cd = B.org_cd)            , '1'                        , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')         );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeDiscuOpinHist
+
+		INSERT INTO TB_RCDISUSEOPINHIST (			RECORD_CENTER_ID			, FOLDER_ID			, CHNG_HIST_NO			, DISCU_YYYY			, REVIEW_OPIN			, CUR_PRESV_TERM_CD			, REVIEW_PRESV_TERM_CD			, REVIEW_DEFER_CD			, REVIEW_RSN			, REVIEW_YMD			, DISCU_SEQ			, RECORD_CHRGR_ID			, DISCU_REASON		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'		)     	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeFolderNeoFile
+
+       INSERT INTO TB_RCFOLDERNEOFILE (			  folder_neo_file_id			, folder_id			, chng_sno			, file_nm			, neo_file_type_cd			, file_size			, store_file_id			, neo_trans_state			, del_flag			, record_center_id			, medium_id			, virus_flag			, virus_dtime			, trans_req_dtime			, trans_fin_dtime			, file_path			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : update
+-- Query Id : updateRcTakeFolderError
+
+		UPDATE TB_RCTAKEFOLDERLIST		   SET error_flag = '1'		      ,exam_cont = exam_cont||DECODE(exam_cont, '', '', null, '', ' ')||'1'		WHERE record_center_id = '1'		AND   folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRcTakeRecordId
+
+ 		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_RCRECORD_SQ01.nextval), 10, '0') FROM dual 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecord
+
+		INSERT INTO TB_RCRECORD (			  record_center_id			, record_id			, folder_id			, take_yyyy			, take_yyyy_sno			, creat_sys_cd			, org_cd			, creat_yyyy			, creat_reg_dtime			, creat_reg_no			, dtch_reg_no			, clss_div_cd			, clss_id			, clss_nm			, title			, sub_title			, corct_title			, record_reg_div_cd			, record_detl_type_cd			, record_sumry			, audvis_record_type			, audvis_record_sumry			, media_format			, medium			, record_size			, attach_cnt			, record_page_cnt			, record_start_page			, record_end_page			, aprov_pos_rank_nm			, duty_chrgr_nm			, enforc_ymd			, creat_org_reg_no			, erecord_flag			, old_record_creat_org_nm			, old_record_docno			, old_record_presv_term			, presv_loc			, secu_clss_cd			, secu_clss_rsn			, read_range			, open_div_cd			, open_grade			, part_open_rsn			, open_limit_part			, open_expt_dtime			, recver			, sender			, chng_ver_no			, doc_distr_no			, folder_clss_no			, spcl_record_type			, orign_copy_flag			, new_div_cd			, chng_flag			, rjct_flag			, doc_no			, pic_ymd			, pic_area			, main_user_nm			, creat_user_id			, creat_user_org_cd			, creat_user_org_nm			, creat_user_pos_rank_nm			, creat_dtime			, creat_sys_record_id			, oper_read_range_cd			, neo_trans_state			, pdf_a1_trans_state			, orign_id			, last_open_resort_yyyy			, open_resort_prog_state			, open_revw_prog_state			, scan_fin_flag			, scan_test_div_cd			, scan_error_div_cd			, scan_error_cont			, adjst_descr			, record_take_seq			, mig_flag			, enforc_docno			, lang			, record_sno			, secret_clss			, secret_term			, openlist_set_cd			, creat_user_nm			, vrms_flag			, prod_type_cd			, close_type_cd			, distribute_no			, distribute_dt			, recall_type_cd			, record_clss_cd			, scan_check_fin_flag			, transf_neo_trans_state			, open_mng_fin_flag			, read_range_mng_fin_flag			, read_rangeresort_prog_state_cd			, last_read_resort_yyyy			, nonelect_reg_dtime			, take_mng_no			, reg_dtime		) VALUES (			  '1'			, '1' 			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordList
+
+  		INSERT INTO TB_RCTAKERECORDLIST (  			 take_rep_cd, take_yyyy, take_sno, record_center_id, record_id, folder_id  		) VALUES (  			'1', '1', '1', '1', '1', '1'  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordChngHist
+
+		INSERT INTO TB_RCRECORDCHNGHIST (			  record_center_id			, record_id			, chng_hist_no			, org_cd			, creat_yyyy			, creat_reg_no			, dtch_reg_no			, creat_reg_ymd_bef			, creat_reg_ymd_aft			, title_bef			, title_aft			, page_cnt_bef			, page_cnt_aft			, aprov_pos_rank_bef			, aprov_pos_rank_aft			, duty_chrgr_bef			, duty_chrgr_aft			, enforc_ymd_bef			, enforc_ymd_aft			, recver_bef			, recver_aft			, chng_ymd			, chng_rsn			, chng_user_nm			, folder_id_bef			, folder_id_aft			, reg_dtime					) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordCreat
+
+		INSERT INTO TB_RCRECORDCREAT(			  record_center_id			, record_id			, agent_sno			, agent_type_cd			, agent_id			, agent_nm			, agent_org_cd			, agent_org_nm			, agent_pos_rank_nm			, req_state_val			, duty_type_cd			, duty_act_dtime			, opin			, opin_dtime			, handl_rslt			, req_person_opin			, send_orgn_nm			, send_dept_nm			, agent_duty_type_cd			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordInfoSrc
+
+		INSERT INTO TB_RCRECORDINFOSRC (			  record_center_id			, record_id			, info_src_type_cd			, info_src_sno			, info_src_title			, info_src_id			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordKeywd
+
+		INSERT INTO TB_RCRECORDKEYWD (		      RECORD_CENTER_ID		    , RECORD_ID		    , KEYWD_LEVL		    , KEYWD		    , TAKE_MNG_NO		    , REG_DTIME		) VALUES (		      '1'		    , '1'		    , '1'		    , '1'		    , '1'		    		    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordRel
+
+		INSERT INTO TB_RCRECORDREL (		 	  record_center_id			, record_id			, rel_type_cd			, rel_seq			, rel_trgt_id			, rel_descr			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordTitleHist
+
+		INSERT INTO TB_RCRECORDTITLEHIST (			  record_center_id			, chng_hist_no			, record_id			, title_bef			, chng_ymd			, chng_user_id			, chng_rsn			, chng_user_nm			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRecordOpenHist
+
+		INSERT INTO TB_RCOPENHIST (			  record_center_id			, record_id			, chng_hist_no			, open_div_cd_bef			, open_div_cd_aft			, chng_ymd			, chng_rsn			, chng_user_id			, open_grade_bef			, open_grade_aft			, open_limit_part_bef			, open_limit_part_aft			, part_open_rsn_bef			, part_open_rsn_aft			, chng_org_cd			, resort_yyyy			, resort_case			, resort_case_no			, resort_reason			, resort_doc_no		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeRangeResortHist
+
+		INSERT INTO TB_RCRANGERESORTHIST (			  record_center_id			, record_id			, resort_chng_hist_no			, oper_read_range_bef			, oper_read_range_aft			, chng_ymd			, chng_opin			, chng_user_id			, handl_org_cd			, resort_yyyy			, resort_case			, resort_case_no			, resort_reason		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeOrignFile
+
+		INSERT INTO TB_RCORIGNFILE (			  record_center_id			, record_id			, orign_file_id			, orign_id			, doc_type_cd			, doc_type_sno			, file_nm			, store_file_nm			, data_format_cd			, file_size			, agent_nm			, ver			, page_cnt			, pdf_a1_trans_state			, pdf_a1_trans_req_dtime			, pdf_a1_trans_fin_dtime			, attach_file_seq			, rel_file_key			, attach_file_mng_info			, del_flag			, file_path			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakePdfA1File
+
+		INSERT INTO TB_RCORIGNPDFA1FILE (			  record_center_id			, record_id			, pdf_a1_file_id			, orign_id			, doc_type_cd			, doc_type_sno			, file_nm			, data_format_cd			, file_size			, del_flag			, file_path			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakeNeoFile
+
+		INSERT INTO TB_RCORIGNNEOFILE (			  record_center_id			, record_id			, chng_sno			, orign_id			, orign_neo_file_id			, file_nm			, neo_file_type_cd			, file_size			, del_flag			, file_path			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakePageFile
+
+		INSERT INTO TB_RCORIGNPAGE (			  record_center_id			, record_id			, orign_id			, doc_type_cd			, doc_type_sno			, orign_page_id			, orign_file_id			, sno			, orign_page_file_nm			, store_page_file_nm			, data_format_cd			, file_size			, del_flag			, file_path			, reg_dtime		) VALUES (			  '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakePageHistFile
+
+		INSERT INTO TB_RCORIGNPAGEHIST (			  record_center_id			, record_id			, orign_id			, orign_page_id			, orign_file_id			, orign_page_file_nm			, store_page_file_nm			, data_format_cd			, file_size			, chng_user_id			, chng_user_nm			, chng_rsn			, file_path			, chng_dtime		) VALUES (			  '1'			, '1'			, '1'		    , '1'		    , '1'		    , '1'		    , '1'		    , '1'		    , '1'		    , '1'		    , '1'			, '1'			, '1'			, '1'		)   	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : update
+-- Query Id : updateRcTakeRecordError
+
+		UPDATE TB_RCTAKERECORDLIST 		   SET error_flag = '1'		      ,exam_cont = exam_cont||DECODE(exam_cont, '', '', null, '', ' ')||'1'		 WHERE record_center_id = '1'		   AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : update
+-- Query Id : updateRcTakeFolderRcvFinFlag
+
+		UPDATE TB_RCTAKEFOLDERLIST		   SET recv_fin_flag = '1'		 WHERE record_center_id = '1'		   AND folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : select
+-- Query Id : findRTakeCreatSysCd
+
+		SELECT DISTINCT CREAT_SYS_CD FROM TB_RCFOLDER WHERE record_center_id = '1' AND take_mng_no = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : update
+-- Query Id : updateRcFolderVirusError
+
+		UPDATE TB_RCTAKEFOLDERLIST A 		   SET A.error_flag = 'Y'		      ,A.exam_cont = exam_cont||decode(A.exam_cont, '', '', NULL, '', ' ')||'전자파일에 바이러스가 존재함. '				WHERE 		   EXISTS (SELECT 1		         FROM TB_RCFOLDER C		        WHERE C.take_org_cd = '1'		          AND C.take_yyyy = '1'		          AND C.take_yyyy_sno = '1'		          AND C.virus_flag = '1'			  			  AND C.record_center_id = A.record_center_id			  AND C.folder_id = A.folder_id		          ) 			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : update
+-- Query Id : updateRcRecordVirusError
+
+		UPDATE TB_RCTAKERECORDLIST A 		   SET A.error_flag = '1'		      ,A.exam_cont = A.exam_cont||DECODE(A.exam_cont, '', '', null, '', ' ')||'전자파일에 바이러스가 존재함.'				WHERE		   EXISTS (SELECT 1		         FROM (		            SELECT C.record_center_id, C.record_id		              FROM TB_RCORIGNFILE c		             		             WHERE EXISTS		                              (SELECT 1		                                 FROM TB_RCFOLDER A, TB_RCRECORD B		                                WHERE A.record_center_id = B.record_center_id		                                  AND A.folder_id = B.folder_id		                                  AND A.record_center_id = '1'		                                  AND A.take_org_cd = '1'		                                  AND A.take_yyyy = '1'		                                  AND A.take_yyyy_sno = '1'						                                                    AND B.record_center_id = c.record_center_id                                                  AND B.record_id = C.record_id)		               AND C.virus_flag = '1'		             UNION		            SELECT C.record_center_id, C.record_id		              FROM TB_RCORIGNPDFA1FILE c		             WHERE EXISTS		                              (SELECT 1		                                 FROM TB_RCFOLDER A, TB_RCRECORD B		                                WHERE A.record_center_id = B.record_center_id		                                  AND A.folder_id = B.folder_id		                                  AND A.record_center_id = '1'		                                  AND A.take_org_cd = '1'		                                  AND A.take_yyyy = '1'		                                  AND A.take_yyyy_sno = '1')		               AND C.virus_flag = '1'		             UNION		            SELECT C.record_center_id, C.record_id		              FROM TB_RCORIGNNEOFILE c		             WHERE 		                              EXISTS (SELECT 1		                                 FROM TB_RCFOLDER A, TB_RCRECORD B		                                WHERE A.record_center_id = B.record_center_id		                                  AND A.folder_id = B.folder_id		                                  AND A.record_center_id = '1'		                                  AND A.take_org_cd = '1'		                                  AND A.take_yyyy = '1'		                                  AND A.take_yyyy_sno = '1'                                                  AND B.record_center_id = c.record_center_id                                                  AND B.record_id = C.record_id)		               AND C.virus_flag = '1'		             UNION		            SELECT C.record_center_id, C.record_id		              FROM TB_RCORIGNPAGE c		             		             WHERE EXISTS		                              (SELECT 1		                                 FROM TB_RCFOLDER A, TB_RCRECORD B		                                WHERE A.record_center_id = B.record_center_id		                                  AND A.folder_id = B.folder_id		                                  AND A.record_center_id = '1' 		                                  AND A.take_org_cd = '1'		                                  AND A.take_yyyy = '1'		                                  AND A.take_yyyy_sno = '1'						                                                    AND B.record_center_id = c.record_center_id                                                  AND B.record_id = C.record_id)		                    AND C.virus_flag = '1'		        ) K 			WHERE K.record_center_id = A.record_center_id                        AND K.record_id = A.record_id			GROUP BY K.record_center_id, K.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcOrignPageHist
+
+		DELETE FROM TB_RCORIGNPAGEHIST C 		WHERE 	  EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd 	= '1'		        AND    A.take_yyyy 		= '1'		        AND    A.take_sno 		= '1'		        AND    A.record_center_id = '1'						AND    A.record_center_id = B.record_center_id			AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcOrignPage
+
+		DELETE FROM TB_RCORIGNPAGE C 		WHERE 		  EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS		        (SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd 	= '1'		        AND    A.take_yyyy 		= '1'		        AND    A.take_sno 		= '1'		        AND    A.record_center_id = '1'						AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcOrignNeoFile
+
+		DELETE FROM TB_RCORIGNNEOFILE C		WHERE 		  EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'			                        AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcPdfA1File
+
+		DELETE FROM TB_RCORIGNPDFA1FILE C		WHERE 		EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'			                        AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcOrignFile
+
+		DELETE FROM TB_RCORIGNFILE C		WHERE 		EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'			                        AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRangeReSortHist
+
+		DELETE FROM TB_RCRANGERESORTHIST C		WHERE 		    EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcOpenHist
+
+		DELETE FROM TB_RCOPENHIST C		WHERE 		EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                        AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecordTitleHist
+
+		DELETE FROM TB_RCRECORDTITLEHIST C		WHERE 		EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecordRel
+
+		DELETE FROM TB_RCRECORDREL C		WHERE 		    EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecordKeywd
+
+		DELETE FROM TB_RCRECORDKEYWD C		WHERE 		    EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND B.record_center_id = C.record_center_id		AND B.folder_id = C.folder_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecordInfoSrc
+
+		DELETE FROM TB_RCRECORDINFOSRC C		WHERE 		    EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B 		    WHERE EXISTS(		        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecordCreat
+
+		DELETE FROM TB_RCRECORDCREAT C		WHERE 		EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B                     WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecordChngHist
+
+		DELETE FROM TB_RCRECORDCHNGHIST C		WHERE 		EXISTS (SELECT 1		    FROM TB_RCTAKERECORDLIST B                     WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)		AND C.record_center_id = B.record_center_id		AND C.record_id = B.record_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcRecord
+
+		DELETE FROM TB_RCRECORD B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcTakeRecordList
+
+		DELETE FROM TB_RCTAKERECORDLIST B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                        AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolderNeoFile
+
+		DELETE FROM TB_RCFOLDERNEOFILE B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcDisuseOpinHist
+
+		DELETE FROM TB_RCDISUSEOPINHIST B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcTakeTakovr
+
+		DELETE FROM TB_RCFOLDERTAKETAKOVR B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'		        AND B.record_center_id = A.record_center_id		        AND B.folder_id = A.folder_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolderRel
+
+		DELETE FROM TB_RCFOLDERREL B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolderPjtClss
+
+		DELETE FROM TB_RCFOLDERPJTCLSS B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolderKeywd
+
+		DELETE FROM TB_RCFOLDERKEYWD B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolderCreat
+
+		DELETE FROM TB_RCFOLDERCREAT B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolderChngHist
+
+		DELETE FROM TB_RCFOLDERCHNGHIST B                                         WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcFolder
+
+		DELETE FROM TB_RCFOLDER B                                        WHERE EXISTS(                        SELECT 1		        FROM   TB_RCTAKEFOLDERLIST A		        WHERE  A.take_rep_cd = '1'		        AND    A.take_yyyy = '1'		        AND    A.take_sno = '1'		        AND    A.record_center_id = '1'                                                AND    A.record_center_id = B.record_center_id                        AND    A.folder_id = B.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcTakeFolderList
+
+		DELETE FROM TB_RCTAKEFOLDERLIST A 		WHERE  A.take_rep_cd = '1'		AND    A.take_yyyy = '1'		AND    A.take_sno = '1'		AND    A.record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml
+-- Query    : delete
+-- Query Id : deleteTbRcTakeError
+
+		DELETE FROM tb_dftakeerror A 		WHERE  A.take_rep_cd = '1'		AND    A.take_yyyy = '1'		AND    A.take_sno = '1'		AND    A.record_center_id = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeHandl.xml

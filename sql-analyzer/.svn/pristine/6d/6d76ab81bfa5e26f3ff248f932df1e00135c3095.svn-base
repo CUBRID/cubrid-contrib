@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="multiAdmin">
+
+	<resultMap id="user-login-id-result" class="rms.multi.admin.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="residNo" 			column="RESID_NO"/>
+	</resultMap>
+	<!-- 
+		로그인 - login_user_id 로 user_id 를 찾는다.(SELECT)
+	 -->
+	<select id="findLoginUserIdList" parameterClass="rms.multi.admin.domain.User" resultMap="user-login-id-result">
+		SELECT user_id, resid_no
+		FROM   TB_STUSER
+		WHERE  use_flag = '1'
+		AND	   user_div = '5' 
+		AND    login_user_id = #loginUserId:VARCHAR#
+	</select>
+	
+	
+	<resultMap id="user-login-list-result" class="rms.multi.admin.domain.User" >
+		<result property="userId" 			column="user_id"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptCd" 			column="dept_cd"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="pos" 				column="pos"/>
+		<result property="rank" 			column="rank"/>
+	</resultMap>
+	<!-- 
+		로그인 - login_user_id 로 동일 로그인 사용자를 찾는다.(SELECT)
+	 -->
+	<select id="findLoginUserList" parameterClass="rms.multi.admin.domain.User" resultMap="user-login-list-result">
+		SELECT A.user_id
+		     , A.user_nm
+			 , A.dept_cd
+			 , B.dept_nm
+			 , A.pos
+			 , A.rank
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		WHERE A.use_flag = '1'
+		AND   A.login_user_id = #loginUserId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.dept_cd = B.dept_cd
+	</select>
+	
+	
+	<resultMap id="user-login-result" class="rms.multi.admin.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userPwd" 			column="USER_PWD"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="regDtime" 		column="reg_dtime"/>
+		<result property="deptNm" 			column="DEPT_NM"/>
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+		<result property="loginUserId" 		column="LOGIN_USER_ID"/>
+	</resultMap>
+	<!-- 
+		로그인 - user_id 로 사용자정보를 찾는다.(SELECT)
+	 -->
+	<select id="findLoginUserId" parameterClass="rms.multi.admin.domain.User" resultMap="user-login-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.user_div
+			 , A.record_center_id
+			 , A.user_pwd
+			 , A.dept_cd
+			 , A.reg_dtime
+			 , B.dept_nm
+			 , B.org_cd
+			 , C.org_nm
+			 , A.login_user_id 
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		   , TB_STORG C
+		WHERE A.use_flag = '1'
+		AND	   user_div = '5' 
+		AND   A.user_id = #userId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.dept_cd = B.dept_cd(+)
+		AND   B.record_center_id = C.record_center_id(+)
+		AND   B.org_cd = C.org_cd(+)
+	</select>
+	
+	<!-- 
+		로그인 - admin user_id 로 사용자정보를 찾는다.(SELECT)
+		사용자로 비교한다.
+	 -->
+	<select id="findAdminLoginUserId" parameterClass="rms.multi.admin.domain.User" resultMap="user-login-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.user_div
+			 , A.record_center_id
+			 , A.user_pwd
+			 , A.dept_cd
+			 , A.reg_dtime
+			 , B.dept_nm
+			 , B.org_cd
+			 , C.org_nm
+			 , A.login_user_id  
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		   , TB_STORG C
+		   , TB_STCENTERADMIN D
+		WHERE A.use_flag = '1'
+		AND   D.multi_admin_id = #multiAdminId:VARCHAR#
+		AND   D.user_id = A.user_id
+		AND	  D.record_center_id =  #recordCenterId:VARCHAR#	
+		AND	  D.record_center_id = A.record_center_id
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.dept_cd = B.dept_cd(+)
+		AND   B.record_center_id = C.record_center_id(+)
+		AND   B.org_cd = C.org_cd(+)
+	</select>
+	
+	<!-- 
+		기록관담당자정보를 가지고 공동형관리자를 찾아서 로그인처리한다. (SELECT)
+	 -->
+	<select id="findMultiAdminLogin" parameterClass="rms.multi.admin.domain.User" resultMap="user-login-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.user_div
+			 , A.record_center_id
+			 , A.user_pwd
+			 , A.dept_cd
+			 , A.reg_dtime
+			 , C.dept_nm
+			 , C.org_cd
+			 , D.org_nm
+			 , A.login_user_id 
+		FROM TB_STUSER A
+			,  TB_STCENTERADMIN B
+			, TB_STDEPT C
+		    , TB_STORG D
+		WHERE A.use_flag = '1'
+		AND   A.user_div = '5'
+		AND	  B.user_id  =  #userId:VARCHAR#
+        AND	  A.user_id  =  B.multi_admin_id
+        AND   A.dept_cd = C.dept_cd(+)
+		AND	  B.record_center_id =  #recordCenterId:VARCHAR#
+		AND   C.record_center_id = D.record_center_id(+)
+		AND   C.org_cd = D.org_cd(+)
+	</select>
+	
+	<!--  사용자 로그인/로그아웃 이력 저장 -->
+	<insert id="createLoginUserTrace" parameterClass="rms.multi.admin.domain.User">
+		INSERT INTO TB_STUSERLOGIN (
+			USER_ID, DEPT_CD, CONN_DTIME, CONN_CLOSE_DTIME, LOGIN_IP
+		) VALUES (
+			#userId:VARCHAR#, #deptCd:VARCHAR#, #connDtime:VARCHAR#, #connCloseDtime:VARCHAR#, #loginIp:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		공동형 관리 - 기록관(Tree)
+	 -->
+	<select id="findRmsTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.multi.admin.domain.RmsTree">
+		<!-- <dynamic>
+			<isEmpty prepend="" property="id">
+				SELECT '0000000' AS id
+					, '기록관' AS text
+					, 'closed' AS state
+					, '' AS iconCls
+				FROM DUAL
+			</isEmpty>
+			<isNotEmpty prepend="" property="id">
+				SELECT A.record_center_id AS id
+					, B.org_nm AS text
+					, 'open' AS state
+					, 'icon-folder_full_accept' AS iconCls
+				FROM TB_STRECORDCENTER A, TB_STORG B
+				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+				AND A.RECORD_CENTER_CD = B.ORG_CD
+				ORDER BY A.RECORD_CENTER_ID
+			</isNotEmpty>
+		</dynamic> -->
+		SELECT A.record_center_id AS id
+			, B.org_nm AS text
+			, 'open' AS state
+			, 'icon-folder_full_accept' AS iconCls
+		FROM TB_STRECORDCENTER A, TB_STORG B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+		AND A.RECORD_CENTER_CD = B.ORG_CD
+		ORDER BY A.RECORD_CENTER_ID
+	</select>
+	
+	
+	<resultMap id="adminRmsOperState-result"		class="rms.multi.admin.domain.AdminRmsState" >
+		<result property="repOrgNm" 		column="REP_ORG_NM"/>
+		<result property="repOrgCd" 		column="REP_ORG_CD"/>
+		<result property="orgAddr" 			column="ORG_ADDR"/>
+		<result property="operOrgNm" 		column="OPER_ORG_NM"/>
+		<result property="operChrgrNm" 		column="OPER_CHRGR_NM"/>
+		<result property="userArngState" 	column="USER_ARNG_STATE"/>
+		<result property="ruleApplyFlag" 	column="RULE_APPLY_FLAG"/>
+		<result property="operRuleEstbFlag" column="OPER_RULE_ESTB_FLAG"/>
+		<result property="brmTypeCd" 		column="BRM_TYPE_CD"/>
+		<result property="linkSys" 			column="LINK_SYS"/>
+		<result property="stakrmArea" 		column="STAKRM_AREA"/>
+		<result property="estbOrgNm" 		column="ESTB_ORG_NM"/>
+		<result property="estbChrgrNm" 		column="ESTB_CHRGR_NM"/>
+		<result property="estbYmd" 			column="ESTB_YMD"/>
+		<result property="arsGoodsNm" 		column="ARS_GOODS_NM"/>
+		<result property="arsUseYmdFrom"	column="ARS_USE_YMD_FROM"/>	
+		<result property="arsUseYmdTo" 		column="ARS_USE_YMD_TO"/>
+		<result property="recordCenterCd"   column="RECORD_CENTER_CD"/>	
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>	
+		<result property="orgNm" 	        column="ORG_NM"/>
+		<result property="countDept"        column="COUNT_DEPT"/>
+		<result property="countUser"        column="COUNT_USER"/>
+	</resultMap>
+	<!-- 
+		기록관 현황(상세정보)를 조회한다.
+	 -->
+	 <select id="findMultiAdminRmsOperState" parameterClass="rms.multi.admin.domain.AdminRmsState" resultMap="adminRmsOperState-result">
+		SELECT A.rep_org_nm
+		     , A.rep_org_cd
+			 , A.org_addr
+			 , A.oper_org_nm
+			 , A.oper_chrgr_nm
+			 , A.user_arng_state
+			 , A.rule_apply_flag
+			 , A.oper_rule_estb_flag
+			 , A.brm_type_cd
+			 , A.LINK_SYS
+			 , A.stakrm_area
+			 , A.estb_org_nm
+			 , A.estb_chrgr_nm
+			 , A.estb_ymd
+			 , A.ars_goods_nm
+			 , A.ars_use_ymd_from
+			 , A.ars_use_ymd_to
+			 , A.record_center_cd
+			 , A.record_center_id
+			 , (SELECT B.full_org_nm FROM TB_STORG B WHERE B.org_cd = A.record_center_cd AND B.record_center_id = #recordCenterId:VARCHAR#) AS org_nm
+			 , (SELECT COUNT(1) FROM TB_STDEPT A WHERE A.record_center_id = #recordCenterId:VARCHAR#) AS count_dept
+			 , (SELECT COUNT(1) FROM TB_STUSER A WHERE A.record_center_id = #recordCenterId:VARCHAR#) AS count_user
+		 FROM  TB_STRECORDCENTER A
+		 WHERE record_center_id =  #recordCenterId:VARCHAR#
+	</select>
+	
+	
+	<resultMap id="find-AdminList-result" class="rms.multi.admin.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="loginUserId" 		column="LOGIN_USER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="multiAdminId" 	column="MULTI_ADMIN_ID"/>
+		<result property="multiAdminNm" 	column="MULTI_ADMIN_NM"/>
+	</resultMap>
+	<!-- 
+		기록관 소속 기록관 담당자 목록을 조회한다.
+	 -->
+	<select id="findAdminUser" parameterClass="rms.multi.admin.domain.User" resultMap="find-AdminList-result">
+		SELECT A.user_id
+		     , A.login_user_id
+		     , A.user_nm
+		     , A.user_div
+			 , A.record_center_id
+			 , B.multi_admin_id
+			 ,(SELECT C.user_nm FROM TB_STUSER C WHERE B.multi_admin_id = C.user_id) multi_admin_nm
+		FROM TB_STUSER A, TB_STCENTERADMIN B
+		WHERE A.use_flag = '1'
+		AND   A.user_div = '3'
+		AND   A.user_id  =  B.user_id(+)
+		AND	  A.record_center_id =  #recordCenterId:VARCHAR#	
+		ORDER BY A.user_nm
+	</select>
+	
+	<!-- 기록관 담당자 지정 createOrUpdate -->
+	<!-- 공동형관리자 지정 여부 확인 -->
+	<select id="countMultiAdminSetRmsAdmin" parameterClass="rms.multi.admin.domain.User" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_STCENTERADMIN
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND multi_admin_id = #multiAdminId:VARCHAR#
+	</select>
+	<!-- 공동형관리자 지정  (CREATE) -->
+	<insert id="createMultiAdminSetRmsAdmin" parameterClass="rms.multi.admin.domain.User">
+		INSERT INTO TB_STCENTERADMIN
+		(	record_center_id
+		    , multi_admin_id
+			, user_id
+			, reg_dtime
+		)
+		VALUES
+		(	#recordCenterId#
+			, #multiAdminId:VARCHAR#
+			, #userId:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	<!-- 공동형관리자지정 (UPDATE) -->
+	<update id="updateMultiAdminSetRmsAdmin" parameterClass="rms.multi.admin.domain.User">
+		UPDATE TB_STCENTERADMIN
+		SET user_id = #userId:VARCHAR#
+		  <!--cubrid , reg_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		  , reg_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND multi_admin_id = #multiAdminId:VARCHAR#
+	</update>
+	
+	
+	<resultMap id="find-MultiRecordCenterOrg" class="rms.multi.admin.domain.MultiOrg">
+		<result property="recordCenterId" 			column="RECORD_CENTER_ID"></result>
+		<result property="recordCenterCd" 			column="RECORD_CENTER_CD"></result>
+		<result property="recordCenterNm" 			column="RECORD_CENTER_Nm"></result>
+		<result property="closeFlag" 					column="CLOSE_FLAG"></result>	
+	</resultMap>
+	<!-- 
+		기록관으로 변경할 기관의 정보를 조회한다.
+	 -->
+	<select id="fineMultiSetOrg" parameterClass="rms.multi.admin.domain.MultiOrg" resultMap="find-MultiRecordCenterOrg">
+		SELECT record_center_id as RECORD_CENTER_ID
+			 , org_cd as RECORD_CENTER_CD
+			 , org_nm as RECORD_CENTER_NM
+			 , close_flag as CLOSE_FLAG 
+		FROM  TB_STORG 
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND org_cd = #newRecordCenterCd:VARCHAR#
+	</select>
+	<!-- 기관변경에 따른 TB_STORG 업데이트 -->
+	<update id="updateMultiSetOrg" parameterClass="rms.multi.admin.domain.MultiOrg">
+		 UPDATE TB_STORG 
+		 SET CLOSE_FLAG =#closeFlag:VARCHAR# 
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND  ORG_CD = #recordCenterCd:VARCHAR# 
+	</update>
+	<!-- 기관변경에 따른 TB_STDEPT 업데이트 -->
+	<update id="updateMultiSetDept" parameterClass="rms.multi.admin.domain.MultiOrg">
+		 UPDATE TB_STDEPT 
+		 SET CLOSE_FLAG =#closeFlag:VARCHAR# 
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND  ORG_CD = #recordCenterCd:VARCHAR# 
+	</update>
+	<!-- 기관변경에 따른 TB_STRECORDCENTER 업데이트 -->
+	<update id="updateMultiSetCenter" parameterClass="rms.multi.admin.domain.MultiOrg">
+		 UPDATE TB_STRECORDCENTER  
+		 SET RECORD_CENTER_CD =#recordCenterCd:VARCHAR#, 
+		 RECORD_CENTER_NM=#recordCenterNm:VARCHAR#, 
+		 REP_ORG_NM = #recordCenterNm:VARCHAR# 
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+</sqlMap>

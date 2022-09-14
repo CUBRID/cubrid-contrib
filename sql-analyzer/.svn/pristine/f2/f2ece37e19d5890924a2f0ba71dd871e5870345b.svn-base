@@ -1,0 +1,18 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\PublicationsSrch.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\PublicationsSrch.xml
+-- Query    : select
+-- Query Id : countDetailsPublicationsPagedList
+
+		SELECT COUNT(1)		FROM  TB_GVPUBL A		WHERE A.record_center_id = '1'		 AND  				(A.publ_ymd BETWEEN '1' AND '1')			   AND             A.org_cd = '1'          AND A.title LIKE  ('1' AND '1' AND '1')   AND 			A.title LIKE '1'		  AND 			A.publ_reg_id = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\PublicationsSrch.xml
+-- Query    : select
+-- Query Id : findDetailsPublicationsPagedList
+
+		SELECT E.record_center_id			, E.publ_reg_id			, E.publ_slt_flag			, E.org_div			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV01' AND Z.com_cd=E.org_div) AS org_div_nm			, E.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm			, E.title			, E.content			, E.publ_ymd			, E.page_cnt			, E.deposit_flag			, (CASE WHEN E.deposit_flag='1' THEN 'O' ELSE 'X' END) AS deposit_flag_nm			, E.remk			, E.publ_prd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV02' AND Z.com_cd=E.publ_prd) AS publ_prd_nm			, E.publ_type			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV03' AND Z.com_cd=E.publ_type) AS publ_type_nm			, E.publ_media			, E.shap_mat			, E.stakrm_id			, E.booksf_id			, E.first_keep_cnt			, E.cur_keep_cnt			, E.destry_rsn1			, E.destry_rsn2			, E.destry_rsn3			, E.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.org_div) AS open_div_cd_nm			, E.open_grade			, E.part_open_rsn			, E.publ_prog_stat			, E.cr_report_ymd			, E.destry_flag			, (CASE WHEN E.destry_flag='0' THEN 'º¸Á¸' ELSE 'Æó±â' END) AS destry_flag_nm			, E.creat_org_nm		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.*					FROM  TB_GVPUBL A					WHERE A.record_center_id = '1' AND  							(A.publ_ymd BETWEEN '1' AND '1')						   AND 			            A.org_cd = '1'			          AND A.title LIKE  ('1' AND '1' AND '1')   AND 						A.title LIKE '1'					  AND 						A.publ_reg_id = '1'					 					ORDER BY A.cr_report_ymd DESC				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\PublicationsSrch.xml

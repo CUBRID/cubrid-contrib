@@ -1,0 +1,529 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findBatchRegInfo
+
+		SELECT 	take_req_user_id, take_req_user_nm, (SELECT org_nm FROM TB_STORG WHERE ORG_CD = '1') take_org_nm		FROM 	TB_TKORGTAKEPLAN		WHERE	record_center_id 	= '1'		AND		creat_sys_cd		= '1'		AND		take_yyyy			= '1'		AND		take_org_cd 		= '1'		AND		take_sno			= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findBatchHistInfo
+
+		select recv_dtime,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'TK11' AND COM_CD = a.REG_PROG_STATE_CD) REG_PROG_STATE_NM		from tb_tkrecvhist a		where record_center_id='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findBatchRegErrorList
+
+		SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (			select a.line_no					,a.recv_error_rsn					,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'TK10' AND COM_CD = file_div_cd) file_div_nm			from tb_tkrecverror a			where record_center_id = '1' 			and recv_dtime='1'						 order by file_div_cd asc, to_number(decode(line_no, 'Exception', 0, line_no))		) B	        WHERE ROWNUM <= '1'	    ) C	    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countBatchRegErrorList
+
+			select count(1)			from tb_tkrecverror 			where record_center_id 	= '1' 			and recv_dtime			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findMaxTakeSno
+
+			SELECT  take_sno			FROM    TB_TKORGTAKEPLAN			WHERE	record_center_id 	= '1'			AND 	take_yyyy 			= '1'			AND		take_org_cd 		= '1'			AND		creat_sys_cd 		= '1'			AND		reg_dtime 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatOrgPlan
+
+	    INSERT INTO TB_TKORGTAKEPLAN (record_center_id	                                 ,take_yyyy	                                 ,take_org_cd	                                 ,creat_sys_cd	                                 ,take_sno	                                 ,recv_div_cd	                                 ,take_req_user_id	                                 ,take_req_user_nm	                                 ,take_state_div_cd	                                 ,reg_dtime)				              VALUES('1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,(SELECT NVL(MAX(take_sno),0) + 1			  			                FROM TB_TKORGTAKEPLAN			                           WHERE record_center_id = '1'			                             AND take_yyyy        = '1'			                             AND take_org_cd      = '1'			                             AND creat_sys_cd     = '1')			                        ,'2'			                        ,'1'			                        ,'1'			                        ,'1'			                        ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateOrgPlan
+
+		UPDATE 	tb_tkorgtakeplan 		SET		take_state_div_cd 	= '1'		WHERE	record_center_id 	= '1'		AND		take_yyyy			= '1'		AND		take_org_cd			= '1'		AND		creat_sys_cd		= '1'		AND		take_sno			= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findTakeOrgPlan
+
+		SELECT 	record_center_id			  , reg_dtime			  , take_req_user_id			  , take_req_user_nm			  , (SELECT org_nm FROM TB_STORG WHERE org_cd = '1') take_org_nm		FROM	tb_tkorgtakeplan 		WHERE	creat_sys_cd 	= '1'		AND		take_yyyy 		= '1'		AND		take_org_cd		= '1'		AND		take_sno		= '1'		AND		take_state_div_cd	= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchRegError
+
+	    INSERT INTO TB_TKRECVERROR (record_center_id	                               ,recv_dtime	                               ,creat_sys_cd	                               ,file_div_cd	                               ,line_no	                               ,recv_error_rsn	                               ,reg_prog_state_cd)				            VALUES ('1'				                   ,'1'				                   ,'1'				                   ,'1'				                   ,'1'				                   ,'1'				                   ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatRecvHist
+
+	    INSERT INTO TB_TKRECVHIST (record_center_id	                              ,recv_dtime	                              ,creat_sys_cd	                              ,file_div_cd	                              ,total_cnt	                              ,recv_imposs_error_cnt	                              ,auto_check_error_cnt	                              ,exam_error_cnt	                              ,reg_prog_state_cd	                              ,state_flag)				          VALUES ('1'				                 ,'1'				                 ,'1'				                 ,'1'				                 ,'1'				                 ,'1'				                 ,'1'				                 ,'1'				                 ,'1'				                 ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateBatchRegState
+
+	    UPDATE TB_TKRECVHIST	       SET reg_prog_state_cd     = '1'	          ,state_flag            = NVL('1',0)	            , 	                  recv_imposs_error_cnt = NVL('1',0)	                , 	                  auto_check_error_cnt  = NVL('1',0)	                , 	                  exam_error_cnt        = NVL('1',0)	                , 	                  total_cnt             = NVL('1',0)	                	    WHERE record_center_id='1'	      AND recv_dtime='1' 	      AND creat_sys_cd='1'	      ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findTakeReqUserOrg
+
+		SELECT 	  dept_cd				, (SELECT org_nm FROM TB_STORG WHERE org_cd = dept_cd) dept_nm		FROM 	tb_stuser 		WHERE 	user_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchFolderReg
+
+	INSERT INTO TB_TKFOLDER (record_center_id,folder_take_seq	                         ,creat_sys_cd,org_cd	                         ,clss_div_cd,clss_id	                         ,creat_yyyy,folder_reg_seq	                         ,oper_read_range_cd,ho_no	                         ,take_org_cd,take_yyyy	                         ,take_sno,clss_nm	                         ,title,sub_title	                         ,folder_type_div_cd,folder_detl_type_cd	                         ,sumry,folder_size	                         ,record_tot_page_cnt,record_reg_cnt	                         ,efile_cnt,new_div_cd	                         ,chng_flag,old_folder_creat_org_nm	                         ,old_folder_clss_no,folder_start_dtime	                         ,folder_close_dtime,funsh_end_dtime	                         ,funsh_rsn,presv_term_cd,old_presv_term_cd	                         ,presv_method_cd,presv_area_cd	                         ,creat_user_id,creat_user_nm	                         ,creat_user_org_cd,creat_user_org_nm	                         ,creat_dtime,erecord_flag	                         ,creat_sys_folder_id,reg_dtime	                         ,sml_cd, line_no)	                 VALUES ('1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,(SELECT NVL(MAX(take_sno),0) 	                             FROM TB_TKORGTAKEPLAN			             	    WHERE record_center_id = '1'			             	      AND creat_sys_cd='05'			             	      AND take_yyyy='1'			             	      AND take_org_cd='1'			             	      ),'1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1',DECODE('1', '20', '25',LPAD('1',2,'0')),DECODE('1', '20', '20', '')			             	,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1', ('1'+1) );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchtFolderCreatReg
+
+	    INSERT INTO TB_TKFOLDERCREAT (record_center_id,folder_take_seq	                                 ,agent_sno,agent_nm	                                 ,agent_type_cd,agent_org_nm	                                 ,agent_org_cd,reg_dtime	                                 ,duty_act_dtime)				             VALUES ('1','1'				                    ,(SELECT NVL(MAX(AGENT_SNO),0)+1 AGENT_SNO				                        FROM TB_TKFOLDERCREAT				                       WHERE RECORD_CENTER_ID = '1'				                         AND FOLDER_TAKE_SEQ = '1')				                    ,'1'				                    ,'1','1'				                    ,'1','1'				                    ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatTkRecvError
+
+	    INSERT INTO TB_TKRECVERROR (record_center_id	                               ,recv_dtime	                               ,creat_sys_cd	                               ,file_div_cd	                               ,line_no	                               ,recv_error_rsn	                               ,reg_prog_state_cd)				           VALUES ('1'				                  ,'1'				                  ,'1'				                  ,'1'				                  ,'1'				                  ,'1'				                  ,'1')   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countFolderRegSeq
+
+			SELECT COUNT(1) COUNT_FOLDER			FROM TB_TKFOLDER			WHERE org_cd ='1' and creat_yyyy = '1' and clss_id='1' 			      and folder_reg_seq='1' and ho_no='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countRecordRegSeq
+
+			SELECT COUNT(1) COUNT_RECORD			FROM TB_TKRECORD			WHERE org_cd ='1' and creat_reg_dtime = '1' and creat_reg_no='1' 			      and dtch_reg_no='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countFolderClssId
+
+			SELECT COUNT(1) COUNT_FOLDER_CLSS_ID			FROM TB_TKFOLDER			WHERE org_cd ='1' and creat_yyyy = '1' and clss_id='1' 			      and folder_reg_seq='1' and ho_no='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchFolderTakovrReg
+
+	INSERT INTO TB_TKFOLDERTAKETAKOVR(record_center_id,folder_take_seq,sno,take_takovr_div_cd,take_takovr_org_cd,									  take_takovr_clss_id,take_takovr_creat_yyyy,take_takovr_folder_reg_seq,take_takovr_ho_no,reg_dtime)							   VALUES('1','1',(SELECT NVL(MAX(SNO),0)+1 SNO				   						FROM TB_TKFOLDERTAKETAKOVR				   						WHERE RECORD_CENTER_ID = '1'				   						AND   FOLDER_TAKE_SEQ = '1'),'1','1',				   						'1','1','1','1','1')				   						;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findFolderTakeSeq
+
+			SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKFOLDER_SQ01.nextval), 15, '0') FOLDER_TAKE_SEQ 			  FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findRecordTakeSeq
+
+	    SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkrecord_sq01.nextval), 15, '0') record_take_seq 	      FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findTakeSeqCount
+
+			SELECT count(1)			FROM TB_TKFOLDER			WHERE CREAT_SYS_CD = '05'			  AND ORG_CD = '1'			  AND CREAT_YYYY = '1'			  AND CLSS_ID = '1'			  AND FOLDER_REG_SEQ = '1'			  AND HO_NO = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findTakeSeq
+
+			SELECT /*+INDEX(TB_TKFOLDER,TB_TKFOLDER_UX01)*/ FOLDER_TAKE_SEQ			FROM TB_TKFOLDER			WHERE CREAT_SYS_CD = '05'			  AND ORG_CD = '1'			  AND CREAT_YYYY = '1'			  AND CLSS_ID = '1'			  AND FOLDER_REG_SEQ = '1'			  AND HO_NO = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchRecordReg
+
+	    INSERT INTO TB_TKRECORD (record_center_id,record_take_seq	                            ,folder_take_seq,creat_sys_cd	                            ,org_cd,creat_yyyy	                            ,creat_reg_dtime,creat_reg_no	                            ,dtch_reg_no,title	                            ,sub_title,record_reg_div_cd	                            ,record_detl_type_cd,record_sumry	                            ,audvis_record_type,audvis_record_sumry	                            ,media_format,medium	                            ,record_size,attach_cnt	                            ,record_page_cnt,aprov_pos_rank_nm	                            ,duty_chrgr_nm,enforc_ymd	                            ,creat_org_reg_no,erecord_flag	                            ,old_record_creat_org_nm,old_record_docno	                            ,old_record_presv_term,open_div_cd	                            ,open_grade,part_open_rsn	                            ,open_limit_part,open_expt_dtime	                            ,recver,sender	                            ,doc_distr_no,folder_clss_no	                            ,spcl_record_type,new_div_cd	                            ,chng_flag,rjct_flag	                            ,doc_no,creat_user_id,creat_user_nm	                            ,creat_user_org_cd,creat_user_org_nm	                            ,creat_user_pos_rank_nm,creat_dtime	                            ,creat_sys_record_id,lang	                            ,reg_dtime,attach_type_cd	                            ,media_format_etc,medium_etc	                            ,record_sno,attach_etc, record_clss_cd	                            ,line_no)		                VALUES ('1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1', '1'		                       ,('1'+1))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchRecordCreatReg
+
+	    INSERT INTO TB_TKRECORDCREAT (record_center_id,record_take_seq	                                 ,agent_sno,agent_type_cd	                                 ,agent_nm,agent_org_cd	                                 ,agent_org_nm,duty_type_cd	                                 ,duty_act_dtime,reg_dtime)				             VALUES ('1','1'				                    ,'1','1'				                    ,'1','1'				                    ,'1','1'					                ,'1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatRecordCreatReg
+
+	    INSERT INTO TB_TKRECORDCREAT (record_center_id,record_take_seq	                                 ,agent_sno,agent_type_cd	                                 ,agent_nm,agent_org_cd	                                 ,agent_org_nm,duty_type_cd	                                 ,duty_act_dtime,reg_dtime)				             VALUES ('1','1'				                    ,(SELECT NVL(MAX(AGENT_SNO),0)+1 AGENT_SNO				                        FROM TB_TKRECORDCREAT				                       WHERE RECORD_CENTER_ID = '1'				                         AND RECORD_TAKE_SEQ  = '1'),'1'				                    ,'1','1'				                    ,'1','1'					                ,'1','1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findOrgInfo
+
+			SELECT ORG_NM			  FROM TB_STORG			 WHERE record_center_id='1'			   AND org_cd ='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findOrgNm
+
+			SELECT ORG_NM			  FROM TB_STORG			 WHERE record_center_id='1'			   AND org_cd ='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchSpecialReg
+
+	    INSERT INTO TB_TKSPCLLIST (record_center_id,spcl_list_take_seq	                              ,folder_take_seq,record_take_seq	                              ,spcl_list_loc,folder_clss_no	                              ,record_reg_no,seq	                              ,spcl_list1,spcl_list2	                              ,spcl_list3,take_yyyy	                              ,reg_dtime)	                      VALUES ('1',LPAD((TB_TKSPCLLIST_SQ01.nextval), 15, '0')	                             ,'1','1'	                             ,'1','1'	                             ,'1','1' 	                             ,'1','1'	                             ,'1','1'	                             ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatAttachFileReg
+
+	    INSERT INTO TB_TKATTACHFILE (record_center_id,record_take_seq	                                ,reg_seq,org_cd	                                ,creat_yyyy,creat_reg_no	                                ,attach_file_seq,attach_file_page_cnt	                                ,doc_type_cd,doc_type_sno	                                ,file_nm,file_size	                                ,attach_file_path,reg_dtime)				             VALUES('1','1'				                   ,'1','1'				                   ,'1','1'				                   ,'1','1'				                   ,'1','1'				                   ,'1','1'				                   ,'1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchFolderErrorReg
+
+	INSERT INTO TB_TKRECVERROR (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,line_no,recv_error_rsn,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchRecordErrorReg
+
+	INSERT INTO TB_TKRECVERROR (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,line_no,recv_error_rsn,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchSpecialErrorReg
+
+	INSERT INTO TB_TKRECVERROR (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,line_no,recv_error_rsn,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchAttachErrorReg
+
+	INSERT INTO TB_TKRECVERROR (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,line_no,recv_error_rsn,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchFolderHist
+
+	INSERT INTO TB_TKRECVHIST (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,total_cnt,recv_imposs_error_cnt,auto_check_error_cnt,exam_error_cnt,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1',					   '1','1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateBatchFolderHist
+
+	    UPDATE TB_TKRECVHIST	       SET recv_imposs_error_cnt = (recv_imposs_error_cnt+NVL('1',0))	          ,auto_check_error_cnt=(auto_check_error_cnt+NVL('1',0))	          ,exam_error_cnt=(exam_error_cnt+NVL('1',0))	          ,reg_prog_state_cd=DECODE(reg_prog_state_cd,'3','3','1')	          ,total_cnt = NVL('1',0)	          ,state_flag = NVL('1',0)	    WHERE record_center_id='1'	      AND recv_dtime='1' 	      AND creat_sys_cd='1' 	      AND file_div_cd='1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countBatchFolderHist
+
+	    SELECT COUNT(1) 	      FROM TB_TKRECVHIST	     WHERE record_center_id='1' 	       AND recv_dtime='1' 	       AND creat_sys_cd='1' 	       AND file_div_cd='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchRecordHist
+
+	    INSERT INTO TB_TKRECVHIST (record_center_id,recv_dtime,creat_sys_cd,file_div_cd	                              ,total_cnt,recv_imposs_error_cnt,auto_check_error_cnt	                              ,exam_error_cnt,reg_prog_state_cd)				           VALUES ('1','1','1'				                  ,'1','1','1'				                  ,'1','1'				                  ,'1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateBatchRecordHist
+
+	    UPDATE TB_TKRECVHIST	       SET recv_imposs_error_cnt = (recv_imposs_error_cnt+NVL('1',0))	          ,auto_check_error_cnt=(auto_check_error_cnt+NVL('1',0))	          ,exam_error_cnt=(exam_error_cnt+NVL('1',0))	          ,reg_prog_state_cd=DECODE(reg_prog_state_cd,'3','3','1')	          ,total_cnt = NVL('1',0)	          ,state_flag = NVL('1',0)	    WHERE record_center_id='1' 	      AND recv_dtime='1' 	      AND creat_sys_cd='1' 	      AND file_div_cd='1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countBatchRecordHist
+
+	    SELECT COUNT(1) 	      FROM TB_TKRECVHIST	     WHERE record_center_id='1' 	       AND recv_dtime='1' 	       AND creat_sys_cd='1' 	       AND file_div_cd='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchSpecialHist
+
+	INSERT INTO TB_TKRECVHIST (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,total_cnt,recv_imposs_error_cnt,auto_check_error_cnt,exam_error_cnt,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1',					   '1','1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateBatchSpecialHist
+
+	UPDATE TB_TKRECVHIST	SET recv_imposs_error_cnt = (recv_imposs_error_cnt+NVL('1',0))	, auto_check_error_cnt=(auto_check_error_cnt+NVL('1',0))	, exam_error_cnt=(exam_error_cnt+NVL('1',0))	, reg_prog_state_cd=DECODE(reg_prog_state_cd,'3','3','1')	, total_cnt = NVL('1',0)	, state_flag = NVL('1',0)	WHERE record_center_id='1' and recv_dtime='1' and creat_sys_cd='1' and file_div_cd='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countBatchSpecialHist
+
+	SELECT COUNT(1) FROM TB_TKRECVHIST	WHERE record_center_id='1' and recv_dtime='1' and creat_sys_cd='1' and file_div_cd='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatBatchAttachHist
+
+	INSERT INTO TB_TKRECVHIST (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,total_cnt,recv_imposs_error_cnt,auto_check_error_cnt,exam_error_cnt,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1',					   '1','1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateBatchAttachHist
+
+	UPDATE TB_TKRECVHIST	SET recv_imposs_error_cnt = (recv_imposs_error_cnt+NVL('1',0))	, auto_check_error_cnt=(auto_check_error_cnt+NVL('1',0))	, exam_error_cnt=(exam_error_cnt+NVL('1',0))	, reg_prog_state_cd=DECODE(reg_prog_state_cd,'3','3','1')	, total_cnt = NVL('1',0)	, state_flag = NVL('1',0)	WHERE record_center_id='1' and recv_dtime='1' and creat_sys_cd='1' and file_div_cd='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countBatchAttachHist
+
+	SELECT COUNT(1) FROM TB_TKRECVHIST	WHERE record_center_id='1' and recv_dtime='1' and creat_sys_cd='1' and file_div_cd='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countRecordRegNo
+
+			SELECT COUNT(1) COUNT_RECORD_REG_NO			FROM TB_TKRECORD			WHERE  dtch_reg_no = '1'			and creat_reg_dtime like '1'||'%'			and creat_reg_no='1'        	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countAttachRecordRegNo
+
+			SELECT COUNT(1) COUNT_RECORD_REG_NO			FROM TB_TKRECORD			WHERE dtch_reg_no = '1'			and creat_reg_no = '1'			and creat_reg_dtime like '1'||'%'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findRegRecordTakeSeq
+
+			SELECT RECORD_TAKE_SEQ			  FROM TB_TKRECORD			 WHERE record_center_id = '1'			   AND creat_sys_cd     = '1'			   AND org_cd           = '1'			   AND creat_yyyy       = '1'			   AND creat_reg_no     = '1'			   AND dtch_reg_no      = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findClssNm
+
+			SELECT UNIT_NM			FROM TB_ZZUNIT			WHERE RECORD_CENTER_ID='1' AND UNIT_CD='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchAttachFile
+
+ 			DELETE FROM tb_tkattachfile AAA			WHERE EXISTS			 (SELECT 1 FROM tb_tkrecord BBB			    WHERE EXISTS			       (SELECT 1			        FROM tb_tkfolder CCC			        WHERE record_center_id  = '1'			        AND take_org_cd         = '1'			        AND take_yyyy           = '1'			        AND take_sno            = '1'			        AND creat_sys_cd        = '1'			        AND BBB.record_center_id = CCC.record_center_id			        AND BBB.folder_take_seq = CCC.folder_take_seq			    )			    AND BBB.record_center_id = AAA.record_center_id			    AND BBB.record_take_seq = AAA.record_take_seq			)		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchRecordSpcllist
+
+ 			DELETE FROM tb_tkspcllist AAA			WHERE EXISTS			   (SELECT 1 FROM tb_tkrecord BBB			    WHERE 			       (SELECT 1 			        FROM tb_tkfolder CCC			        WHERE record_center_id  = '1'			        AND take_org_cd         = '1'			        AND take_yyyy           = '1'			        AND take_sno            = '1'			        AND creat_sys_cd        = '1'			        AND BBB.record_center_id = CCC.record_center_id			        AND BBB.folder_take_seq = CCC.folder_take_seq			    )			    AND BBB.record_center_id = AAA.record_center_id			    AND BBB.record_take_seq = AAA.record_take_seq			)		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchFolderSpcllist
+
+ 			DELETE FROM tb_tkspcllist AAA			WHERE EXISTS			   (SELECT 1 			    FROM tb_tkfolder BBB			    WHERE record_center_id  = '1'			    AND take_org_cd         = '1'			    AND take_yyyy           = '1'			    AND take_sno            = '1'			    AND creat_sys_cd        = '1'			    AND BBB.record_center_id = AAA.record_center_id			    AND BBB.folder_take_seq = AAA.folder_take_seq			) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchRecordCreat
+
+ 			DELETE FROM tb_tkrecordcreat AAA			WHERE EXISTS						   (SELECT 1 FROM tb_tkrecord BBB			    WHERE 			    			    			       (SELECT 1 			        FROM tb_tkfolder CCC			        WHERE record_center_id  = '1'			        AND take_org_cd         = '1'			        AND take_yyyy           = '1'			        AND take_sno            = '1'			        AND creat_sys_cd        = '1'			        AND BBB.record_center_id = CCC.record_center_id			        AND BBB.folder_take_seq = CCC.folder_take_seq			    )			    AND BBB.record_center_id = AAA.record_center_id			    AND BBB.record_take_seq = AAA.record_take_seq			) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchFolderCreat
+
+ 			DELETE FROM tb_tkfoldercreat AAA			WHERE EXISTS						   (SELECT 1			    FROM tb_tkfolder BBB			   	WHERE record_center_id  = '1'			    AND take_org_cd         = '1'			    AND take_yyyy           = '1'			    AND take_sno            = '1'		      AND creat_sys_cd        = '1'		      AND BBB.record_center_id = AAA.record_center_id			    AND BBB.folder_take_seq = AAA.folder_take_seq			)		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchRecord
+
+ 			DELETE FROM tb_tkRecord AAA			WHERE EXISTS						   (SELECT 1			    FROM tb_tkfolder BBB			    WHERE record_center_id  = '1'			    AND take_org_cd         = '1'			    AND take_yyyy           = '1'			    AND take_sno            = '1'		      AND creat_sys_cd        = '1'		      AND BBB.record_center_id = AAA.record_center_id			    AND BBB.folder_take_seq = AAA.folder_take_seq			)		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchFolderTakeTakovr
+
+ 			DELETE FROM tb_tkfoldertaketakovr AAA			WHERE EXISTS						   (SELECT 1			    FROM tb_tkfolder BBB			    WHERE record_center_id  = '1'			    AND take_org_cd         = '1'			    AND take_yyyy           = '1'			    AND take_sno            = '1'		      AND creat_sys_cd        = '1'		      AND BBB.record_center_id = AAA.record_center_id			    AND BBB.folder_take_seq = AAA.folder_take_seq			)		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchFolder
+
+ 			DELETE FROM tb_tkfolder			WHERE record_center_id  = '1'		    AND take_org_cd         = '1'		    AND take_yyyy           = '1'		    AND take_sno            = '1'	        AND creat_sys_cd        = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchOrgPlan
+
+ 			DELETE FROM tb_tkorgtakeplan			WHERE record_center_id  = '1'		    AND take_org_cd         = '1'		    AND take_yyyy           = '1'		    AND take_sno            = '1'	        AND creat_sys_cd        = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchRecvHist
+
+		DELETE FROM tb_tkrecvhist		WHERE record_center_id 	= '1' 		AND recv_dtime 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : delete
+-- Query Id : deleteBatchRecvError
+
+		DELETE FROM tb_tkrecverror		WHERE record_center_id='1' 		AND recv_dtime = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findRMSBatchRegFileRegList
+
+		SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (		SELECT recv_dtime, reg_prog_state_cd, state_flag		       ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd ='TK11' and com_cd = a.reg_prog_state_cd) reg_prog_state_nm				      , tot_folder_cnt, err_folder_cnt				      , tot_record_cnt, err_record_cnt				      , tot_special_cnt, err_special_cnt				      , tot_attach_cnt, err_attach_cnt		FROM(	    			SELECT /*+ no_merge */ recv_dtime, max(reg_prog_state_cd) reg_prog_state_cd, state_flag				      , SUM(folder_tot) tot_folder_cnt, SUM(folder_err) err_folder_cnt				      , SUM(record_tot) tot_record_cnt, SUM(record_err) err_record_cnt				      , SUM(spcl_tot) tot_special_cnt, SUM(spcl_err) err_special_cnt				      , SUM(attach_tot) tot_attach_cnt, SUM(attach_err) err_attach_cnt			/*				      ,sum(folder_err)||'/'||sum(folder_tot) folder_err					  ,sum(record_err)||'/'||sum(record_tot) record_err				      ,sum(spcl_err)||'/'||sum(spcl_tot) spcl_err					  ,sum(attach_err)||'/'||sum(attach_tot) attach_err				      ,sum(folder_err) folder_err, sum(record_err) record_err				      ,sum(spcl_err) spcl_err, sum(attach_err) attach_err				      ,sum(folder_tot) folder_tot, sum(record_tot) record_tot				      ,sum(spcl_tot) spcl_tot, sum(attach_tot) attach_tot			*/		  			FROM(				SELECT recv_dtime, reg_prog_state_cd , state_flag				      ,sum(folder_err) folder_err, sum(record_err) record_err				      ,sum(spcl_err) spcl_err, sum(attach_err) attach_err				      ,sum(folder_tot) folder_tot, sum(record_tot) record_tot				      ,sum(spcl_tot) spcl_tot, sum(attach_tot) attach_tot				FROM(					select recv_dtime, reg_prog_state_cd , file_div_cd, state_flag,						   decode(file_div_cd, '1', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)						                                                    else 0 end)												 ,0) folder_err,						   decode(file_div_cd, '2', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)						                                                    else 0 end)												 ,0) record_err,						   decode(file_div_cd, '3', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)						                                                    else 0 end)												 ,0) spcl_err,						   decode(file_div_cd, '4', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)						                                                    else 0 end)												 ,0) attach_err,						   decode(file_div_cd, '1', sum(total_cnt), 0) folder_tot,						   decode(file_div_cd, '2', sum(total_cnt), 0) record_tot,						   decode(file_div_cd, '3', sum(total_cnt), 0) spcl_tot,						   decode(file_div_cd, '4', sum(total_cnt), 0) attach_tot					from tb_tkrecvhist					where record_center_id ='1'											group by recv_dtime, reg_prog_state_cd, file_div_cd , state_flag  					)				group by recv_dtime, reg_prog_state_cd, state_flag				) 			group by recv_dtime, state_flag			order by recv_dtime			) a			) B        WHERE ROWNUM <= '1'    ) C    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countRMSBatchRegFileRegList
+
+		select count(1)			FROM (				select recv_dtime				from tb_tkrecvhist  where record_center_id = '1'				group by recv_dtime			);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findBatchRegFileRegList
+
+		SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (	SELECT take_org_nm	    , recv_dtime	    , state_flag	    , reg_prog_state_nm	    , reg_prog_state_cd	    , take_org_cd        , take_yyyy        , take_sno        , creat_sys_cd	    , NVL(folder_err, 0) err_folder_cnt	    , NVL(folder_tot, 0) tot_folder_cnt	    , NVL(record_err, 0) err_record_cnt	    , NVL(record_tot, 0) tot_record_cnt	    , NVL(special_err, 0) err_special_cnt	    , NVL(special_tot, 0) tot_special_cnt	    , NVL(attach_err, 0) err_attach_cnt	    , NVL(attach_tot, 0) tot_attach_cnt	FROM (	    SELECT (SELECT B.org_nm	            FROM   TB_STORG B	            WHERE  B.record_center_id = A.record_center_id	            AND    B.org_cd = A.take_org_cd ) take_org_nm	        , A.reg_dtime recv_dtime	        , (SELECT  NVL(MAX(state_flag), '0') 	           FROM   TB_TKRECVHIST B 	           WHERE  B.record_center_id = A.record_center_id 	           AND    B.recv_dtime = A.reg_dtime ) state_flag	        , B.com_cd_nm reg_prog_state_nm	        , B.com_cd reg_prog_state_cd	        , A.take_org_cd	        , A.take_yyyy	        , A.take_sno	        , A.creat_sys_cd	        , (SELECT COUNT(1) FROM tb_tkrecverror B                WHERE B.record_center_id = A.record_center_id               AND   B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '1') folder_err	        , (SELECT total_cnt 	           FROM   TB_TKRECVHIST B 	           WHERE  B.record_center_id = A.record_center_id 	           AND    B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '1') folder_tot	        , (SELECT COUNT(1) FROM tb_tkrecverror B                WHERE B.record_center_id = A.record_center_id               AND   B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '2') record_err	        , (SELECT total_cnt 	           FROM   TB_TKRECVHIST B 	           WHERE  B.record_center_id = A.record_center_id 	           AND    B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '2') record_tot	        , (SELECT COUNT(1) FROM tb_tkrecverror B                WHERE B.record_center_id = A.record_center_id               AND   B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '3') special_err	        , (SELECT total_cnt 	           FROM   TB_TKRECVHIST B 	           WHERE  B.record_center_id = A.record_center_id 	           AND    B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '3') special_tot	        , (SELECT COUNT(1) FROM tb_tkrecverror B                WHERE B.record_center_id = A.record_center_id               AND   B.recv_dtime = A.reg_dtime 	           AND    B.file_div_cd = '4') attach_err	        , (SELECT total_cnt 	           FROM   TB_TKRECVHIST B 	           WHERE  B.record_center_id = A.record_center_id 	           AND    B.recv_dtime = A.reg_dtime 	           AND    b.file_div_cd = '4') attach_tot	    FROM TB_TKORGTAKEPLAN A, TB_ZZCOMCD B	    WHERE A.record_center_id = '1'	    AND   (A.take_state_div_cd(+) = B.com_cd AND B.com_type_cd = 'TK11')  	    AND   A.creat_sys_cd = '1'	    	    ORDER BY recv_dtime	)	) B        WHERE ROWNUM <= '1'    ) C    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : countBatchRegFileRegList
+
+		SELECT 	COUNT(1) 		FROM 	TB_TKORGTAKEPLAN 		WHERE 	RECORD_CENTER_ID = '1'		AND 	CREAT_SYS_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : insert
+-- Query Id : creatStateFlag
+
+	INSERT INTO TB_TKRECVHIST (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,total_cnt,recv_imposs_error_cnt,auto_check_error_cnt,exam_error_cnt,reg_prog_state_cd,state_flag)				VALUES('1','1','1','1','1','1','1',					   '1','1','1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateStateFlag
+
+		UPDATE 	TB_TKRECVHIST		SET   	  state_flag 		= '1'		WHERE 	record_center_id	= '1' 		AND 	recv_dtime			= '1' 		AND 	creat_sys_cd		= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateRecordInfo
+
+			UPDATE TB_TKRECORD A			SET  A.record_size = NVL((SELECT SUM(B.file_size)			                          FROM  TB_TKATTACHFILE B			                          WHERE B.record_center_id = A.record_center_id			                          AND   B.record_take_seq = A.record_take_seq),0)			   			WHERE A.record_center_id = '1'			AND   A.record_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateRecordScanFinFlag
+
+			UPDATE TB_TKRECORD			   SET scan_fin_flag = '1'			 WHERE record_center_id = '1'			   AND record_take_seq  = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : update
+-- Query Id : updateFolderInfo
+
+			UPDATE TB_TKFOLDER A			SET  A.folder_size = NVL((SELECT SUM(B.record_size)			                          FROM  TB_TKRECORD B			                          WHERE B.record_center_id = A.record_center_id			                          AND   B.folder_take_seq = A.folder_take_seq),0)			    			    , A.record_reg_cnt = NVL((SELECT LPAD(TO_CHAR(COUNT(1)),6,'0')			                              FROM  TB_TKRECORD B			                              WHERE B.record_center_id = A.record_center_id			                              AND   B.folder_take_seq = A.folder_take_seq),'000000')			    , A.EFILE_CNT='000000'				, A.erecord_flag = DECODE((SELECT SUM(DECODE (B.erecord_flag, '1', 1, 0))				                           FROM  TB_TKRECORD B				                           WHERE B.record_center_id = A.record_center_id				                           AND   B.folder_take_seq = A.folder_take_seq),0,'2'										   , DECODE((SELECT SUM(DECODE (B.erecord_flag, '2', 1, 0))					                                 FROM  TB_TKRECORD B					                                 WHERE B.record_center_id = A.record_center_id					                                 AND   B.folder_take_seq = A.folder_take_seq),0,'1','3'))			WHERE				EXISTS				(				SELECT record_center_id, folder_take_seq				FROM  TB_TKRECORD				WHERE record_center_id = '1'				AND   record_take_seq = '1'				AND record_center_id = A.record_center_id				AND folder_take_seq = A.folder_take_seq				)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : isTkFolder
+
+			SELECT COUNT(1)			  FROM TB_TKFOLDER			 WHERE RECORD_CENTER_ID='1'			   AND CREAT_SYS_CD='05'			   AND ORG_CD='1' 			   AND CREAT_YYYY='1'			   AND CLSS_ID='1'			   AND FOLDER_REG_SEQ='1'			   AND HO_NO='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : isRecord
+
+			SELECT COUNT(1)			  FROM TB_TKRECORD			 WHERE RECORD_CENTER_ID='1'			   AND CREAT_SYS_CD='05'			   AND ORG_CD='1' 			   AND CREAT_YYYY='1'			   AND CREAT_REG_NO='1'			   AND DTCH_REG_NO='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findFolderClssNo
+
+			SELECT A.FOLDER_CLSS_NO			  FROM TB_TKRECORD A			 WHERE A.record_center_id = '1'			   AND A.creat_sys_cd     = '1'			   AND A.org_cd           = '1'			   AND A.creat_yyyy       = '1'			   AND A.creat_reg_no     = '1'			   AND A.dtch_reg_no      = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : checkRecordClssCd
+
+		SELECT count(*) 		  FROM TB_ZZCOMCD		 WHERE com_type_cd = (SELECT sub_com_type_cd FROM TB_ZZCOMCD 							   WHERE com_type_cd = 'RD02' AND com_cd = '1' ) 		   AND com_cd = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml
+-- Query    : select
+-- Query Id : findTakeStateDivCd
+
+		select take_state_div_cd		from tb_tkorgtakeplan 		where creat_sys_cd = '05' 		and record_center_id = '1' 		and reg_dtime = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\batchReg\BatchReg.xml

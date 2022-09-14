@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="loginout">
+	
+	<!-- 
+		선택한 인증서로 등록된 사용자 목록을 조회한다.
+	 -->
+	<resultMap id="findPkiLoginUserId-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="user_id"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptCd" 			column="dept_cd"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="pos" 				column="pos"/>
+		<result property="rank" 			column="rank"/>
+		<result property="userPwd"			column="user_pwd"/>
+		<result property="pkiNameCheck"		column="pki_name_check"/>
+	</resultMap>
+	<select id="findPkiLoginUserId" parameterClass="rms.common.loginout.domain.UserPki" resultMap="findPkiLoginUserId-result">
+		SELECT X.USER_ID
+		     , X.USER_NM
+		     , X.DEPT_CD
+		     , X.POS
+		     , X.RANK
+		     , X.USER_PWD
+		     , (SELECT Z.dept_nm FROM TB_STDEPT Z WHERE Z.record_center_id = X.record_center_id AND Z.dept_cd = X.dept_cd) AS DEPT_NM
+		     , X.PKI_NAME_CHECK
+		FROM (SELECT A.USER_ID
+		           , A.USER_NM
+		           , A.DEPT_CD
+		           , A.POS
+		           , A.RANK
+		           , A.RECORD_CENTER_ID
+		           , A.USER_PWD
+		           , A.PKI_NAME_CHECK
+		      FROM TB_STUSER A, TB_STUSERPKI B
+		      WHERE B.PKI_UID = #pkiUid:VARCHAR#
+		      <dynamic>
+		      	<isNotEmpty prepend="AND" property="userId">
+		      		A.USER_ID = #userId:VARCHAR#
+		      	</isNotEmpty>
+		      </dynamic>
+		      AND USE_FLAG = '1'
+		      AND A.USER_ID = B.USER_ID
+		) X
+	</select>
+
+	<!-- 
+		선택된 인증서로 등록된 복수사용자 리스트를 조회한다.
+	 -->	
+	<resultMap id="findCertUserList-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="user_id"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptCd" 			column="dept_cd"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="pos" 				column="pos"/>
+		<result property="rank" 			column="rank"/>
+		<result property="userPwd"			column="user_pwd"/>
+		<result property="pkiNameCheck"		column="pki_name_check"/>
+	</resultMap>
+	<select id="findCertUserList" parameterClass="rms.common.loginout.domain.UserPki" resultMap="findCertUserList-result">
+		SELECT X.USER_ID
+		     , X.USER_NM
+		     , X.DEPT_CD
+		     , X.POS
+		     , X.RANK
+		     , X.USER_PWD
+		     , (SELECT Z.dept_nm FROM TB_STDEPT Z WHERE Z.record_center_id = X.record_center_id AND Z.dept_cd = X.dept_cd) AS DEPT_NM
+		     , X.PKI_NAME_CHECK
+		FROM (SELECT A.USER_ID
+		           , A.USER_NM
+		           , A.DEPT_CD
+		           , A.POS
+		           , A.RANK
+		           , A.RECORD_CENTER_ID
+		           , A.USER_PWD
+		           , A.PKI_NAME_CHECK
+		      FROM TB_STUSER A, TB_STUSERPKI B
+		      WHERE B.PKI_UID = #pkiUid:VARCHAR#
+		      <dynamic>
+		      	<isNotEmpty prepend="AND" property="userId">
+		      		A.USER_ID = #userId:VARCHAR#
+		      	</isNotEmpty>
+		      </dynamic>
+		      AND A.USER_ID = B.USER_ID
+		) X
+	</select>
+	
+	<!-- 
+		아이디와패스워드를 통하여 사용자정보를 조회한다.
+	 -->
+	<resultMap id="findUserPki-result" class="rms.common.loginout.domain.UserPki" >
+		<result property="userId"    column="user_id"    nullValue="" />
+		<result property="pkiUid"    column="pki_uid"    nullValue="" />
+		<result property="regDtime"  column="reg_dtime"  nullValue="" />
+		<result property="leftDtime" column="left_dtime" nullValue="" />
+		<result property="pkiType"   column="pki_type"   nullValue="" />
+	</resultMap>
+	<select id="findUserPki" parameterClass="rms.common.loginout.domain.UserPki" resultMap="findUserPki-result">
+		SELECT 	user_id, pki_uid, reg_dtime, left_dtime, pki_type
+		FROM	TB_STUSERPKI
+		WHERE	user_id = #userId:VARCHAR#
+		AND		rownum = 1
+		ORDER	BY	reg_dtime DESC
+	</select>
+	
+	<!-- 
+		새로운 사용자인증서를 등록한다.
+	 -->
+	<insert id="createUserPki" parameterClass="rms.common.loginout.domain.UserPki">
+		INSERT	INTO TB_STUSERPKI (user_id, pki_uid, reg_dtime, left_dtime, pki_type)
+		VALUES	(#userId#, #pkiUid#, #regDtime#, #leftDtime#, #pkiType#)
+	</insert>
+	
+	<!-- 
+		등록된 사용자인증서를 새로운인증서로 갱신한다.
+	 -->
+	<update id="updateUserPki" parameterClass="rms.common.loginout.domain.UserPki">
+		UPDATE	TB_STUSERPKI
+		SET		pki_uid = #pkiUid:VARCHAR#,
+				reg_dtime = #regDtime:VARCHAR#,
+				left_dtime = #leftDtime:VARCHAR#,
+				pki_type = #pkiType:VARCHAR#
+		WHERE	user_id = #userId:VARCHAR#
+	</update>
+	
+	
+	
+</sqlMap>

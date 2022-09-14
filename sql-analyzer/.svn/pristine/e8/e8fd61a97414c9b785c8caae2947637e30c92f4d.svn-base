@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : countFolderTraceForRecordChrgr
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1'  		AND B.USER_DIV ='3'				AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : findFolderTraceForRecordChrgr
+
+		SELECT A.USER_ID		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 			, B.USER_NM		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.WORK_DTIME		, A.CONN_IP		, '' TITLE		, '' ORG_NM		, '' ORG_ABBR_NM		, '' RANK		, '' USER_DIV_NM		, '' CREAT_YYYY		, '' FOLDER_ID		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1'		AND B.USER_DIV ='3'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1' 								ORDER BY A.WORK_DTIME ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : countFolderTraceForNomlUser
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1'		AND B.USER_DIV != '3' 				AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : findFolderTraceForNomlUser
+
+		SELECT A.USER_ID		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		, B.USER_NM		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.WORK_DTIME		, A.CONN_IP		, (SELECT TITLE FROM TB_RDFOLDER WHERE FOLDER_ID = A.TRGT_ID AND RECORD_CENTER_ID = '1') TITLE		, '' ORG_NM		, '' ORG_ABBR_NM		, '' RANK		, '' USER_DIV_NM		, '' CREAT_YYYY		, A.TRGT_ID FOLDER_ID		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_DIV_CD = '1' 		AND B.USER_DIV != '3'   	  	  			AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		 				ORDER BY A.WORK_DTIME ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : findTraceUser
+
+		SELECT A.USER_ID		, A.USER_NM		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = A.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.RANK		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ST01' AND USE_FLAG = '1' AND COM_CD = A.USER_DIV ) USER_DIV_NM		FROM TB_STUSER A		WHERE A.USER_ID = '1'  			AND A.RECORD_CENTER_ID = '1'				;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : countFolderTraceForRecordChrgrDetl
+
+		SELECT COUNT(1)		FROM   TB_ZZTRACE A, TB_RDFOLDER B		WHERE  A.TRGT_ID = B.FOLDER_ID AND A.TRGT_DIV_CD = '1' AND A.USER_ID = '1'			AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : findFolderTraceForRecordChrgrDetl
+
+		SELECT A.TRGT_ID AS FOLDER_ID				, '' USER_ID				, '' USER_NM				, '' DEPT_NM				, '' CONN_IP				, '' RANK				, '' USER_DIV_NM				, '' CREAT_YYYY							,A.WORK_DTIME				, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		   				,B.TITLE				,(SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = '1') ORG_NM				,(SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = '1') ORG_ABBR_NM		FROM   TB_ZZTRACE A, TB_RDFOLDER B		WHERE  A.TRGT_ID = B.FOLDER_ID AND A.TRGT_DIV_CD = '1' AND A.USER_ID = '1'			AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : countFolderTrace
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		AND C.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : findFolderTrace
+
+		SELECT A.TRGT_ID AS FOLDER_ID		, '' USER_ID		, B.USER_NM		, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.WORK_DTIME		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		, '' CONN_IP		, C.TITLE		, '' ORG_NM		, '' ORG_ABBR_NM		, '' RANK		, '' USER_DIV_NM		, C.CREAT_YYYY		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		AND C.RECORD_CENTER_ID = '1' 							ORDER BY A.WORK_DTIME	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : countFolderTraceDetl
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = '1' AND A.TRGT_DIV_CD='1'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml
+-- Query    : select
+-- Query Id : findFolderTraceDetl
+
+		SELECT '' FOLDER_ID		, '' USER_ID		, B.USER_NM		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.WORK_DTIME		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		, '' CONN_IP		, '' TITLE		, '' ORG_NM		, '' ORG_ABBR_NM		, '' RANK		, '' USER_DIV_NM		, '' CREAT_YYYY		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = '1' AND A.TRGT_DIV_CD='1'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\FolderTrace.xml

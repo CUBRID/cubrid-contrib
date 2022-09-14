@@ -1,0 +1,256 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : countAdjstTrgtPagedList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A        WHERE A.RECORD_CENTER_ID = '1'        AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')        AND A.DISUSE_EVAL_PROG_FLAG = '0'         AND                  A.ORG_CD = '1'              AND                 A.ORG_CD = '1'              AND                 		(A.CREAT_YYYY BETWEEN '1' AND '1')               	   AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 A.CREAT_SYS_CD = '1'              AND                 NVL(A.ADJST_FLAG,'0') = '1'              AND                 A.ERECORD_FLAG = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstTrgtPagedList
+
+		SELECT G.folder_id		      ,G.erecord_flag		      ,G.org_cd		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = G.record_center_id AND Z.org_cd = G.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = G.record_center_id AND Z.org_cd = G.org_cd) AS org_abbr_nm		      ,G.clss_nm		      ,G.title		      ,G.creat_yyyy		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = DECODE(G.presv_term_cd, '20', '25', G.presv_term_cd)) AS presv_term_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = G.creat_sys_cd) AS creat_sys_nm		      ,NVL(G.adjst_flag, '0') AS adjst_flag		      ,CASE WHEN NVL(G.adjst_flag, 0) = '0' THEN  '미정리' WHEN G.adjst_flag = '1' THEN '정리' END  AS adjst_flag_nm		FROM (		    SELECT F.*		    FROM(		        SELECT ROWNUM AS rnum		              ,E.*		        FROM (		            SELECT A.*		            FROM TB_RDFOLDER A		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND A.DISUSE_EVAL_PROG_FLAG = '0'		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND  		                		(A.CREAT_YYYY BETWEEN '1' AND '1')		                	   AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    A.CREAT_SYS_CD = '1'		                  AND 		                    NVL(A.ADJST_FLAG,'0') = '1'		                  AND 			                A.ERECORD_FLAG = '1'			              		            ORDER BY A.RECORD_CENTER_ID, A.TITLE		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstFolder
+
+		SELECT ORG_TITLE			  ,CORCT_TITLE			  ,ADJST_DESCR			  ,PRESV_METHOD_CD			  ,PRESV_TYPE_CD		FROM  TB_RDFOLDER		WHERE FOLDER_ID = '1'		AND   RECORD_CENTER_ID = '1' AND 			ADJST_FLAG  = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstFolderKeywd
+
+		SELECT KEYWD		FROM  TB_RDFOLDERKEYWD		WHERE FOLDER_ID = '1'		AND   RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : delete
+-- Query Id : deleteAdjstFolderKey
+
+	  	DELETE FROM TB_RDFOLDERKEYWD		 WHERE FOLDER_ID = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : insert
+-- Query Id : createAdjstFolderKey
+
+		INSERT INTO TB_RDFOLDERKEYWD (RECORD_CENTER_ID, FOLDER_ID,KEYWD_LEVL,KEYWD)		VALUES ( '1', '1'		       , (SELECT TRIM(TO_CHAR(NVL(MAX(KEYWD_LEVL),0) + 1, '0'))		  		    FROM TB_RDFOLDERKEYWD		 		   WHERE FOLDER_ID = '1'		 		     AND RECORD_CENTER_ID = '1')		 	   , '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : update
+-- Query Id : updateAdjstFolder
+
+		UPDATE TB_RDFOLDER		   SET ADJST_DESCR = '1'		    		     	, TITLE = '1'		     		     	, CORCT_TITLE = '1' 		     , PRESV_METHOD_CD = '1'		     		     , ADJST_DTIME = (Select to_char(sys_datetime,'YYYYMMDDHHMMSS') from dual)		     , ADJST_FLAG  = '1'		 WHERE FOLDER_ID = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : update
+-- Query Id : updateFolderByAdjst
+
+		UPDATE	tb_rdfolder		SET		presv_method_cd = '1' ,			presv_type_cd = '0',			mf_pic_state_cd = '0',			mf_req_type_cd = '0'		 		WHERE	record_center_id = '1'		AND		folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : countAdjstRecordPagedList
+
+		SELECT COUNT(1)        FROM TB_RDRECORD A        WHERE A.RECORD_CENTER_ID = '1'        AND A.FOLDER_ID = '1'        AND A.OPER_READ_RANGE_CD != '03'        AND A.OPER_READ_RANGE_CD IS NOT NULL AND             A.ERECORD_FLAG = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstRecordPagedList
+
+		SELECT D.record_id		      ,D.record_center_id		      ,D.org_title		      ,D.title		      ,D.erecord_flag		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD03' AND Z.com_cd = D.record_detl_type_cd) AS record_detl_type_nm		      ,SUBSTR(D.creat_reg_dtime,0,8) AS creat_reg_dtime		      ,D.duty_chrgr_nm AS agent_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD23' AND Z.com_cd = D.erecord_flag) AS erecord_flag_nm		      ,D.oper_read_range_cd		FROM (		    SELECT C.*		    FROM(		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT *		            FROM TB_RDRECORD A		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.FOLDER_ID = '1'		            AND A.OPER_READ_RANGE_CD != '03'		            AND A.OPER_READ_RANGE_CD IS NOT NULL AND 		                A.ERECORD_FLAG = '1'		             		            ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstRecord
+
+		SELECT ORG_TITLE, CORCT_TITLE, ADJST_DESCR, RECORD_PAGE_CNT		  FROM TB_RDRECORD		 WHERE RECORD_ID = '1'		   AND RECORD_CENTER_ID = '1' AND 			CORCT_TITLE  = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstRecordKeywd
+
+		SELECT KEYWD		  FROM TB_RDRECORDKEYWD		 WHERE RECORD_ID = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : delete
+-- Query Id : deleteAdjstRecordKey
+
+	  	DELETE FROM TB_RDRECORDKEYWD		 WHERE RECORD_ID = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : insert
+-- Query Id : createAdjstRecordKey
+
+		INSERT INTO TB_RDRECORDKEYWD (RECORD_CENTER_ID, RECORD_ID,KEYWD_LEVL,KEYWD)		VALUES ('1', '1'		       , (SELECT TRIM(TO_CHAR(NVL(MAX(KEYWD_LEVL),0) + 1, '0'))		  		    FROM TB_RDRECORDKEYWD		 		   WHERE RECORD_ID = '1'		 		     AND RECORD_CENTER_ID = '1')		 	   , '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : insert
+-- Query Id : createAdjstRecordHistory
+
+	INSERT 		  INTO TB_RDRECORDADHIST 		       (SELECT RECORD_CENTER_ID, 		              RECORD_ID, 		              (SELECT NVL(MAX(CHNG_HIST_NO)+1,1) 		                FROM TB_RDRECORDADHIST 		               WHERE RECORD_CENTER_ID='1'		                     AND RECORD_ID= '1'		              ), 		              TITLE,  				      	'1', 				       		              ADJST_DESCR, 		              '1', 		              RECORD_PAGE_CNT, 		              '1', 		              TO_CHAR(sys_datetime,'YYYYMMDDHHMISS') 		         FROM TB_RDRECORD 		        WHERE RECORD_CENTER_ID='1'		              AND RECORD_ID= '1' 		       )			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : update
+-- Query Id : updateAdjstRecord
+
+		UPDATE TB_RDRECORD		   SET ADJST_DESCR = '1'		     		     		, CORCT_TITLE = '1'					, TITLE = '1'  		     , RECORD_PAGE_CNT = '1'		 WHERE RECORD_ID = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : update
+-- Query Id : updateAdjstFolderPageCount
+
+		UPDATE TB_RDFOLDER A		SET RECORD_TOT_PAGE_CNT = (SELECT SUM(RECORD_PAGE_CNT) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID)		WHERE RECORD_CENTER_ID = '1'		AND FOLDER_ID = (SELECT FOLDER_ID 		         		 FROM TB_RDRECORD 		        		 WHERE RECORD_CENTER_ID = '1' 		              	 AND RECORD_ID = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : countAdjstDamgPagedList
+
+        SELECT COUNT(*) 	  	FROM TB_RDFOLDER A	  		,TB_RDRECORD B	 	WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID	    AND A.FOLDER_ID = B.FOLDER_ID 	    AND A.FOLDER_KEEP_STATE_CD IN ('01', '04') 	    AND B.ERECORD_FLAG ='2'  		AND A.RECORD_CENTER_ID = '1' AND  				A.ORG_CD = '1'			  AND 				A.ORG_CD = '1'			  AND 				(A.CREAT_YYYY BETWEEN '1' AND '1')			  AND 				(B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')			  AND 				(A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')			  AND 				A.CREAT_SYS_CD = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstDamgPagedList
+
+		SELECT G.*		FROM (				SELECT F.*			FROM (				SELECT ROWNUM AS rnum				  	  ,E.*				FROM (		  					SELECT B.RECORD_ID 				     	  ,(SELECT ORG_NM FROM TB_STORG D WHERE D.ORG_CD = A.ORG_CD AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS ORG_NM				     	  ,(SELECT ORG_ABBR_NM FROM TB_STORG D WHERE D.ORG_CD = A.ORG_CD AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS ORG_ABBR_NM				     	  ,A.CLSS_NM				     	  ,B.TITLE				     	  ,A.CREAT_YYYY				     	  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD D WHERE DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = D.COM_CD AND D.COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM				     	  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD D WHERE A.CREAT_SYS_CD = D.COM_CD AND D.COM_TYPE_CD = 'RD17') AS CREAT_SYS_NM				     	  ,(SELECT COUNT(*) FROM TB_RDRECORDDAMGLOSS Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.RECORD_ID = B.RECORD_ID AND PROC_CASE = '1' ) AS DAMG_CNT				     	  ,(SELECT COUNT(*) FROM TB_RDRECORDDAMGLOSS Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.RECORD_ID = B.RECORD_ID AND PROC_CASE = '2' ) AS RESTR_CNT				     	  ,(SELECT COUNT(*) FROM TB_RDRECORDDAMGLOSS Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.RECORD_ID = B.RECORD_ID AND PROC_CASE = '3' ) AS LOSE_CNT				     	  ,(SELECT COUNT(*) FROM TB_RDRECORDDAMGLOSS Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.RECORD_ID = B.RECORD_ID AND PROC_CASE = '1' AND DAMG_HANDL_CD = '2' ) AS DAMG_IGWAN_CNT					FROM TB_RDFOLDER A						,TB_RDRECORD B					WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID					AND   A.FOLDER_ID = B.FOLDER_ID				 	AND   A.FOLDER_KEEP_STATE_CD IN ('01', '04') 				 	AND   B.ERECORD_FLAG ='2'  				 	AND   A.RECORD_CENTER_ID = '1' AND  					A.ORG_CD = '1'				  AND 					A.ORG_CD = '1'				  AND 					(A.CREAT_YYYY BETWEEN '1' AND '1')				  AND 					(B.TITLE LIKE '1' OR B.SUB_TITLE LIKE '1' OR B.CORCT_TITLE LIKE '1')				  AND 					(A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')				  AND 					A.CREAT_SYS_CD = '1'				  					ORDER BY A.ORG_CD, A.CLSS_ID, B.TITLE				) E				WHERE ROWNUM <= '1'    		) F    		WHERE F.rnum >= '1'		) G 		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : countAdjstDamgRslt
+
+		SELECT COUNT(1) FROM TB_RDRECORD_RESTORE WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : insert
+-- Query Id : createAdjstDamgRslt
+
+		INSERT INTO TB_RDRECORD_RESTORE (			 RECORD_CENTER_ID, RECORD_ID, DAMG_FLAG, DAMG_CONT, DAMG_HANDL_CD			,DAMG_HANDL_RSLT, RESTR_HANDL_YMD, RESTR_USER_INFO, REG_DTIME, REQUEST_CORP_CD			,REQUEST_CORP_NM, REQUEST_ORG_CD, REQUEST_ORG_NM, REQUEST_USER_ID, REQUEST_USER_NM			,REQUEST_USER_POS_RANK_NM 		) (SELECT '1', '1', '1', '1', '1'			   	 ,'1', '1', '1'				 				 ,TO_CHAR(sys_datetime,'yyyymmddhh24miss')				 , REQUEST_CORP_CD			   	 ,REQUEST_CORP_NM, REQUEST_ORG_CD, REQUEST_ORG_NM, REQUEST_USER_ID, REQUEST_USER_NM			   	 ,REQUEST_USER_POS_RANK_NM 		   FROM (SELECT HUPPER_ORG_CD AS REQUEST_CORP_CD          			   ,(SELECT ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.ORG_CD = B.HUPPER_ORG_CD) AS REQUEST_CORP_NM          			   ,DEPT_CD AS REQUEST_ORG_CD          			   ,ORG_NM AS REQUEST_ORG_NM          			   ,USER_ID AS REQUEST_USER_ID          			   ,USER_NM AS REQUEST_USER_NM          			   ,(CASE WHEN POS IS NOT NULL AND RANK IS NOT NULL THEN POS||'/'||RANK					          WHEN POS IS NOT NULL AND RANK IS NULL THEN POS					          WHEN POS IS NULL AND RANK IS NOT NULL THEN RANK					          ELSE ''					     END) AS REQUEST_USER_POS_RANK_NM                  FROM TB_STUSER A, TB_STORG B                  WHERE A.DEPT_CD = B.ORG_CD 		         AND USER_ID = '1') 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : update
+-- Query Id : updateAdjstDamgRslt
+
+		UPDATE TB_RDRECORD_RESTORE		SET DAMG_FLAG 		 	= '1'		      ,DAMG_CONT 	 	= '1'		      ,DAMG_HANDL_CD 	= '1'		      ,DAMG_HANDL_RSLT 	= '1'		      ,RESTR_HANDL_YMD 	= '1'		      ,RESTR_USER_INFO 	= '1'		      		      ,REG_DTIME 		= TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID 	= '1'		AND RECORD_ID 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstDamgStateInfo
+
+		SELECT (SELECT ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.ORG_CD = A.ORG_CD) AS ORG_NM			  ,A.TITLE			  ,B.DAMG_FLAG			  ,B.DAMG_HANDL_CD			  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD33' AND C.COM_CD = B.DAMG_HANDL_CD ) AS DAMG_HANDL_NM			  ,B.DAMG_CONT		FROM TB_RDRECORD A, TB_RDRECORD_RESTORE B 		WHERE A.RECORD_CENTER_ID='1'		AND A.RECORD_ID='1' 		AND A.RECORD_CENTER_ID=B.RECORD_CENTER_ID		AND A.RECORD_ID=B.RECORD_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstDamgRsltInfo
+
+		SELECT (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.ORG_CD = A.ORG_CD) AS ORG_NM			  ,TITLE			  ,NVL(DAMG_FLAG,0)AS DAMG_FLAG			  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD33' AND COM_CD = DAMG_HANDL_CD ) AS DAMG_HANDL_NM			  ,DAMG_CONT			  ,DAMG_HANDL_CD			  ,DAMG_HANDL_RSLT			  ,RESTR_USER_INFO			  ,RESTR_HANDL_YMD 		FROM TB_RDRECORD A, TB_RDRECORD_RESTORE B 		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+) 		AND A.RECORD_ID=B.RECORD_ID(+) 		AND A.RECORD_CENTER_ID='1'		AND A.RECORD_ID='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstDamgInfo
+
+	SELECT *	FROM (                        SELECT ( SELECT C.ORG_NM FROM TB_STORG C , TB_RDRECORD A WHERE C.record_center_id = A.record_id AND C.ORG_CD = A.ORG_CD) AS ORG_NM, 			       A.TITLE, 			       B.PROC_CONT,			       A.RECORD_ID,			       NVL(B.PROC_SNO,'0') AS PROC_SNO,			       DAMG_HANDL_CD,			       NVL(C.MAX_PROC_SNO,'0') AS MAX_PROC_SNO,			       B.RESTR_USER_INFO,			       B.PROC_HANDL_YMD   			FROM TB_RDRECORD A, 			     (SELECT * 			      FROM TB_RDRECORDDAMGLOSS 			      WHERE RECORD_CENTER_ID='1' 			      AND RECORD_ID='1' 			      AND PROC_CASE = '1'					      			      ) B ,			      (SELECT RECORD_CENTER_ID, RECORD_ID,MAX(PROC_SNO) AS MAX_PROC_SNO			      FROM TB_RDRECORDDAMGLOSS 			      WHERE RECORD_CENTER_ID='1' 			      AND RECORD_ID='1' 			      AND PROC_CASE = '1'				      GROUP BY RECORD_CENTER_ID, RECORD_ID				      			      ) C		    WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+) 		    AND A.RECORD_ID=B.RECORD_ID(+) 		    AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)            AND A.RECORD_ID = C.RECORD_ID(+)		    AND A.RECORD_CENTER_ID='1'	        AND A.RECORD_ID='1'		    ORDER BY PROC_SNO DESC 		  )	WHERE ROWNUM = 1;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : countAdjstLabelPagedList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A        WHERE A.RECORD_CENTER_ID = '1'        AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')        AND A.ERECORD_FLAG IN ('2','3')         AND                  A.ORG_CD = '1'              AND                 A.ORG_CD = '1'              AND                 		(A.CREAT_YYYY BETWEEN '1' AND '1')               	   AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 A.CREAT_SYS_CD = '1'              AND                 (SUBSTR(A.REG_DTIME,1,8) BETWEEN '1' AND '1')              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findAdjstLabelPagedList
+
+		SELECT D.org_cd		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_abbr_nm		      ,D.creat_yyyy		      ,D.title		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = DECODE(D.presv_term_cd, '20', '25', D.presv_term_cd)) AS presv_term_nm		      ,D.folder_id		      ,D.take_yyyy||'-'||TRIM(TO_CHAR(D.take_yyyy_sno, '0000000000')) AS mng_no		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm		      ,D.folder_type_div_cd		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT A.*		            FROM TB_RDFOLDER A		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND A.ERECORD_FLAG IN ('2','3')		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND  		                		(A.CREAT_YYYY BETWEEN '1' AND '1')		                	   AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    A.CREAT_SYS_CD = '1'		                  AND 		                    (SUBSTR(A.REG_DTIME,1,8) BETWEEN '1' AND '1')		                  		            ORDER BY A.ORG_CD, A.CLSS_ID, A.TITLE		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocCoverLabel
+
+		SELECT A.CREAT_SYS_CD			 , A.FOLDER_ID		     , A.TITLE			 , A.ORG_CD			 , A.CLSS_ID			 , A.FOLDER_REG_SEQ			 , A.CREAT_YYYY			 , A.HO_NO			 , SUBSTR(A.FOLDER_CLOSE_DTIME,1,4) END_YYYY			 , (SELECT B.ORG_NM				  FROM TB_STORG B				 WHERE A.ORG_CD = B.ORG_CD				   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID) ORG_NM			 , (SELECT COUNT(HO_NO)		      FROM TB_RDFOLDER		      WHERE CREAT_SYS_CD = A.CREAT_SYS_CD		      AND ORG_CD = A.ORG_CD		      AND CLSS_ID = A.CLSS_ID		      AND CREAT_YYYY = A.CREAT_YYYY		      AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) HO_NO_CNT		FROM TB_RDFOLDER A		WHERE A.RECORD_CENTER_ID = '1'		AND A.FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocListLabelTypeList
+
+		SELECT A.FOLDER_TYPE_DIV_CD		FROM TB_RDFOLDER A		WHERE A.RECORD_CENTER_ID = '1'		AND A.FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocListLabelHead
+
+		SELECT FOLDER_ID		      ,org_cd		      ,clss_id		      ,creat_yyyy		      ,folder_reg_seq		      ,ho_no		      ,TITLE			  ,CREAT_YYYY			  ,FOLDER_TYPE_DIV_CD		FROM TB_RDFOLDER		WHERE RECORD_CENTER_ID = '1'		AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocListLabel_Type1List
+
+		SELECT to_char(to_date(A.CREAT_REG_DTIME,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') CREAT_REG_DTIME		     , DECODE(A.CREAT_SYS_CD,'02',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              '05',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||SUBSTR(A.CREAT_REG_NO,8,6))		              RECORD_ID			 , A.TITLE			 , A.RECVER			 , A.SENDER			 , A.RECORD_PAGE_CNT			 , DECODE(A.ERECORD_FLAG, '1','전자','2','비전자','') ERECORD_FLAG		  FROM TB_RDRECORD A		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.FOLDER_ID = '1'		ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocListLabel_Type2List
+
+		SELECT DECODE(A.CREAT_SYS_CD,'02',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              '05',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||SUBSTR(A.CREAT_REG_NO,8,6))		              RECORD_ID		     , A.TITLE			 , A.AUDVIS_RECORD_SUMRY			 , B.COM_CD_NM		  FROM TB_RDRECORD A, TB_ZZCOMCD B		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.FOLDER_ID = '1'		   AND (A.AUDVIS_RECORD_TYPE = B.COM_CD and B.COM_TYPE_CD = 'RD04')		ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocListLabel_Type3List
+
+		SELECT DECODE(A.CREAT_SYS_CD,'02',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              '05',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||SUBSTR(A.CREAT_REG_NO,8,6))		              RECORD_ID		     , A.TITLE			 , A.AUDVIS_RECORD_SUMRY		  FROM TB_RDRECORD A		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.FOLDER_ID = '1'		ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : select
+-- Query Id : findPrintDocListLabel_Type4List
+
+		SELECT DECODE(A.CREAT_SYS_CD,'02',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              '05',A.CREAT_SYS_CD||'-'||SUBSTR(A.CREAT_REG_NO,0,7)||'-'||SUBSTR(A.CREAT_REG_NO,8,6),		              A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||SUBSTR(A.CREAT_REG_NO,8,6))		              RECORD_ID		     , A.TITLE			 , A.RECORD_PAGE_CNT			 , DECODE(A.ERECORD_FLAG, '1','전자','2','비전자','')	 ERECORD_FLAG		  FROM TB_RDRECORD A		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.FOLDER_ID = '1'		ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : update
+-- Query Id : updateAdjstLoseRslt
+
+		UPDATE TB_RDRECORDDAMGLOSS		   SET DAMG_HANDL_CD = '1'		     , PROC_CONT = '1'		     , RESTR_USER_INFO = '1'		     , PROC_HANDL_YMD = '1'		     , PROC_CORP_CD = (SELECT HUPPER_ORG_CD FROM TB_STUSER A,TB_STORG B WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND A.DEPT_CD = B.ORG_CD AND USER_ID = '1')		     , PROC_CORP_NM = (SELECT (SELECT FULL_ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.ORG_CD = B.HUPPER_ORG_CD ) AS PROC_CORP_NM FROM TB_STUSER A, TB_STORG B WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND A.DEPT_CD = B.ORG_CD AND USER_ID = '1')		     , PROC_ORG_CD = (SELECT DEPT_CD FROM TB_STUSER A,TB_STORG B WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND A.DEPT_CD = B.ORG_CD AND USER_ID = '1')		     , PROC_ORG_NM = (SELECT FULL_ORG_NM FROM TB_STUSER A,TB_STORG B WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND A.DEPT_CD = B.ORG_CD AND USER_ID = '1')		     , PROC_USER_ID = '1'		     , PROC_USER_NM = (SELECT USER_NM FROM TB_STUSER A,TB_STORG B WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND A.DEPT_CD = B.ORG_CD AND USER_ID = '1')		     , PROC_USER_POS_RANK_NM =  (SELECT  (CASE WHEN POS IS NULL AND RANK IS NULL THEN ''                                  WHEN POS IS NULL AND RANK IS NOT NULL THEN RANK                                  WHEN POS IS NOT NULL AND RANK IS NULL THEN POS                                  ELSE POS||'/'||RANK                             END) FROM TB_STUSER A,TB_STORG B WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND A.DEPT_CD = B.ORG_CD AND USER_ID = '1')		 WHERE RECORD_ID = '1'		   AND RECORD_CENTER_ID = '1'		   AND PROC_CASE = '1'		   AND PROC_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml
+-- Query    : insert
+-- Query Id : InsertAdjstDamgRslt
+
+		INSERT INTO TB_RDRECORDDAMGLOSS		(			RECORD_CENTER_ID,			RECORD_ID,			PROC_CASE,			PROC_SNO,			DAMG_HANDL_CD,			PROC_CONT,			RESTR_USER_INFO,			PROC_HANDL_YMD,			REG_DTIME,			PROC_CORP_CD,			PROC_CORP_NM,			PROC_ORG_CD,			PROC_ORG_NM,			PROC_USER_ID,			PROC_USER_NM,			PROC_USER_POS_RANK_NM		)        (SELECT '1',               '1',               '1',               ( SELECT NVL(MAX(PROC_SNO), 0) + 1 FROM TB_RDRECORDDAMGLOSS WHERE RECORD_CENTER_ID = '1'	AND RECORD_ID = '1' AND PROC_CASE = '1'),               '1',               '1',              '1',               '1',                            TO_CHAR(sys_datetime,'yyyymmddhh24miss'),               PROC_CORP_CD,			  PROC_CORP_NM,			  PROC_ORG_CD,			  PROC_ORG_NM,			  PROC_USER_ID,			  PROC_USER_NM,			  PROC_USER_POS_RANK_NM         FROM               (SELECT HUPPER_ORG_CD AS PROC_CORP_CD,                      (SELECT FULL_ORG_NM                        FROM TB_STORG C                       WHERE C.RECORD_CENTER_ID = B.RECORD_CENTER_ID                        AND C.ORG_CD = B.HUPPER_ORG_CD                      ) AS PROC_CORP_NM,                      DEPT_CD AS PROC_ORG_CD,                      FULL_ORG_NM AS PROC_ORG_NM,                      USER_ID AS PROC_USER_ID,                      USER_NM AS PROC_USER_NM,                      (CASE WHEN POS IS NULL AND RANK IS NULL THEN ''                                  WHEN POS IS NULL AND RANK IS NOT NULL THEN RANK                                  WHEN POS IS NOT NULL AND RANK IS NULL THEN POS                                  ELSE POS||'/'||RANK                             END) AS PROC_USER_POS_RANK_NM                 FROM TB_STUSER A,                      TB_STORG B                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                     AND A.DEPT_CD = B.ORG_CD                      AND USER_ID = '1'               )        )	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\adjst\Adjst.xml

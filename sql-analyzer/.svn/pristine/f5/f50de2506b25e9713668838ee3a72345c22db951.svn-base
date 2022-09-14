@@ -1,0 +1,124 @@
+***** Not Null Constraints Error Message Collection *****
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+id  : createClssDetl
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : insert
+-- Query Id : createClssDetl
+
+		INSERT INTO TB_ZZCLSS			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO,CLSS_DESCR,REG_DTIME)		VALUES		(concat('1', LPAD(TB_ZZCLSS_SQ01.NEXTVAL,6,'0')),'1','1',			(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD='1'),(SELECT NVL(MAX(SORT_SNO)+1,1) FROM TB_ZZCLSS),			replace(replace('1', chr(10), ' '), chr(13), ' '),			TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		);
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+id  : createBisClssRegApply
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\ClssReg.xml
+-- Query    : insert
+-- Query Id : createBisClssRegApply
+
+		INSERT INTO TB_ZZCLSS			(CLSS_CD,UPPER_CLSS_CD,CLSS_NM,LEVL,SORT_SNO,CLSS_DESCR,REG_DTIME)		VALUES		(			concat('1', LPAD(TB_ZZCLSS_SQ01.NEXTVAL,6,'0')),			'1',			'1',			(SELECT LEVL+1 FROM TB_ZZCLSS WHERE CLSS_CD='1'),			(SELECT NVL(MAX(SORT_SNO)+1,1) FROM TB_ZZCLSS),			'1',			TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')					)	;
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OpenMng.xml
+id  : createOpenMngHist
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OpenMng.xml
+-- Query    : insert
+-- Query Id : createOpenMngHist
+
+		INSERT INTO TB_RDOPENHIST (			RECORD_CENTER_ID		   ,RECORD_ID		   ,CHNG_HIST_NO		   ,OPEN_DIV_CD_BEF		   ,OPEN_DIV_CD_AFT		   ,CHNG_YMD		   ,CHNG_RSN		   ,CHNG_USER_ID		   ,OPEN_GRADE_BEF		   ,OPEN_GRADE_AFT		   ,OPEN_LIMIT_PART_BEF		   ,OPEN_LIMIT_PART_AFT		   ,PART_OPEN_RSN_BEF		   ,PART_OPEN_RSN_AFT		   ,CHNG_ORG_CD		) VALUES (				'1'			   ,'1'		       ,(SELECT NVL(MAX(CHNG_HIST_NO),0) + 1 FROM TB_RDOPENHIST WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1')		       ,(SELECT OPEN_DIV_CD  FROM TB_RDRECORD WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1')			   ,'1'			   ,'1'			   ,'1'			   ,'1'			   ,(SELECT OPEN_GRADE FROM TB_RDRECORD WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1') 			   ,NVL('1', 'NNNNNNNN')			   ,(SELECT OPEN_LIMIT_PART FROM TB_RDRECORD WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1')			   ,'1'			   ,(SELECT PART_OPEN_RSN FROM TB_RDRECORD WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1')			   ,'1'			   ,'1' 		   	)	;
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+id  : createOrgChngHist
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : insert
+-- Query Id : createOrgChngHist
+
+		INSERT INTO TB_STORGHIST (			CHNG_BEF_ORG_CD, CHNG_AFT_ORG_CD, CHNG_BEF_ORG_NM, CHNG_AFT_ORG_NM, REG_DTIME		)		VALUES (			'1',						'1',			(SELECT org_abbr_nm FROM tb_storg WHERE record_center_id = '1' AND org_cd = '1'),			(SELECT org_abbr_nm FROM tb_storg WHERE record_center_id = '1' AND org_cd = '1'),			to_char(SYSDATE, 'YYYYMMDD')		);
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+id  : createUserMngDetl
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : insert
+-- Query Id : createUserMngDetl
+
+		INSERT INTO TB_STUSER (			record_center_id, user_id, dept_cd, user_div, user_nm, login_user_id, user_pwd, pos, rank, work_flag, tel_no, addr, resid_no, use_flag, reg_dtime, pki_name_check, sso_flag, menu_grant_grp_cd		) VALUES (			(SELECT record_center_id FROM TB_STDEPT WHERE dept_cd = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, 'Y'			, '1'			, '1'		)	;
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+id  : createUserBatchReg
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\User.xml
+-- Query    : insert
+-- Query Id : createUserBatchReg
+
+		INSERT INTO TB_STUSER (				  user_id, record_center_id, dept_cd, user_div, user_nm				, login_user_id, user_pwd, pos, rank, work_flag				, use_flag, sso_flag, reg_dtime, menu_grant_grp_cd		) VALUES (			  '1'			, (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd='1')			, '1', '1', '1'			, '1', '1', '1', '1', '1'						, '1', '3', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, (SELECT menu_grant_grp_cd FROM TB_STMENUGRANTGRP WHERE record_center_id = (SELECT record_center_id FROM TB_STDEPT WHERE dept_cd='1') AND default_grant_div = '1')		)	;
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\prod\ProdGroup.xml
+id  : insertProdPage
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\prod\ProdGroup.xml
+-- Query    : insert
+-- Query Id : insertProdPage
+
+		INSERT INTO TB_CRATTACHFILE		(			record_center_id, 	record_recv_seq,		reg_seq,              	org_cd,   		creat_yyyy,                       			creat_reg_no, 		attach_file_seq,     	attach_file_page_cnt,  	reg_dtime,		doc_type_cd,			file_size		) VALUES (			'1', 				(SELECT record_recv_seq			 FROM TB_CRRECORD			 WHERE record_center_id='1'			 AND   creat_sys_cd = '02'			 AND   org_cd = '1'			 AND   creat_yyyy = '1'			 AND   creat_reg_no = '1'			 AND   dtch_reg_no = '00'),			(SELECT TO_NUMBER(NVL(MAX(reg_seq), 0)+1)			 FROM TB_CRATTACHFILE			 WHERE record_center_id = '1'			 AND record_recv_seq = ( SELECT record_recv_seq									 FROM TB_CRRECORD									 WHERE record_center_id='1'									 AND   creat_sys_cd = '02'									 AND   org_cd = '1'									 AND   creat_yyyy = '1'									 AND   creat_reg_no = '1'									 AND   dtch_reg_no = '00') ),			'1',			'1',			'1',			'1',			'1',						TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),			'1',			'1'		);
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\prod\ProdGroup.xml
+id  : insertProdGfileHist
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\prod\ProdGroup.xml
+-- Query    : insert
+-- Query Id : insertProdGfileHist
+
+		INSERT INTO TB_CRFOLDERCHNGHIST		(			record_center_id,			folder_recv_seq,            chng_hist_no,       org_cd,       	clss_id,      			creat_yyyy,  				folder_reg_seq,             ho_no,          	title_bef,     	title_aft,                  			folder_type_div_cd_bef,  	folder_type_div_cd_aft,		chng_ymd,  			chng_rsn,  		chng_user_nm, 			reg_dtime		) VALUES (			'1',			(SELECT folder_recv_seq			 FROM  TB_CRFOLDER			 WHERE record_center_id = '1'			 AND   creat_sys_cd = '02'			 AND   org_cd = '1'			 AND   clss_id = '1'			 AND   creat_yyyy = '1'			 AND   folder_reg_seq = '1'			 AND   ho_no = '1' ),			(SELECT TO_NUMBER(NVL(MAX(chng_hist_no), 0)+1) chngHistNo 			 FROM  TB_CRFOLDERCHNGHIST			 WHERE record_center_id = '1'			 AND folder_recv_seq = ( SELECT folder_recv_seq									 FROM  TB_CRFOLDER									 WHERE record_center_id = '1'									 AND   creat_sys_cd = '02'									 AND   org_cd = '1'									 AND   clss_id = '1'									 AND   creat_yyyy = '1'									 AND   folder_reg_seq = '1'									 AND   ho_no = '1' ) ),			'1',			'1',      			'1',			'1',			'1',			'1',			'1',  			'1',			'1',			'1',			'1',			'1', 						TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\prod\ProdGroup.xml
+id  : insertProdDocHist
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\prod\ProdGroup.xml
+-- Query    : insert
+-- Query Id : insertProdDocHist
+
+		INSERT INTO TB_CRRECORDCHNGHIST		(			record_center_id,		record_recv_seq,    	chng_hist_no,    		org_cd,             	creat_yyyy,               			creat_reg_no,     		dtch_reg_no,    		creat_reg_ymd_bef,  	creat_reg_ymd_aft,	 	title_bef,			title_aft,              page_cnt_bef,   		page_cnt_aft,           aprov_pos_rank_bef,		aprov_pos_rank_aft,			duty_chrgr_bef,  		duty_chrgr_aft,  		enforc_ymd_bef,       	enforc_ymd_aft,			recver_bef,			recver_aft, 			chng_ymd,   			chng_rsn,         		chng_user_nm,			reg_dtime                   		) VALUES (			'1',			(SELECT record_recv_seq			 FROM  TB_CRRECORD			 WHERE record_center_id = '1'			 AND   creat_sys_cd = '02'			 AND   org_cd = '1'			 AND   creat_reg_no = '1'			 AND   creat_yyyy = '1'			 AND   dtch_reg_no = '1' ),			(SELECT TO_NUMBER(NVL(MAX(chng_hist_no), 0)+1) chngHistNo 			 FROM  TB_CRRECORDCHNGHIST			 WHERE record_center_id = '1'			 AND record_recv_seq = ( SELECT record_recv_seq									 FROM  TB_CRRECORD									 WHERE record_center_id = '1'									 AND   creat_sys_cd = '02'									 AND   org_cd = '1'									 AND   creat_reg_no = '1'									 AND   creat_yyyy = '1'									 AND   dtch_reg_no = '1' ) ),			'1',          	'1',             			'1',  		'1',  		'1', 	'1',	  	'1',			'1',         '1',  		'1',       '1',		'1',			'1', 	'1', 	'1',     '1',  		'1', 			'1',		'1',			'1',      	'1'						,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')                                               		);
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+id  : insertTakeDoc
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeDoc
+
+		INSERT INTO TB_TKRECORD		(			record_take_seq,	folder_take_seq,            creat_sys_cd,         	org_cd,                     title, 			record_reg_div_cd,  record_size,                read_range,            	open_div_cd,                creat_yyyy, 			reg_dtime,          creat_reg_dtime,            creat_reg_no,         	dtch_reg_no,                audvis_record_type,			record_page_cnt,    aprov_pos_rank_nm,          duty_chrgr_nm,       	enforc_ymd,                 creat_org_reg_no, 			erecord_flag,       old_record_creat_org_nm,	old_record_docno, 		old_record_presv_term,		open_limit_part,			recver,             sender,                     doc_distr_no,          	folder_clss_no,             spcl_record_type,			new_div_cd,         chng_flag,                  rjct_flag,				doc_no,    					creat_sys_record_id, 			record_center_id,	open_grade,					audvis_record_sumry,	orign_copy_flag, 			error_flag,			take_fin_flag,		exam_rslt_cd,				record_detl_type_cd,	record_sno,					secu_clss_rsn,			part_open_rsn,      oper_read_range_cd,			line_no,				exam_cont, 					prod_type_cd		) VALUES (			'1',			(SELECT folder_take_seq FROM TB_TKFOLDER WHERE record_center_id='1' AND creat_sys_cd='02' AND creat_sys_folder_id='1' AND take_sno = '1'),			'1',          			'1',                    '1', 			'1',               '1',               '1',           		'1',            '1', 						TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),			'1',            '1',          		'1',            '1',			LPAD( '1',6,'0'),   '1',         	'1',        		'1',            '1', 			'1',                  '1',  	'1', 			'1',	'1', 			'1',                       '1',                   '1',          		'1',         '1', 			'1',                     '1',                 '1',                 '1',                '1', 			'1', 				'1',				'1',		'1',		'1',			'1', 					'1',				'1',			'1',					'1',			'1', 					'1',			'1',					'1',				'1'		);
+
+filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+id  : createMultiTakovrSetPlan
+SQL statement violated NOT NULL constraint.[CAS INFO-127.0.0.1:54330,2,9921],[SESSION-33],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : insert
+-- Query Id : createMultiTakovrSetPlan
+
+		INSERT INTO tb_rdmultitakovrplan 					(take_takovr_snd_rep_cd					,take_takovr_yyyy					,take_takovr_sno					,record_center_id					,take_takovr_rcv_rep_cd					,take_state_snd_div_cd					,take_state_flag					,take_takovr_snd_user_id					,non_elect_take_plan_yyyy					,take_takovr_rsn					,reg_dtime)		VALUES( (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')				,'1'				,'1'				,'1'				,(SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')				,'1'				,'1'				,'1'				,'1'				,'1'				,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))	;
+
+***** Close *****

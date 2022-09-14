@@ -1,0 +1,766 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.confset">
+
+	<resultMap id="OrgCdApply-result" 		class="rms.sys.confset.domain.Org" >
+		<result property="orgCd"			column="org_cd"></result>
+		<result property="orgNm"			column="org_nm"></result>
+		<result property="orgAbbrNm"		column="org_abbr_nm"></result>
+		<result property="fullOrgNm"		column="full_org_nm"></result>
+		<result property="hupperOrgCd"		column="hupper_org_cd"></result>
+		<result property="upperOrgCd"		column="upper_org_cd"></result>
+		<result property="levl"				column="levl"></result>
+		<result property="orgSeq"			column="org_seq"></result>
+		<result property="closeFlag"		column="close_flag"></result>
+		<result property="closeFlagNm"		column="close_flag_nm"></result>
+		<result property="applyStartYmd"	column="apply_start_ymd"></result>
+		<result property="applyCloseYmd"	column="apply_close_ymd"></result>
+	</resultMap>
+	<!-- 
+		환경설정 코드반영 기관코드반영 목록을 조회한다.
+	 -->
+	<select id="findOrgCdApplyPagedList" parameterClass="rms.sys.confset.domain.Org" resultMap="OrgCdApply-result">
+		SELECT C.org_cd
+			, C.org_nm
+			, C.org_abbr_nm
+			, C.full_org_nm
+			, C.hupper_org_cd
+			, C.upper_org_cd
+			, C.levl
+			, C.org_seq
+			, C.close_flag
+			, DECODE(C.close_flag,'1','폐지','현존') close_flag_nm
+			, C.apply_start_ymd
+			, C.apply_close_ymd
+		FROM (
+			SELECT B.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, A.*
+				FROM (
+					SELECT org_cd
+						, org_nm
+						, org_abbr_nm
+						, full_org_nm
+						, hupper_org_cd
+						, upper_org_cd
+						, levl
+						, org_seq
+						, close_flag
+						, apply_start_ymd
+						, apply_close_ymd
+					FROM TB_STORG
+					<dynamic prepend="WHERE">
+						<isNotEmpty prepend="AND" property="recordCenterId">
+							record_center_id = #recordCenterId:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgNm">
+							org_nm LIKE #orgNm:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY close_flag, COALESCE(nullif(upper_org_cd, '0'), org_cd), org_cd
+				) A
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) B
+			WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+	</select>
+	<!--
+		COUNT - 환경설정 코드반영 기관코드반영 목록을 조회한다.
+	-->
+	<select id="countOrgCdApplyPagedList" parameterClass="rms.sys.confset.domain.Org" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STORG
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgNm">
+				org_nm LIKE #orgNm:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		코드반영_기관코드반영
+		: 기관코드를 폐지 한다.
+	 -->
+	<update id="deleteOrgCd" parameterClass="rms.sys.confset.domain.Org">
+	    UPDATE TB_STORG 
+	    SET  CLOSE_FLAG='1'
+	    	,APPLY_CLOSE_YMD=TO_CHAR(SYSDATE,'YYYYMMDD')
+        WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+        AND ORG_CD = #delOrgCd:VARCHAR#
+	</update>
+	
+	
+	<resultMap id="UnitApply-result" 		class="rms.sys.confset.domain.Unit" >
+		<result property="unitCd"			column="unit_cd"></result>
+		<result property="creatStndYmd"		column="creat_stnd_ymd"></result>
+		<result property="unitNm"			column="unit_nm"></result>
+		<result property="unitDescr"		column="unit_descr"></result>
+		<result property="orgCd"			column="org_cd"></result>
+		<result property="orgNm"			column="org_nm"></result>
+		<result property="useFlag"			column="use_flag"></result>
+		<result property="useNm"			column="use_nm"></result>
+	</resultMap>
+	<!-- 
+		환경설정 코드반영 단위업무반영 목록을 조회한다.
+	 -->
+	<select id="findUnitApplyPagedList" parameterClass="rms.sys.confset.domain.Unit" resultMap="UnitApply-result">
+		SELECT E.unit_cd
+			, E.creat_stnd_ymd
+			, E.unit_nm
+			, E.unit_descr
+			, E.org_cd
+			, (SELECT F.org_nm FROM TB_STORG F	WHERE F.record_center_id = #recordCenterId:VARCHAR# AND F.org_cd=E.org_cd) org_nm
+			, E.use_flag
+			, DECODE(E.use_flag,'1','사용','0','미사용','') use_nm
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.unit_cd
+						, A.creat_stnd_ymd
+						, A.unit_nm
+						, A.unit_descr
+						, B.org_cd
+						, B.use_flag
+					FROM TB_ZZUNIT A
+					   , TB_ZZORGUNIT B
+					WHERE A.UNIT_CD=B.UNIT_CD
+				    AND A.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+				    AND B.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+					<dynamic prepend="AND">
+						<isNotEmpty prepend="AND" property="unitNm">
+							A.unit_nm LIKE #unitNm:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							B.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	<!--
+		COUNT - 환경설정 코드반영 단위업무반영 목록을 조회한다.
+	-->
+	<select id="countUnitApplyPagedList" parameterClass="rms.sys.confset.domain.Unit" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_ZZUNIT A
+		   , TB_ZZORGUNIT B
+		WHERE A.UNIT_CD=B.UNIT_CD
+		AND A.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="unitNm">
+				A.unit_nm LIKE #unitNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 단위과제상세 -->
+	<resultMap id="clss-result" class="rms.sys.confset.domain.Clss">
+		<result property="clssId" 		column="CLSS_ID"></result>
+		<result property="clssNm" 		column="CLSS_NM"></result>
+		<result property="clssPathNm" 	column="CLSS_PATH_NM"></result>
+		<result property="sortSno" 		column="SORT_SNO"></result>
+		<result property="levl" 		column="LEVL"></result>
+		<result property="descr" 		column="DESCR"></result>
+		<result property="startDtime" 		column="START_DTIME"></result>
+		<result property="closeDtime" 		column="CLOSE_DTIME"></result>
+	</resultMap>
+	<!-- 단위과제상세 기능별-->
+	<select id="findBisClss" parameterClass="rms.sys.confset.domain.Clss" resultMap="clss-result">
+		SELECT A.BIS_CLSS_ID CLSS_ID
+			,A.BIS_CLSS_NM CLSS_NM
+			,A.LEVL
+			,A.SORT_SNO
+			,(SELECT BIS_CLSS_PATH_NM FROM (SELECT BIS_CLSS_ID, SYS_CONNECT_BY_PATH(BIS_CLSS_NM,'>') BIS_CLSS_PATH_NM 
+			  FROM (SELECT * FROM TB_ZZBISCLSS) 
+			  START WITH BIS_CLSS_ID = '00000000000000000000000000000000000' 
+			  CONNECT BY PRIOR BIS_CLSS_ID = UPPER_BIS_CLSS_ID)
+			  WHERE BIS_CLSS_ID = #clssId:VARCHAR#) CLSS_PATH_NM
+			,A.TASK_DESCR DESCR
+			,A.START_DTIME
+			,A.CLOSE_DTIME
+		FROM TB_ZZBISCLSS A
+		WHERE BIS_CLSS_ID = #clssId:VARCHAR#
+	</select>
+	<!-- 단위과제상세 목적별-->
+	<select id="findPjtClss" parameterClass="rms.sys.confset.domain.Clss" resultMap="clss-result">
+		SELECT A.PJT_CLSS_ID CLSS_ID
+			, A.PJT_CLSS_NM CLSS_NM
+			, A.LEVL
+			, A.SORT_SNO
+			, (SELECT PJT_CLSS_PATH_NM FROM (SELECT PJT_CLSS_ID, SYS_CONNECT_BY_PATH(PJT_CLSS_NM,'>') PJT_CLSS_PATH_NM 
+			   FROM (SELECT * FROM TB_ZZPJTCLSS) 
+			   START WITH PJT_CLSS_ID = '00000000000000000000000000000000000' 
+			   CONNECT BY PRIOR PJT_CLSS_ID = UPPER_PJT_CLSS_ID)
+			   WHERE PJT_CLSS_ID = #clssId:VARCHAR#) CLSS_PATH_NM
+			, A.START_DTIME
+			, A.CLOSE_DTIME
+			, '' DESCR
+		FROM TB_ZZPJTCLSS A
+		WHERE PJT_CLSS_ID = #clssId:VARCHAR#
+	</select>
+	<!-- 단위과제트리 -->
+	<select id="findTreeBisClss" parameterClass="rms.sys.confset.domain.TreeBisClss" resultClass="rms.sys.confset.domain.TreeBisClss">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType
+				, A.bis_clss_id AS id
+				, A.bis_clss_nm AS text
+				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'
+				   ELSE 'open'
+				   END) AS state
+				, (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete'
+				        WHEN A.levl = '0' THEN 'icon-search'
+				        ELSE 'icon-folder_full_accept'
+				   END) AS iconCls
+				, levl AS levl
+			FROM  TB_ZZBISCLSS A
+			<dynamic prepend="WHERE">
+				<isEmpty prepend="AND" property="id">
+					NOT EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.bis_clss_id=A.upper_bis_clss_id)
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="id">
+					A.upper_bis_clss_id = #id:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="delFlag">
+					A.DEL_FLAG IN('0', #delFlag:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 
+				                    FROM TB_ZZBISORG
+				                    WHERE ORG_CD =#orgCd:VARCHAR#)
+				</isNotEmpty>
+			</dynamic>
+			ORDER BY A.levl, A.sort_sno
+		) B
+	</select>
+	
+	<!-- 
+			시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (DELETE 반영임시테이블초기화)
+	 -->
+	<delete id="deleteOrgCdApplyTemp">
+		DELETE TB_STORGTEMP
+	</delete>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (CREATE 반영임시테이블저장)
+	 -->
+	<insert id="createOrgCdApplyTemp" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STORGTEMP
+			(org_cd, org_nm,org_abbr_nm,full_org_nm , hupper_org_cd
+			, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd
+			, apply_close_ymd)
+		VALUES
+			(#orgCd:VARCHAR#, #fullOrgNm:VARCHAR#, #orgAbbrNm:VARCHAR#, #fullOrgNm:VARCHAR#, #hupperOrgCd:VARCHAR#
+			, #upperOrgCd:VARCHAR#, #levl:VARCHAR#, #orgSeq:VARCHAR#, #closeFlag:VARCHAR#, #applyStartYmd:VARCHAR#
+			, #applyCloseYmd:VARCHAR#)
+	</insert>
+	
+	<!--
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (SELECT 반영임시테이블의 Max 레벨 조회)
+	-->
+	<select id="findOrgCdApplyMaxLevl" parameterClass="rms.sys.confset.domain.Org" resultClass="int">
+		SELECT NVL(MAX(levl),0)
+		FROM  TB_STORGTEMP
+	</select>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (CREATE 반영임시테이블의 정보 중 신규 기관코드를 기관코드 테이블에 저장)
+		20150421 김경수 record_center_id 추가 (기록관 구분)
+	 -->
+	<insert id="createOrgCdApply" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STORG
+		(
+			record_center_id, org_cd, org_nm, org_abbr_nm, full_org_nm
+			, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag
+			, apply_start_ymd, apply_close_ymd, link_trgt_id
+		)
+		(
+			SELECT E.record_center_id
+				 , E.org_cd
+			     , replace(NVL(TRIM(SUBSTR(E.FULL_ORG_NM, DECODE(INSTR(E.FULL_ORG_NM, 
+																	       (SELECT B.rep_org_nm
+																			FROM TB_STRECORDCENTER B
+																			WHERE B.record_center_id=E.record_center_id))
+																	,1,LENGTH((SELECT B.rep_org_nm
+																			FROM TB_STRECORDCENTER B
+																			WHERE B.record_center_id=E.record_center_id))+1,0) )),E.FULL_ORG_NM),'"','')
+				 , replace(E.org_abbr_nm,'"','')
+				 , replace(E.full_org_nm,'"','')
+				 , E.hupper_org_cd
+				 , E.upper_org_cd
+				 , E.levl
+				 , E.org_seq
+				 , E.close_flag
+				 , E.apply_start_ymd
+				 , E.apply_close_ymd
+				 , E.link_trgt_id
+			FROM (
+				SELECT NVL(B.record_center_id,C.record_center_id) record_center_id
+					 , A.org_cd
+				     , A.org_nm
+					 , A.org_abbr_nm
+					 , A.full_org_nm
+					 , A.hupper_org_cd
+					 , DECODE(A.upper_org_cd,'0000000','0',A.upper_org_cd) upper_org_cd
+					 , A.levl
+					 , A.org_seq
+					 , A.close_flag
+					 , A.apply_start_ymd
+					 , A.apply_close_ymd
+					 , NVL(B.link_trgt_id,D.link_trgt_id) link_trgt_id
+				FROM  TB_STORGTEMP A
+				    , (SELECT * FROM TB_STORG WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#) B
+					, (SELECT MIN(record_center_id) record_center_id FROM TB_STRECORDCENTER) C
+					, (SELECT MIN(link_trgt_id) link_trgt_id FROM TB_STLINKTRGT) D
+				WHERE A.upper_org_cd = B.org_cd(+)
+				AND   (B.upper_org_cd IS NULL OR B.upper_org_cd != 'ZZZZZZZ')
+				AND   A.levl = #levl:VARCHAR#
+				AND   A.org_cd NOT IN (SELECT org_cd FROM TB_STORG WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#) 
+			) E
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (UPDATE - 반영임시테이블의 정보를 기관코드 테이블에 갱신 (서열) )
+	 -->
+	<update id="updateOrgCdApply">
+		UPDATE TB_STORG A
+		SET  A.org_seq= (SELECT B.org_seq
+		                  FROM  TB_STORGTEMP B
+		                  WHERE B.org_cd = A.org_cd)
+		
+	</update>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (UPDATE - 반영임시테이블에서 폐지로 된 항목들에 대해 기관코드테이블에 폐지로 갱신 (폐지일,폐지구분) )
+	 -->
+	<update id="updateOrgCdApplyDel">
+		UPDATE TB_STORG A
+		SET   (A.close_flag, A.apply_close_ymd)
+		               = (SELECT B.close_flag
+		                       , B.apply_close_ymd 
+		                  FROM TB_STORGTEMP B
+		                  WHERE  B.org_cd = A.org_cd)
+		WHERE (A.upper_org_cd IS NULL OR A.upper_org_cd != 'ZZZZZZZ')
+		AND   A.org_cd IN (SELECT org_cd FROM TB_STORGTEMP)
+	</update>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (UPDATE - 반영임시테이블에서 폐지로 된 항목들에 대해 기관코드테이블에 폐지로 갱신 (폐지일,폐지구분) )
+	 -->
+	<update id="updateDeptCdApplyDel">
+		UPDATE TB_STDEPT A
+		SET   (A.close_flag, A.apply_close_ymd)
+		               = (SELECT B.close_flag
+		                       , B.apply_close_ymd 
+		                  FROM TB_STORGTEMP B
+		                  WHERE  B.org_cd = A.org_cd)
+		WHERE (A.upper_dept_cd IS NULL OR A.upper_dept_cd != 'ZZZZZZZ')
+		AND   EXISTS (SELECT 1 FROM TB_STORGTEMP where org_cd = A.org_cd)
+	</update>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (CREATE 신규된 기관코드를 조직테이블에 저장)
+	 -->
+	<insert id="createOrgCdApplyDeptCd">
+		INSERT INTO TB_STDEPT
+		(record_center_id, dept_cd, org_cd, dept_nm, dept_abbr_nm, hupper_dept_cd, upper_dept_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd)
+		(
+			SELECT record_center_id, org_cd, org_cd, org_nm, org_abbr_nm, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd
+			FROM  TB_STORG
+			WHERE NOT EXISTS (SELECT 1 FROM TB_STDEPT where dept_cd = org_cd)
+			AND   org_cd != 'ZZZZZZZ'
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (UPDATE - 반영임시테이블의 정보를 조직테이블에 갱신 (상위기관코드) )
+	 -->
+	<update id="updateDeptCdApply">
+		UPDATE TB_STDEPT A
+		SET  A.UPPER_DEPT_CD = (SELECT B.UPPER_ORG_CD
+		                  FROM  TB_STORGTEMP B
+		                  WHERE B.ORG_CD = A.DEPT_CD)
+		WHERE A.DEPT_CD in (SELECT DEPT_CD FROM TB_STDEPT WHERE UPPER_DEPT_CD IS NULL)
+	</update>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (UPDATE - 반영임시테이블의 정보를 기관코드테이블에 갱신 (상위기관코드) )
+	 -->
+	<update id="updateUpperOrgCdApply">
+		UPDATE TB_STORG A
+		SET  A.UPPER_ORG_CD = (SELECT B.UPPER_ORG_CD
+		                  FROM  TB_STORGTEMP B
+		                  WHERE B.ORG_CD = A.ORG_CD)
+		WHERE A.ORG_CD in (SELECT ORG_CD FROM TB_STORG WHERE UPPER_ORG_CD IS NULL)
+	</update>
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (CREATE 신규된 기관코드에 대해 처리과별단위업무 매핑테이블에 공통코드 매핑정보 저장)
+	 -->
+	<insert id="createOrgCdApplyOrgUnit">
+		INSERT INTO TB_ZZORGUNIT
+		      (record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag,COM_UNIT_FLAG)
+		(
+			SELECT *
+			FROM 
+			(
+				SELECT DISTINCT A.record_center_id, B.org_cd, A.unit_cd, '0', A.reg_dtime, DECODE(A.state_cd,'2','0','1'),'1'
+				FROM TB_ZZUNIT A
+				   , TB_STORG B
+				WHERE A.record_center_id = B.record_center_id
+				AND   (A.unit_cd LIKE 'ZZ%' OR A.COM_UNIT_FLAG='1') 
+				<!--cubrid-->
+				AND NOT EXISTS (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZORGUNIT WHERE record_center_id = A.record_center_id AND org_cd = b.org_cd AND unit_cd =  a.unit_cd)
+				
+			) C
+			WHERE 
+			<!--cubrid
+			            NOT EXISTS (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZORGUNIT WHERE record_center_id = C.record_center_id AND org_cd = C.org_cd AND unit_cd =  C.unit_cd)
+			-->
+			     C.org_cd NOT IN (SELECT record_center_cd FROM TB_STRECORDCENTER)
+		)
+	</insert>
+
+	<!-- 시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (기관코드 반영 후 해당 처리과의 Level을 수정) -->
+	<update id="updateLevelOrgCdApply">
+		UPDATE TB_STORG A
+        SET A.LEVL =(SELECT COUNT(1) FROM TB_STORG B START WITH B.ORG_CD = A.ORG_CD CONNECT BY PRIOR B.UPPER_ORG_CD=B.ORG_CD and prior B.RECORD_CENTER_ID = B.RECORD_CENTER_ID)
+	</update>
+    <!-- 시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (기관코드 반영 후 해당 처리과의 Level을 수정) -->
+	
+	<update id="updateLevelDeptCdApply">
+		UPDATE TB_STDEPT A
+        SET A.LEVL =(SELECT COUNT(1) FROM TB_STDEPT B START WITH B.DEPT_CD = A.DEPT_CD CONNECT BY PRIOR B.UPPER_DEPT_CD=B.DEPT_CD)
+	</update>
+
+	<!-- 시스템관리 > 환경설정 > 코드반영 > 기관코드반영 (기관코드 반영 후 폐지된 처리과 공통단위업무 폐지처리) -->
+	
+	<update id="updateComUnitFlagDel">
+		UPDATE TB_ZZORGUNIT 
+		   SET USE_FLAG='0'
+		 WHERE ORG_CD IN (SELECT ORG_CD 
+		                    FROM TB_STORG
+		                   WHERE CLOSE_FLAG='1')
+		   AND (UNIT_CD LIKE 'ZZ%' OR COM_UNIT_FLAG='1')
+		   AND USE_FLAG='1'
+	</update>
+	
+	<!--
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영(COUNT)
+	-->
+	<select id="countUnitApply" parameterClass="rms.sys.confset.domain.Unit" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZUNIT A
+		   , TB_ZZORGUNIT B
+		WHERE A.UNIT_CD=B.UNIT_CD
+		AND A.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="unitNm">
+				A.unit_nm LIKE #unitNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (SELECT)
+	 -->
+	<select id="findUnitApply" parameterClass="rms.sys.confset.domain.Unit" resultMap="UnitApply-result">
+		SELECT A.unit_cd
+		     , A.creat_stnd_ymd
+			 , A.unit_nm
+			 , A.unit_descr
+			 , B.org_cd
+			 , (SELECT C.org_nm
+			    FROM TB_STORG C
+				WHERE C.record_center_id = #recordCenterId:VARCHAR#
+				AND   C.org_cd=B.org_cd) org_nm
+			 , B.use_flag
+			 , DECODE(B.use_flag,'1','사용','0','미사용','') use_nm
+		FROM TB_ZZUNIT A
+		   , TB_ZZORGUNIT B
+		WHERE A.UNIT_CD=B.UNIT_CD
+	    AND A.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	    AND B.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="unitNm">
+				A.unit_nm LIKE #unitNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (DELETE 1. 반영임시테이블 초기화)
+	 -->
+	<delete id="deleteUnitApplyTemp">
+		DELETE FROM TB_ZZUNITTEMP
+	</delete>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (CREATE 2. 단위업무코드를 반영임시테이블에 등록)
+	 -->
+	<insert id="createUnitApplyTemp" parameterClass="rms.sys.confset.domain.Unit">
+		INSERT INTO TB_ZZUNITTEMP
+			( record_center_id, org_cd, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd
+			, lrg_cd, lrg_nm, mid_cd, mid_nm, sml_cd
+			, sml_nm, unit_cd, unit_nm, unit_descr, presv_term_cd
+			, presv_term_fix_rsn, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd
+			, main_read_usg, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2
+			, spcl_list3, state_cd, take_flag, reg_user_id, reg_dtime )
+		(
+			SELECT record_center_id, org_cd, #narsHandlDtime:VARCHAR#, #creatStndYmd:VARCHAR#, #tempUnitCd:VARCHAR#
+				, #lrgCd:VARCHAR#, #lrgNm:VARCHAR#, #midCd:VARCHAR#, #midNm:VARCHAR#, #smlCd:VARCHAR#
+				, #smlNm:VARCHAR#, #unitCd:VARCHAR#, #unitNm:VARCHAR#, #unitDescr:VARCHAR#, #presvTermCd:VARCHAR#
+				, #presvTermFixRsn:VARCHAR#, #presvMethodCd:VARCHAR#, #presvAreaCd:VARCHAR#, #funshRecordFlag:VARCHAR#, #funshRecordTransfYmd:VARCHAR#
+				, #mainReadUsg:VARCHAR#, #transfReadExptCnt:VARCHAR#, #spclListLoc:VARCHAR#, #spclList1:VARCHAR#, #spclList2:VARCHAR#
+				, #spclList3:VARCHAR#, #stateCd:VARCHAR#, '0', #regUserId:VARCHAR#, #regDtime:VARCHAR#
+			FROM 
+			(
+				(SELECT record_center_id, org_cd
+				   FROM TB_STORG
+				  WHERE org_cd = #orgCd:VARCHAR#
+				)
+				UNION ALL
+				(
+				SELECT '0000000',#orgCd:VARCHAR# FROM DUAL
+				WHERE ( SELECT COUNT(1) FROM TB_STORG WHERE org_cd = #orgCd:VARCHAR# ) = 0
+				)
+			)
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (SELECT 3. 반영임시테이블에 지정된 처리과가 존재하는지 확인 (존재않는 처리과리스트 반환) )
+	 -->
+	<select id="findUnitApplyOrgCheck">
+		SELECT DISTINCT A.org_cd
+		FROM TB_ZZUNITTEMP A
+		WHERE 
+		NOT EXISTS (SELECT 1 FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.org_cd)
+		ORDER BY A.org_cd
+	</select>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (CREATE 4. 단위업무 임시테이블의 공통코드(ZZ..)를 해당하는 대표기관코드에 포함되는 처리과(하위지청 포함)에 추가하도록 반영임시테이블에 등록)
+	 -->
+	<insert id="createUnitApplyTempZZ">
+		INSERT INTO TB_ZZUNITTEMP
+			( record_center_id, org_cd, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd
+			, lrg_cd, lrg_nm, mid_cd, mid_nm, sml_cd
+			, sml_nm, unit_cd, unit_nm, unit_descr, presv_term_cd
+			, presv_term_fix_rsn, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd
+			, main_read_usg, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2
+			, spcl_list3, state_cd, take_flag, reg_user_id, reg_dtime )
+		(
+			SELECT DISTINCT B.record_center_id, B.org_cd, A.nars_handl_dtime, A.creat_stnd_ymd, A.temp_unit_cd
+				, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm, A.sml_cd
+				, A.sml_nm, A.unit_cd, A.unit_nm, A.unit_descr, A.presv_term_cd
+				, A.presv_term_fix_rsn, A.presv_method_cd, A.presv_area_cd, A.funsh_record_flag, A.funsh_record_transf_ymd
+				, A.main_read_usg, A.transf_read_expt_cnt, A.spcl_list_loc, A.spcl_list1, A.spcl_list2
+				, A.spcl_list3, A.state_cd, A.take_flag, A.reg_user_id, A.reg_dtime
+			FROM (SELECT * FROM TB_ZZUNITTEMP WHERE unit_cd LIKE 'ZZ%') A
+				, TB_STORG B
+			WHERE A.org_cd = B.hupper_org_cd
+			<!--cubrid
+			AND   (B.record_center_id, B.org_cd, A.unit_cd) NOT IN (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZUNITTEMP)
+		  -->
+		  AND   NOT EXISTS (SELECT 1 FROM TB_ZZUNITTEMP AAA WHERE B.record_center_id = AAA.record_center_id AND B.org_cd = AAA.org_cd AND A.unit_cd = AAA.unit_cd)
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (CREATE 5. 단위업무 임시테이블의 코드중 단위업무테이블에 존재하지 않는 코드 등록)
+	 -->
+	<insert id="createUnitApply">
+		INSERT INTO TB_ZZUNIT
+		( 
+		    record_center_id, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd, lrg_cd
+			, lrg_nm, mid_cd, mid_nm, sml_cd, sml_nm
+			, unit_cd, unit_nm, unit_descr, presv_term_cd, presv_term_fix_rsn
+			, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg
+			, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3
+			, state_cd, take_flag, reg_user_id, reg_dtime
+		)
+		(
+		    SELECT DISTINCT record_center_id, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd, lrg_cd
+		        	, lrg_nm, mid_cd, mid_nm, sml_cd, sml_nm
+		        	, unit_cd, unit_nm, unit_descr, presv_term_cd, presv_term_fix_rsn
+		        	, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg
+		        	, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3
+		        	, state_cd, take_flag, reg_user_id, reg_dtime
+		    FROM (
+		        SELECT RANK() OVER (PARTITION BY record_center_id, unit_cd ORDER BY state_cd DESC, creat_stnd_ymd DESC, org_cd) rank
+		            , record_center_id, nars_handl_dtime, creat_stnd_ymd, temp_unit_cd, lrg_cd
+		        	, lrg_nm, mid_cd, mid_nm, sml_cd, sml_nm
+		        	, unit_cd, unit_nm, unit_descr, presv_term_cd, presv_term_fix_rsn
+		        	, presv_method_cd, presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg
+		        	, transf_read_expt_cnt, spcl_list_loc, spcl_list1, spcl_list2, spcl_list3
+		        	, state_cd, take_flag, reg_user_id, reg_dtime, org_cd
+		        FROM TB_ZZUNITTEMP
+		    ) AA
+		    WHERE rank = '1'
+		  <!--CUBRID  
+			AND   (record_center_id, unit_cd) NOT IN (SELECT record_center_id, unit_cd FROM TB_ZZUNIT)
+		  -->
+		  AND   NOT EXISTS (SELECT 1 FROM TB_ZZUNITTEMP AAA WHERE AA.record_center_id = AAA.record_center_id AND AA.unit_cd = AAA.unit_cd)
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (UPDATE 6. 단위업무 임시테이블의 코드중 '수정' 코드에 해당하는 단위업무테이블 갱신)
+	 -->
+	<update id="updateUnitApplyMod">
+		UPDATE TB_ZZUNIT A
+		SET ( A.unit_nm, A.unit_descr, A.nars_handl_dtime, A.creat_stnd_ymd, A.temp_unit_cd
+			, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm, A.sml_cd
+			, A.sml_nm, A.presv_term_cd, A.presv_term_fix_rsn, A.presv_method_cd, A.presv_area_cd
+			, A.funsh_record_flag, A.funsh_record_transf_ymd, A.main_read_usg, A.transf_read_expt_cnt, A.spcl_list_loc
+			, A.spcl_list1, A.spcl_list2, A.spcl_list3, A.state_cd, A.take_flag
+			, A.reg_user_id, A.reg_dtime )
+			= ( SELECT DISTINCT B.unit_nm, B.unit_descr, B.nars_handl_dtime, B.creat_stnd_ymd, B.temp_unit_cd
+					, B.lrg_cd, B.lrg_nm, B.mid_cd, B.mid_nm, B.sml_cd
+					, B.sml_nm, B.presv_term_cd, B.presv_term_fix_rsn, B.presv_method_cd, B.presv_area_cd
+					, B.funsh_record_flag, B.funsh_record_transf_ymd, B.main_read_usg, B.transf_read_expt_cnt, B.spcl_list_loc
+					, B.spcl_list1, B.spcl_list2, B.spcl_list3, A.state_cd, B.take_flag
+					, B.reg_user_id, B.reg_dtime
+				FROM  TB_ZZUNITTEMP B
+				WHERE B.record_center_id = A.record_center_id
+				AND   B.unit_cd = A.unit_cd
+				AND   B.state_cd = '3'
+				AND   DECODE(B.NARS_HANDL_DTIME, NULL, B.CREAT_STND_YMD,  B.NARS_HANDL_DTIME ) = (SELECT MAX(NVL(NARS_HANDL_DTIME, CREAT_STND_YMD)) FROM TB_ZZUNITTEMP WHERE record_center_id = B.record_center_id AND unit_cd = B.unit_cd AND state_cd = '3')
+			)
+		WHERE 
+		EXISTS 
+		(
+			SELECT C.record_center_id, C.unit_cd
+			FROM  TB_ZZUNITTEMP C
+			WHERE C.record_center_id = A.record_center_id
+			AND   C.unit_cd = A.unit_cd
+			AND   C.state_cd = '3'
+		)
+		AND   A.creat_stnd_ymd <![CDATA[ <= ]]> (SELECT MAX(NVL(creat_stnd_ymd,'00000000')) FROM TB_ZZUNITTEMP WHERE record_center_id = A.record_center_id AND unit_cd = A.unit_cd AND state_cd = '3')
+	</update>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (UPDATE 7. 단위업무 임시테이블의 코드중 '폐지' 코드에 해당하는 단위업무테이블 갱신) - 변경기준일,상태코드 반영 안함 
+	 -->
+	<update id="updateUnitApplyDel">
+		UPDATE TB_ZZUNIT A
+		SET ( A.unit_nm, A.unit_descr, A.nars_handl_dtime, A.creat_stnd_ymd, A.temp_unit_cd
+			, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm, A.sml_cd
+			, A.sml_nm, A.presv_term_cd, A.presv_term_fix_rsn, A.presv_method_cd, A.presv_area_cd
+			, A.funsh_record_flag, A.funsh_record_transf_ymd, A.main_read_usg, A.transf_read_expt_cnt, A.spcl_list_loc
+			, A.spcl_list1, A.spcl_list2, A.spcl_list3, A.state_cd, A.take_flag
+			, A.reg_user_id, A.reg_dtime )
+			= ( SELECT B.unit_nm, B.unit_descr, B.nars_handl_dtime, A.creat_stnd_ymd, B.temp_unit_cd
+					, B.lrg_cd, B.lrg_nm, B.mid_cd, B.mid_nm, B.sml_cd
+					, B.sml_nm, B.presv_term_cd, B.presv_term_fix_rsn, B.presv_method_cd, B.presv_area_cd
+					, B.funsh_record_flag, B.funsh_record_transf_ymd, B.main_read_usg, B.transf_read_expt_cnt, B.spcl_list_loc
+					, B.spcl_list1, B.spcl_list2, B.spcl_list3, A.state_cd, B.take_flag
+					, B.reg_user_id, B.reg_dtime
+				FROM  TB_ZZUNITTEMP B
+				WHERE B.record_center_id = A.record_center_id
+				AND   B.unit_cd = A.unit_cd
+				AND   B.state_cd = '2'
+				AND   ROWNUM = 1
+			)
+		WHERE 
+		EXISTS 
+		(
+			SELECT C.record_center_id, C.unit_cd
+			FROM  TB_ZZUNITTEMP C
+			WHERE C.record_center_id = A.record_center_id
+			AND   C.unit_cd = A.unit_cd
+			AND   C.state_cd = '2'
+		)
+	</update>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (CREATE 8. 단위업무 임시테이블의 매핑정보를 처리과,단위업무 매핑테이블에 저장)
+	 -->
+	<insert id="createUnitApplyOrgUnit">
+		INSERT INTO TB_ZZORGUNIT
+		(
+		    record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag
+		)
+		(
+		    SELECT DISTINCT record_center_id, org_cd, unit_cd, '0', reg_dtime, DECODE(state_cd,'2','0','1')
+		    FROM (
+		        SELECT RANK() OVER (PARTITION BY record_center_id, org_cd, unit_cd ORDER BY state_cd DESC, creat_stnd_ymd DESC) rank
+		            , record_center_id, org_cd, unit_cd, '0', reg_dtime, state_cd
+		        FROM TB_ZZUNITTEMP
+		    )AA
+		    WHERE rank = '1'
+		  <!--CUBRID  
+			AND   (record_center_id, org_cd, unit_cd) NOT IN (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZORGUNIT)
+		  -->
+		  AND   NOT EXISTS (SELECT 1 FROM TB_ZZUNITTEMP AAA WHERE AA.record_center_id = AAA.record_center_id AND AA.unit_cd = AAA.unit_cd AND AA.org_cd = AAA.org_cd)
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리 > 환경설정 > 코드반영 > 단위업무반영 (UPDATE 9. 단위업무 임시테이블의 코드중 '폐지' 코드에 해당하는 처리과,단위업무 매핑테이블 갱신)
+	 -->
+	<update id="updateUnitApplyOrgUnitDel">
+		UPDATE TB_ZZORGUNIT A
+		SET    A.use_flag = '0'
+		WHERE 
+		EXISTS
+		(
+			SELECT 1
+			FROM  TB_ZZUNITTEMP C
+			WHERE C.record_center_id = A.record_center_id
+			AND   C.org_cd = A.org_cd
+			AND   C.unit_cd = A.unit_cd
+			AND   C.state_cd = '2'
+                        AND   C.record_center_id = A.record_center_id
+                        AND   C.org_cd = A.org_cd
+                        AND   C.unit_cd = A.unit_cd 
+		)
+		AND A.use_flag != '0'
+	</update>
+	
+	<resultMap id="FindHupperOrgCd-result"	class="rms.sys.confset.domain.Org">
+		<result property="orgCd"			column="RECORD_CENTER_CD"></result>
+	</resultMap>
+	
+	<select id="findHupperOrgCd" resultMap="FindHupperOrgCd-result">
+		SELECT RECORD_CENTER_CD 
+		FROM TB_STRECORDCENTER
+	</select>
+	
+	<update id="deletOrgCd" parameterClass="rms.sys.confset.domain.Org">
+	    UPDATE TB_STORG 
+	    SET CLOSE_FLAG='1',APPLY_CLOSE_YMD=TO_CHAR(SYSDATE,'YYYYMMDD')
+        WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+        AND ORG_CD=#delOrgCd:VARCHAR#
+	</update>
+</sqlMap>

@@ -1,0 +1,151 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatPagedList
+
+		SELECT COUNT(1)		FROM  TB_OPOPENGROUP A        WHERE A.record_center_id = '1'        AND   A.open_sys_cd = '01' AND 			A.open_dtime LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatPagedList
+
+		SELECT E.confirm_flag			, E.open_dtime			, E.list_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='OP02' AND Z.com_cd=E.list_type_cd) AS list_type_nm			, E.list_prov_flag			, E.list_prov_dtime			, NVL(E.open_cnt,0) AS open_cnt		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (		        SELECT '1' AS confirm_flag		        	, A.open_dtime		            , A.list_type_cd		            , A.list_prov_flag		        	, A.list_prov_dtime		        	, A.choice_cnt+A.append_cnt AS open_cnt		        FROM  TB_OPOPENGROUP A		        WHERE A.record_center_id = '1'		        AND   A.open_sys_cd = '01' AND 					A.open_dtime LIKE '1'				 		        ORDER BY A.record_center_id, A.open_sys_cd, A.open_dtime DESC			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'		ORDER BY E.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatOrgPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd			FROM  TB_OPOPENLIST A			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state = '4'			 AND 				A.open_dtime = '1'			  AND 				A.org_cd = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatOrgPagedList
+
+		SELECT F.record_center_id			, F.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm			, COUNT(1) AS open_cnt		FROM (			SELECT E.record_center_id				, E.org_cd			FROM  TB_OPOPENLIST E						WHERE			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd						FROM  TB_OPOPENLIST A						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state = '4' AND 							A.open_dtime = '1'						  AND 							A.org_cd = '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd			)			AND   E.open_state = '4'			 AND 				E.open_dtime = '1'			 		) F		GROUP BY F.record_center_id, F.org_cd		ORDER BY F.record_center_id, F.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatOrgChngRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd			FROM  TB_OPOPENLISTCHNG A			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01' AND 				A.open_dtime = '1'			  AND 				A.org_cd = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatOrgChngRecordPagedList
+
+		SELECT F.record_center_id			, F.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm			, COUNT(1) AS open_cnt		FROM (			SELECT E.record_center_id				, E.org_cd			FROM  TB_OPOPENLISTCHNG E						WHERE			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd						FROM  TB_OPOPENLISTCHNG A						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						 AND 							A.open_dtime = '1'						  AND 							A.org_cd = '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd			) AND 				E.open_dtime = '1'			 		) F		GROUP BY F.record_center_id, F.org_cd		ORDER BY F.record_center_id, F.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatOrgChngFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd			FROM  TB_OPOPENLISTCHNG A			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01' AND 				A.open_dtime = '1'			  AND 				A.org_cd = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatOrgChngFolderPagedList
+
+		SELECT F.record_center_id			, F.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm			, COUNT(1) AS open_cnt		FROM (			SELECT E.record_center_id				, E.org_cd			FROM  TB_OPOPENLISTCHNG E				, TB_RDRECORD R			WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd						FROM  TB_OPOPENLISTCHNG A						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						 AND 							A.open_dtime = '1'						  AND 							A.org_cd = '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd			) AND 				E.open_dtime = '1'			 			AND   E.record_center_id = R.record_center_id			AND   E.folder_id = R.folder_id		) F		GROUP BY F.record_center_id, F.org_cd		ORDER BY F.record_center_id, F.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id			FROM  TB_OPOPENLIST A				, TB_RDFOLDER B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state = '4'			AND   A.open_dtime = '1'			AND   A.org_cd = '1'			AND   B.record_center_id = A.record_center_id			AND   B.folder_id = A.folder_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatFolderPagedList
+
+		SELECT G.record_center_id			, G.folder_id			, G.folder_title			, COUNT(1) AS open_cnt		FROM (			SELECT E.record_center_id				, E.folder_id				, F.title AS folder_title			FROM  TB_OPOPENLIST E				, TB_RDFOLDER F			WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title						FROM  TB_OPOPENLIST A							, TB_RDFOLDER B						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_state = '4'						AND   A.open_dtime = '1'						AND   A.org_cd = '1'						AND   B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id						 AND 							B.title LIKE '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, B.title					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd				AND   D.folder_id = E.folder_id			)			AND   E.open_state = '4'			AND   E.open_dtime = '1'			AND   F.record_center_id = E.record_center_id			AND   F.folder_id = E.folder_id			 AND 				F.title LIKE '1'			 		) G		GROUP BY G.record_center_id, G.folder_id, G.folder_title		ORDER BY G.record_center_id, G.folder_title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatFolderChngRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id			FROM  TB_OPOPENLISTCHNG A				, TB_RDFOLDER B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_dtime = '1'			AND   A.org_cd = '1'			AND   B.record_center_id = A.record_center_id			AND   B.folder_id = A.folder_id			 AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatFolderChngRecordPagedList
+
+		SELECT G.record_center_id			, G.folder_id			, G.folder_title			, COUNT(1) AS open_cnt		FROM (			SELECT E.record_center_id				, E.folder_id				, F.title AS folder_title			FROM  TB_OPOPENLISTCHNG E				, TB_RDFOLDER F			WHERE 			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title						FROM  TB_OPOPENLISTCHNG A							, TB_RDFOLDER B						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_dtime = '1'						AND   A.org_cd = '1'						AND   B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id AND 							B.title LIKE '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, B.title					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd				AND   D.folder_id = E.folder_id			)			AND   E.open_dtime = '1'			AND   F.record_center_id = E.record_center_id			AND   F.folder_id = E.folder_id AND 				F.title LIKE '1'			 		) G		GROUP BY G.record_center_id, G.folder_id, G.folder_title		ORDER BY G.record_center_id, G.folder_title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatFolderChngFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id			FROM  TB_OPOPENLISTCHNG A				, TB_RDFOLDER B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_dtime = '1'			AND   A.org_cd = '1'			AND   B.record_center_id = A.record_center_id			AND   B.folder_id = A.folder_id			 AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatFolderChngFolderPagedList
+
+		SELECT G.record_center_id			, G.folder_id			, G.folder_title			, COUNT(1) AS open_cnt		FROM (			SELECT E.record_center_id				, E.folder_id				, F.title AS folder_title			FROM  TB_OPOPENLISTCHNG E				, TB_RDFOLDER F				, TB_RDRECORD R						WHERE			EXISTS (				SELECT 1				FROM (					SELECT ROWNUM AS rnum						, C.*					FROM (						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title						FROM  TB_OPOPENLISTCHNG A							, TB_RDFOLDER B						WHERE A.record_center_id = '1'						AND   A.open_sys_cd = '01'						AND   A.open_dtime = '1'						AND   A.org_cd = '1'						AND   B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id AND 							B.title LIKE '1'						 						ORDER BY A.record_center_id, A.open_sys_cd, B.title					) C					WHERE ROWNUM <= '1'				) D				WHERE D.rnum >= '1'								AND   D.record_center_id = E.record_center_id				AND   D.open_sys_cd = E.open_sys_cd				AND   D.org_cd = E.org_cd				AND   D.folder_id = E.folder_id			)			AND   E.open_dtime = '1'			AND   F.record_center_id = E.record_center_id			AND   F.folder_id = E.folder_id AND 				F.title LIKE '1'			 			AND   F.record_center_id = R.record_center_id			AND   F.folder_id = R.folder_id		) G		GROUP BY G.record_center_id, G.folder_id, G.folder_title		ORDER BY G.record_center_id, G.folder_title	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id			FROM  TB_OPOPENLIST A				, TB_RDRECORD B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_state = '4'			AND   A.open_dtime = '1'			AND   A.org_cd = '1'			AND   A.folder_id = '1'			AND   B.record_center_id = A.record_center_id			AND   B.record_id = A.record_id			 AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatRecordPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.record_title			, D.creat_reg_dtime			, D.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm			, D.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm			, D.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm			, D.open_dtime		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.record_center_id					, A.record_id					, B.title AS record_title					, B.creat_reg_dtime					, B.record_reg_div_cd					, B.record_detl_type_cd					, B.open_div_cd					, A.open_dtime				FROM  TB_OPOPENLIST A					, TB_RDRECORD B				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				AND   A.open_state = '4'				AND   A.open_dtime = '1'				AND   A.org_cd = '1'				AND   A.folder_id = '1'				AND   B.record_center_id = A.record_center_id				AND   B.record_id = A.record_id				 AND 					B.title LIKE '1'				 				ORDER BY A.record_center_id, A.open_sys_cd, B.title			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatRecordChngRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id			FROM  TB_OPOPENLISTCHNG A				, TB_RDRECORD B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_dtime = '1'			AND   A.org_cd = '1'			AND   A.folder_id = '1'			AND   B.record_center_id = A.record_center_id			AND   B.record_id = A.record_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatRecordChngRecordPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.record_title			, D.creat_reg_dtime			, D.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm			, D.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm			, D.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm			, D.open_dtime		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT A.record_center_id					, A.record_id					, B.title AS record_title					, B.creat_reg_dtime					, B.record_reg_div_cd					, B.record_detl_type_cd					, B.open_div_cd					, A.open_dtime				FROM  TB_OPOPENLISTCHNG A					, TB_RDRECORD B				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				AND   A.open_dtime = '1'				AND   A.org_cd = '1'				AND   A.folder_id = '1'				AND   B.record_center_id = A.record_center_id				AND   B.record_id = A.record_id AND 					B.title LIKE '1'				 				ORDER BY A.record_center_id, A.open_sys_cd, B.title			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : countDiosCurStatRecordChngFolderPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT DISTINCT A.record_center_id, A.open_sys_cd, B.record_id			FROM  TB_OPOPENLISTCHNG A				, TB_RDRECORD B			WHERE A.record_center_id = '1'			AND   A.open_sys_cd = '01'			AND   A.open_dtime = '1'			AND   A.org_cd = '1'			AND   A.folder_id = '1'			AND   B.record_center_id = A.record_center_id			AND   B.folder_id = A.folder_id AND 				B.title LIKE '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosCurStatRecordChngFolderPagedList
+
+		SELECT D.record_center_id			, D.record_id			, D.record_title			, D.creat_reg_dtime			, D.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm			, D.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm			, D.open_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm			, D.open_dtime		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (				SELECT B.record_center_id					, B.record_id					, B.title AS record_title					, B.creat_reg_dtime					, B.record_reg_div_cd					, B.record_detl_type_cd					, B.open_div_cd					, A.open_dtime				FROM  TB_OPOPENLISTCHNG A					, TB_RDRECORD B				WHERE A.record_center_id = '1'				AND   A.open_sys_cd = '01'				AND   A.open_dtime = '1'				AND   A.org_cd = '1'				AND   A.folder_id = '1'				AND   B.record_center_id = A.record_center_id				AND   B.folder_id = A.folder_id AND 					B.title LIKE '1'				 				ORDER BY A.record_center_id, A.open_sys_cd, B.title			) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml
+-- Query    : select
+-- Query Id : findDiosRecordOpenHistList
+
+		SELECT C.list_gubun			, C.list_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='OP02' AND Z.com_cd=C.list_type_cd) AS list_type_nm			, C.list_prov_dtime			, C.open_dtime		FROM (		    (		        SELECT '1' AS list_gubun, B.list_type_cd, B.list_prov_dtime, B.open_dtime		        FROM  TB_OPOPENLIST A		            , TB_OPOPENGROUP B		        WHERE A.record_center_id = '1'		        AND   A.open_sys_cd = '01'				AND   A.org_cd = '1'				AND   A.folder_id = '1'		        AND   A.record_id = '1'		        AND   A.record_center_id = B.record_center_id		        AND   A.open_dtime = B.open_dtime		        AND   B.list_type_cd = '01'		    )		    UNION ALL		    (		        SELECT '2' AS list_gubun, B.list_type_cd, B.list_prov_dtime, B.open_dtime		        FROM  TB_OPOPENLISTCHNG A		            , TB_OPOPENGROUP B		        WHERE A.record_center_id = '1'		        AND   A.open_sys_cd = '01'				AND   A.folder_id = '1'		        AND   A.record_id = '1'		        AND   A.record_center_id = B.record_center_id		        AND   A.open_dtime = B.open_dtime		        AND   B.list_type_cd = '02'		    )		    UNION ALL		    (		        SELECT '2' AS list_gubun, B.list_type_cd, B.list_prov_dtime, B.open_dtime		        FROM  TB_OPOPENLISTCHNG A		            , TB_OPOPENGROUP B		        WHERE A.record_center_id = '1'		        AND   A.open_sys_cd = '01'				AND   A.folder_id = '1'		        AND   A.record_center_id = B.record_center_id		        AND   A.open_dtime = B.open_dtime		        AND   B.list_type_cd IN ('03','04','05','06')		    )		) C		ORDER BY C.open_dtime;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\open\open\DiosCurStat.xml

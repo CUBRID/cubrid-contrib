@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.srch">
+
+	<!--
+		행정박물검색_행정박물검색
+		: 행정박물 목록 조회
+	-->
+	<resultMap id="findDetailsMuseumPagedList-result" class="rms.srch.srch.domain.Museum">
+		<result property="recordCenterId"				column="record_center_id"/>
+		<result property="admnatnlId"					column="admnatnl_id"/>
+		<result property="admnatnlRelno"				column="admnatnl_relno"/>
+		<result property="clss" 						column="clss"/>
+		<result property="shape" 						column="shape"/>
+		<result property="material" 					column="material"/>
+		<result property="admnatnlhistNm" 				column="admnatnlhist_nm"/>
+		<result property="creatRegDtime" 				column="creat_reg_dtime"/>
+		<result property="endYmd" 						column="end_ymd"/>
+		<result property="admProgState" 				column="adm_prog_state"/>
+		<result property="dstFlag" 						column="dst_flag"/>
+		<result property="distFlagCd" 					column="dist_flag_cd"/>
+		<result property="crntHandCnt" 					column="crnt_hand_cnt"/>
+	</resultMap>
+	<select id="countDetailsMuseumPagedList" parameterClass="rms.srch.srch.domain.Museum" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_ADARCHIVALOBJ A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="clss">
+			A.clss = #clss:CHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="shape">
+			A.shape = #shape:CHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="material">
+			A.material = #material:CHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="dstFlag">
+			A.dst_flag = #dstFlag:CHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatRegDtime">
+			A.creat_reg_dtime <![CDATA[>=]]> #creatRegDtime:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="endYmd">
+			A.end_ymd <![CDATA[<=]]> #endYmd:CHAR# 
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="arrAdmnatnlhistNm">
+			<iterate property="arrAdmnatnlhistNm" open="(" close=")" conjunction=" AND ">A.admnatnlhist_nm LIKE #arrAdmnatnlhistNm[]:VARCHAR#</iterate>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="innerAdmnatnlhistNm">
+			A.admnatnlhist_nm LIKE #innerAdmnatnlhistNm:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findDetailsMuseumPagedList" parameterClass="rms.srch.srch.domain.Museum" resultMap="findDetailsMuseumPagedList-result">
+		SELECT E.record_center_id
+			, E.admnatnl_id
+			, E.admnatnl_relno
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD01' AND Z.com_cd=E.clss) AS clss
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD02' AND Z.com_cd=E.shape) AS shape
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD03' AND Z.com_cd=E.material) AS material
+			, E.admnatnlhist_nm
+			, E.creat_reg_dtime
+			, E.end_ymd
+			, E.adm_prog_state
+			, ( SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'GV06' AND COM_CD = E.dst_flag) AS dst_flag
+			, E.dst_flag AS dist_flag_cd
+			, E.crnt_hand_cnt
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.*
+					FROM  TB_ADARCHIVALOBJ A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty prepend="AND" property="clss">
+						A.clss = #clss:CHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="shape">
+						A.shape = #shape:CHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="material">
+						A.material = #material:CHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="dstFlag">
+						A.dst_flag = #dstFlag:CHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="creatRegDtime">
+						A.creat_reg_dtime <![CDATA[>=]]> #creatRegDtime:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="endYmd">
+						A.end_ymd <![CDATA[<=]]> #endYmd:CHAR# 
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="arrAdmnatnlhistNm">
+						<iterate property="arrAdmnatnlhistNm" open="(" close=")" conjunction=" AND ">A.admnatnlhist_nm LIKE #arrAdmnatnlhistNm[]:VARCHAR#</iterate>
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="innerAdmnatnlhistNm">
+						A.admnatnlhist_nm LIKE #innerAdmnatnlhistNm:VARCHAR#
+					</isNotEmpty>
+					ORDER BY A.record_center_id, A.admnatnl_id DESC
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+
+</sqlMap>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="rmsstate.curstate">
+
+	<!-- 
+		기록관현황_시설장비현황
+		: 전산장비 목록을 조회한다.
+	 -->
+	 <resultMap id="findCompuEquipList-result" class="rms.rmsstate.curstate.domain.CurStateEquip">
+	 	<result property="equipNm" 			column="EQUIP_NM"/>
+		<result property="goodsNm" 			column="GOODS_NM"/>
+		<result property="goodsCnt" 		column="GOODS_CNT"/>
+		<result property="introYmd" 		column="INTRO_YMD"/>
+		<result property="remk" 			column="REMK"/>
+	 </resultMap>
+	 <select id="findCompuEquipList" parameterClass="rms.rmsstate.curstate.domain.CurStateEquip" resultMap="findCompuEquipList-result">
+		SELECT EQUIP_NM, GOODS_NM, GOODS_CNT, INTRO_YMD, REMK FROM TB_STCOMPUEQUIP
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	 </select>
+
+
+	<!-- 
+		기록관현황_시설장비현황
+		: 보존시설 목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStateStakrmList-result" class="rms.rmsstate.curstate.domain.CurStateEquip">
+	 	<result property="stakrmNm" 		column="STAKRM_NM"/>
+		<result property="stakrmLoc" 		column="STAKRM_LOC"/>
+		<result property="area" 			column="AREA"/>
+		<result property="stakrmTypeNm" 	column="STAKRM_TYPE_NM"/>
+		<result property="useRate" 			column="USE_RATE"/>
+		<result property="remk" 			column="REMK"/>
+		<result property="infoFileId" 		column="INFO_FILE_ID"/>	
+	 </resultMap>
+	 <select id="findCurStateStakrmList" parameterClass="rms.rmsstate.curstate.domain.CurStateEquip" resultMap="findCurStateStakrmList-result">
+		SELECT stakrm_nm
+			  ,(SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ST19' AND com_cd = a.stakrm_type_cd) AS stakrm_loc
+			  ,area
+			  ,(SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ST17' AND com_cd = a.stakrm_type_cd) AS stakrm_type_nm
+			  ,use_rate
+			  ,remk
+			  ,info_file_id
+  		FROM tb_ststakrminfo a
+ 		WHERE record_center_id = #recordCenterId:VARCHAR#
+	 </select>
+	 
+	<!-- 
+		기록관현황_시설장비현황
+		: 보존장비 목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStatePresvEquipList-result" class="rms.rmsstate.curstate.domain.CurStateEquip">
+	 	<result property="equipClssNm" 		column="EQUIP_CLSS_NM"/>
+		<result property="goodsNm" 			column="GOODS_NM"/>
+		<result property="equipType" 			column="EQUIP_TYPE"/>
+		<result property="goodsCnt" 		column="GOODS_CNT"/>
+		<result property="introYmd" 		column="INTRO_YMD"/>
+		<result property="remk" 			column="REMK"/>	
+	 </resultMap>
+	 <select id="findCurStatePresvEquipList" parameterClass="rms.rmsstate.curstate.domain.CurStateEquip" resultMap="findCurStatePresvEquipList-result">
+		SELECT (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST13' AND COM_CD = A.EQUIP_CLSS_CD) AS EQUIP_CLSS_NM,
+		       EQUIP_TYPE, GOODS_NM, GOODS_CNT, INTRO_YMD, REMK
+		  FROM TB_STPRESVEQUIP A
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	 </select>
+	 
+	 <!-- 
+		기록관현황_시설장비현황
+		: 기록물 및 서고 소독 목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStateDisinfList-result" class="rms.rmsstate.curstate.domain.CurStateEquip">
+	 	<result property="disinfTrgtNm" 		column="DISINF_TRGT_NM"/>
+		<result property="disinfYmd" 			column="DISINF_YMD"/>
+		<result property="drugNm" 				column="DRUG_NM"/>
+		<result property="disinfUserNm" 		column="DISINF_USER_NM"/>
+		<result property="remk" 				column="REMK"/>
+	 </resultMap>
+	 <select id="findCurStateDisinfList" parameterClass="rms.rmsstate.curstate.domain.CurStateEquip" resultMap="findCurStateDisinfList-result">
+		SELECT (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST14' AND COM_CD = A.DISINF_TRGT_CD) AS DISINF_TRGT_NM,
+		       DISINF_YMD, DRUG_NM, DISINF_USER_NM, REMK
+		  FROM TB_STDISINF A
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	 </select>
+	 
+	 
+	 
+
+</sqlMap>

@@ -1,0 +1,46 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+-- Query    : select
+-- Query Id : countOrgNm
+
+		SELECT COUNT(1)		FROM  TB_STORG		WHERE record_center_id = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+-- Query    : select
+-- Query Id : findOrgNm
+
+		SELECT C.record_center_id			, C.org_cd			, C.org_nm			, C.org_abbr_nm			, C.upper_org_cd			, C.close_flag			, C.record_center_flag		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT record_center_id					, org_cd					, org_nm					, org_abbr_nm					, upper_org_cd					, (CASE WHEN close_flag='0' THEN 'ÇöÁ¸' ELSE 'ÆóÁö' END) AS close_flag					, '' AS record_center_flag				FROM  TB_STORG				WHERE record_center_id = '1'				ORDER BY full_org_nm, close_flag			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+-- Query    : select
+-- Query Id : findOrgTree
+
+		SELECT A.record_center_id AS recordCenterId			, '1' AS treeType			, A.org_cd AS id			, A.org_abbr_nm AS text			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.upper_org_cd=A.org_cd) THEN 'closed'					ELSE 'open'				END) AS state 			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'					ELSE 'icon-folder_full_accept'				END) AS iconCls			, A.levl		FROM TB_STORG A		WHERE A.record_center_id = '1'				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+-- Query    : select
+-- Query Id : findRecordCenterList
+
+		SELECT 'RC_'||A.record_center_id AS recordCenterId			, A.record_center_id||'::'||A.record_center_cd AS id			, A.rep_org_nm AS text			, (CASE WHEN A.record_center_id='1' THEN 'open'					ELSE 'closed' END) AS state			, 'icon-search' AS iconCls		FROM TB_STRECORDCENTER A		ORDER BY A.record_center_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+-- Query    : select
+-- Query Id : findMultiOrgTree
+
+		SELECT A.record_center_id AS recordCenterId			, A.record_center_id||'::'||A.org_cd AS id			, A.org_abbr_nm AS text			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'					ELSE 'open'				END) AS state 			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'					ELSE 'icon-folder_full_accept'				END) AS iconCls		FROM TB_STORG A		WHERE A.record_center_id = '1'				ORDER BY A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml
+-- Query    : select
+-- Query Id : findMultiOrgListTree
+
+		SELECT A.record_center_id AS recordCenterId			, A.record_center_id||'::'||A.org_cd AS id			, A.org_abbr_nm AS text			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'					ELSE 'open'				END) AS state 			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'					ELSE 'icon-folder_full_accept'				END) AS iconCls		FROM TB_STORG A WHERE  				A.record_center_id = '1'			  AND 				A.record_center_id = '1'			  AND 				A.upper_org_cd = '1'			  		ORDER BY A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeOrg.xml

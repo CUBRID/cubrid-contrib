@@ -1,0 +1,44 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+
+createFormatOrgPKI
+Query result contains more than a single tuple. [CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createFormatOrgPKI
+
+		INSERT INTO TB_STFORMATPKI (			seq, record_center_id, pki, pki_usg, validity_date_from		   ,validity_date_to, reg_flag, creat_user_id, creat_user_nm, creat_user_org_cd		   ,creat_user_org_nm, reg_dtime, record_center_cd, record_center_nm		)		VALUES (			TB_STFORMATPKI_SQ01.nextVal, '1', '1', '1', '1'		   ,'1', 'Y', '1', '1', '1'		   ,(SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'), TO_CHAR(SYSDATE, 'YYYYMMDD'), '1', (SELECT record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_cd = '1')		);
+
+createFormatPKIHist
+Query result contains more than a single tuple. [CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createFormatPKIHist
+
+		INSERT INTO TB_STFORMATPKIHIST (			seq, record_center_id, pki, pki_usg, validity_date_from, validity_date_to, creat_user_id, creat_user_nm,			creat_user_org_cd, creat_user_org_nm, reg_dtime, record_center_cd, record_center_nm		)		VALUES (			TB_STFORMATPKIHIST_SQ01.nextVal, '1', '1', '1', '1', '1', '1',			'1', '1', (SELECT org_abbr_nm FROM TB_STORG B WHERE B.record_center_id = '1' AND B.org_cd = '1'), TO_CHAR(SYSDATE, 'YYYYMMDD'),			'1', (SELECT record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_cd = '1')		) 	;
+
+findFormatPKIHist
+Query result contains more than a single tuple. [CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : select
+-- Query Id : findFormatPKIHist
+
+		SELECT ROWNUM AS rnum			  ,seq		      ,record_center_id		      ,record_center_cd		      ,record_center_nm		       , 		          (SELECT rep_org_cd FROM TB_STRECORDCENTER B WHERE B.record_center_cd = A.record_center_cd) rep_org_cd		       		      ,pki		      ,pki_usg		      ,validity_date_from		      ,validity_date_to		      ,creat_user_id		      ,creat_user_nm		      ,creat_user_org_cd		      ,creat_user_org_nm		      ,reg_dtime		FROM TB_STFORMATPKIHIST A		WHERE A.pki_usg = '1'		 AND  		        A.record_center_cd = '1'		      AND 		        A.record_center_cd = '1'		      AND 		        A.record_center_id = '1'		      		ORDER BY seq	;
+
+createRcRate
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_stwflbrcrate_record_center_id(B+tree: 4|118|630) ON CLASS tb_stwflbrcrate(CLASS_OID: 0|487|15). key: '1'(OID: 2|280|9).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml
+-- Query    : insert
+-- Query Id : createRcRate
+
+		INSERT INTO TB_STWFLBRCRATE			(record_center_id, record_center_rate)		VALUES 			('1', '1');
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\confset\FormatServerMng.xml

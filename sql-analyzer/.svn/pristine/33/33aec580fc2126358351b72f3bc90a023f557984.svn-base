@@ -1,0 +1,34 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+
+InsertUserSync
+The constraint of the foreign key 'tb_stuser_fk02' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : insert
+-- Query Id : InsertUserSync
+
+		INSERT INTO TB_STUSER		(			USER_ID, RECORD_CENTER_ID, DEPT_CD, USER_DIV, USER_NM			, LOGIN_USER_ID, USER_PWD, POS, RANK, WORK_FLAG			, TEL_NO, ADDR, RESID_NO, USE_FLAG, REG_DTIME			, SSO_FLAG, LOGIN_ERROR_CNT, ONNARA_USERID, MENU_GRANT_GRP_CD, PKI_NAME_CHECK			, SSO_KEY		)		VALUES		(			(SELECT LPAD(TO_CHAR(NVL((SELECT TO_NUMBER(MAX(USER_ID)) FROM TB_STUSER),0)+1),10,'0') FROM DUAL)			, '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '1', '1', '1', '1', '1'			, '2', 0, '', (SELECT MENU_GRANT_GRP_CD FROM TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID = '1' AND DEFAULT_GRANT_DIV = '1'), 'Y'			, '1'		)	;
+
+UpdateUserSync
+Semantic: Class (TB_STUSER) does not have attribute REGID_NO. update TB_STUSER A set A.LOGIN_USER_ID='1', A.REG_DTIME='1',...[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+-- Query    : update
+-- Query Id : UpdateUserSync
+
+		UPDATE TB_STUSER A		SET   A.LOGIN_USER_ID     = '1'			, A.REG_DTIME         = '1'			 			, A.RECORD_CENTER_ID  = '1'			, A.DEPT_CD           = '1'			, A.MENU_GRANT_GRP_CD = (SELECT B.MENU_GRANT_GRP_CD FROM TB_STMENUGRANTGRP B WHERE B.RECORD_CENTER_ID = '1' AND B.DEFAULT_GRANT_DIV = A.USER_DIV)			  			, A.USER_NM           = '1'			  			, A.POS               = '1'			  			, A.RANK              = '1'			  			, A.WORK_FLAG         = '1'			  			, A.TEL_NO            = '1'			  			, A.ADDR              = '1'			  			, A.REGID_NO          = '1'			  			, A.USE_FLAG          = '1'			 		WHERE A.SSO_KEY = '1'	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSync\conf\sql\map\sqlMap-RmsUserSync.xml
+
+null
+No statement to execute.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUserSyncNeis\build.xml
+-- Query    : delete
+-- Query Id : null
+
+;

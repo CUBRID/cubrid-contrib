@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.comcd">
+	<!-- findComCdList -->
+	<!--  공통 코드 조회 -->
+	<select id="findComCd" parameterClass="rms.common.code.domain.Code" resultClass="rms.common.code.domain.Code">
+		SELECT com_type_cd AS type
+			, com_cd    AS code
+			, com_cd_nm AS name
+			<!--cubrid , use_flag  AS use-->
+			, use_flag  AS &quot;use&quot;
+			, sub_com_type_cd AS subType
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = #type:VARCHAR#
+		ORDER BY COM_CD
+	</select>
+	
+	<select id="findAllCd" resultClass="rms.common.code.domain.Code">
+		SELECT	com_type_cd as type, com_cd as code, com_cd_nm as name
+		FROM	TB_ZZCOMCD
+	</select>
+	
+	<!-- findCdList -->
+	
+	<resultMap id="code-result" class="rms.common.code.domain.Code" >
+	    <result property="code" 	column="CODE"></result>
+	    <result property="name" 	column="NAME"></result>
+	</resultMap>
+	
+	<!--  기록물건유형 중 세부유형이 있는 기록물건등록유형정보 -->
+	<select id="findSubComCd" parameterClass="rms.common.code.domain.Code" resultClass="rms.common.code.domain.Code">
+		SELECT COM_CD AS code,
+		       COM_CD_NM AS name,
+		       SUB_COM_TYPE_CD AS subType
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = #code:VARCHAR#
+		AND SUB_COM_TYPE_CD IS NOT NULL
+	</select>
+	
+	<!--  공통 코드 조회 (기록관코드) -->
+	<select id="findRecordCenterCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT RECORD_CENTER_ID AS CODE,
+		       RECORD_CENTER_NM AS NAME
+		FROM TB_STRECORDCENTER
+		ORDER BY RECORD_CENTER_NM
+	</select>
+	
+	<!--  공통 코드 조회 (인계기록관코드) -->
+	<select id="findTakovrRecordCenterCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT RECORD_CENTER_ID AS CODE,
+		       RECORD_CENTER_NM AS NAME
+		FROM TB_STRECORDCENTER
+		WHERE TAKE_TAKOVR_DIV_CD = '2'
+		ORDER BY RECORD_CENTER_NM
+	</select>
+	
+	<!--  공통 코드 조회 (인수기록관코드) -->
+	<select id="findTakeRecordCenterCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT RECORD_CENTER_ID AS CODE,
+		       RECORD_CENTER_NM AS NAME
+		FROM TB_STRECORDCENTER
+		WHERE TAKE_TAKOVR_DIV_CD = '1'
+		ORDER BY RECORD_CENTER_NM
+	</select>
+	
+	<!--  공통 코드 조회 (메뉴권한그룹코드) -->
+	<select id="findMenuGrantGrpCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT MENU_GRANT_GRP_CD AS CODE,
+		       MENU_GRANT_GRP_NM AS NAME
+		FROM TB_STMENUGRANTGRP
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		ORDER BY DEFAULT_GRANT_DIV
+	</select>
+	
+	<!--  공통 코드 조회 (연계대상코드) -->
+	<select id="findLinkTrgtCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT DISTINCT LINK_TRGT_ID AS CODE
+		     , LINK_TRGT_NM AS NAME
+		FROM TB_STLINKTRGT
+		ORDER BY LINK_TRGT_NM
+	</select>
+	
+	<!--  인계기록관아아디 조회  -->
+	<select id="findTakovrRecordCenterId" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT A.TAKOVR_RECORD_CENTER_ID AS CODE
+		     , MAX(B.RECORD_CENTER_NM) AS NAME
+		FROM TB_DFORGTAKE A, TB_STRECORDCENTER B
+		WHERE A.TAKOVR_RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		GROUP BY A.TAKOVR_RECORD_CENTER_ID
+		ORDER BY A.TAKOVR_RECORD_CENTER_ID
+	</select>
+	
+	<!--  생산보고년도  조회  -->
+	<select id="findReportYyyy" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT CODE, NAME 
+		FROM
+		(
+			SELECT CR_REPORT_YYYY AS CODE
+			     , CR_REPORT_YYYY AS NAME
+			FROM TB_CRREPORT
+			WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			  AND CREAT_SYS_CD IN ('01', '02')
+			   <![CDATA[  AND CR_REPORT_YYYY <= TO_CHAR(SYSDATE,'YYYY') ]]>
+			UNION ALL
+			SELECT CR_REPORT_YYYY AS CODE
+			     , CR_REPORT_YYYY AS NAME
+			  FROM TB_CRFOLDER 
+			 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   AND CREAT_SYS_CD = '03'
+			   <![CDATA[  AND CR_REPORT_YYYY <= TO_CHAR(SYSDATE,'YYYY') ]]>
+			   AND CR_REPORT_YYYY IS NOT NULL
+			UNION ALL 
+			SELECT TO_CHAR(SYSDATE,'YYYY') CODE,
+			       TO_CHAR(SYSDATE,'YYYY') NAME
+		    FROM DUAL
+		)
+		GROUP BY CODE, NAME
+		ORDER BY CODE DESC
+	</select>
+	
+	<select id="findTakovrSno" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT ORG_TAKOVR_SNO AS CODE
+		     , TAKOVR_YYYY||'-'||LPAD(ORG_TAKOVR_SNO,3,'0') AS NAME
+		FROM TB_DFORGTAKOVR
+		WHERE TAKOVR_YYYY = TO_CHAR(SYSDATE,'YYYY')
+		AND   RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		ORDER BY ORG_TAKOVR_SNO  
+	</select>
+	
+	<select id="findTakeSno" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT ORG_TAKE_SNO AS CODE
+		     , ORG_TAKE_YYYY||'-'||LPAD(ORG_TAKE_SNO,3,'0') AS NAME
+		FROM TB_DFORGTAKE
+		WHERE ORG_TAKE_YYYY = TO_CHAR(SYSDATE,'YYYY')
+		ORDER BY ORG_TAKE_SNO DESC
+	</select>
+	
+	<!--  공통 코드 조회 (생산시스템코드) -->
+	<select id="findCreatSysCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT creat_sys_cd  AS CODE, 
+			   (SELECT D.com_cd_nm
+			    FROM TB_ZZCOMCD D
+			    WHERE D.com_type_cd = 'RD17'
+			    AND   D.com_cd = A.creat_sys_cd) as NAME
+		FROM TB_STCREATSYS A
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND ORG_CD = #orgCd:VARCHAR#
+		ORDER BY creat_sys_cd
+	</select>
+	
+	<!--  기관간인수인계 (인계기관의 인수부처명-계획수립,기능선정,인계처리) -->
+	<select id="findTakeRepIng" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT take_takovr_mng_no AS CODE
+		     , take_takovr_rep_nm AS NAME
+		FROM TB_RDTAKETAKOVRPLAN A
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   take_takovr_div_cd = '2'
+		AND   run_state_cd IN ('01','02','03')
+		ORDER BY take_takovr_rep_nm
+	</select>
+	
+	<!--  기관간인수인계 (인계기관의 인수부처명-인계처리) -->
+	<select id="findTakeRepAll" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT take_takovr_mng_no AS CODE
+		     , take_takovr_rep_nm AS NAME
+		FROM TB_RDTAKETAKOVRPLAN A
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   take_takovr_div_cd = '2'
+		AND   run_state_cd IN ('01','02','03','04')
+		ORDER BY take_takovr_rep_nm
+	</select>
+	
+	<!--  기관간인수인계 (인수기관의 인계부처명-계획수립,기능선정,인계처리) -->
+	<select id="findTakovrRepIng" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT take_takovr_mng_no AS CODE
+		     , take_takovr_rep_nm AS NAME
+		FROM TB_RDTAKETAKOVRPLAN A
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   take_takovr_div_cd = '1'
+		AND   run_state_cd IN ('01','02','03')
+		ORDER BY take_takovr_rep_nm
+	</select>
+	
+	<!--  기관간인수인계 (인계기관의 인수부처명-인계완료) -->
+	<select id="findTakeRepEnd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT take_takovr_rep_cd AS CODE
+		     , take_takovr_rep_nm AS NAME
+		FROM (
+			SELECT take_takovr_rep_cd
+			     , MAX(take_takovr_rep_nm) take_takovr_rep_nm
+			FROM TB_RDTAKETAKOVRPLAN A
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND   take_takovr_div_cd = '2'
+			AND   run_state_cd = '04'
+			GROUP BY take_takovr_rep_cd
+		)
+		ORDER BY take_takovr_rep_nm
+	</select>
+	
+	<!--  기관간인수인계 (인수기관의 인계부처명-인수완료) -->
+	<select id="findTakovrRepEnd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT take_takovr_rep_cd AS CODE
+		     , take_takovr_rep_nm AS NAME
+		FROM (
+			SELECT take_takovr_rep_cd
+			     , MAX(take_takovr_rep_nm) take_takovr_rep_nm
+			FROM TB_RDTAKETAKOVRPLAN A
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND   take_takovr_div_cd = '1'
+			AND   run_state_cd = '04'
+			GROUP BY take_takovr_rep_cd
+		)
+		ORDER BY take_takovr_rep_nm
+	</select>
+	
+</sqlMap>

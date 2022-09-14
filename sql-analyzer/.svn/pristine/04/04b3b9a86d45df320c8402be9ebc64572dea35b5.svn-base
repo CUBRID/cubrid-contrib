@@ -1,0 +1,165 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : countTask
+
+	SELECT count(1)	  FROM (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = DECODE(C.presv_term_cd, '20', '25', C.presv_term_cd))  PRESV_TERM_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = DECODE(B.RECORD_CENTER_PRESV_TERM_CD, '20', '25', B.RECORD_CENTER_PRESV_TERM_CD)) RECORD_CENTER_PRESV_TERM_NM	       ,B.RECORD_CENTER_CHECK_YMD	       ,B.RECORD_CENTER_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.PRESV_TERM_STATE           ,C.PRESV_TERM_CD	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   FROM tb_zzbisclss A       WHERE A.levl='6' and A.presv_term_state in (1,2)           START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID ) D       WHERE  	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 		    D.BIS_CLSS_ID = '1' 		    AND 				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 								FROM TB_ZZBISORG							   WHERE ORG_CD= '1')  AND 			D.WRITE_FLAG = '1'		    AND 			D.BIS_TYPE = '1'		    AND 			D.PRESV_TERM_STATE = '1'		    AND 			D.DEL_FLAG = '1'		      			    ORDER BY START_DTIME			     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findTask
+
+	 SELECT ROWNUM AS rnum	       ,D.BIS_CLSS_ID	       ,D.BIS_CLSS_NM	       ,D.BIS_CLSS_PATH_NM	       ,D.BIS_TYPE_NM	       ,D.START_DTIME	       ,D.PRESV_TERM_NM	       ,D.PRESV_TERM_HANDL_STATE_NM	       ,D.RECORD_CENTER_PRESV_TERM_NM	       ,D.RECORD_CENTER_CHECK_YMD	       ,D.RECORD_CENTER_OPIN	       ,D.DEL_FLAG_NM	       ,D.WRITE_FLAG_NM	       ,D.DEL_FLAG	       ,D.BIS_TYPE	 FROM 	 (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,NVL((SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = DECODE(C.presv_term_cd, '20', '25', C.presv_term_cd)) PRESV_TERM_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = DECODE(B.RECORD_CENTER_PRESV_TERM_CD, '20', '25', B.RECORD_CENTER_PRESV_TERM_CD)) RECORD_CENTER_PRESV_TERM_NM	       ,B.RECORD_CENTER_CHECK_YMD	       ,B.RECORD_CENTER_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.PRESV_TERM_STATE           ,C.PRESV_TERM_CD	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   FROM tb_zzbisclss A       WHERE A.levl='6' and A.presv_term_state in (1,2)           START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID   		      ORDER BY START_DTIME for orderby_num() between '1' AND '1'		    		) D;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findTaskExcel
+
+	SELECT D.BIS_CLSS_ID	       ,D.BIS_CLSS_NM	       ,D.BIS_CLSS_PATH_NM	       ,D.BIS_TYPE_NM	       ,D.START_DTIME	       ,D.PRESV_TERM_NM	       ,D.PRESV_TERM_HANDL_STATE_NM	       ,D.RECORD_CENTER_PRESV_TERM_NM	       ,D.RECORD_CENTER_CHECK_YMD	       ,D.RECORD_CENTER_OPIN	       ,D.DEL_FLAG_NM	       ,D.DEL_FLAG	       ,D.TASK_DESCR	 FROM 	 (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,NVL((SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = C.presv_term_cd)  PRESV_TERM_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM	       ,B.RECORD_CENTER_CHECK_YMD	       ,B.RECORD_CENTER_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.TASK_DESCR           ,C.PRESV_TERM_STATE	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   ,A.TASK_DESCR		   FROM tb_zzbisclss A       WHERE A.levl='6' and A.presv_term_state in (1,2)           START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID ) D       WHERE  	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 		    D.BIS_CLSS_ID = '1' 		    AND 				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 								FROM TB_ZZBISORG							   WHERE ORG_CD= '1')  AND 			D.PRESV_TERM_CD = '1'		    AND 			D.WRITE_FLAG = '1'		    AND 			D.BIS_TYPE = '1'		    AND 			D.PRESV_TERM_STATE = '1'		    AND 			D.DEL_FLAG = '1'		      		      ORDER BY START_DTIME		    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findExcelOrgNm
+
+		SELECT A.org_cd			, (SELECT B.org_nm FROM TB_STORG B WHERE B.org_cd=A.org_cd and b.record_center_id='1') org_nm			, (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.org_cd=A.org_cd and b.record_center_id='1') org_abbr_nm			, (SELECT B.full_org_nm FROM TB_STORG B WHERE B.org_cd=A.org_cd and b.record_center_id='1') full_org_nm		FROM TB_ZZBISORG A		WHERE A.bis_clss_id = '1'		AND   A.del_flag = '0'    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : countTaskReMedi
+
+	SELECT COUNT(1)	 FROM 	 (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = C.presv_term_cd)  PRESV_TERM_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd =decode(c.presv_term_state,2,3,c.presv_term_state)) presv_term_handl_state_nm	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = B.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM	       ,B.NARS_CHECK_YMD	       ,B.NARS_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.TASK_DESCR           ,C.PRESV_TERM_STATE           ,C.PRESV_TERM_FILE_CREAT_STATE	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   ,A.TASK_DESCR		   ,A.PRESV_TERM_FILE_CREAT_STATE		   FROM tb_zzbisclss A       WHERE A.levl='6'            START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID ) D WHERE  	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 		    D.BIS_CLSS_ID = '1' 		    AND 				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 								FROM TB_ZZBISORG							   WHERE ORG_CD= '1')  AND 			D.PRESV_TERM_CD = '1'		    AND 			D.WRITE_FLAG = '1'		    AND 			D.BIS_TYPE = '1'		    AND 		   D.PRESV_TERM_STATE = '1'		    AND  		      		(D.START_DTIME BETWEEN '1'||'000000' AND '1'||'240000')	      		   AND 			D.DEL_FLAG = '1'		    		          ORDER BY START_DTIME		        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findTaskReMedi
+
+	SELECT D.BIS_CLSS_ID	       ,D.BIS_CLSS_NM	       ,D.BIS_CLSS_PATH_NM	       ,D.BIS_TYPE_NM	       ,D.START_DTIME	       ,D.PRESV_TERM_NM	       ,D.PRESV_TERM_HANDL_STATE_NM	       ,D.NARS_PRESV_TERM_NM	       ,D.NARS_CHECK_YMD	       ,D.NARS_OPIN	       ,D.DEL_FLAG_NM	       ,D.DEL_FLAG	       ,D.TASK_DESCR	       ,D.PRESV_TERM_STATE		   ,D.PRESV_TERM_FILE_CREAT_STATE,D.RESUBMIT_FLAG	 FROM 	 (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,NVL((SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = C.presv_term_cd)  PRESV_TERM_NM            	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd = c.presv_term_state) AS presv_term_handl_state_nm,	        (SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = B.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM	       ,B.NARS_CHECK_YMD	       ,B.NARS_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.TASK_DESCR           ,C.PRESV_TERM_STATE           ,C.PRESV_TERM_FILE_CREAT_STATE,C.RESUBMIT_FLAG	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   ,A.TASK_DESCR		   ,A.PRESV_TERM_FILE_CREAT_STATE,DECODE(A.RESUBMIT_FLAG,1,'Y','N') RESUBMIT_FLAG		   FROM tb_zzbisclss A       WHERE A.levl='6'            START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID ) D       WHERE  	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 		    D.BIS_CLSS_ID = '1' 		    AND 				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 								FROM TB_ZZBISORG							   WHERE ORG_CD= '1')  AND 			D.PRESV_TERM_CD = '1'		    AND 			D.WRITE_FLAG = '1'		    AND 			D.BIS_TYPE = '1'		    AND 		    D.PRESV_TERM_STATE = '1'	        AND  		      		(D.START_DTIME BETWEEN '1'||'000000' AND '1'||'240000')	      		   AND 			D.DEL_FLAG = '1'		     	          ORDER BY START_DTIME	       ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findTaskInfo
+
+		SELECT A.BIS_CLSS_ID		, A.BIS_CLSS_NM		, A.PRESV_TERM_CD		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_CD ) presv_term_nm		, NVL((SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ03' AND USE_FLAG = '1' AND COM_CD = REPLACE(A.BIS_TYPE,'B','')),REPLACE(A.BIS_TYPE,'B','')) BIS_TYPE		, A.START_DTIME		, A.CLOSE_DTIME		, A.LAW_BASIS		, A.PRESV_TERM_FIX_YMD		, A.PRESV_TERM_FIX_RSN		, A.OPEN_DETL_STND	    , A.READ_RANGE_DETL_STND		, A.FUNSH_RECORD		, A.FUNSH_FLAG		, A.FUNSH_RSN		, A.FUNSH_TERM		,(SELECT MAX(DECODE(LEVL,1, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,2, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,3, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,4, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,5, BIS_CLSS_NM)) BIS_CLSS_FULL_NM			FROM   TB_ZZBISCLSS			START WITH BIS_CLSS_ID = '1'			CONNECT BY BIS_CLSS_ID = PRIOR UPPER_BIS_CLSS_ID 		) BIS_CLSS_PATH_NM		,(SELECT MAX(DECODE(LEVL,1, PJT_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,2, PJT_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,3, PJT_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,4, PJT_CLSS_NM)) PJT_CLSS_FULL_NM			FROM   TB_ZZPJTCLSS			START WITH PJT_CLSS_ID = (SELECT PJT_CLSS_ID FROM TB_ZZPJTMAPPNG WHERE BIS_CLSS_ID = '1')			CONNECT BY PJT_CLSS_ID = PRIOR UPPER_PJT_CLSS_ID 		) PJT_CLSS_PATH_NM		, A.TASK_DESCR		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ01' AND USE_FLAG='1' AND COM_CD = A.	WRITE_FLAG ) as WRITE_FLAG		, A.PRESV_TERM_FIX_YMD		, A.TASK_REMK		, A.PRESV_TERM_HANDL_STATE		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ11' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_STATE) PRESV_TERM_HANDL_STATE_NM		, A.PRESV_TERM_FIX_RSN		FROM TB_ZZBISCLSS A		WHERE A.LEVL = '6'  		AND A.BIS_CLSS_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : update
+-- Query Id : updateTaskMng
+
+		  UPDATE TB_ZZBISCLSS		  SET TASK_REMK = '1'		  , FUNSH_FLAG = '1'		  , FUNSH_RSN = '1'		  , FUNSH_TERM = '1'		  , OPEN_DETL_STND = '1'		  , READ_RANGE_DETL_STND = '1'		  , FUNSH_RECORD = '1'		  , WRITE_FLAG = '1'		  WHERE BIS_CLSS_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findMidRef
+
+		SELECT A.BIS_CLSS_NM		, A.PRESV_TERM_CD		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1'AND COM_CD = A.PRESV_TERM_CD ) PRESV_TERM_NM 		, '' BIS_CLSS_PATH_NM        FROM TB_ZZBISCLSS A		WHERE PRESV_TERM_CD >'0' AND UPPER_BIS_CLSS_ID IN(			SELECT BIS_CLSS_ID			FROM TB_ZZBISCLSS			WHERE UPPER_BIS_CLSS_ID IN ( 				SELECT UPPER_BIS_CLSS_ID				FROM TB_ZZBISCLSS 				WHERE BIS_CLSS_ID = (					SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS 					WHERE BIS_CLSS_ID = '1' 									) 				)			)		ORDER BY PRESV_TERM_CD, BIS_CLSS_NM	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findMidRefNm
+
+		SELECT DISTINCT '' BIS_CLSS_NM		, '' PRESV_TERM_CD		, '' PRESV_TERM_NM 		,(SELECT MAX(DECODE(LEVL,1, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,2, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,3, BIS_CLSS_NM))||'>'||			   MAX(DECODE(LEVL,4, BIS_CLSS_NM)) BIS_CLSS_FULL_NM			FROM   TB_ZZBISCLSS			START WITH BIS_CLSS_ID = '1'				CONNECT BY BIS_CLSS_ID = PRIOR UPPER_BIS_CLSS_ID 		) BIS_CLSS_PATH_NM		FROM TB_ZZBISCLSS A;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findPresvTerm
+
+		SELECT COM_CD AS PRESV_TERM_CD		, COM_CD_NM AS PRESV_TERM_NM		FROM TB_ZZCOMCD		WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : update
+-- Query Id : updatePresvTermAprov
+
+	  UPDATE TB_ZZBISCLSS	  SET  PRESV_TERM_HANDL_STATE = '2'	  WHERE PRESV_TERM_HANDL_STATE = '1' AND BIS_CLSS_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findChrgOrg
+
+		SELECT ORG_CD, ORG_NM, org_abbr_nm, full_org_nm		FROM TB_STORG 		WHERE ORG_CD IN (SELECT ORG_CD FROM TB_ZZBISORG WHERE BIS_CLSS_ID = '1' AND DEL_FLAG='0' )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : countUnitCreat
+
+		SELECT COUNT(1)		FROM TB_ZZBISCLSS A		WHERE LEVL = '6'		AND A.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD IN (SELECT ORG_CD FROM TB_STORG WHERE RECORD_CENTER_ID = '1'));
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findUnitCreat
+
+		SELECT A.BIS_CLSS_ID		, A.BIS_CLSS_NM		, A.START_DTIME		, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = (SELECT MIN(ORG_CD) FROM TB_ZZBISORG WHERE BIS_CLSS_ID = A.BIS_CLSS_ID AND ORG_CD IN (SELECT ORG_CD FROM TB_STORG WHERE RECORD_CENTER_ID = '1'))AND RECORD_CENTER_ID = '1') CHRG_ORG_NM		, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = (SELECT MIN(ORG_CD) FROM TB_ZZBISORG WHERE BIS_CLSS_ID = A.BIS_CLSS_ID AND ORG_CD IN (SELECT ORG_CD FROM TB_STORG WHERE RECORD_CENTER_ID = '1'))AND RECORD_CENTER_ID = '1') CHRG_ORG_ABBR_NM				, A.TRANS_UNIT_CD UNIT_CD		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ16' AND USE_FLAG='1' AND COM_CD = A.UNIT_CD_TRANS_FLAG) UNIT_CD_TRANS_FLAG		FROM TB_ZZBISCLSS A		WHERE LEVL = '6'		AND A.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD IN (SELECT ORG_CD FROM TB_STORG WHERE RECORD_CENTER_ID = '1'));
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : update
+-- Query Id : updateTransUnitCd
+
+	  UPDATE TB_ZZBISCLSS	  SET  TRANS_UNIT_CD = '1' 	  , UNIT_CD_TRANS_FLAG = '1' 	  WHERE BIS_CLSS_ID = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findTaskForUnit
+
+		SELECT A.WORK_DTIME NARS_HANDL_DTIME			, A.START_DTIME CREAT_STND_YMD			, (SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = (SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = A.UPPER_BIS_CLSS_ID)) LRG_CD			, (SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = (SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = (SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = A.UPPER_BIS_CLSS_ID))) LRG_NM			, (SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = A.UPPER_BIS_CLSS_ID) MID_CD			, (SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = (SELECT UPPER_BIS_CLSS_ID FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = A.UPPER_BIS_CLSS_ID)) MID_NM			, A.UPPER_BIS_CLSS_ID SML_CD			, (SELECT BIS_CLSS_NM FROM TB_ZZBISCLSS WHERE BIS_CLSS_ID = A.UPPER_BIS_CLSS_ID) SML_NM			, '' UNIT_CD			, A.BIS_CLSS_NM UNIT_NM			, A.TASK_DESCR UNIT_DESCR			, A.PRESV_TERM_CD			, A.PRESV_TERM_FIX_RSN			, DECODE(A.DEL_FLAG,0,'1',1,'2') STATE_CD			, A.LINK_DTIME		FROM TB_ZZBISCLSS A		WHERE LEVL = '6'		AND BIS_CLSS_ID = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : checkLinkDtimeAndTaskDel
+
+		SELECT A.DEL_FLAG		, A.LINK_DTIME		, A.BIS_CLSS_ID		FROM TB_ZZBISCLSS A		WHERE TRANS_UNIT_CD = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findChrgOrgDelFlag
+
+		SELECT DEL_FLAG 		FROM TB_ZZBISORG 		WHERE BIS_CLSS_ID = '1' AND ORG_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findAddChrgOrg
+
+		SELECT B.ORG_CD			, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = '1') ORG_NM			, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = '1') ORG_ABBR_NM			, (SELECT FULL_ORG_NM FROM TB_STORG WHERE ORG_CD = B.ORG_CD AND RECORD_CENTER_ID = '1') FULL_ORG_NM		FROM TB_ZZBISCLSS A, TB_ZZBISORG B		WHERE A.BIS_CLSS_ID = B.BIS_CLSS_ID 		AND B.ORG_CD IN (SELECT ORG_CD FROM TB_STORG WHERE RECORD_CENTER_ID = '1')		AND A.TRANS_UNIT_CD = '1'		AND B.ORG_CD NOT IN(SELECT ORG_CD FROM TB_ZZSENDUNITORG WHERE TRANS_UNIT_CD= '1' AND RECORD_CENTER_ID = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : countPresvTerm
+
+	    SELECT count(1)	    FROM TB_ZZCOMCD	    WHERE COM_TYPE_CD='RD07'	    AND (COM_CD = '1'	    OR COM_CD_NM = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : countNarsReqBisClss
+
+	SELECT COUNT(1)	 FROM 	 (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = C.presv_term_cd)  PRESV_TERM_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM	       ,B.RECORD_CENTER_CHECK_YMD	       ,B.RECORD_CENTER_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.PRESV_TERM_STATE	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   FROM tb_zzbisclss A       WHERE A.levl='6'            START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID ) D             WHERE  	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 	  	    D.BIS_CLSS_PATH_NM LIKE '1'	        AND 		    D.BIS_CLSS_ID = '1' 		    AND 				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 								FROM TB_ZZBISORG							   WHERE ORG_CD= '1')  AND 			D.PRESV_TERM_CD = '1'		    AND 			D.BIS_TYPE = '1'		    AND 			D.DEL_FLAG = '1'		    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml
+-- Query    : select
+-- Query Id : findNarsReqBisClss
+
+	SELECT D.BIS_CLSS_ID	       ,D.BIS_CLSS_NM	       ,D.BIS_CLSS_PATH_NM	       ,D.BIS_TYPE_NM	       ,D.START_DTIME	       ,D.PRESV_TERM_NM	       ,D.RECORD_CENTER_PRESV_TERM_NM	       ,D.RECORD_CENTER_CHECK_YMD	       ,D.RECORD_CENTER_OPIN	       ,D.DEL_FLAG_NM	       ,D.DEL_FLAG	       ,D.BIS_TYPE	       ,D.TASK_DESCR,D.RESUBMIT_FLAG	 FROM 	 (SELECT C.BIS_CLSS_ID	       ,C.BIS_CLSS_NM	       ,C.BIS_CLSS_PATH_NM	       ,NVL((SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ03'                AND use_flag = '1'                AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm	       ,C.START_DTIME	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = C.presv_term_cd)  PRESV_TERM_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'ZZ11'                AND use_flag = '1'                AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM	       ,(SELECT com_cd_nm               FROM tb_zzcomcd              WHERE com_type_cd = 'RD07'                AND use_flag = '1'                AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM	       ,B.RECORD_CENTER_CHECK_YMD	       ,B.RECORD_CENTER_OPIN	       ,(SELECT COM_CD_NM	           FROM TB_ZZCOMCD		      WHERE COM_TYPE_CD='ZZ19'		        AND USE_FLAG='0'			    AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM	       ,(SELECT COM_CD_NM              FROM TB_ZZCOMCD             WHERE COM_TYPE_CD = 'ZZ01'               AND USE_FLAG = '1'               AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM           ,C.DEL_FLAG           ,C.WRITE_FLAG           ,C.TASK_DESCR           ,REPLACE(C.BIS_TYPE,'B','') bis_type           ,C.PRESV_TERM_STATE,C.RESUBMIT_FLAG	  FROM (SELECT A.BIS_CLSS_ID, A.bis_clss_nm           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 	       ,A.BIS_TYPE           ,A.START_DTIME           ,A.PRESV_TERM_CD	       ,A.PRESV_TERM_STATE	       ,A.DEL_FLAG		   ,A.WRITE_FLAG		   ,A.TASK_DESCR,DECODE(A.RESUBMIT_FLAG,1,'Y','N') RESUBMIT_FLAG		   FROM tb_zzbisclss A       WHERE A.levl='6'            START WITH A.bis_clss_id ='00000000000000000000000000000000000'      CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id) C,TB_ZZPRESVTERMHIST B      WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID ) D       WHERE  	  	    D.BIS_CLSS_PATH_NM LIKE '1'  AND 	  	    D.BIS_CLSS_PATH_NM LIKE '1'  AND 		    D.BIS_CLSS_ID = '1' 		    AND 				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID 								FROM TB_ZZBISORG							   WHERE ORG_CD= '1')  AND 			D.PRESV_TERM_CD = '1'		    AND 			D.BIS_TYPE = '1'		    AND 			D.DEL_FLAG = '1'		      		      ORDER BY START_DTIME		    ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\Task.xml

@@ -1,0 +1,1757 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.optidiskmst">
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 계획서목록을  조회한다.
+	 -->
+	<resultMap id="findCntChkDiskPlanPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="cntChkId" 				column="CNTCHK_ID"/>		 <!-- 계획서번호 -->
+		<result property="planYmd" 					column="PLAN_YMD"/>			 <!-- 계획일자 -->
+		<result property="checkYmd"					column="CHECK_YMD"/>		 <!-- 점검일자 -->
+		<result property="workUserNm"				column="WORK_USER_NM"/>		 <!-- 담당자 -->	
+		<result property="checkStateNm"				column="CHECK_STATE_NM"/>	 <!-- 상태명-->
+		<result property="checkStateCd"				column="CHECK_STATE_CD"/>	 <!-- 상태 -->
+		<result property="mediaDiv"                 column="MEDIA_DIV"/>         <!-- 매체구분 -->	
+		<result property="mediaDivNm"               column="MEDIA_DIV_NM"/>      <!-- 매체구분명 -->
+	</resultMap>
+	<select id="countCntChkDiskPlanPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SROPTIDISK_CNTCHK A, TB_STUSER C, TB_ZZCOMCD D
+        WHERE A.WORK_USER_ID = C.USER_ID
+        AND (A.CNTCHK_PROG_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')
+        AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="checkStateCd">
+                A.CNTCHK_PROG_STATE_CD = #checkStateCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="cntChkId">
+                A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="planYmd">
+                A.PLAN_YMD = REPLACE(#planYmd:VARCHAR#, '-', '')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="workUserId">
+                A.WORK_USER_ID = #workUserId:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findCntChkDiskPlanPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntChkDiskPlanPagedList-result">
+		SELECT H.CNTCHK_ID
+		      ,H.PLAN_YMD
+		      ,H.CHECK_YMD
+		      ,H.USER_NM AS WORK_USER_NM
+		      ,H.COM_CD_NM AS CHECK_STATE_NM
+		      ,H.COM_CD AS CHECK_STATE_CD
+		      ,H.MEDIA_DIV
+		      ,(CASE WHEN H.MEDIA_DIV = '1' THEN '광디스크' WHEN H.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM
+		FROM (
+		    SELECT G.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , F.*
+		        FROM (
+		            SELECT DISTINCT(SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6)) AS CNTCHK_ID
+		            	  ,A.PLAN_YMD, A.CHECK_YMD, C.USER_NM, D.COM_CD_NM     
+		                  ,D.COM_CD, A.MEDIA_DIV
+		            FROM TB_SROPTIDISK_CNTCHK A, TB_STUSER C, TB_ZZCOMCD D
+		            WHERE A.WORK_USER_ID = C.USER_ID
+		            AND (A.CNTCHK_PROG_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')
+		            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="checkStateCd">
+		                    A.CNTCHK_PROG_STATE_CD = #checkStateCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="cntChkId">
+		                    A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="planYmd">
+		                    A.PLAN_YMD = REPLACE(#planYmd:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="workUserId">
+		                    A.WORK_USER_ID = #workUserId:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY CNTCHK_ID DESC
+		        ) F
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:VARCHAR#
+		    ) G
+		    WHERE G.rnum <![CDATA[>=]]> #pagedStart:VARCHAR#
+		) H
+		ORDER BY H.rnum
+	</select>
+	
+	<!--
+		보존매체정수점검_계획수립
+		: 사용자가 등록한 정수점검대상 모두 삭제
+	-->
+	<delete id="deleteCntChkDiskPlanTempAll" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		DELETE FROM TB_ZZSTAKRMTMP WHERE USER_ID = #userId:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND MEDIA_DIV = #mediaDiv:VARCHAR#
+	</delete>
+	
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 점검계획서 작성시 작성 대상 목록을 조회한다.
+	 -->
+	<resultMap id="findCntChkDiskPlanWritePagedList-result" 	class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+	    <result property="optidiskStakrmId"         column="OPTIDISK_STAKRM_ID"/>        <!-- 서고번호 -->
+	    <result property="optidiskStakrmNm"         column="OPTIDISK_STAKRM_NM"/>        <!-- 서고명 -->
+	    <result property="optidiskBooksfId"         column="OPTIDISK_BOOKSF_ID"/>        <!-- 서가번호 -->
+	    <result property="optidiskBooksfNm"         column="OPTIDISK_BOOKSF_NM"/>        <!-- 서가명 -->
+	    <result property="diskCnt"                  column="DISK_CNT"/>                  <!-- 매체수 -->
+	    <result property="splitCnt"                 column="SPLIT_CNT"/>                 <!-- 광디스크분할디스크수/MF복제수 -->
+	    <result property="lastCheckYyyy"            column="LAST_CHECK_YYYY"/>           <!-- 광디스크기정수점검연도 -->
+	    <result property="mediaDivNm"               column="MEDIA_DIV_NM"/>              <!-- 매체구분명 -->
+	    <result property="mediaDiv"                 column="MEDIA_DIV"/>              	 <!-- 매체구분명 -->
+	</resultMap>
+	<select id="countCntChkDiskPlanWritePagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+	    <isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+	            SELECT COUNT(1)
+	            FROM TB_SROPTIDISK_BOOKSF A, TB_SROPTIDISK_STAKRM C, TB_ZZSTAKRMTMP D
+	            WHERE A.OPTIDISK_STAKRM_ID = C.OPTIDISK_STAKRM_ID
+	            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+	            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+	            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	            AND (A.OPTIDISK_STAKRM_ID = D.TRGT_ID AND A.OPTIDISK_BOOKSF_ID = D.REMK AND D.USER_ID = #userId:VARCHAR# AND D.MEDIA_DIV = '1')
+	            <isNotEmpty prepend="AND" property="stakrmId">
+	                A.OPTIDISK_STAKRM_ID = #stakrmId:VARCHAR#
+	            </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="booksfId">
+	                A.OPTIDISK_BOOKSF_ID = #booksfId:VARCHAR#
+	            </isNotEmpty>
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">       <!-- M/F -->
+	            SELECT COUNT(1)
+	            FROM TB_SRMFBOOKSF A, TB_SRMFSTAKRM C, TB_ZZSTAKRMTMP D
+	            WHERE A.MF_STAKRM_ID = C.MF_STAKRM_ID
+	            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+	            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+	            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	            AND (A.MF_STAKRM_ID = D.TRGT_ID AND A.MF_BOOKSF_ID = D.REMK AND D.USER_ID = #userId:VARCHAR# AND D.MEDIA_DIV = '2')
+	            <isNotEmpty prepend="AND" property="stakrmId">
+	                A.MF_STAKRM_ID = #stakrmId:VARCHAR#
+	            </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="booksfId">
+	                A.MF_BOOKSF_ID = #booksfId:VARCHAR#
+	            </isNotEmpty>
+	    </isEqual>    
+	</select>
+	<select id="findCntChkDiskPlanWritePagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntChkDiskPlanWritePagedList-result">
+	    <isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+	        SELECT G.*
+	        FROM (
+	            SELECT F.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        ,E.*
+	                FROM (
+	                    SELECT A.OPTIDISK_STAKRM_ID
+	                            ,C.OPTIDISK_STAKRM_NM
+	                            ,A.OPTIDISK_BOOKSF_ID
+	                            ,A.OPTIDISK_BOOKSF_NM
+	                            ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS DISK_CNT
+	                            ,(SELECT NVL(SUM(SPLIT_TOT), 0) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS SPLIT_CNT  
+	                            ,A.LAST_CHECK_YYYY
+	                            ,#mediaDiv:VARCHAR# AS MEDIA_DIV
+	                            ,'광디스크' AS MEDIA_DIV_NM
+	                    FROM TB_SROPTIDISK_BOOKSF A, TB_SROPTIDISK_STAKRM C, TB_ZZSTAKRMTMP D
+	                    WHERE A.OPTIDISK_STAKRM_ID = C.OPTIDISK_STAKRM_ID
+	                    AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+	                    AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+	                    AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND (A.OPTIDISK_STAKRM_ID = D.TRGT_ID AND A.OPTIDISK_BOOKSF_ID = D.REMK AND D.USER_ID = #userId:VARCHAR# AND D.MEDIA_DIV = '1')
+	                    <isNotEmpty prepend="AND" property="stakrmId">
+	                        A.OPTIDISK_STAKRM_ID = #stakrmId:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="booksfId">
+	                        A.OPTIDISK_BOOKSF_ID = #booksfId:VARCHAR#
+	                    </isNotEmpty>
+	                    ORDER BY A.OPTIDISK_STAKRM_ID, A.OPTIDISK_BOOKSF_ID
+	                ) E
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) F
+	            WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) G
+	        ORDER BY G.rnum
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">       <!-- M/F -->
+	        SELECT G.*
+	        FROM (
+	            SELECT F.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        ,E.*
+	                FROM (
+	                    SELECT A.MF_STAKRM_ID AS OPTIDISK_STAKRM_ID
+	                            ,C.MF_STAKRM_NM AS OPTIDISK_STAKRM_NM
+	                            ,A.MF_BOOKSF_ID AS OPTIDISK_BOOKSF_ID
+	                            ,A.MF_BOOKSF_NM AS OPTIDISK_BOOKSF_NM
+	                            ,(SELECT COUNT(1) FROM TB_SRMFPIC B WHERE B.MF_STAKRM_ID = A.MF_STAKRM_ID AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS DISK_CNT
+	                            ,(SELECT NVL(SUM(TOT_COPY_CNT), 0) FROM TB_SRMFPIC B WHERE B.MF_STAKRM_ID = A.MF_STAKRM_ID AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AS SPLIT_CNT  
+	                            ,A.LAST_CHECK_YYYY
+	                            ,#mediaDiv:VARCHAR# AS MEDIA_DIV
+	                            ,'M/F' AS MEDIA_DIV_NM
+	                    FROM TB_SRMFBOOKSF A, TB_SRMFSTAKRM C, TB_ZZSTAKRMTMP D
+	                    WHERE A.MF_STAKRM_ID = C.MF_STAKRM_ID
+	                    AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+	                    AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+	                    AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND (A.MF_STAKRM_ID = D.TRGT_ID AND A.MF_BOOKSF_ID = D.REMK AND D.USER_ID = #userId:VARCHAR# AND D.MEDIA_DIV = '2')
+	                    <isNotEmpty prepend="AND" property="stakrmId">
+	                        A.MF_STAKRM_ID = #stakrmId:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="booksfId">
+	                        A.MF_BOOKSF_ID = #booksfId:VARCHAR#
+	                    </isNotEmpty>
+	                    ORDER BY A.MF_STAKRM_ID, A.MF_BOOKSF_ID
+	                ) E
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) F
+	            WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) G
+	        ORDER BY G.rnum
+	    </isEqual>    
+	</select>
+		
+	<!-- 
+		보존매체정수점검_계획수립
+		: 정수점검대상 서고, 서가 목록 조회
+	 -->
+	<resultMap id="findOptidiskStakrmBooksfPagedList-result"	class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+	    <result property="optidiskStakrmId"         column="OPTIDISK_STAKRM_ID"/>
+	    <result property="optidiskBooksfId"         column="OPTIDISK_BOOKSF_ID"/>
+	    <result property="diskCnt"                  column="DISK_CNT"/>
+	    <result property="splitCnt"                 column="SPLIT_CNT"/>
+	    <result property="lastCheckYyyy"            column="LAST_CHECK_YYYY"/>
+	</resultMap>
+	<select id="countOptidiskStakrmBooksfPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+	    <isEqual property="mediaDiv" compareValue="1">
+	            SELECT COUNT(1)
+	            FROM TB_SROPTIDISK_BOOKSF A
+	            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	            AND NOT EXISTS (
+	                SELECT E.TRGT_ID 
+	                FROM TB_ZZSTAKRMTMP E
+	                WHERE E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                AND E.USER_ID = #userId:VARCHAR#
+	                AND E.TRGT_ID = A.OPTIDISK_STAKRM_ID
+	                AND E.REMK = A.OPTIDISK_BOOKSF_ID
+	                AND E.MEDIA_DIV = '1' 
+	                AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	            )
+	            <isNotEmpty prepend="AND" property="stakrmId">
+	                A.OPTIDISK_STAKRM_ID = #stakrmId:VARCHAR#
+	            </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="booksfId">
+	                A.OPTIDISK_BOOKSF_ID = #booksfId:VARCHAR#
+	            </isNotEmpty>
+	    </isEqual>      
+	    <isEqual property="mediaDiv" compareValue="2">   <!--  M/F -->
+	            SELECT COUNT(1)
+	            FROM TB_SRMFBOOKSF A
+	            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	            AND NOT EXISTS (
+	                SELECT E.TRGT_ID 
+	                FROM TB_ZZSTAKRMTMP E
+	                WHERE E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                AND E.USER_ID = #userId:VARCHAR#
+	                AND E.TRGT_ID = A.MF_STAKRM_ID
+	                AND E.REMK = A.MF_BOOKSF_ID
+	                AND E.MEDIA_DIV = '2'
+	                AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	            )
+	            <isNotEmpty prepend="AND" property="stakrmId">
+	                A.MF_STAKRM_ID = #stakrmId:VARCHAR#
+	            </isNotEmpty>
+	            <isNotEmpty prepend="AND" property="booksfId">
+	                A.MF_BOOKSF_ID = #booksfId:VARCHAR#
+	            </isNotEmpty>
+	    </isEqual>
+	</select>
+	<select id="findOptidiskStakrmBooksfPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskStakrmBooksfPagedList-result">
+	    <isEqual property="mediaDiv" compareValue="1">
+	        SELECT D.*
+	        FROM (
+	            SELECT C.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        , B.*
+	                FROM (
+	                    SELECT A.OPTIDISK_STAKRM_ID
+	                            ,A.OPTIDISK_BOOKSF_ID
+	                            ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID=A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) AS DISK_CNT
+	                            ,(SELECT NVL(SUM(SPLIT_TOT), 0) FROM TB_SROPTIDISK_MST B WHERE B.OPTIDISK_STAKRM_ID=A.OPTIDISK_STAKRM_ID AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) AS SPLIT_CNT  
+	                            ,A.LAST_CHECK_YYYY
+	                    FROM TB_SROPTIDISK_BOOKSF A
+	                    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND NOT EXISTS (
+	                        SELECT E.TRGT_ID 
+	                        FROM TB_ZZSTAKRMTMP E
+	                        WHERE E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                        AND E.USER_ID = #userId:VARCHAR#
+	                        AND E.TRGT_ID = A.OPTIDISK_STAKRM_ID
+	                        AND E.REMK = A.OPTIDISK_BOOKSF_ID
+	                        AND E.MEDIA_DIV = '1' 
+	                        AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	                    )
+	                    <isNotEmpty prepend="AND" property="stakrmId">
+	                        A.OPTIDISK_STAKRM_ID = #stakrmId:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="booksfId">
+	                        A.OPTIDISK_BOOKSF_ID = #booksfId:VARCHAR#
+	                    </isNotEmpty>
+	                    ORDER BY A.OPTIDISK_STAKRM_ID, a.OPTIDISK_BOOKSF_ID
+	                ) B
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) C
+	            WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) D
+	        ORDER BY D.rnum
+	    </isEqual>      
+	    <isEqual property="mediaDiv" compareValue="2">
+	        SELECT D.*
+	        FROM (
+	            SELECT C.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        , B.*
+	                FROM (
+	                    SELECT A.MF_STAKRM_ID AS OPTIDISK_STAKRM_ID
+	                            , A.MF_BOOKSF_ID AS OPTIDISK_BOOKSF_ID 
+	                            , (SELECT COUNT(1)  FROM TB_SRMFPIC B WHERE B.MF_STAKRM_ID=A.MF_STAKRM_ID AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) AS DISK_CNT
+	                            , (SELECT NVL(SUM(TOT_COPY_CNT), 0) FROM TB_SRMFPIC B WHERE B.MF_STAKRM_ID=A.MF_STAKRM_ID AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) AS SPLIT_CNT  
+	                            , A.LAST_CHECK_YYYY
+	                    FROM TB_SRMFBOOKSF A
+	                    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND NOT EXISTS (
+	                        SELECT E.TRGT_ID 
+	                        FROM TB_ZZSTAKRMTMP E
+	                        WHERE E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                        AND E.USER_ID = #userId:VARCHAR#
+	                        AND E.TRGT_ID = A.MF_STAKRM_ID
+	                        AND E.REMK = A.MF_BOOKSF_ID
+	                        AND E.MEDIA_DIV = '2'
+	                        AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	                    )
+	                    <isNotEmpty prepend="AND" property="stakrmId">
+	                        A.MF_STAKRM_ID = #stakrmId:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="booksfId">
+	                        A.MF_BOOKSF_ID = #booksfId:VARCHAR#
+	                    </isNotEmpty>
+	                    ORDER BY A.MF_STAKRM_ID, A.MF_BOOKSF_ID
+	                ) B
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) C
+	            WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) D
+	        ORDER BY D.rnum
+	    </isEqual>
+	</select>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 보존매체정수점검대상을 추가한다.	
+	 -->
+	<insert id="createCntChkDiskTemp" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		INSERT INTO TB_ZZSTAKRMTMP (RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK, MEDIA_DIV)
+		VALUES (#recordCenterId:VARCHAR#, #userId:VARCHAR#, #trgtId:VARCHAR#, #remk:VARCHAR#, #mediaDiv:VARCHAR#) <!-- 서고ID, 서가ID /mediaDiv(매체구분) 컬럼 추가 -->	
+	</insert>	
+	
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 보존매체정수점검대상을 삭제한다.
+	 -->
+	<delete id="deleteCntChkDiskTemp" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		DELETE FROM TB_ZZSTAKRMTMP
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND TRGT_ID = #trgtId:VARCHAR#
+		AND REMK    = #remk:VARCHAR#
+		AND USER_ID = #userId:VARCHAR#
+		AND MEDIA_DIV = #mediaDiv:VARCHAR#
+	</delete>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 작성완료 정수점검 일련번호 max+1 조회 
+	-->
+	<resultMap id="findCntChkDiskSno-result"	class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="sno" 						column="SNO"/>
+	</resultMap>
+	<select id="findCntChkDiskSno" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntChkDiskSno-result">
+		SELECT NVL(MAX(SNO), 0) + 1 AS SNO                            
+		  FROM TB_SROPTIDISK_CNTCHK
+		WHERE CHECK_YYYY = #checkYyyy:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIA_DIV = #mediaDiv:VARCHAR#
+	</select>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 임시테이블의 서고/서가 목록을 조회한다. 
+	-->
+	<resultMap id="findCntChkDiskTempList-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="optidiskStakrmId" 	column="OPTIDISK_STAKRM_ID"/>		<!-- 서고번호 -->
+		<result property="optidiskStakrmNm" 	column="OPTIDISK_STAKRM_NM"/>		<!-- 서고명 -->
+		<result property="optidiskBooksfId" 	column="OPTIDISK_BOOKSF_ID"/>		<!-- 서가번호 -->
+		<result property="optidiskBooksfNm" 	column="OPTIDISK_BOOKSF_NM"/>		<!-- 서가명 -->
+		<result property="diskCnt" 				column="DISK_CNT"/>					<!-- 매체수 -->
+		<result property="splitCnt" 			column="SPLIT_CNT"/>				<!-- 광디스크분할디스크수/MF복제수 -->
+		<result property="lastCheckYyyy"		column="LAST_CHECK_YYYY"/>			<!-- 광디스크기정수점검연도 -->
+		<result property="mediaDiv"			    column="MEDIA_DIV_NM"/>				<!-- 매체구분명 -->
+	</resultMap>
+	<select id="findCntChkDiskTempList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntChkDiskTempList-result">
+		<isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+			SELECT 
+			      A.OPTIDISK_STAKRM_ID
+			     , C.OPTIDISK_STAKRM_NM
+			     , A.OPTIDISK_BOOKSF_ID
+				 , A.OPTIDISK_BOOKSF_NM
+				 , (SELECT COUNT(1) FROM TB_SROPTIDISK_MST B 
+				    WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID
+					  AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID
+					  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) DISK_CNT
+				 , (SELECT NVL(SUM(SPLIT_TOT), 0) FROM TB_SROPTIDISK_MST B 
+				    WHERE B.OPTIDISK_STAKRM_ID = A.OPTIDISK_STAKRM_ID
+					  AND B.OPTIDISK_BOOKSF_ID = A.OPTIDISK_BOOKSF_ID
+					  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) SPLIT_CNT  
+			     , A.LAST_CHECK_YYYY
+			     , '광디스크' AS MEDIA_DIV_NM     <!-- 매체구분명 -->
+			  FROM TB_SROPTIDISK_BOOKSF A, TB_SROPTIDISK_STAKRM C, TB_ZZSTAKRMTMP D
+			 WHERE A.OPTIDISK_STAKRM_ID = C.OPTIDISK_STAKRM_ID
+			   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+			   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+			   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   AND (A.OPTIDISK_STAKRM_ID = D.TRGT_ID AND A.OPTIDISK_BOOKSF_ID = D.REMK AND D.USER_ID = #userId:VARCHAR# AND D.MEDIA_DIV = '1')
+				<isNotEmpty prepend="AND" property="stakrmId">
+					A.OPTIDISK_STAKRM_ID = #stakrmId:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="booksfId">
+					A.OPTIDISK_BOOKSF_ID = #booksfId:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.OPTIDISK_STAKRM_ID, A.OPTIDISK_BOOKSF_ID
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">       <!-- M/F -->
+	    		SELECT 
+	    		   A.MF_STAKRM_ID AS OPTIDISK_STAKRM_ID
+			     , C.MF_STAKRM_NM AS OPTIDISK_STAKRM_NM
+			     , A.MF_BOOKSF_ID AS OPTIDISK_BOOKSF_ID
+				 , A.MF_BOOKSF_NM AS OPTIDISK_BOOKSF_NM
+				 , (SELECT COUNT(1) FROM TB_SRMFPIC B 
+				    WHERE B.MF_STAKRM_ID = A.MF_STAKRM_ID
+					  AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID
+					  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) DISK_CNT
+				 , (SELECT NVL(SUM(TOT_COPY_CNT), 0) FROM TB_SRMFPIC B 
+				    WHERE B.MF_STAKRM_ID = A.MF_STAKRM_ID
+					  AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID
+					  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) SPLIT_CNT  
+			     , A.LAST_CHECK_YYYY
+				 , 'M/F' AS MEDIA_DIV_NM    <!-- 매체구분명 -->
+			  FROM TB_SRMFBOOKSF A, TB_SRMFSTAKRM C, TB_ZZSTAKRMTMP D
+			 WHERE A.MF_STAKRM_ID = C.MF_STAKRM_ID
+			   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+			   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+			   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   AND (A.MF_STAKRM_ID = D.TRGT_ID AND A.MF_BOOKSF_ID = D.REMK AND D.USER_ID = #userId:VARCHAR# AND D.MEDIA_DIV = '2')
+				<isNotEmpty prepend="AND" property="stakrmId">
+					A.MF_STAKRM_ID = #stakrmId:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="booksfId">
+					A.MF_BOOKSF_ID = #booksfId:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.MF_STAKRM_ID, A.MF_BOOKSF_ID
+	    </isEqual>	
+    </select>
+	
+	<!-- 
+		보존매체정수점검_계획수립 
+		: 광디스크수록 마스터/MF마스터 테이블의 ORG_CD, SEQ 가져오기
+	 -->
+	<resultMap id="cntChkDisk-result"				class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="orgCd" 					column="ORG_CD"/>			    <!-- 처리과코드 -->
+		<result property="seq" 						column="SEQ"/>				<!-- 정수점검 디테일 테이블에 인서트 될 광디스크/MF 관리연번 -->
+	</resultMap>
+	<select id="findCntChkDiskTrgtDisk" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="cntChkDisk-result">
+		<isEqual property="mediaDiv" compareValue="1">  <!-- 광디스크 -->
+			SELECT ORG_CD
+			       , SEQ
+			  FROM TB_SROPTIDISK_MST
+			 WHERE OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+			   AND OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+			   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#    
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">    <!-- M/F -->
+		SELECT CREAT_ORG_CD AS ORG_CD
+		        , PIC_SNO AS SEQ
+		FROM TB_SRMFPIC
+		WHERE MF_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+		AND MF_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		</isEqual>
+	</select>	
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 광디스크 분할총수량, /MF복제총수량 가져오기
+	 -->
+	<resultMap id="findCntChkDiskTrgtMedia-result"				class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="splitTot" 						column="SPLIT_TOT"/>				<!-- 광디스크 분할총수량 / MF 복제총수량 -->
+	</resultMap>
+	<select id="findCntChkDiskTrgtMedia" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntChkDiskTrgtMedia-result">
+		<isEqual property="mediaDiv" compareValue="1">
+			SELECT SPLIT_TOT
+			FROM TB_SROPTIDISK_MST
+			WHERE OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+			AND OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+			AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND ORG_CD = #orgCd:VARCHAR#
+			AND SEQ = #seq:VARCHAR#
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+			SELECT TOT_COPY_CNT SPLIT_TOT
+			FROM TB_SRMFPIC
+			WHERE MF_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+			AND MF_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+			AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND CREAT_ORG_CD = #orgCd:VARCHAR#
+			AND PIC_SNO = #seq:VARCHAR#
+		</isEqual>
+	</select>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 보존매체 정수점검 마스터정보를 등록한다. 
+	-->
+	<insert id="createCntChkDiskPlan" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		INSERT INTO TB_SROPTIDISK_CNTCHK (
+			RECORD_CENTER_ID, CNTCHK_ID,CHECK_YYYY,SNO,PLAN_YMD,WORK_USER_ID,CNTCHK_PROG_STATE_CD, MEDIA_DIV
+		) VALUES (
+			#recordCenterId:VARCHAR#, #cntChkId:VARCHAR#, #checkYyyy:VARCHAR#, #sno:NUMBER#, #planYmd:VARCHAR#, #workUserId:VARCHAR#, #cntchkProgStateCd:VARCHAR#, #mediaDiv:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 보존매체 정수점검 디테일정보를 등록한다. 
+	-->
+	<insert id="createCntChkDiskDetlPlan" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		INSERT INTO TB_SROPTIDISK_CNTCHKDETL (
+			RECORD_CENTER_ID,CNTCHK_ID, ORG_CD, SEQ, OPTIDISK_STAKRM_ID, OPTIDISK_BOOKSF_ID, MEDIA_DIV, SPLIT_TOT
+		) VALUES (
+			#recordCenterId:VARCHAR#, REPLACE(#cntChkId:VARCHAR#, '-', ''), #orgCd:VARCHAR#, #seq:NUMBER#, #optidiskStakrmId:VARCHAR#, #optidiskBooksfId:VARCHAR#, #mediaDiv:VARCHAR#, #splitTot:VARCHAR#
+		)
+	</insert>
+	
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 정수점검대상 테이블에 정수점검상세정보 인서트 
+	-->
+	<insert id="createCntChkDiskPlanChngTemp" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		INSERT INTO TB_ZZSTAKRMTMP (
+			RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK, MEDIA_DIV
+		) (
+			SELECT #recordCenterId# RECORD_CENTER_ID
+		     	  ,#userId# USER_ID
+			 	  ,B.OPTIDISK_STAKRM_ID
+		     	  ,B.OPTIDISK_BOOKSF_ID
+		     	  ,B.MEDIA_DIV
+		  	FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B
+		 	WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+		    AND A.CNTCHK_ID = B.CNTCHK_ID
+		    AND A.MEDIA_DIV = B.MEDIA_DIV		 
+		    AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		    AND B.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		    AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+		 	GROUP BY B.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID, B.MEDIA_DIV
+		)
+	</insert>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 계획서 수정시 계획서 상세테이블을 삭제한다.
+	 -->
+	<delete id="deleteCntChkDiskDetl" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+	  	DELETE FROM TB_SROPTIDISK_CNTCHKDETL
+		WHERE CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIA_DIV = #mediaDiv:VARCHAR#
+	</delete>
+	
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 정수점검계획서 마스터 테이블을 삭제한다. 
+	-->
+	<delete id="deleteCntChkDiskPlan" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+	  	DELETE FROM TB_SROPTIDISK_CNTCHK
+		WHERE CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIA_DIV = #mediaDiv:VARCHAR#
+	</delete>
+	
+	<!-- 
+		보존매체정수점검_계획수립
+		: 선택한 계획서의 정수점검대상 엑셀저장데이터를 조회한다. 
+	-->
+	<resultMap id="findExcelCntChkDiskPlanPagedList-result"	class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="trgtId" 			column="TRGT_ID" 			nullValue=""/>	      	<!-- 광디스크ID -->
+		<result property="splitTot" 		column="SPLIT_TOT"			nullValue="0"/>	      	<!-- 분할디스크수 -->
+		<result property="optidiskYyyy" 	column="OPTIDISK_YYYY"		nullValue=""/>	       	<!-- 수록년도 -->
+		<result property="optidiskLoc"		column="OPTIDISK_LOC"		nullValue=""/>	       	<!-- 배치정보 -->
+		<result property="optidiskStakrmId"	column="OPTIDISK_STAKRM_ID"	nullValue=""/>			<!-- 서고 ID -->
+		<result property="optidiskBooksfId"	column="OPTIDISK_BOOKSF_ID"	nullValue=""/>			<!-- 서가 ID -->
+		<result property="cntchkRsltCd"		column="CNTCHK_RSLT_CD" 	nullValue=""/>	    	<!-- 점검결과 코드 -->
+		<result property="cntchkRsltNm"		column="CNTCHK_RSLT_NM"		nullValue=""/>	    	<!-- 점검결과 이름-->
+		<result property="checkYmd"			column="CHECK_YMD"			nullValue=""/>		   	<!-- 점검일자-->
+		<result property="handlRsltCont"	column="HANDL_RSLT_CONT" 	nullValue=""/>	    	<!-- 점검내역-->
+		<result property="mediaDiv"         column="MEDIA_DIV"/>                              	<!-- 매체구분명 -->
+		<result property="mediaDivNm"       column="MEDIA_DIV_NM"/>                         	<!-- 매체구분명 -->
+		<result property="cntChkId"         column="CNTCHK_ID"/>                               	<!-- 계획서번호 -->
+		<result property="cntchkCnt"        column="CNTCHK_CNT"/>                              	<!-- 점검수량 -->
+		<result property="referDocu"		column="REFER_DOCU"/>
+		<result property="checkYyyy" 		column="CHECK_YYYY"/>
+	</resultMap>
+	<select id="findExcelCntChkDiskPlanPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findExcelCntChkDiskPlanPagedList-result">
+		<isEqual property="mediaDiv" compareValue="1">
+		  SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID
+			       ,C.SPLIT_TOT
+			       ,C.OPTIDISK_YYYY
+			       ,LPAD(C.OPTIDISK_STAKRM_ID,3,'0')||'-'||LPAD(C.OPTIDISK_BOOKSF_ID,3,'0')||'-'||LPAD(C.FLOOR_NO,3,'0')||'-'||LPAD(C.COL_NO,3,'0') AS OPTIDISK_LOC
+			       ,C.OPTIDISK_STAKRM_ID
+			       ,C.OPTIDISK_BOOKSF_ID
+			       ,B.CNTCHK_RSLT_CD
+			       ,(SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z
+				   WHERE Z.COM_TYPE_CD = 'SR08'
+				   AND Z.COM_CD = B.CNTCHK_RSLT_CD) CNTCHK_RSLT_NM
+				   ,B.CHECK_YMD
+				   ,HANDL_RSLT_CONT
+				   ,A.MEDIA_DIV
+				   ,(CASE WHEN A.MEDIA_DIV = '1' THEN '광디스크'
+				            WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM
+				   ,SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID
+				   ,B.CNTCHK_CNT
+				   ,B.REFER_DOCU
+				   ,A.CHECK_YYYY
+			FROM   TB_SROPTIDISK_CNTCHK A
+			       ,TB_SROPTIDISK_CNTCHKDETL B
+			       ,TB_SROPTIDISK_MST C
+			WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+			AND A.CNTCHK_ID IN
+			<iterate property="cntChkArray" open="(" close=")" conjunction=",">
+	 			REPLACE(#cntChkArray[].cntChkId#, '-', '')
+			</iterate>
+			AND   A.MEDIA_DIV = #mediaDiv:VARCHAR#
+			AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			AND   B.CNTCHK_ID = A.CNTCHK_ID
+			AND   B.MEDIA_DIV = A.MEDIA_DIV
+			AND   C.ORG_CD = B.ORG_CD
+			AND   C.SEQ = B.SEQ
+			AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			ORDER BY A.CNTCHK_ID DESC, TRGT_ID
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+		  SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID
+			       ,C.TOT_COPY_CNT AS SPLIT_TOT
+			       ,SUBSTR(C.PIC_YMD, 1, 4) AS OPTIDISK_YYYY
+			       ,LPAD(C.MF_STAKRM_ID,3,'0')||'-'||LPAD(C.MF_BOOKSF_ID,3,'0')||'-'||LPAD(C.BOOKSF_SHELF_CNO,3,'0')||'-'||LPAD(C.BOOKSF_SHELF_RNO,3,'0') AS OPTIDISK_LOC
+			       ,C.MF_STAKRM_ID AS OPTIDISK_STAKRM_ID
+			       ,C.MF_BOOKSF_ID AS OPTIDISK_BOOKSF_ID
+			       ,B.CNTCHK_RSLT_CD
+			       ,(SELECT Z.COM_CD_NM 
+			        FROM TB_ZZCOMCD Z
+				    WHERE Z.COM_TYPE_CD = 'SR08'
+				    AND Z.COM_CD = B.CNTCHK_RSLT_CD) CNTCHK_RSLT_NM
+				   ,B.CHECK_YMD
+				   ,B.HANDL_RSLT_CONT
+				   ,A.MEDIA_DIV
+				   ,(CASE WHEN A.MEDIA_DIV = '1' THEN '광디스크'
+				            WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM
+				   ,SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID
+				   ,B.CNTCHK_CNT
+				   ,B.REFER_DOCU
+			FROM TB_SROPTIDISK_CNTCHK A
+			       ,TB_SROPTIDISK_CNTCHKDETL B
+			       ,TB_SRMFPIC C
+			WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+			AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+			AND A.CNTCHK_ID IN
+			<iterate property="cntChkArray" open="(" close=")" conjunction=",">
+		 		REPLACE(#cntChkArray[].cntChkId#, '-', '')
+			</iterate>
+			AND   A.MEDIA_DIV = #mediaDiv:VARCHAR#
+			AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			AND   B.CNTCHK_ID = A.CNTCHK_ID
+		    AND   B.MEDIA_DIV = A.MEDIA_DIV
+			AND   C.CREAT_ORG_CD = B.ORG_CD
+			AND   C.PIC_SNO = B.SEQ
+			AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			ORDER BY A.CNTCHK_ID, TRGT_ID
+		</isEqual>
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 계획서목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskCntChkRslt-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="cntChkId" 			column="CNTCHK_ID"/>						<!-- 정수점검ID -->
+		<result property="planYmd" 				column="PLAN_YMD"/>							<!-- 계획일자 -->
+		<result property="checkYmd" 			column="CHECK_YMD"/>						<!-- 점검일자 -->
+		<result property="cntPlanTrgt"			column="CNT_PLAN_TRGT" 	nullValue="0"/>		<!-- 대상 수 -->
+		<result property="cntChecked"			column="CNT_CHECKED" 	nullValue="0"/>		<!-- 점검 수 -->
+		<result property="cntUnchecked"			column="CNT_UNCHECKED" 	nullValue="0"/>		<!-- 미점검 수 -->
+		<result property="cntchkProgStateCd"	column="CNTCHK_PROG_STATE_CD"/>				<!-- 정수점검진행 상태코드 -->
+		<result property="cntchkProgStateNm"	column="CNTCHK_PROG_STATE_NM"/>				<!-- 정수점검진행 상태이름 -->
+		<result property="mediaDiv"             column="MEDIA_DIV"/>             			<!-- 매체구분 -->
+		<result property="mediaDivNm"       	 column="MEDIA_DIV_NM"/>       				<!-- 매체구분명 -->    
+	</resultMap>
+	<select id="countOptidiskCntChkRslt" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+		SELECT COUNT(1)        
+        FROM TB_SROPTIDISK_CNTCHK A ,(SELECT CNTCHK_ID
+                                            ,COUNT(*) AS CNT_PLAN_TRGT
+                                            ,SUM(CASE WHEN CNTCHK_RSLT_CD != '0' THEN 1 ELSE 0 END) AS CNT_CHECKED
+                                            ,SUM(CASE WHEN CNTCHK_RSLT_CD = '0' THEN 1 ELSE 0 END) AS CNT_UNCHECKED
+                                      FROM TB_SROPTIDISK_CNTCHKDETL
+                                      WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                                      <isNotEmpty prepend="AND" property="mediaDiv">   
+                                      	MEDIA_DIV = #mediaDiv:VARCHAR#
+                                      </isNotEmpty>
+                                      <isEmpty prepend="AND" property="mediaDiv">   
+                                      	MEDIA_DIV = '1'
+                                      </isEmpty>
+                                      GROUP BY CNTCHK_ID) B
+        WHERE A.CNTCHK_ID = B.CNTCHK_ID
+        AND   A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+        AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+        <isNotEmpty prepend="AND" property="mediaDiv">   
+             A.MEDIA_DIV = #mediaDiv:VARCHAR#
+           </isNotEmpty>
+           <isEmpty prepend="AND" property="mediaDiv">   
+             A.MEDIA_DIV = '1'
+           </isEmpty>
+        <isNotEmpty prepend="AND" property="cntChkId">
+           A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="cntchkProgStateCd">
+           A.CNTCHK_PROG_STATE_CD = #cntchkProgStateCd:VARCHAR#
+        </isNotEmpty>
+	</select>
+	<select id="findOptidiskCntChkRslt" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskCntChkRslt-result">
+		SELECT E.cntchk_id
+		      ,E.plan_ymd
+		      ,E.check_ymd
+		      ,E.cnt_plan_trgt
+		      ,E.cnt_checked
+		      ,E.cnt_unchecked
+		      ,E.cntchk_prog_state_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'SR09' AND Z.com_cd = E.cntchk_prog_state_cd) AS cntchk_prog_state_nm
+		      ,E.media_div
+		      ,(CASE WHEN E.media_div = '1' THEN '광디스크' WHEN E.media_div = '2' THEN 'M/F' END) AS media_div_nm
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , C.*
+		        FROM (
+		            SELECT SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID
+		                   ,A.PLAN_YMD,A.CHECK_YMD,B.CNT_PLAN_TRGT,B.CNT_CHECKED
+		                   ,B.CNT_UNCHECKED,A.CNTCHK_PROG_STATE_CD,A.MEDIA_DIV        
+		            FROM TB_SROPTIDISK_CNTCHK A ,(SELECT CNTCHK_ID
+		                                                ,COUNT(*) AS CNT_PLAN_TRGT
+		                                                ,SUM(CASE WHEN CNTCHK_RSLT_CD != '0' THEN 1 ELSE 0 END) AS CNT_CHECKED
+		                                                ,SUM(CASE WHEN CNTCHK_RSLT_CD = '0' THEN 1 ELSE 0 END) AS CNT_UNCHECKED
+		                                          FROM TB_SROPTIDISK_CNTCHKDETL
+		                                          WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                                          <isNotEmpty prepend="AND" property="mediaDiv">   
+		                                          	MEDIA_DIV = #mediaDiv:VARCHAR#
+		                                          </isNotEmpty>
+		                                          <isEmpty prepend="AND" property="mediaDiv">   
+		                                          	MEDIA_DIV = '1'
+		                                          </isEmpty>
+		                                          GROUP BY CNTCHK_ID) B
+		            WHERE A.CNTCHK_ID = B.CNTCHK_ID
+		            AND   A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+		            AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+		            <isNotEmpty prepend="AND" property="mediaDiv">   
+		                 A.MEDIA_DIV = #mediaDiv:VARCHAR#
+		               </isNotEmpty>
+		               <isEmpty prepend="AND" property="mediaDiv">   
+		                 A.MEDIA_DIV = '1'
+		               </isEmpty>
+		            <isNotEmpty prepend="AND" property="cntChkId">
+		               A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="cntchkProgStateCd">
+		               A.CNTCHK_PROG_STATE_CD = #cntchkProgStateCd:VARCHAR#
+		            </isNotEmpty>
+		            ORDER BY A.CNTCHK_ID DESC
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 점검결과등록화면의 조회조건(계획서번호) 항목 목록을 조회한다.
+	 -->
+	 <select id="findOptidiskCntChkSearchCondList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.String">
+	 	SELECT A.CHECK_YYYY || '-' || LPAD(SNO, 6, '0') AS CNTCHK_ID
+		FROM TB_SROPTIDISK_CNTCHK A
+		WHERE A.RECORD_CENTER_ID   = #recordCenterId:VARCHAR#
+		AND A.CHECK_YYYY = #checkYyyy:VARCHAR#
+		AND A.WORK_USER_ID = #workUserId:VARCHAR#
+		<isNotEmpty prepend="AND" property="mediaDiv">   
+			A.MEDIA_DIV = #mediaDiv:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="mediaDiv">   
+			A.MEDIA_DIV = '1'
+		</isEmpty>
+		ORDER BY A.CHECK_YYYY, A.SNO
+	 </select>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 계획서목록(상세)을 조회한다.
+	 -->
+	<resultMap id="findCntChkRsltDetailPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="trgtId" 			column="TRGT_ID" 			nullValue=""/>		<!-- 광디스크ID -->
+		<result property="splitTot" 		column="SPLIT_TOT"			nullValue="0"/>		<!-- 분할디스크수 -->
+		<result property="optidiskYyyy" 	column="OPTIDISK_YYYY"		nullValue=""/>	    <!-- 수록년도 -->
+		<result property="optidiskLoc"		column="OPTIDISK_LOC"		nullValue=""/>		<!-- 배치정보 -->
+		<result property="optidiskStakrmId"	column="OPTIDISK_STAKRM_ID"	nullValue=""/>		<!-- 서고 ID -->
+		<result property="optidiskBooksfId"	column="OPTIDISK_BOOKSF_ID"	nullValue=""/>		<!-- 서가 ID -->
+		<result property="cntchkRsltCd"		column="CNTCHK_RSLT_CD" 	nullValue=""/>	    <!-- 점검결과 코드 -->
+		<result property="cntchkRsltNm"		column="CNTCHK_RSLT_NM"		nullValue=""/>	    <!-- 점검결과 이름-->
+		<result property="checkYmd"			column="CHECK_YMD"			nullValue=""/>		<!-- 점검일자-->
+		<result property="handlRsltCont"	column="HANDL_RSLT_CONT" 	nullValue=""/>	    <!-- 점검내역-->
+		<result property="mediaDiv"         column="MEDIA_DIV"/>                            <!-- 매체구분명 -->
+		<result property="mediaDivNm"       column="MEDIA_DIV_NM"/>                         <!-- 매체구분명 -->
+		<result property="cntChkId"         column="CNTCHK_ID"/>                            <!-- 계획서번호 -->
+		<result property="cntchkCnt"        column="CNTCHK_CNT"/>                           <!-- 점검수량 -->
+		<result property="referDocu"		column="REFER_DOCU"/>
+		<result property="checkYyyy" 		column="CHECK_YYYY"/>
+	</resultMap>
+	<select id="countCntChkRsltDetailPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+		<isEqual property="mediaDiv" compareValue="1">
+            SELECT COUNT(1)
+            FROM   TB_SROPTIDISK_CNTCHK A,TB_SROPTIDISK_CNTCHKDETL B,TB_SROPTIDISK_MST C
+            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+            AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+            AND   A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+            AND   A.MEDIA_DIV = #mediaDiv:VARCHAR#     <!-- 매체구분 -->
+            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+            AND   B.CNTCHK_ID = A.CNTCHK_ID
+            AND   B.MEDIA_DIV = A.MEDIA_DIV    <!-- 매체구분 -->
+            AND   C.ORG_CD = B.ORG_CD
+            AND   C.SEQ = B.SEQ
+            AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+            <isNotEmpty prepend="AND" property="cntchkRsltCd">
+                B.CNTCHK_RSLT_CD = #cntchkRsltCd:VARCHAR#
+            </isNotEmpty>
+		</isEqual>
+		<isEqual property="mediaDiv" compareValue="2">
+            SELECT COUNT(1)
+            FROM TB_SROPTIDISK_CNTCHK A,TB_SROPTIDISK_CNTCHKDETL B,TB_SRMFPIC C
+            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+            AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+            AND   A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+            AND   A.MEDIA_DIV = #mediaDiv:VARCHAR#       <!-- 매체구분 -->
+            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+            AND   B.CNTCHK_ID = A.CNTCHK_ID
+            AND   B.MEDIA_DIV = A.MEDIA_DIV   <!-- 매체구분 -->
+            AND   C.CREAT_ORG_CD = B.ORG_CD
+            AND   C.PIC_SNO = B.SEQ
+            AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+            <isNotEmpty prepend="AND" property="cntchkRsltCd">
+                B.CNTCHK_RSLT_CD = #cntchkRsltCd:VARCHAR#
+            </isNotEmpty>
+		</isEqual>
+	</select>
+	<select id="findCntChkRsltDetailPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntChkRsltDetailPagedList-result">
+		<isEqual property="mediaDiv" compareValue="1">
+			SELECT F.trgt_id
+			        ,F.split_tot
+			        ,F.optidisk_yyyy
+			        ,LPAD(F.optidisk_stakrm_id,3,'0')||'-'||LPAD(F.optidisk_booksf_id,3,'0')||'-'||LPAD(F.floor_no,3,'0')||'-'||LPAD(F.col_no,3,'0') AS optidisk_loc
+			        ,F.optidisk_stakrm_id
+			        ,F.optidisk_booksf_id
+			        ,F.cntchk_rslt_cd
+			        ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'SR08' AND Z.com_cd = F.cntchk_rslt_cd) AS cntchk_rslt_nm
+			        ,F.check_ymd
+			        ,F.handl_rslt_cont
+			        ,F.media_div
+			        ,(CASE WHEN F.media_div = '1' THEN '광디스크' WHEN F.media_div = '2' THEN 'M/F' END) AS media_div_nm
+			        ,F.cntchk_id
+			        ,F.cntchk_cnt
+			        ,F.refer_docu
+			        ,F.check_yyyy
+			FROM(
+			    SELECT E.*
+			    FROM (
+			        SELECT ROWNUM AS rnum
+			                 ,D.*
+			        FROM (
+			            SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID
+			                   ,C.SPLIT_TOT,C.OPTIDISK_YYYY,C.OPTIDISK_STAKRM_ID,C.OPTIDISK_BOOKSF_ID
+			                   ,C.FLOOR_NO,C.COL_NO,B.CNTCHK_RSLT_CD,B.CHECK_YMD,HANDL_RSLT_CONT
+			                   ,A.MEDIA_DIV,A.CNTCHK_ID,B.CNTCHK_CNT,B.REFER_DOCU,A.CHECK_YYYY
+			            FROM   TB_SROPTIDISK_CNTCHK A,TB_SROPTIDISK_CNTCHKDETL B,TB_SROPTIDISK_MST C
+			            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			            AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+			            AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+			            AND   A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+			            AND   A.MEDIA_DIV = #mediaDiv:VARCHAR#     <!-- 매체구분 -->
+			            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			            AND   B.CNTCHK_ID = A.CNTCHK_ID
+			            AND   B.MEDIA_DIV = A.MEDIA_DIV    <!-- 매체구분 -->
+			            AND   C.ORG_CD = B.ORG_CD
+			            AND   C.SEQ = B.SEQ
+			            AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			            <isNotEmpty prepend="AND" property="cntchkRsltCd">
+			                B.CNTCHK_RSLT_CD = #cntchkRsltCd:VARCHAR#
+			            </isNotEmpty>
+			            ORDER BY TRGT_ID
+			        ) D
+			        WHERE  ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			    ) E
+			    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+			) F
+			ORDER BY F.rnum
+			</isEqual>
+			<isEqual property="mediaDiv" compareValue="2">
+			SELECT F.trgt_id
+			        ,F.tot_copy_cnt AS split_tot
+			        ,SUBSTR(F.pic_ymd, 1, 4) AS optidisk_yyyy
+			        ,LPAD(F.mf_stakrm_id,3,'0')||'-'||LPAD(F.mf_booksf_id,3,'0')||'-'||LPAD(F.booksf_shelf_cno,3,'0')||'-'||LPAD(F.booksf_shelf_rno,3,'0') AS optidisk_loc
+			        ,F.mf_stakrm_id AS optidisk_stakrm_id
+			        ,F.mf_booksf_id AS optidisk_booksf_id
+			        ,F.cntchk_rslt_cd
+			        ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'SR08' AND Z.com_cd = F.cntchk_rslt_cd) AS cntchk_rslt_nm
+			        ,F.check_ymd
+			        ,F.handl_rslt_cont
+			        ,F.media_div
+			        ,(CASE WHEN F.media_div = '1' THEN '광디스크' WHEN F.media_div = '2' THEN 'M/F' END) AS media_div_nm
+			        ,F.cntchk_id
+			        ,F.cntchk_cnt
+			        ,F.refer_docu
+			        ,F.check_yyyy
+			FROM(
+			    SELECT E.*
+			    FROM (
+			        SELECT ROWNUM AS rnum
+			                 ,D.*
+			        FROM (
+			            SELECT LPAD(B.ORG_CD,7,'0')||'-'||LPAD(B.SEQ,6,'0') AS TRGT_ID
+			                   ,C.TOT_COPY_CNT,C.PIC_YMD, 1, 4,C.MF_STAKRM_ID,C.MF_BOOKSF_ID
+			                   ,C.BOOKSF_SHELF_CNO,C.BOOKSF_SHELF_RNO,B.CNTCHK_RSLT_CD,B.CHECK_YMD,B.HANDL_RSLT_CONT
+			                   ,A.MEDIA_DIV,A.CNTCHK_ID,B.CNTCHK_CNT,B.REFER_DOCU,A.check_yyyy
+			            FROM TB_SROPTIDISK_CNTCHK A,TB_SROPTIDISK_CNTCHKDETL B,TB_SRMFPIC C
+			            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			            AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+			            AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+			            AND   A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+			            AND   A.MEDIA_DIV = #mediaDiv:VARCHAR#       <!-- 매체구분 -->
+			            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			            AND   B.CNTCHK_ID = A.CNTCHK_ID
+			            AND   B.MEDIA_DIV = A.MEDIA_DIV   <!-- 매체구분 -->
+			            AND   C.CREAT_ORG_CD = B.ORG_CD
+			            AND   C.PIC_SNO = B.SEQ
+			            AND   C.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+			            <isNotEmpty prepend="AND" property="cntchkRsltCd">
+			                B.CNTCHK_RSLT_CD = #cntchkRsltCd:VARCHAR#
+			            </isNotEmpty>
+			            ORDER BY TRGT_ID
+			        ) D
+			        WHERE  ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			    ) E
+			    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+			) F
+			ORDER BY F.rnum
+		</isEqual>
+	</select>
+	
+
+	<!-- 
+		보존매체정수점검_점검현황
+		: 점검현황 목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskCntchkCurStatPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="recordCenterId"		column="RECORD_CENTER_ID" 		nullValue="" />
+		<result property="cntChkId"				column="CNTCHK_ID" 				nullValue="" />
+		<result property="optidiskStakrmId"		column="OPTIDISK_STAKRM_ID" 	nullValue="" />
+		<result property="optidiskStakrmNm"		column="OPTIDISK_STAKRM_NM" 	nullValue="" />
+		<result property="optidiskBooksfId"		column="OPTIDISK_BOOKSF_ID" 	nullValue="" />
+		<result property="optidiskBooksfNm"		column="OPTIDISK_BOOKSF_NM" 	nullValue="" />
+		<result property="totCnt"				column="TOT_CNT"  				nullValue="0"/>
+		<result property="chk1Cnt"				column="CHK1_CNT" 				nullValue="0"/>
+		<result property="chk2Cnt"				column="CHK2_CNT" 				nullValue="0"/>
+		<result property="chk3Cnt"				column="CHK3_CNT" 				nullValue="0"/>
+		<result property="chk4Cnt"				column="CHK4_CNT" 				nullValue="0"/>
+		<result property="chk5Cnt"				column="CHK5_CNT" 				nullValue="0"/>
+		<result property="cntchkProgStateCd"	column="CNTCHK_PROG_STATE_CD" 	nullValue="" />
+		<result property="cntchkProgStateNm"	column="CNTCHK_PROG_STATE_NM" 	nullValue="" />
+		<result property="checkYmd"				column="CHECK_YMD" 				nullValue="" />
+		<result property="workUserId"			column="WORK_USER_ID" 			nullValue="" />
+		<result property="workUserNm"			column="WORK_USER_NM" 			nullValue="" />
+		<result property="mediaDiv"    			column="MEDIA_DIV" 				nullValue="" />   <!--  매체구분값 -->
+		<result property="mediaDivNm"          	column="MEDIA_DIV_NM" 			nullValue="" />   <!-- 매체구분명 -->
+	</resultMap>
+	<select id="countOptidiskCntchkCurStatPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT A.CNTCHK_ID
+            FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B
+            WHERE 1 = 1
+            AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+            AND B.CNTCHK_ID = A.CNTCHK_ID
+            AND B.MEDIA_DIV = A.MEDIA_DIV
+            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+                <isNotEmpty prepend="AND" property="cntChkId">
+             		A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="checkYyyy">
+             		A.CHECK_YYYY = #checkYyyy:VARCHAR#
+                </isNotEmpty>    
+                <isNotEmpty prepend="AND" property="checkYmd">
+             		A.CHECK_YMD = REPLACE(#checkYmd:VARCHAR#,'-','')
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="optidiskStakrmId">
+             		B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="optidiskBooksfId">
+             		B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+                </isNotEmpty>
+             GROUP BY A.RECORD_CENTER_ID, A.MEDIA_DIV, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID
+             ORDER BY A.CNTCHK_ID DESC
+        ) C
+	</select>
+	<select id="findOptidiskCntchkCurStatPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskCntchkCurStatPagedList-result">
+		SELECT E.record_center_id
+		      ,SUBSTR(E.CNTCHK_ID, 1, 4)||'-'||SUBSTR(E.CNTCHK_ID, 5, 6) CNTCHK_ID
+		      ,E.media_div
+		      ,E.optidisk_stakrm_id
+		      ,E.optidisk_booksf_id
+		      ,E.optidisk_stakrm_nm
+		      ,E.optidisk_booksf_nm
+		      ,E.tot_cnt
+		      ,E.chk1_cnt
+		      ,E.chk2_cnt
+		      ,E.chk3_cnt
+		      ,E.chk4_cnt
+		      ,E.chk5_cnt
+		      ,E.cntchk_prog_state_cd
+		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'SR09' AND com_cd = E.cntchk_prog_state_cd) AS cntchk_prog_state_nm
+		      ,E.check_ymd
+		      ,E.work_user_id
+		      ,E.work_user_nm
+		      ,(CASE WHEN E.media_div = '1' THEN '광디스크' WHEN E.media_div = '2' THEN 'M/F' END) AS media_div_nm
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , C.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID
+		                 , A.CNTCHK_ID
+		                 , A.MEDIA_DIV
+		                 , B.OPTIDISK_STAKRM_ID
+		                 , B.OPTIDISK_BOOKSF_ID
+		              	<isEqual property="mediaDiv" compareValue="1"> 
+		                 , MAX(( SELECT OPTIDISK_STAKRM_NM FROM TB_SROPTIDISK_STAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID )) AS OPTIDISK_STAKRM_NM
+		                 , MAX(( SELECT OPTIDISK_BOOKSF_NM FROM TB_SROPTIDISK_BOOKSF WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND OPTIDISK_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID )) AS OPTIDISK_BOOKSF_NM
+		              	</isEqual>
+		              	<isEqual property="mediaDiv" compareValue="2"> 
+		                 , MAX(( SELECT MF_STAKRM_NM FROM TB_SRMFSTAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND MF_STAKRM_ID = B.OPTIDISK_STAKRM_ID )) AS OPTIDISK_STAKRM_NM
+		                 , MAX(( SELECT MF_BOOKSF_NM FROM TB_SRMFBOOKSF WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND MF_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND MF_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID )) AS OPTIDISK_BOOKSF_NM
+		              	</isEqual>
+		                 , COUNT(*) AS TOT_CNT
+		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) AS CHK1_CNT
+		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) AS CHK2_CNT
+		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) AS CHK3_CNT
+		                 , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '9' THEN 1 ELSE 0 END) AS CHK4_CNT
+		                 , COUNT(*) - SUM(CASE WHEN B.CNTCHK_RSLT_CD IN ('1','2','3','9') THEN 1 ELSE 0 END) AS CHK5_CNT
+		                 , MAX(A.CNTCHK_PROG_STATE_CD) AS CNTCHK_PROG_STATE_CD 
+		                 , MAX(A.CHECK_YMD) AS CHECK_YMD
+		                 , MAX(A.WORK_USER_ID) AS WORK_USER_ID
+		                 , MAX(( SELECT USER_NM FROM TB_STUSER WHERE USER_ID = A.WORK_USER_ID)) AS WORK_USER_NM
+		            FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B
+		            WHERE 1 = 1
+		            AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND B.CNTCHK_ID = A.CNTCHK_ID
+		            AND B.MEDIA_DIV = A.MEDIA_DIV
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+		                <isNotEmpty prepend="AND" property="cntChkId">
+		             		A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="checkYyyy">
+		             		A.CHECK_YYYY = #checkYyyy:VARCHAR#
+		                </isNotEmpty>    
+		                <isNotEmpty prepend="AND" property="checkYmd">
+		             		A.CHECK_YMD = REPLACE(#checkYmd:VARCHAR#,'-','')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="optidiskStakrmId">
+		             		B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="optidiskBooksfId">
+		             		B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+		                </isNotEmpty>
+		             GROUP BY A.RECORD_CENTER_ID, A.MEDIA_DIV, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID
+		             ORDER BY A.CNTCHK_ID DESC
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		보존매체정수점검_점검현황
+		: 서고 목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskCntchkCurStatStakrmPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="optidiskStakrmId"			column="OPTIDISK_STAKRM_ID" />
+		<result property="optidiskStakrmNm"	    column="OPTIDISK_STAKRM_NM" />
+	</resultMap>
+	<select id="countOptidiskCntchkCurStatStakrmPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+		<isNotEmpty property="mediaDiv">
+		    <isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+		        SELECT COUNT(1)
+                FROM TB_SROPTIDISK_STAKRM
+                WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                <isNotEmpty prepend="AND" property="optidiskStakrmId">
+                	OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+                </isNotEmpty>
+		     </isEqual>
+		     <isEqual property="mediaDiv" compareValue="2">     <!-- M/F -->
+		         SELECT COUNT(1)
+                 FROM TB_SRMFSTAKRM
+                 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                 <isNotEmpty prepend="AND" property="optidiskStakrmId">
+                 	MF_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+                 </isNotEmpty>
+		     </isEqual>
+		 </isNotEmpty>
+	</select>
+	<select id="findOptidiskCntchkCurStatStakrmPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskCntchkCurStatStakrmPagedList-result">
+		<isNotEmpty property="mediaDiv">
+		    <isEqual property="mediaDiv" compareValue="1">    <!-- 광디스크 -->
+		        SELECT D.optidisk_stakrm_id
+		                ,D.optidisk_stakrm_nm
+		        FROM (
+		            SELECT C.*
+		            FROM (
+		                SELECT ROWNUM AS rnum
+		                        , B.*
+		                FROM (
+		                    SELECT *
+		                      FROM TB_SROPTIDISK_STAKRM
+		                     WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                     <isNotEmpty prepend="AND" property="optidiskStakrmId">
+		                     	OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+		                     </isNotEmpty>
+		                     ORDER BY OPTIDISK_STAKRM_ID
+		                ) B
+		                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		            ) C
+		            WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		        ) D
+		        ORDER BY D.rnum
+		     </isEqual>
+		     <isEqual property="mediaDiv" compareValue="2">     <!-- M/F -->
+		         SELECT D.mf_stakrm_id AS optidisk_stakrm_id
+		                ,D.mf_stakrm_nm AS optidisk_stakrm_nm
+		        FROM (
+		            SELECT C.*
+		            FROM (
+		                SELECT ROWNUM AS rnum
+		                        , B.*
+		                FROM (
+		                     SELECT *
+		                      FROM TB_SRMFSTAKRM
+		                     WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                     <isNotEmpty prepend="AND" property="optidiskStakrmId">
+		                     	MF_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+		                     </isNotEmpty>
+		                     ORDER BY MF_STAKRM_ID
+		                ) B
+		                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		            ) C
+		            WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		        ) D
+		        ORDER BY D.rnum
+		     </isEqual>
+		 </isNotEmpty>
+	</select>
+	
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 보존매체 정수점검 결과를 등록한다. 
+	-->
+	<update id="updateOptidiskCntChkRsltDetail" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+	   UPDATE TB_SROPTIDISK_CNTCHKDETL
+		   SET CHECK_YMD = #checkYmd:VARCHAR#
+		      ,CNTCHK_RSLT_CD = #cntchkRsltCd:VARCHAR#
+		      ,HANDL_RSLT_CONT = #handlRsltCont:VARCHAR#
+		      ,REFER_DOCU = #referDocu:VARCHAR#
+			  <isNotEmpty property="cntchkCnt">       <!-- 개별, 일괄 등록용 -->
+				,CNTCHK_CNT = #cntchkCnt:INT#
+			  </isNotEmpty>
+			  <isNotEmpty property="cntChkCnt">		<!-- 엑셀파일 등록용 -->			
+				,CNTCHK_CNT = #cntChkCnt:VARCHAR#
+			  </isNotEmpty>
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		AND	 ORG_CD = SUBSTR(#trgtId:VARCHAR#,1,7)
+		AND	 SEQ = TO_NUMBER(SUBSTR(#trgtId:VARCHAR#,9,6))
+		AND   MEDIA_DIV = #mediaDiv:VARCHAR#
+	</update>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 정수점검 진행상태코드를 갱신한다. 
+	 -->
+	<update id="updateOptidiskCntChkRsltProgState" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		 UPDATE TB_SROPTIDISK_CNTCHK A
+		   SET A.CNTCHK_PROG_STATE_CD = 
+		     ( SELECT CASE WHEN COUNT(1) <![CDATA[>]]> 0 THEN '0' ELSE '1' END
+		         FROM TB_SROPTIDISK_CNTCHKDETL B
+		        WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		          AND B.CNTCHK_ID = A.CNTCHK_ID
+		          AND B.MEDIA_DIV = A.MEDIA_DIV
+		          AND B.CNTCHK_RSLT_CD = '0'
+		     )
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		   AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+		   AND A.CNTCHK_PROG_STATE_CD <![CDATA[<>]]> '2'
+	</update>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 정수점검계획서 작성완료를 한다.
+	 -->
+	<update id="updateOptidiskCntChkRsltFin" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		UPDATE TB_SROPTIDISK_CNTCHK
+		   SET CHECK_YMD = #checkYmd:VARCHAR#
+		      , CNTCHK_PROG_STATE_CD = '2'
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		   AND CNTCHK_PROG_STATE_CD = '1'
+		   AND WORK_USER_ID = #workUserId:VARCHAR#
+		   AND MEDIA_DIV = #mediaDiv:VARCHAR#
+	</update>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 서가:최종점검년도를 갱신한다. 
+	-->
+	<update id="updateOptidiskCntChkRsltlastChkYyyy" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<isEqual property="mediaDiv" compareValue="1">
+			UPDATE TB_SROPTIDISK_BOOKSF AAA
+			SET      LAST_CHECK_YYYY = #lastCheckYyyy:VARCHAR#
+			WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND    
+			<!--CUBRID
+			(OPTIDISK_STAKRM_ID, OPTIDISK_BOOKSF_ID) IN 
+			                              (SELECT DISTINCT OPTIDISK_STAKRM_ID, OPTIDISK_BOOKSF_ID
+			                              -->
+			                              EXISTS (SELECT 1
+			                              FROM   TB_SROPTIDISK_CNTCHKDETL
+			                              WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			                              AND    CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+			                              AND 	MEDIA_DIV = '1'
+			                              AND OPTIDISK_STAKRM_ID = AAA.OPTIDISK_STAKRM_ID
+			                              AND OPTIDISK_BOOKSF_ID = AAA.OPTIDISK_BOOKSF_ID
+			                              )
+		</isEqual>	                              
+		<isEqual property="mediaDiv" compareValue="2">
+			UPDATE TB_SRMFBOOKSF AAA
+			SET      LAST_CHECK_YYYY = #lastCheckYyyy:VARCHAR#
+			WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND    
+			<!--CUBRID
+			(MF_STAKRM_ID, MF_BOOKSF_ID) IN 
+			                              (SELECT DISTINCT OPTIDISK_STAKRM_ID, OPTIDISK_BOOKSF_ID
+			                              -->
+			                              EXISTS (SELECT 1
+			                              FROM   TB_SROPTIDISK_CNTCHKDETL
+			                              WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			                              AND    CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+			                              AND 	MEDIA_DIV = '2'
+			                              AND OPTIDISK_STAKRM_ID = AAA.MF_STAKRM_ID
+			                              AND OPTIDISK_BOOKSF_ID = AAA.MF_BOOKSF_ID
+			                              )
+		</isEqual>
+	</update>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 정수점검상태코드를 조회한다.
+	 -->
+	<resultMap id="findCntchkProgStateCd-result"	class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="cntchkProgStateCd"	column="CNTCHK_PROG_STATE_CD"/>				<!-- 정수점검상태코드값 -->
+	</resultMap>
+	<select id="findCntchkProgStateCd" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findCntchkProgStateCd-result">
+		SELECT CNTCHK_PROG_STATE_CD
+		FROM TB_SROPTIDISK_CNTCHK
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIA_DIV = #mediaDiv:VARCHAR#
+		AND CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+	</select>
+	
+	
+	
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 점검결과 목록 엑셀저장을 한다.	
+	 -->
+	<resultMap id="findExcelOptidiskCntChkRslt-result"	class="rms.presv.optidiskmst.domain.OptidiskCntChk" >
+		<result property="cntChkId" 			column="CNTCHK_ID"/>		<!-- 정수점검ID -->
+		<result property="planYmd" 				column="PLAN_YMD"/>			<!-- 계획일자 -->
+		<result property="checkYmd" 			column="CHECK_YMD"/>		<!-- 점검일자 -->
+		<result property="cntPlanTrgt"			column="CNT_PLAN_TRGT" 	nullValue="0"/>		<!-- 대상 수 -->
+		<result property="cntChecked"			column="CNT_CHECKED" 	nullValue="0"/>		<!-- 점검 수 -->
+		<result property="cntUnchecked"			column="CNT_UNCHECKED" 	nullValue="0"/>		<!-- 미점검 수 -->
+		<result property="cntchkProgStateCd"	column="CNTCHK_PROG_STATE_CD"/>				<!-- 정수점검진행 상태코드 -->
+		<result property="cntchkProgStateNm"	column="CNTCHK_PROG_STATE_NM"/>				<!-- 정수점검진행 상태이름 -->
+		<result property="mediaDiv"                  column="MEDIA_DIV"/>             <!-- 매체구분 -->
+		<result property="mediaDivNm"              column="MEDIA_DIV_NM"/>       <!-- 매체구분명 -->
+	</resultMap>
+	<select id="findExcelOptidiskCntChkRslt" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findExcelOptidiskCntChkRslt-result"> 	
+		SELECT SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID
+		       ,A.PLAN_YMD
+		       ,A.CHECK_YMD
+		       ,B.CNT_PLAN_TRGT
+		       ,B.CNT_CHECKED
+		       ,B.CNT_UNCHECKED
+		       ,A.CNTCHK_PROG_STATE_CD
+		       ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z
+			   WHERE Z.com_type_cd = 'SR09'
+			   AND Z.com_cd = A.CNTCHK_PROG_STATE_CD) CNTCHK_PROG_STATE_NM
+			   ,A.MEDIA_DIV		
+			   ,(CASE WHEN A.MEDIA_DIV = '1' THEN '광디스크'
+			            WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) AS MEDIA_DIV_NM
+		FROM TB_SROPTIDISK_CNTCHK A
+		,(SELECT CNTCHK_ID
+		     , COUNT(*) AS CNT_PLAN_TRGT
+		     , SUM(CASE WHEN CNTCHK_RSLT_CD <![CDATA[<>]]> '0' THEN 1 ELSE 0 END) AS CNT_CHECKED
+		     , SUM(CASE WHEN CNTCHK_RSLT_CD = '0' THEN 1 ELSE 0 END) AS CNT_UNCHECKED
+		  FROM TB_SROPTIDISK_CNTCHKDETL
+		  WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="mediaDiv">   
+   		  MEDIA_DIV = #mediaDiv:VARCHAR#
+   		</isNotEmpty>
+   		<isEmpty prepend="AND" property="mediaDiv">   
+   		  MEDIA_DIV = '1'
+   		</isEmpty>
+		  GROUP BY CNTCHK_ID      
+		) B
+		WHERE A.CNTCHK_ID = B.CNTCHK_ID
+		AND   A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   A.WORK_USER_ID = #workUserId:VARCHAR#
+		AND   A.CHECK_YYYY = #checkYyyy:VARCHAR#
+		<isNotEmpty prepend="AND" property="mediaDiv">   
+   		  A.MEDIA_DIV = #mediaDiv:VARCHAR#
+   		</isNotEmpty>
+   		<isEmpty prepend="AND" property="mediaDiv">   
+   		  A.MEDIA_DIV = '1'
+   		</isEmpty>
+		<isNotEmpty prepend="AND" property="cntChkId">
+		   A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="cntchkProgStateCd">
+		   A.CNTCHK_PROG_STATE_CD = #cntchkProgStateCd:VARCHAR#
+		</isNotEmpty>
+		ORDER BY A.CNTCHK_ID DESC
+	</select>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 결과등록시 발생한 오류내역 엑셀파일을 조회한다.
+	 -->
+	<resultMap id="findOptidiskCntChkRsltDetailExcelErrorXls-result" class="java.util.HashMap">
+		<result property="fileNm" 			column="file_nm"/>
+		<result property="fileKey" 			column="file_key"/>
+	</resultMap>
+	<select id="findOptidiskCntChkRsltDetailExcelErrorXls" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskCntChkRsltDetailExcelErrorXls-result">
+		SELECT file_nm, file_key FROM TB_ZZREQEXCELLIST WHERE REQ_USER_ID = #reqUserId:VARCHAR# AND REQ_MENU_ID = #menuId:VARCHAR# AND REQ_INDEX = #reqIndex:VARCHAR#
+	</select>
+	
+	<!-- 
+		보존매체정수점검_점검결과등록
+		: 정상적으로 결과등록 완료후 오류내역 엑셀파일을 삭제한다.
+	 -->
+	<delete id="deleteOptidiskCntChkRsltErrorXls" parameterClass="java.lang.String">
+		DELETE FROM TB_ZZREQEXCELLIST WHERE FILE_KEY = #string:VARCHAR#
+	</delete>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 
+		보존매체정수점검_점검현황
+		: 서가 목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskCntchkCurStatBooksfPagedList-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="optidiskBooksfId"			column="OPTIDISK_BOOKSF_ID" />
+		<result property="optidiskBooksfNm"			column="OPTIDISK_BOOKSF_NM" />
+		<result property="shelfCCnt"				column="SHELF_C_CNT" />
+		<result property="shelfRCnt"				column="SHELF_R_CNT" />
+	</resultMap>
+	<select id="countOptidiskCntchkCurStatBooksfPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long">
+	    <isEqual property="mediaDiv" compareValue="1">   <!-- 광디스크 -->
+               SELECT COUNT(1)     
+               FROM TB_SROPTIDISK_BOOKSF
+               WHERE RECORD_CENTER_ID   = #recordCenterId:VARCHAR#
+               AND OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+               ORDER BY OPTIDISK_BOOKSF_ID
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">    <!--  M/F -->
+	        SELECT COUNT(1) 
+               FROM TB_SRMFBOOKSF
+               WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+               AND MF_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+               ORDER BY MF_BOOKSF_ID
+	    </isEqual>
+	</select>
+	<select id="findOptidiskCntchkCurStatBooksfPagedList" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskCntchkCurStatBooksfPagedList-result">
+	    <isEqual property="mediaDiv" compareValue="1">
+	        SELECT D.optidisk_booksf_id
+	                ,D.optidisk_booksf_nm
+	                ,D.shelf_c_cnt
+	                ,D.shelf_r_cnt
+	        FROM (
+	            SELECT C.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        ,B.*
+	                FROM (
+	                    SELECT *     
+	                    FROM TB_SROPTIDISK_BOOKSF
+	                    WHERE RECORD_CENTER_ID   = #recordCenterId:VARCHAR#
+	                    AND OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+	                    ORDER BY OPTIDISK_BOOKSF_ID
+	                ) B
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) C
+	            WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) D
+	        ORDER BY D.rnum
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">
+	        SELECT D.mf_booksf_id AS optidisk_booksf_id
+	                ,D.mf_booksf_nm AS optidisk_booksf_nm
+	                ,D.shelf_c_cnt
+	                ,D.shelf_r_cnt
+	        FROM (
+	            SELECT C.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        ,B.*
+	                FROM (
+	                    SELECT * 
+	                    FROM TB_SRMFBOOKSF
+	                    WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND MF_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+	                    ORDER BY MF_BOOKSF_ID
+	                ) B
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) C
+	            WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) D
+	        ORDER BY D.rnum
+	    </isEqual>
+	</select>
+	
+	<!-- 
+		보존매체정수점검_점검현황
+		: 점검현황엑셀저장을 한다.
+	 -->
+	<select id="findExcelDocCntChkCurStat" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		SELECT RANK() OVER(ORDER BY A.RECORD_CENTER_ID, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID) AS rankNo
+		     , A.RECORD_CENTER_ID as recordCenterId
+		     , SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) cntChkId
+		     , A.MEDIA_DIV
+		     , (CASE WHEN A.MEDIA_DIV = '1' THEN '광디스크'
+		              WHEN A.MEDIA_DIV = '2' THEN 'M/F' END) as mediaDivNm
+		     , B.OPTIDISK_STAKRM_ID as optidiskStakrmId
+		     , B.OPTIDISK_BOOKSF_ID as optidiskBooksfId
+		  <isEqual property="mediaDiv" compareValue="1">      <!-- 광디스크 -->
+		     , MAX(( SELECT OPTIDISK_STAKRM_NM FROM TB_SROPTIDISK_STAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID )) AS optidiskStakrmNm
+		     , MAX(( SELECT OPTIDISK_BOOKSF_NM FROM TB_SROPTIDISK_BOOKSF 
+		       WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND OPTIDISK_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID )) AS optidiskBooksfNm
+		  </isEqual>
+		  <isEqual property="mediaDiv" compareValue="2">      <!-- M/F -->
+		     , MAX(( SELECT MF_STAKRM_NM FROM TB_SRMFSTAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND MF_STAKRM_ID = B.OPTIDISK_STAKRM_ID )) AS optidiskStakrmNm
+		     , MAX(( SELECT MF_BOOKSF_NM FROM TB_SRMFBOOKSF 
+		       WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND MF_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND MF_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID )) AS optidiskBooksfNm
+		  </isEqual>
+		     , COUNT(*) AS totCnt
+		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) AS chk1Cnt
+		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) AS chk2Cnt
+		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) AS chk3Cnt
+		     , SUM(CASE WHEN B.CNTCHK_RSLT_CD = '9' THEN 1 ELSE 0 END) AS chk4Cnt
+		     , COUNT(*) - SUM(CASE WHEN B.CNTCHK_RSLT_CD IN ('1','2','3','9') THEN 1 ELSE 0 END) AS chk5Cnt
+		     , MAX(A.CNTCHK_PROG_STATE_CD) AS cntChkProgStateCd 
+		     , MAX((SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR09' AND COM_CD = A.CNTCHK_PROG_STATE_CD)) AS cntchkProgStateNm
+		     , MAX(A.CHECK_YMD) AS checkYmd
+		     , MAX(( SELECT USER_NM FROM TB_STUSER WHERE USER_ID = A.WORK_USER_ID)) AS workUserNm
+		  FROM TB_SROPTIDISK_CNTCHK A
+		     , TB_SROPTIDISK_CNTCHKDETL B
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		 AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+			<isNotEmpty prepend="AND" property="cntChkId">
+		 A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="checkYyyy">
+		 A.CHECK_YYYY = #checkYyyy:VARCHAR#
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="checkYmd">
+		 A.CHECK_YMD = REPLACE(#checkYmd:VARCHAR#,'-','')
+			</isNotEmpty>
+		   AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		   AND B.CNTCHK_ID = A.CNTCHK_ID
+		   AND B.MEDIA_DIV = A.MEDIA_DIV
+			<isNotEmpty prepend="AND" property="optidiskStakrmId">
+		 B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="optidiskBooksfId">
+		 B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+			</isNotEmpty>
+		 GROUP BY A.RECORD_CENTER_ID, A.MEDIA_DIV, A.CNTCHK_ID, B.OPTIDISK_STAKRM_ID, B.OPTIDISK_BOOKSF_ID
+		 ORDER BY A.CNTCHK_ID DESC, rankNo DESC
+	</select>
+
+	<!-- 
+		보존매체정수점검_점검현황
+		: 점검현황 상세목록을 조회한다.
+	 -->
+	<resultMap id="findOptidiskCntChkCurStatDetail-result" class="rms.presv.optidiskmst.domain.OptidiskCntChk">
+		<result property="recordCenterId"		column="RECORD_CENTER_ID" 		nullValue=""  />
+		<result property="cntChkId"				column="CNTCHK_ID" 				nullValue=""  />
+		<result property="optidiskStakrmId"		column="OPTIDISK_STAKRM_ID" 	nullValue=""  />
+		<result property="optidiskStakrmNm"		column="OPTIDISK_STAKRM_NM" 	nullValue=""  />
+		<result property="optidiskBooksfId"		column="OPTIDISK_BOOKSF_ID"		nullValue=""  />
+		<result property="optidiskBooksfNm"		column="OPTIDISK_BOOKSF_NM" 	nullValue=""  />
+		<result property="cntchkProgStateCd"	column="CNTCHK_PROG_STATE_CD" 	nullValue=""  />
+		<result property="cntchkProgStateNm"	column="CNTCHK_PROG_STATE_NM" 	nullValue=""  />
+		<result property="orgCd"				column="ORG_CD" 				nullValue=""  />
+		<result property="seq"					column="SEQ" 					nullValue=""  />
+		<result property="orgCdSeq"				column="ORG_CD_SEQ" 			nullValue=""  />
+		<result property="splitTot"				column="SPLIT_TOT" 				nullValue="0"  />
+		<result property="cntchkCnt"			column="CNTCHK_CNT" 			nullValue="0"  />
+		<result property="cntchkRsltCd"			column="CNTCHK_RSLT_CD" 		nullValue=""  />
+		<result property="cntchkRsltNm"			column="CNTCHK_RSLT_NM" 		nullValue=""  />
+		<result property="handlRsltCont"		column="HANDL_RSLT_CONT" 		nullValue=""  />
+		<result property="checkYmd"				column="CHECK_YMD" 				nullValue=""  />
+		<result property="booksfLocation"		column="BOOKSF_LOCATION" 		nullValue=""  />
+		<result property="floorNo"				column="FLOOR_NO" 				nullValue=""  />
+		<result property="colNo"				column="COL_NO" 				nullValue=""  />
+		<result property="mediaDivNm"           column="MEDIA_DIV_NM" 			nullValue="" />
+	</resultMap>
+	<select id="countOptidiskCntChkCurStatDetail" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultClass="java.lang.Long" >
+	    <isEqual property="mediaDiv" compareValue="1"> 
+             SELECT COUNT(1)
+             FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B 
+             LEFT OUTER JOIN TB_SROPTIDISK_MST C
+             ON C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.ORG_CD = B.ORG_CD AND C.SEQ = B.SEQ
+             WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+             AND A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+             AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+             AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+             AND B.CNTCHK_ID = A.CNTCHK_ID
+             AND B.MEDIA_DIV = A.MEDIA_DIV
+             <isNotEmpty prepend="AND" property="optidiskStakrmId">
+                 B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="optidiskBooksfId">
+                 B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+             </isNotEmpty>   
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">
+             SELECT COUNT(1)
+             FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B
+             LEFT OUTER JOIN TB_SRMFPIC C
+             ON C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.CREAT_ORG_CD = B.ORG_CD AND C.PIC_SNO = B.SEQ
+             WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+             AND A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+             AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+             AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+             AND B.CNTCHK_ID = A.CNTCHK_ID
+             AND B.MEDIA_DIV = A.MEDIA_DIV
+             <isNotEmpty prepend="AND" property="optidiskStakrmId">
+                 B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="optidiskBooksfId">
+                 B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+             </isNotEmpty>   
+	    </isEqual>
+	</select>
+	<select id="findOptidiskCntChkCurStatDetail" parameterClass="rms.presv.optidiskmst.domain.OptidiskCntChk" resultMap="findOptidiskCntChkCurStatDetail-result" >
+	    <isEqual property="mediaDiv" compareValue="1">
+	        SELECT F.*
+	        FROM (
+	            SELECT E.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        ,D.*
+	                FROM (
+	                    SELECT A.RECORD_CENTER_ID
+	                            , A.CNTCHK_ID
+	                            , B.OPTIDISK_STAKRM_ID
+	                            , ( SELECT OPTIDISK_STAKRM_NM FROM TB_SROPTIDISK_STAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID ) AS OPTIDISK_STAKRM_NM
+	                            , B.OPTIDISK_BOOKSF_ID
+	                            , ( SELECT OPTIDISK_BOOKSF_NM FROM TB_SROPTIDISK_BOOKSF WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND OPTIDISK_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND OPTIDISK_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID ) AS OPTIDISK_BOOKSF_NM
+	                            , A.CNTCHK_PROG_STATE_CD 
+	                            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR09' AND COM_CD = A.CNTCHK_PROG_STATE_CD) AS CNTCHK_PROG_STATE_NM
+	                            , (CASE WHEN C.BOOKSF_ARNG_FLAG = '1' THEN C.OPTIDISK_STAKRM_ID || '-' || C.OPTIDISK_BOOKSF_ID || '-' || C.FLOOR_NO || '-' || C.COL_NO END) AS BOOKSF_LOCATION
+	                            , C.FLOOR_NO
+	                            , C.COL_NO
+	                            , B.ORG_CD
+	                            , B.SEQ
+	                            , B.ORG_CD || '-' || LPAD(B.SEQ,6,'0') AS ORG_CD_SEQ
+	                            , B.SPLIT_TOT
+	                            , B.CNTCHK_CNT
+	                            , B.CNTCHK_RSLT_CD
+	                            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR08' AND COM_CD = B.CNTCHK_RSLT_CD) AS CNTCHK_RSLT_NM     
+	                            , B.HANDL_RSLT_CONT
+	                            , B.CHECK_YMD
+	                            , '광디스크' AS MEDIA_DIV_NM
+	                    FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B 
+	                    LEFT OUTER JOIN TB_SROPTIDISK_MST C
+	                    ON C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.ORG_CD = B.ORG_CD AND C.SEQ = B.SEQ
+	                    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+	                    AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+	                    AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	                    AND B.CNTCHK_ID = A.CNTCHK_ID
+	                    AND B.MEDIA_DIV = A.MEDIA_DIV
+	                    <isNotEmpty prepend="AND" property="optidiskStakrmId">
+	                        B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="optidiskBooksfId">
+	                        B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+	                    </isNotEmpty>   
+	                    ORDER BY B.ORG_CD, B.SEQ
+	                ) D
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) E
+	            WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) F
+	        ORDER BY F.rnum
+	    </isEqual>
+	    <isEqual property="mediaDiv" compareValue="2">
+	        SELECT F.*
+	        FROM (
+	            SELECT E.*
+	            FROM (
+	                SELECT ROWNUM AS rnum
+	                        ,D.*
+	                FROM (    
+	                    SELECT A.RECORD_CENTER_ID
+	                            , A.CNTCHK_ID
+	                            , B.OPTIDISK_STAKRM_ID
+	                            , ( SELECT MF_STAKRM_NM FROM TB_SRMFSTAKRM WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND MF_STAKRM_ID = B.OPTIDISK_STAKRM_ID ) AS OPTIDISK_STAKRM_NM
+	                            , B.OPTIDISK_BOOKSF_ID
+	                            , ( SELECT MF_BOOKSF_NM FROM TB_SRMFBOOKSF WHERE RECORD_CENTER_ID = B.RECORD_CENTER_ID AND MF_STAKRM_ID = B.OPTIDISK_STAKRM_ID AND MF_BOOKSF_ID = B.OPTIDISK_BOOKSF_ID ) AS OPTIDISK_BOOKSF_NM
+	                            , A.CNTCHK_PROG_STATE_CD 
+	                            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR09' AND COM_CD = A.CNTCHK_PROG_STATE_CD) AS CNTCHK_PROG_STATE_NM
+	                            , (CASE WHEN C.MF_ARNG_FLAG = '1' THEN C.MF_STAKRM_ID || '-' || C.MF_BOOKSF_ID || '-' || C.BOOKSF_SHELF_CNO || '-' || C.BOOKSF_SHELF_RNO END) AS BOOKSF_LOCATION
+	                            , C.BOOKSF_SHELF_CNO AS FLOOR_NO
+	                            , C.BOOKSF_SHELF_RNO AS COL_NO
+	                            , B.ORG_CD
+	                            , B.SEQ
+	                            , B.ORG_CD || '-' || LPAD(B.SEQ,6,'0') AS ORG_CD_SEQ
+	                            , B.SPLIT_TOT
+	                            , B.CNTCHK_CNT
+	                            , B.CNTCHK_RSLT_CD
+	                            , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'SR08' AND COM_CD = B.CNTCHK_RSLT_CD) AS CNTCHK_RSLT_NM     
+	                            , B.HANDL_RSLT_CONT
+	                            , B.CHECK_YMD
+	                            , 'M/F' AS MEDIA_DIV_NM
+	                    FROM TB_SROPTIDISK_CNTCHK A, TB_SROPTIDISK_CNTCHKDETL B
+	                    LEFT OUTER JOIN TB_SRMFPIC C
+	                    ON C.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND C.CREAT_ORG_CD = B.ORG_CD AND C.PIC_SNO = B.SEQ
+	                    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                    AND A.CNTCHK_ID = REPLACE(#cntChkId:VARCHAR#, '-', '')
+	                    AND A.MEDIA_DIV = #mediaDiv:VARCHAR#
+	                    AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	                    AND B.CNTCHK_ID = A.CNTCHK_ID
+	                    AND B.MEDIA_DIV = A.MEDIA_DIV
+	                    <isNotEmpty prepend="AND" property="optidiskStakrmId">
+	                        B.OPTIDISK_STAKRM_ID = #optidiskStakrmId:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="optidiskBooksfId">
+	                        B.OPTIDISK_BOOKSF_ID = #optidiskBooksfId:VARCHAR#
+	                    </isNotEmpty>   
+	                    ORDER BY B.ORG_CD, B.SEQ
+	                ) D
+	                WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+	            ) E
+	            WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	        ) F
+	        ORDER BY F.rnum
+	    </isEqual>
+	</select>
+
+		
+</sqlMap>

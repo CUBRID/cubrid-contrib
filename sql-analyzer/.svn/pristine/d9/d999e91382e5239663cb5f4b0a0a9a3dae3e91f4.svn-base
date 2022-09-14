@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.recordmng">
+
+	
+	<!-- 
+		기록물관리_공개관리
+		: 공개관리 대상 기록물 철 목록을 조회한다.	
+	 -->
+	<resultMap id="findOpenMngFolderPagedList-result" class="rms.sys.recordmng.domain.OpenMngFolder">
+		<result property = "orgCd" 			    column = "ORG_CD"				/>
+		<result property = "folderId" 		    column = "FOLDER_ID"			/>
+		<result property = "clssNm" 		    column = "CLSS_NM"				/>
+		<result property = "title" 			    column = "TITLE"				/> 		
+		<result property = "creatYyyy"		    column = "CREAT_YYYY"			/>
+		<result property = "orgNm" 			    column = "ORG_NM"				/>
+		<result property = "orgAbbrNm" 		    column = "ORG_ABBR_NM"			/>
+		<result property = "presvTermNm" 	    column = "PRESV_TERM_NM"		/>
+		<result property = "creatSysNm" 	    column = "CREAT_SYS_NM"			/>
+		<result property = "erecordFlagNm" 	    column = "ERECORD_FLAG_NM"		/>
+		<result property = "agentNm" 		    column = "AGENT_NM"				/>
+		<result property = "folderKeepStateNm" 	column = "FOLDER_KEEP_STATE_NM"	/>
+		<result property = "creatSysCd" 	    column = "CREAT_SYS_CD"			/>
+		<result property = "operReadRangeCd"    column = "OPER_READ_RANGE_CD"	/>
+		<result property = "neoTransState"    	column = "neo_trans_state"	/>
+		<result property = "neoTransStateNm"    column = "neo_trans_state_nm"	/>
+		<result property = "openMngFinFlagCnt"  column = "open_mng_fin_flag_cnt"	/>
+	</resultMap>
+	<select id="countOpenMngFolderPagedList" parameterClass="rms.sys.recordmng.domain.OpenMngFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (	
+			SELECT /*+ index(B, TB_RDRECORD_IX01) */
+				   A.record_center_id, A.folder_id
+			FROM  TB_RDFOLDER A, TB_RDRECORD B
+			WHERE A.record_center_id = B.record_center_id
+			<dynamic>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isEmpty property="orgCd">
+					<isNotEmpty prepend="AND" property="orgNm">
+						A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+					</isNotEmpty>
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>	
+				<isNotEmpty prepend="AND" property="creatFromYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR#
+					<isNotEmpty prepend="AND" property="creatToYyyy">
+						#creatToYyyy:VARCHAR#)
+					</isNotEmpty>
+				</isNotEmpty>	
+				<isNotEmpty prepend="AND" property="clssId">
+				    <isEqual property="clssDivCd" compareValue="1">
+						(A.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+					</isEqual>
+					<isEqual property="clssDivCd" compareValue="2">
+				    	A.clss_id = #clssId:VARCHAR#
+				    </isEqual>
+				</isNotEmpty>	
+				<isNotEmpty prepend="AND" property="title">
+					A.title LIKE #title:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTypeDivCd">
+					A.folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="presvTermCd">
+					<isEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.presv_term_cd <![CDATA[>=]]> '20'
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+						</isNotEqual> 					 
+					</isEqual>
+						<isNotEqual property="presvTermCheck" compareValue="1">
+							<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+								A.presv_term_cd IN ('20','25') 
+							</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+					A.presv_term_cd = #presvTermCd:VARCHAR#
+						</isNotEqual>
+					</isNotEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="keywd">
+					A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERKEYWD WHERE record_center_id=#recordCenterId:VARCHAR# AND keywd LIKE #keywd:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="agentNm">
+					A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERCREAT WHERE record_center_id=#recordCenterId:VARCHAR# AND agent_nm LIKE #agentNm:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="erecordFlag">
+					A.erecord_flag = #erecordFlag:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="scanProgStateCd">
+					<isEqual property="scanProgStateCd" compareValue="5">
+						A.scan_prog_state_cd = #scanProgStateCd:VARCHAR#
+					</isEqual>
+					<isEqual property="scanProgStateCd" compareValue="1">
+				    	(A.scan_prog_state_cd IS NULL or A.scan_prog_state_cd IN ('', '1', '2', '3', '4'))
+				    </isEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="takeYyyy">
+					A.take_yyyy = #takeYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderKeepStateCd">
+					<isEqual property="folderKeepStateCd" compareValue="01">
+						A.folder_keep_state_cd IN (#folderKeepStateCd:VARCHAR#, '04')
+					</isEqual>
+					<isNotEqual property="folderKeepStateCd" compareValue="01">
+				    	A.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#					
+					</isNotEqual>
+				</isNotEmpty>
+			</dynamic>
+			AND A.folder_id = B.folder_id
+			AND A.record_center_id = #recordCenterId:VARCHAR#
+			AND (B.open_revw_prog_state IS NULL OR B.open_revw_prog_state IN ('1','2','5'))
+			AND NVL(B.open_mng_fin_flag, '0') != '1'
+			GROUP BY A.record_center_id, A.folder_id
+		)
+	</select>
+	<select id="findOpenMngFolderPagedList" parameterClass="rms.sys.recordmng.domain.OpenMngFolder" resultMap="findOpenMngFolderPagedList-result">
+		SELECT E.org_cd
+		      ,E.folder_id
+		      ,(CASE WHEN E.clss_div_cd = '1' THEN (SELECT Z.bis_clss_nm FROM tb_zzbisclss Z WHERE Z.bis_clss_id = E.clss_id)
+		             WHEN E.clss_div_cd = '2' THEN (SELECT Z.unit_nm FROM tb_zzunit Z WHERE Z.record_center_id = E.record_center_id AND Z.unit_cd = E.clss_id)
+		        END) clss_nm
+		      ,E.title
+		      ,E.creat_yyyy
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_abbr_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) presv_term_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) creat_sys_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm
+		      ,(SELECT Z.agent_nm FROM TB_RDFOLDERCREAT Z WHERE Z.record_center_id=E.record_center_id AND   Z.folder_id=E.folder_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDFOLDERCREAT Y WHERE Y.record_center_id=E.record_center_id AND Y.folder_id=E.folder_id)) agent_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) folder_keep_state_nm
+		      ,E.creat_sys_cd
+		      ,E.oper_read_range_cd
+		      ,NVL(E.neo_trans_state, '0') neo_trans_state
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST02' AND Z.com_cd = NVL(E.neo_trans_state,'0')) AS neo_trans_state_nm
+		      ,E.open_mng_fin_flag_cnt
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                   ,C.*
+		        FROM (
+		            SELECT  /*+ index(B, TB_RDRECORD_IX01) */
+		                      A.record_center_id
+		                    , A.folder_id
+		                    , MAX(A.creat_sys_cd) creat_sys_cd
+		                    , MAX(A.org_cd) org_cd
+		                    , MAX(A.clss_div_cd) clss_div_cd
+		                    , MAX(A.clss_id) clss_id
+		                    , MAX(A.clss_nm) clss_nm
+		                    , MAX(A.new_clss_id) new_clss_id
+		                    , MAX(A.new_clss_nm) new_clss_nm
+		                    , MAX(A.creat_yyyy) creat_yyyy
+		                    , MAX(A.title) title
+		                    , MAX(A.presv_term_cd) presv_term_cd
+		                    , MAX(A.erecord_flag) erecord_flag
+		                    , MAX(A.folder_keep_state_cd) folder_keep_state_cd
+		                    , MAX(A.oper_read_range_cd) oper_read_range_cd
+		                    , MAX(A.neo_trans_state) neo_trans_state
+		                    , SUM(DECODE(B.open_mng_fin_flag, NULL, 1, 0)) open_mng_fin_flag_cnt
+		            FROM  TB_RDFOLDER A, TB_RDRECORD B
+		            WHERE A.record_center_id = B.record_center_id
+		            <dynamic>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+						<isEmpty property="orgCd">
+							<isNotEmpty prepend="AND" property="orgNm">
+								A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="creatSysCd">
+							A.creat_sys_cd = #creatSysCd:VARCHAR#
+						</isNotEmpty>	
+						<isNotEmpty prepend="AND" property="creatFromYyyy">
+							(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR#
+							<isNotEmpty prepend="AND" property="creatToYyyy">
+								#creatToYyyy:VARCHAR#)
+							</isNotEmpty>
+						</isNotEmpty>	
+						<isNotEmpty prepend="AND" property="clssId">
+						    <isEqual property="clssDivCd" compareValue="1">
+								(A.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+							</isEqual>
+							<isEqual property="clssDivCd" compareValue="2">
+						    	A.clss_id = #clssId:VARCHAR#
+						    </isEqual>
+						</isNotEmpty>	
+						<isNotEmpty prepend="AND" property="title">
+							A.title LIKE #title:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="folderTypeDivCd">
+							A.folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty property="presvTermCd">
+							<isEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									A.presv_term_cd <![CDATA[>=]]> '20'
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+									A.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+								</isNotEqual> 					 
+							</isEqual>
+								<isNotEqual property="presvTermCheck" compareValue="1">
+									<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+										A.presv_term_cd IN ('20','25') 
+									</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.presv_term_cd = #presvTermCd:VARCHAR#
+								</isNotEqual>
+							</isNotEqual>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="keywd">
+							A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERKEYWD WHERE record_center_id=#recordCenterId:VARCHAR# AND keywd LIKE #keywd:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="agentNm">
+							A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERCREAT WHERE record_center_id=#recordCenterId:VARCHAR# AND agent_nm LIKE #agentNm:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="erecordFlag">
+							A.erecord_flag = #erecordFlag:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="scanProgStateCd">
+							<isEqual property="scanProgStateCd" compareValue="5">
+								A.scan_prog_state_cd = #scanProgStateCd:VARCHAR#
+							</isEqual>
+							<isEqual property="scanProgStateCd" compareValue="1">
+						    	(A.scan_prog_state_cd IS NULL or A.scan_prog_state_cd IN ('', '1', '2', '3', '4'))
+						    </isEqual>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="takeYyyy">
+							A.take_yyyy = #takeYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="folderKeepStateCd">
+							<isEqual property="folderKeepStateCd" compareValue="01">
+								A.folder_keep_state_cd IN (#folderKeepStateCd:VARCHAR#, '04')
+							</isEqual>
+							<isNotEqual property="folderKeepStateCd" compareValue="01">
+						    	A.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#					
+							</isNotEqual>
+						</isNotEmpty>
+					</dynamic>
+		            AND A.folder_id = B.folder_id
+		            AND A.record_center_id = #recordCenterId:VARCHAR#
+		            AND (B.open_revw_prog_state IS NULL OR B.open_revw_prog_state IN ('1','2','5'))
+		            AND NVL(B.open_mng_fin_flag, '0') != '1'
+		            GROUP BY A.record_center_id, A.folder_id
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    )D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 엑셀저장시 기록물철별 기록물건 목록을 조회한다.
+	 -->
+	<resultMap id="findExcelOpenMngFolderRecordList-result" class="rms.sys.recordmng.domain.OpenMngRecord">
+		<result property="orgNm" 			 column="org_nm"/>
+		<result property="orgAbbrNm" 		 column="org_abbr_nm"/>
+		<result property="orgCd" 		 	 column="org_cd"/>
+		<result property="clssNm" 			 column="clss_nm"/>
+		<result property="folderTitle" 		 column="folder_title"/>
+		<result property="creatYyyy" 		 column="creat_yyyy"/>
+		<result property="presvTermCd" 		 column="presv_term_cd"/>
+		<result property="presvTermNm" 		 column="presv_term_nm"/>
+		<result property="title" 			 column="record_title"/>
+		<result property="creatRegDtime" 	 column="creat_reg_dtime"/>
+		<result property="openDivCd" 		 column="open_div_cd"/>
+		<result property="openDivNm" 		 column="open_div_nm"/>
+		<result property="openGrade" 		 column="open_grade"/>
+		<result property="partOpenRsn" 		 column="part_open_rsn"/> 
+		<result property="openLimitPart" 	 column="open_limit_part"/>
+		<result property="recordDetlTypeCd"  column="record_detl_type_cd"/>
+		<result property="recordDetlTypeNm"  column="record_detl_type_nm"/>
+		<result property="recordCenterId" 	 column="record_center_id"/>
+		<result property="folderClssNo" 	 column="folder_clss_no"/>
+		<result property="recordRegNo" 		 column="record_reg_no"/>
+		<result property="creatRegNo" 		 column="creat_reg_no"/>
+		<result property="folderKeepStateCd" column="folder_keep_state_cd"/>
+		<result property="folderKeepStateNm" column="folder_keep_state_nm"/>
+		<result property="hoNo"					column="HO_NO"/>
+		<result property="hoNoCnt"				column="HO_NO_CNT"/>
+	</resultMap>
+	<select id="findExcelOpenMngFolderRecordList" parameterClass="rms.sys.recordmng.domain.OpenMngFolder" resultMap="findExcelOpenMngFolderRecordList-result">
+		SELECT    /*+ index(A, TB_RDRECORD_IX01) */
+		          (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_nm
+		        , (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_abbr_nm
+		        , (CASE WHEN (SELECT Z.close_flag FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) = '0' THEN B.org_cd
+		                ELSE ''
+		           END) org_cd
+		        , (CASE WHEN B.clss_div_cd = '1' THEN (SELECT Z.bis_clss_nm FROM tb_zzbisclss Z WHERE Z.bis_clss_id = B.clss_id)
+		                WHEN B.clss_div_cd = '2' THEN (SELECT Z.unit_nm FROM tb_zzunit Z WHERE Z.record_center_id = B.record_center_id AND Z.unit_cd = B.clss_id)
+		           END) clss_nm
+		        , B.title folder_title
+		        , B.creat_yyyy
+		        , B.presv_term_cd
+		        , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'RD07' AND Z.com_cd = B.presv_term_cd) presv_term_nm
+		        , A.title record_title
+		        , SUBSTR(A.creat_reg_dtime, 1, 8) creat_reg_dtime
+		        , A.open_div_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD05' AND Z.com_cd = A.open_div_cd) open_div_nm
+		        , A.open_grade
+		        , A.part_open_rsn 
+		        , A.open_limit_part
+		        , A.record_detl_type_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD03' AND Z.com_cd = A.record_detl_type_cd) record_detl_type_nm
+		        , A.record_center_id
+		        , B.creat_sys_cd||'-'||B.org_cd||'-'||B.clss_Id||'-'||B.creat_yyyy||'-'||B.folder_reg_seq||'-'||B.ho_no folder_clss_no
+		        , B.ho_no
+		        , A.creat_sys_cd||'-'||A.org_cd||'-'||A.creat_yyyy||'-'||A.creat_reg_no||'-'||A.dtch_reg_no record_reg_no
+		        , A.creat_reg_no
+		        , B.folder_keep_state_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD32' AND Z.com_cd = B.folder_keep_state_cd) folder_keep_state_nm
+		        , (SELECT COUNT (*) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = B.CREAT_SYS_CD AND ORG_CD = B.ORG_CD AND CLSS_ID = B.CLSS_ID AND CREAT_YYYY = B.CREAT_YYYY AND FOLDER_REG_SEQ = B.FOLDER_REG_SEQ) HO_NO_CNT
+		FROM tb_rdrecord A, tb_rdfolder B
+		WHERE   A.record_center_id = #recordCenterId:VARCHAR#
+		AND     A.record_center_id = B.record_center_id 
+		AND     A.folder_id = B.folder_id
+		AND     (A.open_revw_prog_state IS NULL OR A.open_revw_prog_state IN ('1', '2', '5'))
+		AND		NVL(A.open_mng_fin_flag, '0') != '1'
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="orgCd">
+				<isNotEmpty prepend="AND" property="orgNm">
+					B.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				B.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				(B.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR#
+				<isNotEmpty prepend="AND" property="creatToYyyy">
+					#creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="clssId">
+			    <isEqual property="clssDivCd" compareValue="1">
+					(B.clss_id = #clssId:VARCHAR# OR B.new_clss_id = #clssId:VARCHAR#)
+				</isEqual>
+				<isEqual property="clssDivCd" compareValue="2">
+			    	B.clss_id = #clssId:VARCHAR#
+			    </isEqual>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="title">
+				B.title LIKE #title:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderTypeDivCd">
+				B.folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="presvTermCd">
+				<isEqual property="presvTermCheck" compareValue="1">
+					<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						B.presv_term_cd <![CDATA[>=]]> '20'
+					</isEqual>
+					<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						B.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+					</isNotEqual> 					 
+				</isEqual>
+					<isNotEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							B.presv_term_cd IN ('20','25') 
+						</isEqual>
+					<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+				B.presv_term_cd = #presvTermCd:VARCHAR#
+					</isNotEqual>
+				</isNotEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keywd">
+				B.folder_id IN (SELECT folder_id FROM TB_RDFOLDERKEYWD WHERE record_center_id=#recordCenterId:VARCHAR# AND keywd LIKE #keywd:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="agentNm">
+				B.folder_id IN (SELECT folder_id FROM TB_RDFOLDERCREAT WHERE record_center_id=#recordCenterId:VARCHAR# AND agent_nm LIKE #agentNm:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="erecordFlag">
+				B.erecord_flag = #erecordFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="scanProgStateCd">
+				<isEqual property="scanProgStateCd" compareValue="5">
+					B.scan_prog_state_cd = #scanProgStateCd:VARCHAR#
+				</isEqual>
+				<isEqual property="scanProgStateCd" compareValue="1">
+			    	B.scan_prog_state_cd IN ('', '1', '2', '3', '4')
+			    </isEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="takeYyyy">
+				B.take_yyyy = #takeYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderKeepStateCd">
+				<isEqual property="folderKeepStateCd" compareValue="01">
+					B.folder_keep_state_cd IN (#folderKeepStateCd:VARCHAR#, '04')
+			    </isEqual>
+				<isNotEqual property="folderKeepStateCd" compareValue="01">
+			    	B.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+				</isNotEqual>
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY B.record_center_id, B.org_cd, folder_clss_no, record_reg_no
+	</select>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 공개관리 대상 기록물 철 목록을 조회한다.	
+	 -->
+	<resultMap id="findOpenMngRecordPagedList-result" class="rms.sys.recordmng.domain.OpenMngRecord">
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="recordOrgCd" 				column="record_org_cd"/>
+		<result property="folderId" 				column="folder_id"/>
+		<result property="recordId" 				column="record_id"/>
+		<result property="title" 					column="title"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="creatRegDtime" 			column="creat_reg_dtime"/>
+		<result property="openDivCd" 				column="open_div_cd"/>
+		<result property="openDivNm" 				column="open_div_nm"/>
+		<result property="erecordFlag" 				column="erecord_flag"/>
+		<result property="erecordFlagNm" 			column="erecord_flag_nm"/>
+		<result property="openMngFinFlag" 			column="open_mng_fin_flag"/>
+		<result property="openMngFinFlagNm" 		column="open_mng_fin_flag_nm"/>
+		<result property="neoTransState" 			column="neo_trans_state"/>
+		<result property="neoTransStateNm" 			column="neo_trans_state_nm"/>
+	</resultMap>
+	<select id="countOpenMngRecordPagedList" parameterClass="rms.sys.recordmng.domain.OpenMngRecord" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDRECORD A
+        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+        AND A.folder_id = #folderId:VARCHAR#
+        AND (A.open_revw_prog_state IS NULL OR A.open_revw_prog_state IN ('1', '2', '5'))
+        <dynamic>
+            <isNotEmpty prepend="AND" property="openDivCd">
+                A.open_div_cd = #openDivCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.org_cd = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isEmpty property="orgCd">
+                <isNotEmpty prepend="AND" property="orgNm">
+                    A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+                </isNotEmpty>
+            </isEmpty>
+            <isNotEmpty prepend="AND" property="creatRegDtimeStart">
+                A.creat_reg_dtime <![CDATA[>=]]> #creatRegDtimeStart:VARCHAR#||'000000'
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatRegDtimeEnd">
+                A.creat_reg_dtime <![CDATA[<=]]> #creatRegDtimeEnd:VARCHAR#||'240000'
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="erecordFlag">
+                A.erecord_flag = #erecordFlag:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                A.title LIKE #title:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="oldRecordDocno">
+                (A.doc_no LIKE #oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #oldRecordDocno:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="openMngFinFlag">
+                <isEqual property="openMngFinFlag" compareValue="0">
+                    A.open_mng_fin_flag IS NULL
+                </isEqual>
+                <isEqual property="openMngFinFlag" compareValue="1">
+                    A.open_mng_fin_flag = '1'
+                </isEqual>
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findOpenMngRecordPagedList" parameterClass="rms.sys.recordmng.domain.OpenMngRecord" resultMap="findOpenMngRecordPagedList-result">
+		SELECT E.record_center_id
+		      ,E.record_org_cd
+		      ,E.folder_id
+		      ,E.record_id
+		      ,E.title
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.record_org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.record_org_cd) AS org_abbr_nm
+		      ,SUBSTR(E.creat_reg_dtime,0,8) AS creat_reg_dtime  
+		      ,E.open_div_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) AS open_div_nm
+		      ,E.erecord_flag
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm
+		      ,NVL(E.open_mng_fin_flag,'0') AS open_mng_fin_flag
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ZZ23' AND Z.com_cd=NVL(E.open_mng_fin_flag,'0')) AS open_mng_fin_flag_nm
+		      ,NVL(E.neo_trans_state, '0') AS neo_trans_state
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST02' AND Z.com_cd = NVL(E.neo_trans_state,'0')) AS neo_trans_state_nm
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                    ,C.*
+		        FROM (
+		            SELECT A.record_center_id, A.org_cd AS record_org_cd, A.folder_id, A.record_id, A.title
+		                  ,A.creat_reg_dtime, A.open_div_cd, A.erecord_flag, A.open_mng_fin_flag, A.neo_trans_state
+		            FROM TB_RDRECORD A
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		            AND A.folder_id = #folderId:VARCHAR#
+		            AND (A.open_revw_prog_state IS NULL OR A.open_revw_prog_state IN ('1', '2', '5'))
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="openDivCd">
+		                    A.open_div_cd = #openDivCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.org_cd = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isEmpty property="orgCd">
+		                    <isNotEmpty prepend="AND" property="orgNm">
+		                        A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+		                    </isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="creatRegDtimeStart">
+		                    A.creat_reg_dtime <![CDATA[>=]]> #creatRegDtimeStart:VARCHAR#||'000000'
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatRegDtimeEnd">
+		                    A.creat_reg_dtime <![CDATA[<=]]> #creatRegDtimeEnd:VARCHAR#||'240000'
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="erecordFlag">
+		                    A.erecord_flag = #erecordFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    A.title LIKE #title:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="oldRecordDocno">
+		                    (A.doc_no LIKE #oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #oldRecordDocno:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="openMngFinFlag">
+		                    <isEqual property="openMngFinFlag" compareValue="0">
+		                        A.open_mng_fin_flag IS NULL
+		                    </isEqual>
+		                    <isEqual property="openMngFinFlag" compareValue="1">
+		                        A.open_mng_fin_flag = '1'
+		                    </isEqual>
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY A.record_center_id, A.title
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	<!-- 
+		기록물관리_공개관리
+		: 공개속성변경이력을 등록한다.	
+	 -->
+	<insert id="createOpenMngHist" parameterClass="rms.sys.recordmng.domain.RdOpenHist">
+		INSERT INTO TB_RDOPENHIST (
+			RECORD_CENTER_ID
+		   ,RECORD_ID
+		   ,CHNG_HIST_NO
+		   ,OPEN_DIV_CD_BEF
+		   ,OPEN_DIV_CD_AFT
+		   ,CHNG_YMD
+		   ,CHNG_RSN
+		   ,CHNG_USER_ID
+		   ,OPEN_GRADE_BEF
+		   ,OPEN_GRADE_AFT
+		   ,OPEN_LIMIT_PART_BEF
+		   ,OPEN_LIMIT_PART_AFT
+		   ,PART_OPEN_RSN_BEF
+		   ,PART_OPEN_RSN_AFT
+		   ,CHNG_ORG_CD
+		) VALUES (
+				#recordCenterId:VARCHAR#
+			   ,#recordId:VARCHAR#
+		       ,(SELECT NVL(MAX(CHNG_HIST_NO),0) + 1 FROM TB_RDOPENHIST WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND RECORD_ID = #recordId:VARCHAR#)
+		       ,(SELECT OPEN_DIV_CD  FROM TB_RDRECORD WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND RECORD_ID = #recordId:VARCHAR#)
+			   ,#openDivCd:VARCHAR#
+			   ,#chngYmd:VARCHAR#
+			   ,#chngRsn:VARCHAR#
+			   ,#chngUserId:VARCHAR#
+			   ,(SELECT OPEN_GRADE FROM TB_RDRECORD WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND RECORD_ID = #recordId:VARCHAR#) 
+			   ,NVL(#openGrade:VARCHAR#, 'NNNNNNNN')
+			   ,(SELECT OPEN_LIMIT_PART FROM TB_RDRECORD WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND RECORD_ID = #recordId:VARCHAR#)
+			   ,#openLimitPart:VARCHAR#
+			   ,(SELECT PART_OPEN_RSN FROM TB_RDRECORD WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND RECORD_ID = #recordId:VARCHAR#)
+			   ,#partOpenRsn:VARCHAR#
+			   ,#orgCd:VARCHAR# 
+		   	)
+	</insert>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 기록물건 의 공개정보를 수정한다.
+	 -->	   	
+	<update id="updateOpenMngRecord" parameterClass="rms.sys.recordmng.domain.RdOpenHist">
+		UPDATE 	TB_RDRECORD
+	  	SET     <isNotEmpty property="openDivCd">
+	  			OPEN_DIV_CD = #openDivCd:VARCHAR#,
+	  			</isNotEmpty>
+	  	       	OPEN_GRADE  = #openGrade:VARCHAR#
+	  	      , OPEN_LIMIT_PART = #openLimitPart:VARCHAR#
+			  , PART_OPEN_RSN = #partOpenRsn:VARCHAR#
+	  	      , OPER_READ_RANGE_CD = DECODE(#openDivCd:VARCHAR#,'1','01',OPER_READ_RANGE_CD)
+	  	      , OPEN_MNG_FIN_FLAG = '1'
+	    WHERE 	RECORD_ID = #recordId:VARCHAR#
+	    AND 	RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</update>
+	
+	<!--  
+		기록물관리_공개관리
+		: 공개속성변경이력을 등록한다. (일괄)
+	 -->
+	<insert id="createBatchOpenMngHist" parameterClass="rms.sys.recordmng.domain.RdOpenHist">
+		INSERT INTO TB_RDOPENHIST
+	  		   (RECORD_CENTER_ID, RECORD_ID, CHNG_HIST_NO, 
+			   OPEN_DIV_CD_BEF, OPEN_DIV_CD_AFT, 
+			   CHNG_YMD, CHNG_RSN, CHNG_USER_ID, 
+			   OPEN_GRADE_BEF, OPEN_GRADE_AFT, 
+			   OPEN_LIMIT_PART_BEF, OPEN_LIMIT_PART_AFT, 
+			   PART_OPEN_RSN_BEF, PART_OPEN_RSN_AFT
+			   )(
+				SELECT	  A.record_center_id
+						, A.record_id
+						,(SELECT NVL(MAX(B.chng_hist_no),0) + 1
+				  		   FROM TB_RDOPENHIST B
+				 		  WHERE B.record_center_id = A.record_center_id
+				 		    AND B.record_id = A.record_id)
+						, A.open_div_cd
+						, #openDivCd:VARCHAR#
+					    , #chngYmd:VARCHAR#
+					    , #chngRsn:VARCHAR#
+					    , #chngUserId:VARCHAR#
+					   	, A.open_grade
+					    , #openGrade:VARCHAR#
+						, A.open_limit_part
+						, #openLimitPart:VARCHAR#
+						, A.part_open_rsn
+						, #partOpenRsn:VARCHAR#
+				FROM 	TB_RDRECORD A
+				WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+				AND	  	A.folder_id = #folderId:VARCHAR#
+				AND		A.open_mng_fin_flag IS NULL
+				AND		(A.open_revw_prog_state IS NULL OR A.open_revw_prog_state IN ('1','2','5'))
+					<dynamic>
+						<isNotEmpty prepend="AND" property="cond_openDivCd">
+							A.open_div_cd = #cond_openDivCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_orgCd">
+							A.org_cd = #cond_orgCd:VARCHAR#
+						</isNotEmpty>
+						<isEmpty property="cond_orgCd">
+							<isNotEmpty prepend="AND" property="cond_orgNm">
+								A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #cond_orgNm:VARCHAR#)
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="cond_creatRegDtimeStart">
+			        		A.creat_reg_dtime <![CDATA[>=]]> #cond_creatRegDtimeStart:VARCHAR#||'000000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_creatRegDtimeEnd">
+							A.creat_reg_dtime <![CDATA[<=]]> #cond_creatRegDtimeEnd:VARCHAR#||'240000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_erecordFlag">
+							A.erecord_flag = #cond_erecordFlag:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_title">
+							A.title LIKE #cond_title:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_oldRecordDocno">
+							(A.doc_no LIKE #cond_oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #cond_oldRecordDocno:VARCHAR#)
+						</isNotEmpty>
+					</dynamic>
+		)
+	</insert>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 기록물건 공개정보를 수정한다. (일괄)
+	 -->
+	<update id="updateBatchOpenMngRecord" parameterClass="rms.sys.recordmng.domain.RdOpenHist">
+		UPDATE 	TB_RDRECORD Z
+	  	SET     OPEN_DIV_CD = #openDivCd:VARCHAR#
+	  	      , OPEN_GRADE  = #openGrade:VARCHAR#
+	  	      , OPEN_LIMIT_PART = #openLimitPart:VARCHAR#
+			  , PART_OPEN_RSN = #partOpenRsn:VARCHAR#
+	  	      , OPER_READ_RANGE_CD = DECODE(#openDivCd:VARCHAR#,'1','01',OPER_READ_RANGE_CD)
+	  	      , OPEN_MNG_FIN_FLAG = '1'
+	    <!--cubrid WHERE 	(record_center_id, record_id)
+		IN 		(  
+				SELECT	  A.record_center_id
+						, A.record_id-->
+            WHERE 	
+		EXISTS 		(  
+				SELECT	  1
+				FROM 	TB_RDRECORD A
+				WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+				AND	  	A.folder_id = #folderId:VARCHAR#
+				AND		A.open_mng_fin_flag IS NULL
+				AND		(A.open_revw_prog_state IS NULL OR A.open_revw_prog_state IN ('1','2','5'))
+                                <!--cubrid-->
+                                AND A.record_center_id = Z.record_center_id
+                                AND A.record_id = Z.record_id
+					<dynamic>
+						<isNotEmpty prepend="AND" property="cond_openDivCd">
+							A.open_div_cd = #cond_openDivCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_orgCd">
+							A.org_cd = #cond_orgCd:VARCHAR#
+						</isNotEmpty>
+						<isEmpty property="cond_orgCd">
+							<isNotEmpty prepend="AND" property="cond_orgNm">
+								A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #cond_orgNm:VARCHAR#)
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="cond_creatRegDtimeStart">
+			        		A.creat_reg_dtime <![CDATA[>=]]> #cond_creatRegDtimeStart:VARCHAR#||'000000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_creatRegDtimeEnd">
+							A.creat_reg_dtime <![CDATA[<=]]> #cond_creatRegDtimeEnd:VARCHAR#||'240000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_erecordFlag">
+							A.erecord_flag = #cond_erecordFlag:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_title">
+							A.title LIKE #cond_title:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_oldRecordDocno">
+							(A.doc_no LIKE #cond_oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #cond_oldRecordDocno:VARCHAR#)
+						</isNotEmpty>
+					</dynamic>
+				)
+	</update>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 일괄등록진행중 발생한오류내역 엑셀파일을 조회한다.
+	 -->
+	<resultMap id="findOpenMngBatchRegErrorXls-result" class="java.util.HashMap">
+		<result property="fileNm" 			column="file_nm"/>
+		<result property="fileKey" 			column="file_key"/>
+	</resultMap>
+	<select id="findOpenMngBatchRegErrorXls" parameterClass="rms.sys.recordmng.domain.OpenMngRecord" resultMap="findOpenMngBatchRegErrorXls-result">
+		SELECT file_nm, file_key FROM TB_ZZREQEXCELLIST WHERE REQ_USER_ID = #reqUserId:VARCHAR# AND REQ_MENU_ID = #menuId:VARCHAR# AND REQ_INDEX = #reqIndex:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 엑셀파일 일괄등록시 이미 처리된 기록물건인지 체크
+	 -->
+	<select id="findOpenMngRecordFinFlag" parameterClass="rms.sys.recordmng.domain.OpenMngRecord" resultClass="string">
+		SELECT	open_mng_fin_flag
+		FROM 	tb_rdrecord
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_id		 = #recordId:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 엑셀파일 일괄등록시 기록물철 식별자로 기록물철ID를 조회한다.
+	 -->
+	<select id="findOpenMngFolderId" parameterClass="rms.sys.recordmng.domain.OpenMngFolder" resultClass="string">
+		SELECT 	folder_id
+		FROM 	tb_rdfolder
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	creat_sys_cd 	 = #creatSysCd:VARCHAR#
+		AND 	org_cd			 = #orgCd:VARCHAR#
+		AND 	clss_id			 = #clssId:VARCHAR#
+		AND		creat_yyyy		 = #creatYyyy:VARCHAR#
+		AND		folder_reg_seq	 = #folderRegSeq:VARCHAR#
+		AND		ho_no			 = #hoNo:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록물관리_공개관리
+		: 엑셀파일 일괄등록시 기록물건 식별자로 기록물건ID를 조회한다.
+	 -->
+	<select id="findOpenMngRecordId" parameterClass="rms.sys.recordmng.domain.OpenMngRecord" resultClass="string">
+		SELECT	record_id
+		FROM 	tb_rdrecord
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		creat_sys_cd 	 = #creatSysCd:VARCHAr#
+		AND		org_cd			 = #orgCd:VARCHAR#
+		AND		creat_yyyy		 = #creatYyyy:VARCHAR#
+		AND		creat_reg_no	 = #creatRegNo:VARCHAR#
+		AND		dtch_reg_no		 = #dtchRegNo:VARCHAR#
+		AND     folder_id 		 = #folderId:VARCHAR#
+	</select>
+	
+	
+	<!-- 
+		공개목록변경 감사추적 등록 내용을 조회한다.
+	 -->
+	<resultMap id="findOpenMngRecordTrace-result" class="rms.common.trace.domain.OpenListChng">
+		<result property="orgCd"			column="ORG_CD"/>
+		<result property="folderId"			column="FOLDER_ID"/>
+		<result property="recordId"			column="RECORD_ID"/>
+		<result property="openGubun"		column="OPEN_GUBUN"/>
+		<result property="partOpenRsn"		column="PART_OPEN_RSN"/>
+		<result property="folderKey"		column="FOLDER_KEY"/>
+		<result property="recordKey"		column="RECORD_KEY"/>
+	</resultMap>
+	<select id="findOpenMngRecordTrace" parameterClass="java.util.HashMap" resultMap="findOpenMngRecordTrace-result">
+		SELECT A.ORG_CD
+		      ,A.FOLDER_ID
+		      ,A.RECORD_ID
+		      ,A.OPEN_DIV_CD||A.OPEN_GRADE AS OPEN_GUBUN
+		      ,A.PART_OPEN_RSN
+		      ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.FOLDER_ID = A.FOLDER_ID) AS FOLDER_KEY
+		      ,A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||A.CREAT_YYYY||'-'||A.CREAT_REG_NO||'-'||A.DTCH_REG_NO AS RECORD_KEY
+		FROM TB_RDRECORD A 
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RECORD_ID = #recordId:VARCHAR#
+	</select>
+	<select id="findOpenMngRecordTraceList" parameterClass="rms.sys.recordmng.domain.RdOpenHist" resultMap="findOpenMngRecordTrace-result">
+		SELECT   A.ORG_CD
+		        ,A.FOLDER_ID
+		        ,A.RECORD_ID
+		        ,A.OPEN_DIV_CD||A.OPEN_GRADE AS OPEN_GUBUN
+		        ,A.PART_OPEN_RSN
+		        ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.FOLDER_ID = A.FOLDER_ID) AS FOLDER_KEY
+		        ,A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||A.CREAT_YYYY||'-'||A.CREAT_REG_NO||'-'||A.DTCH_REG_NO AS RECORD_KEY
+		FROM TB_RDRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.folder_id = #folderId:VARCHAR#
+		AND (A.open_revw_prog_state IS NULL OR A.open_revw_prog_state IN ('1','2','5'))
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="cond_openDivCd">
+		        A.open_div_cd = #cond_openDivCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="cond_orgCd">
+		        A.org_cd = #cond_orgCd:VARCHAR#
+		    </isNotEmpty>
+		    <isEmpty property="cond_orgCd">
+		        <isNotEmpty prepend="AND" property="cond_orgNm">
+		            A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #cond_orgNm:VARCHAR#)
+		        </isNotEmpty>
+		    </isEmpty>
+		    <isNotEmpty prepend="AND" property="cond_creatRegDtimeStart">
+		        A.creat_reg_dtime <![CDATA[>=]]> #cond_creatRegDtimeStart:VARCHAR#||'000000'
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="cond_creatRegDtimeEnd">
+		        A.creat_reg_dtime <![CDATA[<=]]> #cond_creatRegDtimeEnd:VARCHAR#||'240000'
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="cond_erecordFlag">
+		        A.erecord_flag = #cond_erecordFlag:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="cond_title">
+		        A.title LIKE #cond_title:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="cond_oldRecordDocno">
+		        (A.doc_no LIKE #cond_oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #cond_oldRecordDocno:VARCHAR#)
+		    </isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	
+	
+	
+	
+</sqlMap>

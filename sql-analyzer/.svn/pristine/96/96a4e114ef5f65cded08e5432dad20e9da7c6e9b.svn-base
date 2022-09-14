@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="orign.Medium">
+
+
+	<!-- ==========================볼륨 관리=============================== -->
+
+	<resultMap id="volume-result" class="rms.orign.server.domain.Volume">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="volmId" column="VOLM_ID" />
+		<result property="volmNm" column="VOLM_NM" />
+		<result property="volmDivCd" column="VOLM_DIV_CD" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="chngDtime" column="CHNG_DTIME" />
+		<result property="remk" column="REMK" />
+	</resultMap>
+
+
+	<resultMap id="volumeSize-result" class="rms.orign.server.domain.Volume">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="volmId" column="VOLM_ID" />
+		<result property="volmNm" column="VOLM_NM" />
+		<result property="volmDivCd" column="VOLM_DIV_CD" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="chngDtime" column="CHNG_DTIME" />
+		<result property="remk" column="REMK" />
+		<result property="totSize" column="TOT_SIZE" />
+		<result property="useSize" column="USE_SIZE" />
+	</resultMap>
+
+
+	<!-- CREATE -->
+	<insert id="createVolume" parameterClass="rms.orign.server.domain.Volume">
+		<!--cubrid insert-->
+		INSERT INTO TB_STVOLM
+		(RECORD_CENTER_ID
+		,VOLM_ID
+		,VOLM_NM
+		,VOLM_DIV_CD
+		,DEL_FLAG
+		,REG_DTIME
+		,CHNG_DTIME
+		,REMK)
+		VALUES (#recordCenterId#
+		,#volmId#
+		,#volmNm#
+		,#volmDivCd#
+		,#delFlag#
+		,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		,#chngDtime#
+		,#remk#)
+	</insert>
+
+	<!-- SELECT -->
+	<select id="findVolumeList" parameterClass="rms.orign.server.domain.Volume"
+		resultMap="volume-result">
+		SELECT RECORD_CENTER_ID
+		,VOLM_ID
+		,VOLM_NM
+		,VOLM_DIV_CD
+		,DEL_FLAG
+		,REG_DTIME
+		,CHNG_DTIME
+		,REMK
+		FROM TB_STVOLM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="volmId">
+			VOLM_ID = #volmId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="volmDivCd">
+			NVL(VOLM_DIV_CD,'1') = #volmDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="delFlag">
+			DEL_FLAG = #delFlag:CHAR#
+		</isNotEmpty>
+		ORDER BY RECORD_CENTER_ID, VOLM_ID
+	</select>
+
+	<!-- SELECT -->
+	<select id="findVolumeSize" parameterClass="rms.orign.server.domain.Volume"
+		resultMap="volumeSize-result">
+		SELECT RECORD_CENTER_ID
+		,VOLM_ID
+		,VOLM_NM
+		,VOLM_DIV_CD
+		,DEL_FLAG
+		,REG_DTIME
+		,CHNG_DTIME
+		,REMK
+		,(SELECT NVL(SUM(TOT_SIZE),0) FROM TB_STMEDIUM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="volmId">
+			VOLM_ID = #volmId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="delFlag">
+			DEL_FLAG = #delFlag:CHAR#
+		</isNotEmpty>
+		) TOT_SIZE
+		,(SELECT NVL(SUM(USE_SIZE),0) FROM TB_STMEDIUM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="volmId">
+			VOLM_ID = #volmId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="delFlag">
+			DEL_FLAG = #delFlag:CHAR#
+		</isNotEmpty>
+		) USE_SIZE
+		FROM TB_STVOLM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="volmId">
+			VOLM_ID = #volmId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="delFlag">
+			DEL_FLAG = #delFlag:CHAR#
+		</isNotEmpty>
+		ORDER BY RECORD_CENTER_ID, VOLM_ID
+	</select>
+
+	<!-- UPDATE -->
+	<update id="setDelflagVolume" parameterClass="rms.orign.server.domain.Volume">
+		<!--cubrid update-->
+		UPDATE TB_STVOLM
+		SET DEL_FLAG = #delFlag:CHAR#
+		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID =
+		#recordCenterId:VARCHAR#
+		AND VOLM_ID = #volmId:VARCHAR#
+	</update>
+
+
+	<!-- DELETE -->
+	<delete id="deleteVolume" parameterClass="rms.orign.server.domain.Volume">
+		DELETE
+		FROM TB_STVOLM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND VOLM_ID = #volmId:VARCHAR#
+	</delete>
+
+
+	<!-- UPDATE -->
+	<update id="updateVolume" parameterClass="rms.orign.server.domain.Volume">
+		<!--cubrid update-->
+		UPDATE TB_STVOLM
+		SET
+		VOLM_NM = #volmNm:VARCHAR#
+		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		,REMK = #remk:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND VOLM_ID = #volmId:VARCHAR#
+	</update>
+
+
+	<!-- MAX [볼륨ID MAX] -->
+	<select id="countVolume" parameterClass="rms.orign.server.domain.Volume"
+		resultClass="int">
+		SELECT NVL(MAX(VOLM_ID),0)
+		FROM TB_STVOLM
+		WHERE
+		RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+
+
+	<!-- ======================저장매체 관리================================ -->
+	<resultMap id="medium-result" class="rms.orign.server.domain.Volume">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="volmId" column="VOLM_ID" />
+		<result property="mediumNm" column="MEDIUM_NM" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumCdNm" column="MEDIUM_CD_NM" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumDetailCdNm" column="MEDIUM_DETAIL_CD_NM" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="totSize" column="TOT_SIZE" />
+		<result property="useSize" column="USE_SIZE" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="chngDtime" column="CHNG_DTIME" />
+		<result property="remk" column="REMK" />
+	</resultMap>
+
+	<!-- CREATE -->
+	<insert id="createMedium" parameterClass="rms.orign.server.domain.Volume">
+		<!--cubrid insert-->
+		INSERT INTO TB_STMEDIUM
+		(RECORD_CENTER_ID
+		,MEDIUM_ID
+		,VOLM_ID
+		,MEDIUM_NM
+		,MEDIUM_CD
+		,MEDIUM_DETAIL_CD
+		,MEDIUM_PATH
+		,TOT_SIZE
+		,USE_SIZE
+		,DEL_FLAG
+		,REG_DTIME
+		,CHNG_DTIME
+		,REMK)
+		VALUES (#recordCenterId#
+		,#mediumId#
+		,#volmId#
+		,#mediumNm#
+		,#mediumCd#
+		,#mediumDetailCd#
+		,#mediumPath#
+		,#totSize#
+		,#useSize#
+		,#delFlag#
+		,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		,#chngDtime#
+		,#remk#)
+	</insert>
+
+	<!-- SELECT -->
+	<select id="findMediumList" parameterClass="rms.orign.server.domain.Volume"
+		resultMap="medium-result">
+		SELECT RECORD_CENTER_ID
+		,MEDIUM_ID
+		,VOLM_ID
+		,MEDIUM_NM
+		,MEDIUM_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST24' AND COM_CD =
+		MEDIUM_CD) AS MEDIUM_CD_NM
+		,MEDIUM_DETAIL_CD
+		,( CASE WHEN MEDIUM_CD='01' THEN '일반스토리지'
+		WHEN MEDIUM_CD='02' THEN (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE
+		COM_TYPE_CD = 'ST25' AND COM_CD = MEDIUM_DETAIL_CD)
+		WHEN MEDIUM_CD='03' THEN (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE
+		COM_TYPE_CD = 'ST26' AND COM_CD = MEDIUM_DETAIL_CD)
+		END ) AS MEDIUM_DETAIL_CD_NM
+		,MEDIUM_PATH
+		,TOT_SIZE
+		,USE_SIZE
+		,DEL_FLAG
+		,REG_DTIME
+		,CHNG_DTIME
+		,REMK
+		FROM TB_STMEDIUM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="mediumId">
+			MEDIUM_ID = #mediumId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="volmId">
+			VOLM_ID = #volmId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="delFlag">
+			DEL_FLAG = #delFlag:CHAR#
+		</isNotEmpty>
+		ORDER BY MEDIUM_ID
+	</select>
+
+	<select id="findStorageMediumList" parameterClass="rms.orign.server.domain.Volume"
+		resultMap="medium-result">
+		SELECT RECORD_CENTER_ID ,
+		MEDIUM_ID ,
+		VOLM_ID ,
+		MEDIUM_NM ,
+		MEDIUM_CD ,
+		(SELECT COM_CD_NM
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST24'
+		AND COM_CD = MEDIUM_CD
+		) AS MEDIUM_CD_NM ,
+		MEDIUM_DETAIL_CD ,
+		(
+		CASE
+		WHEN MEDIUM_CD='01'
+		THEN '일반스토리지'
+		WHEN MEDIUM_CD='02'
+		THEN
+		(SELECT COM_CD_NM
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST25'
+		AND COM_CD = MEDIUM_DETAIL_CD
+		)
+		WHEN MEDIUM_CD='03'
+		THEN
+		(SELECT COM_CD_NM
+		FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST26'
+		AND COM_CD = MEDIUM_DETAIL_CD
+		)
+		END
+		) AS MEDIUM_DETAIL_CD_NM ,
+		MEDIUM_PATH ,
+		TOT_SIZE ,
+		USE_SIZE ,
+		DEL_FLAG ,
+		REG_DTIME ,
+		CHNG_DTIME ,
+		REMK
+		FROM TB_STMEDIUM C
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID =
+		(SELECT MIN(MEDIUM_ID) AS MEDIUM_ID
+		FROM TB_STVOLM A,
+		TB_STMEDIUM B
+		WHERE A.VOLM_ID=B.VOLM_ID
+		AND A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		AND A.RECORD_CENTER_ID=C.RECORD_CENTER_ID
+		AND A.VOLM_DIV_CD = #volmDivCd:CHAR#
+		AND TOT_SIZE-USE_SIZE > 0
+		AND A.DEL_FLAG='0'
+		AND B.DEL_FLAG='0'
+		)
+		ORDER BY MEDIUM_ID
+	</select>
+
+
+	<!-- UPDATE -->
+	<update id="setDelflagMedium" parameterClass="rms.orign.server.domain.Volume">
+		<!--cubrid update-->
+		UPDATE TB_STMEDIUM
+		SET DEL_FLAG = #delFlag:CHAR#
+		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID = #mediumId:VARCHAR#
+	</update>
+
+
+	<!-- DELETE -->
+	<delete id="deleteMedium" parameterClass="rms.orign.server.domain.Volume">
+		DELETE
+		FROM TB_STMEDIUM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID = #mediumId:VARCHAR#
+	</delete>
+
+
+	<!-- UPDATE -->
+	<update id="setUseSizeMedium" parameterClass="rms.orign.server.domain.Volume">
+		UPDATE TB_STMEDIUM
+		SET USE_SIZE = #useSize:NUMBER# +
+		(SELECT USE_SIZE FROM TB_STMEDIUM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID = #mediumId:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#)
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID = #mediumId:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#
+	</update>
+
+
+	<!-- UPDATE -->
+	<update id="updateMedium" parameterClass="rms.orign.server.domain.Volume">
+		<!--cubrid update-->
+		UPDATE TB_STMEDIUM
+		SET VOLM_ID = #volmId:VARCHAR#
+		,MEDIUM_NM = #mediumNm:VARCHAR#
+		,MEDIUM_CD = #mediumCd:VARCHAR#
+		,MEDIUM_DETAIL_CD = #mediumDetailCd:VARCHAR#
+		,MEDIUM_PATH= #mediumPath:VARCHAR#
+		,TOT_SIZE = #totSize:NUMBER#
+		,CHNG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		,REMK = #remk:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID = #mediumId:VARCHAR#
+	</update>
+
+
+	<!-- MAX [볼륨ID MAX] -->
+	<select id="countMedium" parameterClass="rms.orign.server.domain.Volume"
+		resultClass="int">
+		SELECT NVL(MAX(MEDIUM_ID),0)
+		FROM TB_STMEDIUM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+
+
+	<!-- COUNT(*) 저장매체가 사용중 인지 체크 -->
+	<select id="countMediumIdOrignFile" parameterClass="rms.orign.server.domain.Volume"
+		resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_STORIGNFILE
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MEDIUM_ID = #mediumId:VARCHAR#
+	</select>
+</sqlMap>

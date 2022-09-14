@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.rcTakovr">
+
+	<!-- 기관간인계 기록물인계 인계현황 -->
+	<resultMap id="findRcTakovrCurState-result" class="rms.transf.rcTakovr.domain.RcTakovrCurState">
+		<result property="takovrMngNo" 				column="TAKOVR_MNG_NO"/>
+		<result property="takovrRepCd" 				column="TAKOVR_REP_CD"/>
+		<result property="takovrYyyy" 				column="TAKOVR_YYYY"/>
+		<result property="takovrSno" 		 		column="TAKOVR_SNO"/>
+		<result property="recordCenterId"			column="RECORD_CENTER_ID"/>
+		<result property="takovrRepNm" 				column="TAKOVR_REP_NM"/>
+		<result property="takeRepCd" 				column="TAKe_REP_CD"/>
+		<result property="takeRepNm" 				column="TAKe_REP_NM"/>
+		<result property="takovrFolderCnt" 			column="TAKOVR_FOLDER_CNT"/>
+		<result property="takovrRecordCnt"  		column="TAKOVR_RECORD_CNT"/>
+	</resultMap>
+	
+	<!-- 인계현황 총계 -->
+	<select id="findRcTakovrCurStateTotal" parameterClass="rms.transf.rcTakovr.domain.RcTakovrCurState" resultMap="findRcTakovrCurState-result">
+	SELECT takovr_mng_no, takovr_rep_cd, takovr_yyyy, takovr_sno, record_center_id, takovr_rep_nm, take_rep_cd, take_rep_nm, sum(takovr_folder_cnt) takovr_folder_cnt, sum(takovr_record_cnt) takovr_record_cnt
+	FROM (
+		SELECT '총계' takovr_mng_no
+		      ,A.takovr_rep_cd
+		      ,A.takovr_yyyy
+		      ,0 takovr_sno
+		      ,A.record_center_id
+		      ,'' takovr_rep_nm
+		      ,'' take_rep_cd
+		      ,'' take_rep_nm
+		      ,((SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id)) +
+		      (SELECT COUNT(1) FROM TB_NKFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id))) takovr_folder_cnt
+		      ,((SELECT COUNT(1) FROM TB_RDRECORD Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id)) +
+		      (SELECT COUNT(1) FROM TB_NKRECORD Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id))) takovr_record_cnt
+		FROM TB_DFTAKOVRPLAN A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND   A.takovr_prog_state_cd = '05'
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="takeRepCd">
+		        A.take_rep_cd = #takeRepCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="takeRepNm">
+		        A.take_rep_nm like #takeRepNm:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+		ORDER BY A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno
+	) L
+	GROUP BY L.takovr_mng_no, L.takovr_rep_cd, L.takovr_yyyy, L.takovr_sno, L.record_center_id, L.takovr_rep_nm, L.take_rep_cd, L.take_rep_nm
+	</select>
+
+	<!-- 인계현황 목록 -->
+	<select id="findRcTakovrCurStateList" parameterClass="rms.transf.rcTakovr.domain.RcTakovrCurState" resultMap="findRcTakovrCurState-result">
+		SELECT A.takovr_rep_cd||'-'||A.takovr_yyyy||'-'||LPAD(A.takovr_sno, 6, '0') takovr_mng_no
+		      ,A.takovr_rep_cd
+		      ,A.takovr_yyyy
+		      ,A.takovr_sno
+		      ,A.record_center_id
+		      ,A.takovr_rep_nm
+		      ,A.take_rep_cd
+		      ,A.take_rep_nm
+		      ,((SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id)) +
+		      (SELECT COUNT(1) FROM TB_NKFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id))) takovr_folder_cnt
+		      ,((SELECT COUNT(1) FROM TB_RDRECORD Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id)) +
+		      (SELECT COUNT(1) FROM TB_NKRECORD Z WHERE EXISTS (SELECT 1 FROM TB_DFTAKOVRFOLDERLIST Y WHERE Y.takovr_rep_cd = A.takovr_rep_cd AND Y.takovr_yyyy = A.takovr_yyyy AND Y.takovr_sno = A.takovr_sno AND Y.record_center_id = Z.record_center_id AND Y.folder_id = Z.folder_id))) takovr_record_cnt
+		FROM TB_DFTAKOVRPLAN A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.takovr_yyyy = #takovrYyyy:VARCHAR#
+		AND   A.takovr_prog_state_cd = '05'
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="takeRepCd">
+		        A.take_rep_cd = #takeRepCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="takeRepNm">
+		        A.take_rep_nm like #takeRepNm:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+		ORDER BY A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno
+	</select>
+</sqlMap>

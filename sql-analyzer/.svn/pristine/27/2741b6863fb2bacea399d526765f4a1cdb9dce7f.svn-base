@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="JFile">
+
+	<insert id="AttachFileDAO.addAttachFile" parameterClass="rms.common.ext.jfile.service.impl.JFileVO">
+		<selectKey resultClass="java.lang.String" keyProperty="fileSeq">
+				SELECT NVL(MAX(FILE_SEQ),0)+1 FROM J_ATTACHFILE WHERE FILE_ID = #fileId#			
+	    </selectKey>
+		INSERT
+		  INTO J_ATTACHFILE 
+		      (
+			   FILE_ID, 
+			   FILE_SEQ,
+			   FILE_NAME,
+			   FILE_SIZE,
+			   FILE_MASK,
+			   DOWNLOAD_COUNT,
+			   DOWNLOAD_EXPIRE_DATE, 
+			   DOWNLOAD_LIMIT_COUNT,
+			   REG_DATE
+			  )
+			   VALUES
+			  (  
+			   #fileId#,
+			   #fileSeq#, 
+			   #fileName#, 
+			   #fileSize# , 
+			   #fileMask# ,
+			    0, 
+			   #downloadExpireDate#,
+			   #downloadLimitCount#,
+			   SYSDATE
+			  )		
+	</insert>
+	
+	<update id="AttachFileDAO.updateAttachFileDeleteYnByFileId" parameterClass="java.util.Map">
+		UPDATE J_ATTACHFILE
+		   SET DELETE_YN = #deleteYn#
+		 WHERE FILE_ID   = #fileId#
+	</update>
+	
+	<update id="AttachFileDAO.updateAttachFileDeleteYn" parameterClass="java.util.Map">
+		UPDATE J_ATTACHFILE
+		   SET DELETE_YN = #deleteYn#
+		 WHERE FILE_ID  = #fileId#  
+       <dynamic prepend="AND">
+       <iterate property="fileSeqs" open=" FILE_SEQ in (" close=")" conjunction=",">
+          #fileSeqs[]#
+       </iterate>
+       </dynamic>
+	</update>
+	
+	<update id="AttachFileDAO.updateAttachFileDownloadCount" parameterClass="java.util.Map">
+		UPDATE J_ATTACHFILE 
+           SET DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+        <dynamic prepend="WHERE">
+          <isNotEmpty prepend="AND" property="fileId">
+          FILE_ID  = #fileId#
+          </isNotEmpty>
+          <isNotEmpty prepend="AND" property="fileSeq">
+		  FILE_SEQ = #fileSeq#
+		  </isNotEmpty>
+        </dynamic>   
+	</update>
+	
+	<update id="AttachFileDAO.updateAttachFileDownloadCountBySequence" parameterClass="java.util.Map">
+		UPDATE J_ATTACHFILE
+           SET DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+         WHERE FILE_ID        = #fileId#
+           AND FILE_SEQ       = #fileSeq#
+	</update>
+	
+	<update id="AttachFileDAO.updateAttachFileDownloadCountByFileId" parameterClass="string">
+		UPDATE J_ATTACHFILE
+           SET DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+         WHERE FILE_ID = #value#
+	</update>
+	
+	<delete id="AttachFileDAO.removeAttachFile" parameterClass="java.util.Map">
+		DELETE
+          FROM J_ATTACHFILE 
+         WHERE FILE_ID  = #fileId#
+         <dynamic prepend="AND">
+           <iterate property="fileSeqs" open=" FILE_SEQ in (" close=")" conjunction=",">
+           #fileSeqs[]#
+           </iterate>
+         </dynamic>
+	</delete>
+	
+	<select id="AttachFileDAO.getAttachFileToMap" parameterClass="java.util.Map" resultClass="rms.common.ext.jfile.service.impl.JFileVO">
+		SELECT 
+			   FILE_ID               as fileId,
+			   FILE_SEQ              as fileSeq,
+			   FILE_NAME             as fileName,
+		       FILE_SIZE             as fileSize,
+		       FILE_MASK             as fileMask,
+		       DOWNLOAD_COUNT        as downloadCount, 
+		       DOWNLOAD_EXPIRE_DATE  as downloadExpireDate, 
+		       DOWNLOAD_LIMIT_COUNT  as downloadLimitCount, 
+		       REG_DATE              as regDate
+		  FROM J_ATTACHFILE
+		  <dynamic prepend="WHERE">
+		  	<isNotEmpty prepend="AND" property="fileId">
+		       FILE_ID  = #fileId#
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="fileSeq">
+		       FILE_SEQ = #fileSeq#
+		  	</isNotEmpty>
+		  </dynamic>
+	</select>
+	
+	<select id="AttachFileDAO.getAttachFileSeqs" parameterClass="string" resultClass="string">
+		SELECT FILE_SEQ
+		  FROM J_ATTACHFILE
+		 WHERE FILE_ID = #value#
+		   AND DELETE_YN = 'Y'  
+	</select>
+	
+	<select id="AttachFileDAO.isExistingAttachFileInfo" parameterClass="java.util.Map" resultClass="string">
+		SELECT FILE_ID
+		  FROM J_ATTACHFILE
+		 WHERE FILE_ID  = #fileId#
+		 <dynamic prepend="AND">
+         <iterate property="fileSeqs" open=" FILE_SEQ in (" close=")" conjunction=",">
+          #fileSeqs[]#
+         </iterate>
+         </dynamic> 
+	</select>
+	
+</sqlMap>

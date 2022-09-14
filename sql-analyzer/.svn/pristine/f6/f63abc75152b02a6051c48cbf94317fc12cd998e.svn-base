@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="loginout">
+		
+	
+	<resultMap id="find-user-info-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="user_id"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptCd" 			column="dept_cd"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="pos" 				column="pos"/>
+		<result property="rank" 			column="rank"/>
+		<result property="userPwd"			column="user_pwd"/>
+		<result property="pkiNameCheck"		column="pki_name_check"/>
+	</resultMap>
+	
+	<!-- 
+		아이디와패스워드를 통하여 사용자정보를 조회한다.
+	 -->
+	<select id="findUserInfo" parameterClass="rms.common.loginout.domain.User" resultMap="find-user-info-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.dept_cd
+		     , (SELECT Z.dept_nm FROM TB_STDEPT Z WHERE Z.record_center_id = A.record_center_id AND Z.dept_cd = A.dept_cd ) AS dept_nm
+		     , A.pos
+		     , A.RANK
+		     , A.user_pwd
+		     , A.pki_name_check
+		FROM TB_STUSER A
+		WHERE     A.use_flag = '1'
+		AND A.login_user_id = #loginUserId:VARCHAR#
+		AND A.user_pwd = #userPwd:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="userId">
+				A.user_id = #userId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+		
+	<resultMap id="user-login-id-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="residNo" 			column="RESID_NO"/>
+	</resultMap>
+	
+	<!-- 
+		로그인 - login_user_id 로 user_id 를 찾는다.(SELECT)
+	 -->
+	<select id="findLoginUserIdList" parameterClass="rms.common.loginout.domain.User" resultMap="user-login-id-result">
+		SELECT user_id, resid_no
+		FROM   TB_STUSER
+		WHERE  use_flag = '1'
+		AND    login_user_id = #loginUserId:VARCHAR#
+	</select>
+	
+	<resultMap id="user-login-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="USER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userDiv" 			column="USER_DIV"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userPwd" 			column="USER_PWD"/>
+		<result property="deptCd" 			column="DEPT_CD"/>
+		<result property="workFlag" 		column="WORK_FLAG"/>
+		<result property="regDtime" 		column="REG_DTIME"/>
+		<result property="deptNm" 			column="DEPT_NM"/>
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+	</resultMap>
+	
+	<!-- 
+		로그인 - user_id 로 사용자정보를 찾는다.(SELECT)
+	 -->
+	<select id="findLoginUserId" parameterClass="rms.common.loginout.domain.User" resultMap="user-login-result">
+		SELECT A.user_id
+		     , A.user_nm
+		     , A.user_div
+			 , A.record_center_id
+			 , A.user_pwd
+			 , A.dept_cd
+			 , A.work_flag
+			 , A.reg_dtime
+			 , B.dept_nm
+			 , B.org_cd
+			 , C.org_nm
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		   , TB_STORG C
+		WHERE A.use_flag = '1'
+		AND   A.user_id = #userId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id(+)
+		AND   A.dept_cd = B.dept_cd(+)
+		AND   B.record_center_id = C.record_center_id(+)
+		AND   B.org_cd = C.org_cd(+)
+	</select>
+	
+	<!--  사용자 로그인/로그아웃 이력 저장 -->
+	<insert id="createLoginUserTrace" parameterClass="rms.common.loginout.domain.User">
+		INSERT INTO TB_STUSERLOGIN (
+			USER_ID, DEPT_CD, CONN_DTIME, CONN_CLOSE_DTIME, LOGIN_IP
+		) VALUES (
+			#userId:VARCHAR#, #deptCd:VARCHAR#, #connDtime:VARCHAR#, #connCloseDtime:VARCHAR#, #loginIp:VARCHAR#
+		)
+	</insert>
+	
+	<update id="UpdateLoginFailCountTrx" parameterClass="rms.common.loginout.domain.User">
+		 UPDATE  TB_STUSER
+		 SET LOGIN_ERROR_CNT = (SELECT 
+						            CASE
+						            WHEN LOGIN_ERROR_CNT >= 10 then
+						            10
+						            ELSE
+						            LOGIN_ERROR_CNT+1
+						            END
+						         FROM TB_STUSER  WHERE USER_ID=#userId:VARCHAR#
+						        )
+		 WHERE USER_ID=#userId:VARCHAR#                      
+	</update>
+	
+	<update id="UpdateLoginSuccessCountTrx" parameterClass="rms.common.loginout.domain.User">
+		 UPDATE  TB_STUSER
+		 SET LOGIN_ERROR_CNT = 0
+		 WHERE USER_ID=#userId:VARCHAR#                      
+	</update>
+	
+	<!--
+		UPDATE 공개전환기간이 '0'인경우 공개재분류 작업없이 바로 공개전환 처리
+	 -->
+	<update id="updateOpenAutoOpenRecordRslt" parameterClass="rms.common.loginout.domain.User">
+		UPDATE TB_RDRECORD
+		   SET open_resort_prog_state = '7',
+		       open_revw_prog_state = '5',
+		       open_limit_part = '',
+		       open_div_cd = '1',
+		       last_open_resort_yyyy = TO_CHAR(SYSDATE, 'YYYY'),
+		       open_grade = 'NNNNNNNN'   
+		  WHERE record_center_id = (SELECT record_center_id
+		                                     FROM TB_STUSER
+		                                    WHERE user_id = #userId:VARCHAR# 
+		                                      AND use_flag = '1'
+		                                      AND user_div = '3')
+		  AND SUBSTR(open_limit_date, 1, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD') 		
+	</update>	
+	
+	<!-- 
+		UPDATE 공개재분류 결과반영 건테이블 전문요원/심의회 자동 결과반영 처리
+	 -->
+	<update id="updateOpenAutoRecordExpertReviewRslt" parameterClass="rms.common.loginout.domain.User">
+		UPDATE tb_rdrecord A
+		SET open_resort_prog_state = '7'
+			, open_revw_prog_state = '5'
+			, open_limit_part = (SELECT auto_limit_part 
+                                 FROM tb_rdopenresortauto
+                                 WHERE record_center_id = A.record_center_id
+                                 AND record_id = A.record_id)
+			, open_div_cd = (SELECT auto_org_open_div_cd 
+                                 FROM tb_rdopenresortauto
+                                 WHERE record_center_id = A.record_center_id
+                                 AND record_id = A.record_id)
+			, last_open_resort_yyyy = (SELECT resort_yyyy
+	                                   FROM tb_rdopenresortauto
+                                       WHERE record_center_id = A.record_center_id
+	                                   AND record_id = A.record_id)
+			, open_grade = (SELECT auto_open_grade
+                            FROM tb_rdopenresortauto
+                            WHERE record_center_id = A.record_center_id
+                            AND record_id = A.record_id)
+		WHERE record_center_id = (SELECT record_center_id FROM TB_STUSER
+     												  WHERE user_id = #userId:VARCHAR# 
+       												  AND use_flag = '1'
+       												  AND user_div = '3')
+		AND A.record_id in (
+					        SELECT RECORD_ID
+					        FROM tb_rdopenresortauto
+					        WHERE record_center_id = (SELECT record_center_id FROM TB_STUSER
+     												  WHERE user_id = #userId:VARCHAR# 
+       												  AND use_flag = '1'
+       												  AND user_div = '3')
+					        AND resort_case = '5'
+					        AND auto_org_open_ymd IS NOT NULL
+					        AND auto_org_open_ymd > (select TO_CHAR(SYSDATE, 'YYYYMMDD') from dual)
+		                   )
+	    AND A.open_resort_prog_state != '7'
+	    AND A.open_revw_prog_state is null		                   
+	</update>	
+	
+	<!--
+		로그인 에러 횟수 조회 
+	 -->
+	<select id="findLoginErrorCnt" parameterClass="rms.common.loginout.domain.User"  resultClass="string">
+		SELECT  LOGIN_ERROR_CNT
+		FROM   TB_STUSER
+		WHERE  USER_ID=#userId:VARCHAR#
+	</select>
+	
+	<!-- 
+		로그인 - login_user_id 로 동일 로그인 사용자를 찾는다.(SELECT)
+	 -->	
+	<resultMap id="user-login-list-result" class="rms.common.loginout.domain.User" >
+		<result property="userId" 			column="user_id"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptCd" 			column="dept_cd"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="pos" 				column="pos"/>
+		<result property="rank" 			column="rank"/>
+	</resultMap>
+	<select id="findLoginUserList" parameterClass="rms.common.loginout.domain.User" resultMap="user-login-list-result">
+		SELECT A.user_id
+		     , A.user_nm
+			 , A.dept_cd
+			 , B.dept_nm
+			 , A.pos
+			 , A.rank
+		FROM TB_STUSER A
+		   , TB_STDEPT B
+		WHERE A.use_flag = '1'
+		AND   A.login_user_id = #loginUserId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.dept_cd = B.dept_cd
+	</select>
+
+	<!-- 
+		기록관리시스템의 recordCenter 별로 담당자 수를 조회한다.
+	 -->	
+	<resultMap id="findRecordCenterIdList-result" class="rms.common.loginout.domain.Chrgr">
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="recordCenterCnt"		column="record_center_cnt"/>
+	</resultMap>
+	<select id="findRecordCenterCnt" parameterClass="string" resultMap="findRecordCenterIdList-result">
+		SELECT record_center_id, count(1) record_center_cnt FROM TB_STRECORDCHRGR GROUP BY record_center_id ORDER BY record_center_id
+	</select>
+	
+	<!-- 
+		기록관별로 담당자를 조회한다.
+	 -->
+	<resultMap id="findChrgrList-result" class="rms.common.loginout.domain.Chrgr">
+		<result property="sno"					column="sno"/>
+		<result property="recordCenterNm"		column="record_center_nm"/>
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="recordCenterCd"		column="record_center_cd"/>
+		<result property="chrgrNm"				column="chrgr_nm"/>
+		<result property="pos"					column="pos"/>
+		<result property="duty"					column="duty"/>
+		<result property="remk"					column="remk"/>
+		<result property="telNo"				column="tel_no"/>			
+		<result property="email"				column="email"/>
+	</resultMap> 
+	<select id="findChrgrList" parameterClass="string" resultMap="findChrgrList-result">
+		SELECT A.sno
+		      ,B.record_center_nm
+		      ,B.record_center_id
+		      ,B.record_center_cd
+		      ,A.chrgr_nm
+		      ,A.pos
+		      ,A.duty
+		      ,A.remk
+		      ,A.tel_no
+		      ,A.email
+		FROM 	TB_STRECORDCHRGR A, tb_strecordcenter B
+		WHERE 	A.record_center_id = B.record_center_id
+		ORDER BY A.record_center_id, A.sno
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.srch">
+
+	<!--
+		기관간인수대상검색_인수기록물철
+		: 기록물철 목록 조회
+	-->
+	<resultMap id="findDetailsTakeFolderPagedList-result" class="rms.srch.srch.domain.DetailsFolder">
+		<result property = "orgCd" 				column = "ORG_CD"				/> 	
+		<result property = "folderId" 			column = "FOLDER_ID"			/> 
+		<result property = "clssNm" 			column = "CLSS_NM"				/> 
+		<result property = "title" 				column = "TITLE"				/> 		
+		<result property = "creatYyyy"			column = "CREAT_YYYY"			/> 		
+		<result property = "orgNm" 				column = "ORG_NM"				/> 	
+		<result property = "orgAbbrNm" 			column = "ORG_ABBR_NM"			/>
+		<result property = "presvTermNm" 		column = "PRESV_TERM_NM"		/> 
+		<result property = "creatSysNm" 		column = "CREAT_SYS_NM"			/>
+		<result property = "erecordFlagNm" 		column = "ERECORD_FLAG_NM"		/>
+		<result property = "agentNm" 			column = "AGENT_NM"				/>
+		<result property = "folderKeepStateNm"	column = "FOLDER_KEEP_STATE_NM"	/>
+		<result property = "creatSysCd" 		column = "CREAT_SYS_CD"			/>
+		<result property = "operReadRangeCd"	column = "OPER_READ_RANGE_CD"	/>
+		<result property = "accsFlag" 			column = "ACCS_FLAG"			/>
+	</resultMap>
+	<select id="countDetailsTakeFolderPagedList" parameterClass="rms.srch.srch.domain.DetailsFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM   TB_RDFOLDER A
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    (A.FOLDER_KEEP_STATE_CD ='04' OR A.VRMS_FLAG='1')
+		<dynamic>
+			<isNotEqual property="readRangType" compareValue="1">
+				<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+				    A.OPER_READ_RANGE_CD != '03' 
+				</isNotEqual>
+			</isNotEqual>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+				<isEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="creatFromYyyy">
+				<isNotEmpty property="creatToYyyy">
+					A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERTAKETAKOVR WHERE RECORD_CENTER_ID =#recordCenterId:VARCHAR# AND TAKE_TAKOVR_ORG_CD = #orgCd:VARCHAR# AND TAKE_TAKOVR_DIV_CD ='2')
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="clssId">
+			    <isEqual property="clssDivCd" compareValue="1">
+					(A.CLSS_ID = #clssId:VARCHAR# OR A.NEW_CLSS_ID = #clssId:VARCHAR#)
+				</isEqual>
+				<isNotEqual property="clssDivCd" compareValue="1">
+			    	A.CLSS_ID = #clssId:VARCHAR#
+			    </isNotEqual>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="arrTitle">
+				<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="innerTitle">
+				A.title LIKE #innerTitle:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderTypeDivCd">
+				A.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+			</isNotEmpty>
+	        <isNotEmpty property="presvTermCd">
+		        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+		            A.PRESV_TERM_CD IN ('20','25')
+	            </isEqual>
+		        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+				A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+	            </isNotEqual>		            
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keywd">
+				A.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERKEYWD WHERE KEYWD LIKE #keywd:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="agentNm">
+				A.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERCREAT WHERE AGENT_NM LIKE #agentNm:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="erecordFlag">
+				A.ERECORD_FLAG = #erecordFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="scanProgStateCd">
+				<isEqual property="scanProgStateCd" compareValue="5">
+					A.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+				</isEqual>
+				<isEqual property="scanProgStateCd" compareValue="1">
+			    	A.SCAN_PROG_STATE_CD IN ('', '1', '2', '3', '4')
+			    </isEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="takeYyyy">
+				A.TAKE_YYYY = #takeYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findDetailsTakeFolderPagedList" parameterClass="rms.srch.srch.domain.DetailsFolder" resultMap="findDetailsTakeFolderPagedList-result">
+		SELECT E.ORG_CD
+			, E.FOLDER_ID
+		       <dynamic>
+			       <isEmpty prepend="" property="clssId">
+			           , DECODE(E.CLSS_DIV_CD,'1',E.CLSS_NM,
+		                                    '2',DECODE(E.NEW_CLSS_ID,NULL,E.CLSS_NM,
+		                                                                  E.NEW_CLSS_NM)) CLSS_NM
+			       </isEmpty>
+			       <isNotEmpty prepend="" property="clssId">
+			           <isEqual property="clssDivCd" compareValue="1">
+					       , DECODE(E.CLSS_DIV_CD,'1',E.CLSS_NM,
+					                            '2',E.NEW_CLSS_NM) CLSS_NM
+				       </isEqual>
+				       <isNotEqual property="clssDivCd" compareValue="1">
+					       , E.CLSS_NM
+				       </isNotEqual>
+			       </isNotEmpty>
+				</dynamic>
+			, E.TITLE
+			, E.CREAT_YYYY
+			, (SELECT O.ORG_NM FROM TB_STORG O WHERE O.RECORD_CENTER_ID=E.RECORD_CENTER_ID AND O.ORG_CD=E.ORG_CD) ORG_NM
+			, (SELECT O.ORG_ABBR_NM FROM TB_STORG O WHERE O.RECORD_CENTER_ID=E.RECORD_CENTER_ID AND O.ORG_CD=E.ORG_CD) ORG_ABBR_NM
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD07' AND Z.COM_CD=E.PRESV_TERM_CD) PRESV_TERM_NM
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD17' AND Z.COM_CD=E.CREAT_SYS_CD) CREAT_SYS_NM
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD23' AND Z.COM_CD=E.ERECORD_FLAG) ERECORD_FLAG_NM
+			, (SELECT B.AGENT_NM
+				FROM TB_RDFOLDERCREAT B
+				WHERE B.RECORD_CENTER_ID=E.RECORD_CENTER_ID AND B.AGENT_TYPE_CD='19' 
+		  		AND   B.FOLDER_ID = E.FOLDER_ID 
+		  		AND   B.AGENT_SNO = (SELECT MAX(Z.AGENT_SNO) FROM TB_RDFOLDERCREAT Z WHERE Z.FOLDER_ID=E.FOLDER_ID)) AGENT_NM
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD32' AND Z.COM_CD = E.FOLDER_KEEP_STATE_CD) FOLDER_KEEP_STATE_NM
+			, E.CREAT_SYS_CD
+			, E.OPER_READ_RANGE_CD
+			, (CASE WHEN '3'=#sesUserDiv:VARCHAR# AND E.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = #sesUserId:VARCHAR#) THEN 1
+					WHEN E.oper_read_range_cd='01' THEN 1
+					<isEqual property="orgUserAccsType" compareValue="1">
+					WHEN (E.oper_read_range_cd='02' AND E.cur_keep_org_cd=#sesOrgCd:VARCHAR#) THEN 1
+					</isEqual>
+					<isEqual property="orgUserAccsType" compareValue="2">
+					WHEN E.cur_keep_org_cd=#sesOrgCd:VARCHAR# THEN 1
+					</isEqual>
+					WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd=#sesOrgCd:VARCHAR#) > 0 THEN 1 
+					WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='1' AND Z.accs_user_id=#sesUserId:VARCHAR#) > 0 THEN 1
+					ELSE 0
+				END) accs_flag
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.RECORD_CENTER_ID
+						, A.FOLDER_ID
+						, A.ORG_CD
+						, A.CLSS_DIV_CD
+						, A.CLSS_ID
+						, A.CLSS_NM
+						, A.NEW_CLSS_ID
+						, A.NEW_CLSS_NM
+						, A.TITLE
+						, A.CREAT_YYYY
+						, A.PRESV_TERM_CD
+						, A.CREAT_SYS_CD
+						, A.ERECORD_FLAG
+						, A.FOLDER_KEEP_STATE_CD
+						, A.OPER_READ_RANGE_CD
+						, A.CUR_KEEP_ORG_CD
+					FROM   TB_RDFOLDER A
+					WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND    (A.FOLDER_KEEP_STATE_CD ='04' OR A.VRMS_FLAG='1')
+					<dynamic>
+						<isNotEqual property="readRangType" compareValue="1">
+							<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+							    A.OPER_READ_RANGE_CD != '03' 
+							</isNotEqual>
+						</isNotEqual>
+						<isNotEmpty prepend="AND" property="creatSysCd">
+							A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatFromYyyy">
+							<isNotEmpty property="creatToYyyy">
+								(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+							</isNotEmpty>
+							<isEmpty property="creatToYyyy">
+								A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+							</isEmpty>
+						</isNotEmpty>
+						<isEmpty prepend="AND" property="creatFromYyyy">
+							<isNotEmpty property="creatToYyyy">
+								A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+								A.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERTAKETAKOVR WHERE RECORD_CENTER_ID =#recordCenterId:VARCHAR# AND TAKE_TAKOVR_ORG_CD = #orgCd:VARCHAR# AND TAKE_TAKOVR_DIV_CD ='2')
+						</isNotEmpty>	
+						<isNotEmpty prepend="AND" property="clssId">
+						    <isEqual property="clssDivCd" compareValue="1">
+								(A.CLSS_ID = #clssId:VARCHAR# OR A.NEW_CLSS_ID = #clssId:VARCHAR#)
+							</isEqual>
+							<isNotEqual property="clssDivCd" compareValue="1">
+						    	A.CLSS_ID = #clssId:VARCHAR#
+						    </isNotEqual>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="arrTitle">
+							<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="innerTitle">
+							A.title LIKE #innerTitle:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="folderTypeDivCd">
+							A.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+						</isNotEmpty>
+				        <isNotEmpty property="presvTermCd">
+					        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+					            A.PRESV_TERM_CD IN ('20','25')
+				            </isEqual>
+					        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				            </isNotEqual>		            
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="keywd">
+							A.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERKEYWD WHERE KEYWD LIKE #keywd:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="agentNm">
+							A.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERCREAT WHERE AGENT_NM LIKE #agentNm:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="erecordFlag">
+							A.ERECORD_FLAG = #erecordFlag:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="scanProgStateCd">
+							<isEqual property="scanProgStateCd" compareValue="5">
+								A.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+							</isEqual>
+							<isEqual property="scanProgStateCd" compareValue="1">
+						    	A.SCAN_PROG_STATE_CD IN ('', '1', '2', '3', '4')
+						    </isEqual>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="takeYyyy">
+							A.TAKE_YYYY = #takeYyyy:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY A.RECORD_CENTER_ID, A.TITLE
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+
+	<!--
+		기관간인수대상검색_인수기록물건
+		: 기록물건 목록 조회
+	-->
+	<resultMap id="findDetailsTakeRecordPagedList-result" class="rms.srch.srch.domain.DetailsRecord">
+		<result property = "folderOrgCd" 		column = "FOLDER_ORG_CD"        /> 
+		<result property = "recordOrgCd" 		column = "RECORD_ORG_CD"        /> 		
+		<result property = "folderId" 			column = "FOLDER_ID"			/>
+		<result property = "recordId" 			column = "RECORD_ID"			/>
+		<result property = "folderTitle" 		column = "FOLDER_TITLE"			/>
+		<result property = "title" 				column = "TITLE"				/>
+		<result property = "orgNm" 				column = "ORG_NM"				/>
+		<result property = "orgAbbrNm" 			column = "ORG_ABBR_NM"      	/>
+		<result property = "creatRegDtime" 		column = "CREAT_REG_DTIME"		/>
+		<result property = "recordDetlTypeNm" 	column = "RECORD_DETL_TYPE_NM"	/>
+		<result property = "openDivNm" 			column = "OPEN_DIV_NM"			/>
+		<result property = "erecordFlagNm" 		column = "ERECORD_FLAG_NM"		/>
+		<result property = "creatSysNm" 		column = "CREAT_SYS_NM"			/>
+		<result property = "spclRecordTypeNm" 	column = "SPCL_RECORD_TYPE_NM"	/>
+		<result property = "scanFinFlag" 	    column = "SCAN_FIN_FLAG"		/>
+		<result property = "folderKeepStateNm" 	column = "FOLDER_KEEP_STATE_NM"	/>
+		<result property = "creatSysCd" 	    column = "CREAT_SYS_CD"			/>
+		<result property = "scanProgStateCd" 	column = "SCAN_PROG_STATE_CD"	/>
+		<result property = "folderReadRangeCd" 	column = "FOLDER_READ_RANGE_CD"	/>
+		<result property = "operReadRangeCd" 	column = "OPER_READ_RANGE_CD"	/>
+		<result property = "folderAccsFlag" 	column = "FOLDER_ACCS_FLAG"		/>
+		<result property = "accsFlag" 			column = "ACCS_FLAG"			/>
+	</resultMap>
+	<select id="countDetailsTakeRecordPagedList" parameterClass="rms.srch.srch.domain.DetailsRecord" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM   TB_RDRECORD A,
+			   TB_STORG B,
+			   TB_RDFOLDER D
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+ 		AND    A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		AND    A.ORG_CD = B.ORG_CD(+)		
+		AND    A.RECORD_CENTER_ID = D.RECORD_CENTER_ID		
+		AND    A.FOLDER_ID = D.FOLDER_ID
+		AND   (D.FOLDER_KEEP_STATE_CD ='04' OR D.VRMS_FLAG ='1') 		
+		<dynamic>
+			<isNotEqual property="readRangType" compareValue="1">
+				<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+				    A.OPER_READ_RANGE_CD != '03' AND    D.OPER_READ_RANGE_CD != '03' 
+				</isNotEqual>
+			</isNotEqual>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="recordDetlTypeCd">
+				A.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="oldRecordDocno">
+				(A.DOC_NO LIKE #oldRecordDocno:VARCHAR# OR A.OLD_RECORD_DOCNO LIKE #oldRecordDocno:VARCHAR#)
+			</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				(A.CREAT_YYYY BETWEEN #creatFromYyyy:VARCHAR#
+				<isNotEmpty prepend="AND" property="creatToYyyy">
+					#creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="orgCd">
+				D.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERTAKETAKOVR WHERE RECORD_CENTER_ID =#recordCenterId:VARCHAR# AND TAKE_TAKOVR_ORG_CD = #orgCd:VARCHAR# AND TAKE_TAKOVR_DIV_CD ='2')								
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="arrTitle">
+				<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="innerTitle">
+				A.title LIKE #innerTitle:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keywd">
+				A.RECORD_ID IN (SELECT RECORD_ID FROM TB_RDRECORDKEYWD WHERE KEYWD LIKE #keywd:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="erecordFlag">
+				A.ERECORD_FLAG = #erecordFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="spclRecordType">
+				<isEqual property="spclRecordType" compareValue="1">
+					A.SPCL_RECORD_TYPE = 'YNNNN'
+				</isEqual>
+				<isEqual property="spclRecordType" compareValue="2">
+			    	A.SPCL_RECORD_TYPE = 'NYNNN'
+			    </isEqual>
+			    <isEqual property="spclRecordType" compareValue="3">
+					A.SPCL_RECORD_TYPE = 'NNYNN'
+				</isEqual>
+				<isEqual property="spclRecordType" compareValue="4">
+			    	A.SPCL_RECORD_TYPE = 'NNNYN'
+			    </isEqual>
+			    <isEqual property="spclRecordType" compareValue="5">
+			    	A.SPCL_RECORD_TYPE = 'NNNNY'
+			    </isEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="scanProgStateCd">
+				<isEqual property="scanProgStateCd" compareValue="5">
+					D.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+				</isEqual>
+				<isEqual property="scanProgStateCd" compareValue="1">
+			    	(D.SCAN_PROG_STATE_CD IS NULL OR D.SCAN_PROG_STATE_CD = '1' OR D.SCAN_PROG_STATE_CD = '2' OR D.SCAN_PROG_STATE_CD = '3' OR D.SCAN_PROG_STATE_CD = '4')
+			    </isEqual>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findDetailsTakeRecordPagedList" parameterClass="rms.srch.srch.domain.DetailsRecord" resultMap="findDetailsTakeRecordPagedList-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.ORG_CD FOLDER_ORG_CD
+					, B.ORG_CD RECORD_ORG_CD
+					, A.FOLDER_ID
+					, A.RECORD_ID
+					, D.TITLE FOLDER_TITLE
+					, A.TITLE
+					, B.ORG_NM
+					, B.ORG_ABBR_NM
+					, SUBSTR(CREAT_REG_DTIME,0,8) CREAT_REG_DTIME
+					, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD03' AND	TB_ZZCOMCD.COM_CD = A.RECORD_DETL_TYPE_CD) RECORD_DETL_TYPE_NM
+					, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD05' AND	TB_ZZCOMCD.COM_CD = A.OPEN_DIV_CD) OPEN_DIV_NM
+					, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD23' AND	TB_ZZCOMCD.COM_CD = A.ERECORD_FLAG) ERECORD_FLAG_NM
+					, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD17' AND	TB_ZZCOMCD.COM_CD = A.CREAT_SYS_CD) CREAT_SYS_NM
+					, (DECODE(SUBSTR(SPCL_RECORD_TYPE,1,1),'N','','Y',(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD18' AND COM_CD='1'))
+			   		  ||DECODE(SUBSTR(SPCL_RECORD_TYPE,2,1),'N','','Y',(SELECT ','||COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD18' AND COM_CD='2'))
+			   		  ||DECODE(SUBSTR(SPCL_RECORD_TYPE,3,1),'N','','Y',(SELECT ','||COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD18' AND COM_CD='3'))
+					  ||DECODE(SUBSTR(SPCL_RECORD_TYPE,4,1),'N','','Y',(SELECT ','||COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD18' AND COM_CD='4'))
+					  ||DECODE(SUBSTR(SPCL_RECORD_TYPE,5,1),'N','','Y',(SELECT ','||COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD18' AND COM_CD='5'))) SPCL_RECORD_TYPE_NM
+					, A.SCAN_FIN_FLAG
+					, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD32' AND	TB_ZZCOMCD.COM_CD = D.FOLDER_KEEP_STATE_CD) FOLDER_KEEP_STATE_NM
+					, A.CREAT_SYS_CD
+					, D.SCAN_PROG_STATE_CD
+					, A.OPER_READ_RANGE_CD
+					, D.OPER_READ_RANGE_CD FOLDER_READ_RANGE_CD
+				    , (CASE WHEN '3'=#sesUserDiv:VARCHAR# AND D.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = #sesUserId:VARCHAR#) THEN 1
+							WHEN D.oper_read_range_cd='01' THEN 1
+							<isEqual property="orgUserAccsType" compareValue="1">
+								WHEN (D.oper_read_range_cd='02' AND D.cur_keep_org_cd=#sesOrgCd:VARCHAR#) THEN 1
+							</isEqual>
+							<isEqual property="orgUserAccsType" compareValue="2">
+								WHEN D.cur_keep_org_cd=#sesOrgCd:VARCHAR# THEN 1
+							</isEqual>
+				            WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=D.record_center_id AND Z.folder_id=D.folder_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd=#sesOrgCd:VARCHAR#) > 0 THEN 1 
+				            WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=D.record_center_id AND Z.folder_id=D.folder_id AND Z.accs_type_cd='1' AND Z.accs_user_id=#sesUserId:VARCHAR#) > 0 THEN 1
+				            ELSE 0
+				       END) folder_accs_flag
+					, (CASE WHEN '3'=#sesUserDiv:VARCHAR# AND A.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = #sesUserId:VARCHAR#) THEN 1
+							WHEN A.oper_read_range_cd='01' THEN 1
+							<isEqual property="orgUserAccsType" compareValue="1">
+								WHEN (A.oper_read_range_cd='02' AND #sesOrgCd:VARCHAR# = (SELECT B.CUR_KEEP_ORG_CD FROM TB_RDFOLDER B WHERE B.folder_id=A.folder_id)) THEN 1
+							</isEqual>
+							<isEqual property="orgUserAccsType" compareValue="2">
+								WHEN #sesOrgCd:VARCHAR# = (SELECT B.CUR_KEEP_ORG_CD FROM TB_RDFOLDER B WHERE B.folder_id=A.folder_id) THEN 1
+							</isEqual>
+				            WHEN (SELECT COUNT(1) FROM TB_RDRECORDACCS Z WHERE Z.record_center_id=A.record_center_id AND Z.record_id=A.record_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd=#sesOrgCd:VARCHAR#) > 0 THEN 1 
+				            WHEN (SELECT COUNT(1) FROM TB_RDRECORDACCS Z WHERE Z.record_center_id=A.record_center_id AND Z.record_id=A.record_id AND Z.accs_type_cd='1' AND Z.accs_user_id=#sesUserId:VARCHAR#) > 0 THEN 1
+				            ELSE 0
+				       END) accs_flag
+				FROM TB_RDRECORD A, TB_STORG B, TB_RDFOLDER D
+				WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		 		AND    A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+				AND    A.ORG_CD = B.ORG_CD(+)		
+				AND    A.RECORD_CENTER_ID = D.RECORD_CENTER_ID		
+				AND    A.FOLDER_ID = D.FOLDER_ID
+				AND   (D.FOLDER_KEEP_STATE_CD ='04' OR D.VRMS_FLAG ='1') 		
+				<dynamic>
+					<isNotEqual property="readRangType" compareValue="1">
+						<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+						    A.OPER_READ_RANGE_CD != '03' AND    D.OPER_READ_RANGE_CD != '03'
+						</isNotEqual>
+					</isNotEqual>
+					<isNotEmpty prepend="AND" property="creatSysCd">
+						A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="recordDetlTypeCd">
+						A.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="oldRecordDocno">
+						(A.DOC_NO LIKE #oldRecordDocno:VARCHAR# OR A.OLD_RECORD_DOCNO LIKE #oldRecordDocno:VARCHAR#)
+					</isNotEmpty>					
+					<isNotEmpty prepend="AND" property="creatFromYyyy">
+						(A.CREAT_YYYY BETWEEN #creatFromYyyy:VARCHAR#
+						<isNotEmpty prepend="AND" property="creatToYyyy">
+							#creatToYyyy:VARCHAR#)
+						</isNotEmpty>
+					</isNotEmpty>	
+					<isNotEmpty prepend="AND" property="orgCd">
+						D.FOLDER_ID IN (SELECT FOLDER_ID FROM TB_RDFOLDERTAKETAKOVR WHERE RECORD_CENTER_ID =#recordCenterId:VARCHAR# AND TAKE_TAKOVR_ORG_CD = #orgCd:VARCHAR# AND TAKE_TAKOVR_DIV_CD ='2')				
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="arrTitle">
+						<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="innerTitle">
+						A.title LIKE #innerTitle:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="keywd">
+						A.RECORD_ID IN (SELECT RECORD_ID FROM TB_RDRECORDKEYWD WHERE KEYWD LIKE #keywd:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="erecordFlag">
+						A.ERECORD_FLAG = #erecordFlag:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="spclRecordType">
+						<isEqual property="spclRecordType" compareValue="1">
+							A.SPCL_RECORD_TYPE = 'YNNNN'
+						</isEqual>
+						<isEqual property="spclRecordType" compareValue="2">
+					    	A.SPCL_RECORD_TYPE = 'NYNNN'
+					    </isEqual>
+					    <isEqual property="spclRecordType" compareValue="3">
+							A.SPCL_RECORD_TYPE = 'NNYNN'
+						</isEqual>
+						<isEqual property="spclRecordType" compareValue="4">
+					    	A.SPCL_RECORD_TYPE = 'NNNYN'
+					    </isEqual>
+					    <isEqual property="spclRecordType" compareValue="5">
+					    	A.SPCL_RECORD_TYPE = 'NNNNY'
+					    </isEqual>
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="scanProgStateCd">
+						<isEqual property="scanProgStateCd" compareValue="5">
+							D.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+						</isEqual>
+						<isEqual property="scanProgStateCd" compareValue="1">
+					    	(D.SCAN_PROG_STATE_CD IS NULL OR D.SCAN_PROG_STATE_CD = '1' OR D.SCAN_PROG_STATE_CD = '2' OR D.SCAN_PROG_STATE_CD = '3' OR D.SCAN_PROG_STATE_CD = '4')
+					    </isEqual>
+					</isNotEmpty>
+				</dynamic>
+				ORDER BY RECORD_ID DESC
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+</sqlMap>

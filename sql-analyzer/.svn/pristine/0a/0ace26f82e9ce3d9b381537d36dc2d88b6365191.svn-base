@@ -1,0 +1,18 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\WorkLevlTrace.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\WorkLevlTrace.xml
+-- Query    : select
+-- Query Id : findWorkLevlTrace
+
+		SELECT AA.FOLDER_ID					, AA.TITLE			, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = '1') ORG_NM			, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = '1') ORG_ABBR_NM			, AA.CREAT_YYYY			, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ14' AND USE_FLAG='1' AND COM_CD=AA.LOC ) LOCATION			, AA.FOLDER_KEEP_STATE_CD			, AA.OUT_FLAG			, AA.EFILE_DEL_FLAG		FROM (			SELECT Z.*			FROM (				SELECT ROWNUM AS rnum					, Y.*				FROM (					SELECT U.FOLDER_ID								, U.TITLE						, U.ORG_CD						, U.CREAT_YYYY						, U.FOLDER_KEEP_STATE_CD						, U.OUT_FLAG						, U.EFILE_DEL_FLAG						, (CASE WHEN U.FOLDER_KEEP_STATE_CD IN ('01','04') AND U.OUT_FLAG != '1' THEN '1'								WHEN u.FOLDER_KEEP_STATE_CD IN ('01','04') AND U.OUT_FLAG = '1' THEN '2'								WHEN U.FOLDER_KEEP_STATE_CD = '03' AND U.EFILE_DEL_FLAG != '1' THEN '3'								WHEN U.FOLDER_KEEP_STATE_CD = '03' AND U.EFILE_DEL_FLAG = '1' THEN '4'								WHEN U.FOLDER_KEEP_STATE_CD = '02' AND U.EFILE_DEL_FLAG != '1' THEN '5'								WHEN U.FOLDER_KEEP_STATE_CD = '02' AND U.EFILE_DEL_FLAG = '1' THEN '6'								WHEN U.FOLDER_KEEP_STATE_CD = '05' AND U.EFILE_DEL_FLAG != '1' THEN '7'								WHEN U.FOLDER_KEEP_STATE_CD = '05' AND U.EFILE_DEL_FLAG = '1' THEN '8'								ELSE ''							END) AS LOC					FROM (						(						SELECT A.FOLDER_ID									, A.TITLE							, A.ORG_CD							, A.CREAT_YYYY							, A.FOLDER_KEEP_STATE_CD							, A.OUT_FLAG							, A.EFILE_DEL_FLAG						FROM TB_RDFOLDER A						WHERE A.RECORD_CENTER_ID = '1'												) UNION ALL (						SELECT A.FOLDER_ID									, A.TITLE							, A.ORG_CD							, A.CREAT_YYYY							, A.FOLDER_KEEP_STATE_CD							, A.OUT_FLAG							, A.EFILE_DEL_FLAG						FROM TB_NKFOLDER A						WHERE A.RECORD_CENTER_ID = '1'						)					) U				) Y				WHERE ROWNUM <= '1'			) Z			WHERE z.rnum >= '1'		) AA		ORDER BY AA.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\WorkLevlTrace.xml
+-- Query    : select
+-- Query Id : countWorkLevlTrace
+
+		SELECT COUNT(1)		FROM (			(			SELECT 1			FROM TB_RDFOLDER A					WHERE A.RECORD_CENTER_ID = '1'			) UNION ALL (			SELECT 1			FROM TB_NKFOLDER A					WHERE A.RECORD_CENTER_ID = '1'			)		) U;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\WorkLevlTrace.xml

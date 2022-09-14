@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="open.make.openlist">
+	
+	<!-- 
+		기록물철ID 최대값 조회
+	 -->
+	<select id="findMaxFolderId" resultClass="string">
+		SELECT NVL(TO_CHAR(MAX(folder_id)),'00000000000000') AS max_folder_id FROM TB_RDFOLDER
+	</select>
+	
+	<!-- 
+		인수된 기록물의 정보공개목록 대상 생성
+	 -->
+	<insert id="createNewOpenList" parameterClass="daemon.open.make.openlist.domain.NewOpenList">
+		INSERT INTO TB_OPOPENLIST
+		(
+			record_center_id, open_sys_cd, open_state, open_dtime, org_cd, folder_id, record_id, creat_sys_cd, creat_yyyy, reg_dtime
+		)
+		(
+			SELECT C.record_center_id
+				, '01' AS open_sys_cd
+				<isEqual property="readRangeType" compareValue="0">
+				, (CASE WHEN C.oper_read_range_cd='03' THEN '2' ELSE '0' END) AS open_state
+				</isEqual>
+				<isNotEqual property="readRangeType" compareValue="0">
+				, '0' AS open_state
+				</isNotEqual>
+				, '' AS open_dtime
+				, C.org_cd
+				, C.folder_id
+				, C.record_id
+				, C.creat_sys_cd
+				, C.creat_yyyy
+				, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS') AS reg_dtime
+			FROM (
+				SELECT /*+ use_merge(B)*/
+					B.record_center_id, B.org_cd, B.folder_id, A.record_id, A.creat_sys_cd, SUBSTR(A.creat_reg_dtime,1,4) AS creat_yyyy, A.oper_read_range_cd
+				FROM  TB_RDRECORD A
+					, TB_RDFOLDER B
+				WHERE B.folder_id <![CDATA[>]]> #minFolderId:VARCHAR#
+				AND   B.folder_id <![CDATA[<=]]> #maxFolderId:VARCHAR#
+				AND   B.folder_keep_state_cd IN ('01','04')
+			    AND   A.record_center_id = B.record_center_id
+			    AND   A.folder_id = B.folder_id
+			    AND   SUBSTR(A.creat_reg_dtime,1,4) <![CDATA[>=]]> '2000'
+			    AND   NOT EXISTS (SELECT 1 FROM TB_OPOPENLIST Z WHERE Z.record_center_id=A.record_center_id AND Z.open_sys_cd='01' AND Z.folder_id=A.folder_id AND Z.record_id=A.record_id)
+				ORDER BY B.record_center_id, B.org_cd, B.folder_id, A.record_id
+			) C
+		)
+	</insert>
+	
+	<!-- 
+		정보공개목록 수정정보 그룹 유형 조회
+	 -->
+	<resultMap id="findOpenListChngGroup_resultMap" class="daemon.open.make.openlist.domain.OpenGroup">
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="listTypeCd"			column="list_type_cd"/>
+		<result property="choiceCnt"			column="choice_cnt"/>
+	</resultMap>
+	<select id="findOpenListChngGroup" resultMap="findOpenListChngGroup_resultMap">
+		SELECT record_center_id
+			, list_type_cd
+			, COUNT(1) AS choice_cnt
+		FROM  TB_OPOPENLISTCHNG
+		WHERE open_sys_cd = '01'
+		AND   (open_dtime IS NULL OR open_dtime = '')
+		GROUP BY record_center_id, list_type_cd
+	</select>
+	
+	<!-- 
+		정보공개목록 수정정보 그룹 생성
+	 -->
+	<insert id="createOpenListChngGroup" parameterClass="daemon.open.make.openlist.domain.OpenGroup">
+		INSERT INTO TB_OPOPENGROUP
+		(
+			record_center_id, open_sys_cd, open_dtime, choice_cnt, except_cnt, append_cnt, list_type_cd, list_prov_flag, list_prov_dtime, reg_dtime
+		)
+		(
+			SELECT #recordCenterId:VARCHAR#
+				, '01'
+				, #openDtime:VARCHAR#
+				, #choiceCnt:VARCHAR#
+				, 0
+				, 0
+				, #listTypeCd:VARCHAR#
+				, '0'
+				, ''
+				, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+			FROM  DUAL
+		)
+	</insert>
+	
+	<!-- 
+		정보공개목록 수정정보의 그룹정보 갱신
+	 -->
+	<update id="updateOpenListChngDtime" parameterClass="daemon.open.make.openlist.domain.OpenGroup">
+		UPDATE TB_OPOPENLISTCHNG
+		SET   open_dtime = #openDtime:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   open_sys_cd = '01'
+		AND   (open_dtime IS NULL OR open_dtime = '')
+		AND   list_type_cd = #listTypeCd:VARCHAR#
+	</update>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 그룹 조회
+	 -->
+	<resultMap id="findOpenGroup_resultMap" class="daemon.open.make.openlist.domain.OpenGroup">
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="recordCenterCd"		column="record_center_cd"/>
+		<result property="openDtime"			column="open_dtime"/>
+		<result property="listTypeCd"			column="list_type_cd"/>
+		<result property="listTypeNm"			column="list_type_nm"/>
+	</resultMap>
+	<select id="findOpenGroup" resultMap="findOpenGroup_resultMap">
+		SELECT A.record_center_id
+			, (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd
+		    , A.open_dtime
+		    , A.list_type_cd
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='OP02' AND Z.com_cd=A.list_type_cd) AS list_type_nm
+		FROM  TB_OPOPENGROUP A
+		WHERE A.open_sys_cd = '01'
+		AND   A.list_prov_flag = '0'
+		ORDER BY A.record_center_id, A.open_sys_cd, A.open_dtime
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 기록물정보 조회
+	 -->
+	<resultMap id="findOpenListRecord_resultMap" class="daemon.open.make.openlist.domain.MetaInfo">
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="openSysCd"			column="open_sys_cd"/>
+		<result property="openDtime"			column="open_dtime"/>
+		<result property="recordId"				column="record_id"/>
+		<result property="orignId"				column="orign_id"/>
+		<result property="recordKey"			column="record_key"/>
+		<result property="clssId"				column="clss_id"/>
+		<result property="clssNm"				column="clss_nm"/>
+		<result property="folderTitle"			column="folder_title"/>
+		<result property="recordTitle"			column="record_title"/>
+		<result property="creatRegDtime"		column="creat_reg_dtime"/>
+		<result property="recordCenterCd"		column="record_center_cd"/>
+		<result property="recordCenterNm"		column="record_center_nm"/>
+		<result property="orgCd"				column="org_cd"/>
+		<result property="orgNm"				column="org_nm"/>
+		<result property="draftUserNm"			column="draft_user_nm"/>
+		<result property="docNoNm"				column="doc_no_nm"/>
+		<result property="presvTermCd"			column="presv_term_cd"/>
+		<result property="openGubun"			column="open_gubun"/>
+		<result property="partOpenRsn"			column="part_open_rsn"/>
+		<result property="recordDetlTypeCd"		column="record_detl_type_cd"/>
+		<result property="infoTypeCd"			column="info_type_cd"/>
+		<result property="signUserNm"			column="sign_user_nm"/>
+		<result property="signUserPosRankNm"	column="sign_user_pos_rank_nm"/>
+		<result property="folderKey"			column="folder_key"/>
+		<result property="creatRegNo"			column="creat_reg_no"/>
+	</resultMap>
+	<select id="findOpenListRecord" parameterClass="daemon.open.make.openlist.domain.OpenGroup" resultMap="findOpenListRecord_resultMap">
+		SELECT R.record_center_id
+			, A.open_sys_cd
+			, A.open_dtime
+			, R.record_id
+			, R.orign_id
+		    , R.creat_sys_cd||'-'||R.org_cd||'-'||R.creat_yyyy||'-'||R.creat_reg_no||'-'||R.dtch_reg_no AS record_key
+		    , R.clss_id
+		    , R.clss_nm
+		    , F.title AS folder_title
+		    , R.title AS record_title
+		    , R.creat_reg_dtime
+		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=R.record_center_id) AS record_center_cd
+		    , (SELECT Z.record_center_nm FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=R.record_center_id) AS record_center_nm
+		    , F.org_cd
+		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm
+		    , (CASE WHEN (R.record_detl_type_cd='01' AND R.prod_type_cd='1')
+		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='28'))
+		            WHEN (R.record_detl_type_cd='02' OR R.record_detl_type_cd='03')
+		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='06'))
+		            WHEN R.record_detl_type_cd='04'
+		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='07'))
+		            WHEN R.creat_sys_cd='03'
+		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='01'))
+		            ELSE
+		                (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02'))
+		        END) AS draft_user_nm
+		    , (CASE WHEN (R.creat_sys_cd='02' OR R.creat_sys_cd='05' OR R.creat_sys_cd='06')
+		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=R.record_center_id AND Z.org_cd=SUBSTR(R.creat_reg_no,1,7)),SUBSTR(R.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(R.creat_reg_no,8))
+		            WHEN (R.creat_sys_cd='01' OR R.creat_sys_cd='04')
+		                THEN ( CASE WHEN R.record_detl_type_cd='01' THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=R.record_center_id AND Z.org_cd=R.org_cd),R.org_cd) ||'-'|| TO_NUMBER(R.doc_no)
+		                            ELSE R.doc_no END)
+		            ELSE R.doc_no
+		        END) AS doc_no_nm
+		    , F.presv_term_cd
+		    , R.open_div_cd||R.open_grade AS open_gubun
+		    , R.part_open_rsn
+		    , R.record_detl_type_cd
+		    , (CASE WHEN R.creat_sys_cd IN ('01','04') THEN '02' ELSE '01' END) AS info_type_cd
+		    , (CASE WHEN (R.record_detl_type_cd='01' AND R.prod_type_cd='0' AND R.close_type_cd = '0'
+		                AND (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02')) is not null
+		                AND (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05')) is null
+		                )
+		            THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02'))
+		         ELSE (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05'))
+		    END ) AS sign_user_nm
+		    , (CASE WHEN (R.record_detl_type_cd='01' AND R.prod_type_cd='0' AND R.close_type_cd = '0'
+		                AND (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02')) is not null
+		                AND (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05')) is null
+		                )
+		            THEN (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02'))
+		         ELSE (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05'))
+		    END ) AS sign_user_pos_rank_nm
+		    , F.creat_sys_cd||'-'||F.org_cd||'-'||F.clss_id||'-'||F.creat_yyyy||'-'||F.folder_reg_seq||'-'||F.ho_no AS folder_key
+		    , R.creat_reg_no
+		FROM  TB_OPOPENLIST A
+		    , TB_RDRECORD R
+		    , TB_RDFOLDER F
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.open_sys_cd = '01'
+		AND   A.open_dtime = #openDtime:VARCHAR#
+		AND   A.record_center_id = R.record_center_id
+		AND   A.record_id = R.record_id
+		AND   R.record_center_id = F.record_center_id
+		AND   R.folder_id = F.folder_id
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 파일정보 조회 (전자기록물건의 파일만 조회)
+	 -->
+	<resultMap id="findOpenListOrignFile_resultMap" class="daemon.open.make.openlist.domain.FileInfo">
+		<result property="orignFileId"			column="orign_file_id"/>
+		<result property="docTypeCd"			column="doc_type_cd"/>
+		<result property="docTypeSno"			column="doc_type_sno"/>
+		<result property="fileNm"				column="file_nm"/>
+		<result property="fileSize"				column="file_size"/>
+		<result property="ver"					column="ver"/>
+	</resultMap>
+	<select id="findOpenListOrignFile" parameterClass="daemon.open.make.openlist.domain.MetaInfo" resultMap="findOpenListOrignFile_resultMap">
+		SELECT orign_file_id
+		    , doc_type_cd
+		    , doc_type_sno
+		    , file_nm
+		    , file_size
+		    , ver
+		FROM  TB_STORIGNFILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   orign_id = #orignId:VARCHAR#
+		AND   doc_type_cd NOT IN ('10','S1')
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 기록물건수정정보 조회 (02:공개재분류)
+	 -->
+	<resultMap id="findOpenListChng02_resultMap" class="daemon.open.make.openlist.domain.MetaChngInfo">
+		<result property="recordKey"				column="record_key"/>
+		<result property="recordCenterCd"			column="record_center_cd"/>
+		<result property="openGubun"				column="open_gubun"/>
+		<result property="partOpenRsn"				column="part_open_rsn"/>
+	</resultMap>
+	<select id="findOpenListChng02" parameterClass="daemon.open.make.openlist.domain.OpenGroup" resultMap="findOpenListChng02_resultMap">
+		SELECT A.record_key
+		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd
+		    , A.open_gubun
+		    , A.part_open_rsn
+		FROM  TB_OPOPENLISTCHNG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.open_sys_cd = '01'
+		AND   A.open_dtime = #openDtime:VARCHAR#
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 기록물건수정정보 조회 (03:재평가)
+	 -->
+	<resultMap id="findOpenListChng03_resultMap" class="daemon.open.make.openlist.domain.MetaChngInfo">
+		<result property="folderKey"				column="folder_key"/>
+		<result property="recordCenterCd"			column="record_center_cd"/>
+		<result property="presvTermCd"				column="presv_term_cd"/>
+		<result property="chngRsn"					column="chng_rsn"/>
+	</resultMap>
+	<select id="findOpenListChng03" parameterClass="daemon.open.make.openlist.domain.OpenGroup" resultMap="findOpenListChng03_resultMap">
+		SELECT A.folder_key
+		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd
+		    , A.presv_term_cd
+		    , A.chng_rsn
+		FROM  TB_OPOPENLISTCHNG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.open_sys_cd = '01'
+		AND   A.open_dtime = #openDtime:VARCHAR#
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 기록물건수정정보 조회 (04:기관간인계)
+	 -->
+	<resultMap id="findOpenListChng04_resultMap" class="daemon.open.make.openlist.domain.MetaChngInfo">
+		<result property="folderKey"				column="folder_key"/>
+		<result property="recordCenterCd"			column="record_center_cd"/>
+		<result property="recordCenterNm"			column="record_center_nm"/>
+		<result property="takovrOrgCd"				column="takovr_org_cd"/>
+		<result property="takovrOrgNm"				column="takovr_org_nm"/>
+		<result property="takeOrgCd"				column="take_org_cd"/>
+		<result property="takeOrgNm"				column="take_org_nm"/>
+	</resultMap>
+	<select id="findOpenListChng04" parameterClass="daemon.open.make.openlist.domain.OpenGroup" resultMap="findOpenListChng04_resultMap">
+		SELECT A.folder_key
+		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd
+		    , (SELECT Z.record_center_nm FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_nm
+		    , A.takovr_org_cd
+		    , A.takovr_org_nm
+		    , A.take_org_cd
+		    , A.take_org_nm
+		FROM  TB_OPOPENLISTCHNG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.open_sys_cd = '01'
+		AND   A.open_dtime = #openDtime:VARCHAR#
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 기록물건수정정보 조회 (05:이관)
+	 -->
+	<resultMap id="findOpenListChng05_resultMap" class="daemon.open.make.openlist.domain.MetaChngInfo">
+		<result property="folderKey"				column="folder_key"/>
+		<result property="recordCenterCd"			column="record_center_cd"/>
+		<result property="transfYmd"				column="transf_ymd"/>
+		<result property="chngRsn"					column="chng_rsn"/>
+	</resultMap>
+	<select id="findOpenListChng05" parameterClass="daemon.open.make.openlist.domain.OpenGroup" resultMap="findOpenListChng05_resultMap">
+		SELECT A.folder_key
+		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd
+		    , A.transf_ymd
+		    , A.chng_rsn
+		FROM  TB_OPOPENLISTCHNG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.open_sys_cd = '01'
+		AND   A.open_dtime = #openDtime:VARCHAR#
+	</select>
+	
+	<!-- 
+		정보공개목록 파일생성 대상 기록물건수정정보 조회 (06:폐기)
+	 -->
+	<resultMap id="findOpenListChng06_resultMap" class="daemon.open.make.openlist.domain.MetaChngInfo">
+		<result property="folderKey"				column="folder_key"/>
+		<result property="recordCenterCd"			column="record_center_cd"/>
+		<result property="disuseYmd"				column="disuse_ymd"/>
+		<result property="chngRsn"					column="chng_rsn"/>
+	</resultMap>
+	<select id="findOpenListChng06" parameterClass="daemon.open.make.openlist.domain.OpenGroup" resultMap="findOpenListChng06_resultMap">
+		SELECT A.folder_key
+		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd
+		    , A.disuse_ymd
+		    , A.chng_rsn
+		FROM  TB_OPOPENLISTCHNG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.open_sys_cd = '01'
+		AND   A.open_dtime = #openDtime:VARCHAR#
+	</select>
+	
+	<!-- 
+		정보공개목록 제공일시 정보 갱신
+	 -->
+	<update id="updateOpenGroupProv" parameterClass="daemon.open.make.openlist.domain.OpenGroup">
+		UPDATE TB_OPOPENGROUP
+		SET   list_prov_flag = '1'
+			, list_prov_dtime = #listProvDtime:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   open_sys_cd = '01'
+		AND   open_dtime = #openDtime:VARCHAR#
+	</update>
+	
+</sqlMap>

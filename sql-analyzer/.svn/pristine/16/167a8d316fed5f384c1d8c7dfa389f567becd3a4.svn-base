@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.ftr">
+	<resultMap id="ftrkeywdtemp-result" class="rms.common.ftr.domain.FtrKeywdTemp">
+		<result property = "recordCenterId" 	column = "RECORD_CENTER_ID"	/>
+		<result property = "ftrDivCd" 			column = "FTR_DIV_CD"	/>
+		<result property = "trgtId" 			column = "TRGT_ID"	/>
+		<result property = "actTypeCd" 			column = "ACT_TYPE_CD"	/>
+		<result property = "fileDelFlag" 		column = "FILE_DEL_FLAG"	/>
+	</resultMap>
+	
+	<!--
+		SELECT
+	 -->
+	<select id="findFtrRecordList" parameterClass="rms.common.ftr.domain.FtrKeywdTemp" resultMap="ftrkeywdtemp-result">
+		SELECT record_center_id
+		     , '2' ftr_div_cd
+		     , record_id trgt_id
+		     , #actTypeCd:VARCHAR# act_type_cd
+		     , #fileDelFlag:VARCHAR# file_del_flag
+		FROM  TB_RDRECORD
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #trgtId:VARCHAR#
+	</select>
+	
+	<!-- 
+		CREATE
+	 -->
+	<insert id="createFtrKeywdTemp" parameterClass="rms.common.ftr.domain.FtrKeywdTemp">
+		INSERT INTO 
+			TB_RDFTRKEYWDTEMP(
+								FTR_KEYWD_SEQ, 
+								RECORD_CENTER_ID, 
+								FTR_DIV_CD, 
+								TRGT_ID, 
+								ACT_TYPE_CD, 
+								EFILE_DEL_FLAG, 
+								WORK_DTIME
+							) 
+		VALUES (
+				TB_RDFTRKEYWDTEMP_SQ01.NEXTVAL, 
+				#recordCenterId:VARCHAR#, 
+				#ftrDivCd:VARCHAR#, 
+				#trgtId:VARCHAR#, 
+				#actTypeCd:VARCHAR#, 
+				NVL(#fileDelFlag:VARCHAR#,0), 
+				<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+				TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			   )
+	</insert>
+</sqlMap>

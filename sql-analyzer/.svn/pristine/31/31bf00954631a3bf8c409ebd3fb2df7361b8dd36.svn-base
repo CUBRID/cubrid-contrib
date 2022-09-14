@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.stndinfo">
+<resultMap id="stnd-presvtermrule-result" class="rms.stnd.stndinfo.domain.PresvTermRule" >
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>
+		<result property="stndRule" 		column="STND_RULE"	jdbcType="CLOB"	javaType="java.lang.String"/>		
+		<result property="ver"			 	column="VER"/>		
+		<result property="recvDtime"		column="RECV_DTIME"/>
+		<result property="userNm"			column="USER_NM"/>
+	</resultMap>
+	
+	<resultMap id="stnd-stndrule-result" class="rms.stnd.stndinfo.domain.PresvTermRule" >
+		<result property="presvTermCd"		column="PRESV_TERM_CD"/>
+		<result property="stndRule" 		column="STND_RULE"	jdbcType="CLOB"	javaType="java.lang.String"/>		
+	</resultMap>
+	
+		
+	<!-- 
+		SELECT
+	 -->
+	<select id="findPresvTermRule" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule" resultMap="stnd-presvtermrule-result">
+		SELECT (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG = '1' AND COM_CD = A.PRESV_TERM_CD ) PRESV_TERM_NM
+		, A.STND_RULE
+		, B.VER
+		, B.RECV_DTIME
+		, (SELECT USER_NM FROM TB_STUSER WHERE USER_ID = B.WORK_USER_ID AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) USER_NM 
+		FROM TB_ZZPRESVTERMRULE A, TB_ZZSTNDMNG B
+		WHERE A.STND_MNG_TYPE_CD = B.STND_MNG_TYPE_CD 
+		AND A.VER = B.VER
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		ORDER BY A.PRESV_TERM_CD DESC
+	</select>
+	
+	<!-- 
+		CREATE
+	 -->
+	<insert id="createPresvTermRule" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule">
+		INSERT INTO TB_ZZPRESVTERMRULE(PRESV_TERM_CD, STND_RULE, STND_MNG_TYPE_CD, VER, RECORD_CENTER_ID) 
+		VALUES (#presvTermCd#, #stndRule#, #stndMngTypeCd#, #ver#, #recordCenterId#)
+	</insert>	
+			
+	<!-- 
+		DELETE
+	 -->	
+	<delete id="deletePresvTermRule" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule">
+	  	DELETE 
+	  	FROM TB_ZZPRESVTERMRULE
+	  	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  	<dynamic>	 	 
+		  	<isEmpty prepend="AND" property="stndMngTypeCd">
+					STND_MNG_TYPE_CD = #stndMngTypeCd:VARCHAR#
+			</isEmpty>
+			<isEmpty prepend="AND" property="ver">
+					VER = #ver:VARCHAR#
+			</isEmpty> 
+		</dynamic>
+	</delete>	
+	
+	<!-- 
+		DELETE
+	 -->	
+	<delete id="deletePresvTermRuleAll" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule">
+	  	DELETE 
+	  	FROM TB_ZZPRESVTERMRULE	 
+	  	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</delete>	
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findStndRule" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule" resultMap="stnd-stndrule-result">
+		SELECT '40' PRESV_TERM_CD, A.STND_RULE 
+		FROM TB_ZZPRESVTERMRULE A
+		WHERE A.PRESV_TERM_CD =  #presvTermCd:VARCHAR# AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</select>
+	
+	<update id="updatePresvTermRule" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule" >
+		UPDATE TB_ZZPRESVTERMRULE SET STND_RULE = #stndRule:vARCHAR#
+		WHERE PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+</sqlMap>

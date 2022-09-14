@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="FormatRequest">
+
+	<!-- 포맷변환 요청대상 목록 
+	     건 변환 성공 후 철 변환 할 수 있도록.. 철 대기 에러코드 추가 및 쿼리 변경.. -->
+	<select id="SelectRequestJobList" resultClass="java.util.HashMap">
+		SELECT A.RECORD_CENTER_ID, A.JOB_ID, A.NEO_GUBUN, A.FOLDER_ID, A.RECORD_ID, A.REQUEST_STATUS, A.NEOCHASU
+		FROM (
+		    SELECT /*+ index(TB_STREQTRANS TB_STREQTRANS_IX04) */
+		          RECORD_CENTER_ID, JOB_ID, NEO_GUBUN, FOLDER_ID, RECORD_ID, REQUEST_STATUS, TO_CHAR(NEOCHASU) AS NEOCHASU
+		    FROM  TB_STREQTRANS
+		    WHERE REQUEST_STATUS = '-'
+            AND (ERROR_CODE <![CDATA[<>]]> 'W0001' OR ERROR_CODE IS NULL)
+		    ORDER BY JOB_ID
+		) A
+		WHERE ROWNUM <![CDATA[<=]]> 100
+	</select>
+
+	<!-- 포맷변환 요청대상 -->
+	<select id="SelectRequestJob" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT RECORD_CENTER_ID, JOB_ID, NEO_GUBUN, FOLDER_ID, RECORD_ID
+		FROM  TB_STREQTRANS
+		WHERE JOB_ID = #JOB_ID:VARCHAR#
+	</select>
+	
+</sqlMap>

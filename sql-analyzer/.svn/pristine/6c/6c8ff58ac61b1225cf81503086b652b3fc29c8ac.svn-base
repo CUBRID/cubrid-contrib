@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace.Trace">
+	
+	<insert id="createTrace" parameterClass="rms.accs.trace.domain.Trace">
+		INSERT INTO TB_ZZTRACE
+	  		   (RECORD_CENTER_ID, 
+	  		    TRACE_YMD, 
+	  		   	TRACE_SNO, 
+	  		   	TRGT_DIV_CD, 
+	  		   	TRGT_ID, 
+	  		   	USER_ID, 
+	  		   	WORK_TYPE_CD, 
+	  		   	WORK_DTIME, 
+	  		   	CONN_IP)	  		    
+	  	VALUES (#recordCenterId:VARCHAR#, 
+	  			#traceYmd:VARCHAR#, 
+	  			TB_ZZTRACE_SQ01.NEXTVAL, 
+	  			#trgtDivCd:VARCHAR#,	  			
+	  			#trgtId:VARCHAR#,
+	  			#userId:VARCHAR#,
+	  			#workTypeCd:VARCHAR#,	  			
+	  			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), -->
+	  			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), 
+	  			#connIp:VARCHAR#)
+	</insert>
+	
+</sqlMap>

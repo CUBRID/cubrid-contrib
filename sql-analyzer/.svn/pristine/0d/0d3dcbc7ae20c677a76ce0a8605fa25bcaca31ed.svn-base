@@ -1,0 +1,88 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : findPublicationsPagedList
+
+	SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (		SELECT 	A.record_center_id					,A.publ_reg_id					,A.publ_slt_flag					,A.org_div					,A.org_cd					,A.title					,A.content					,A.publ_ymd					,A.page_cnt					,A.deposit_flag					,A.remk					,A.publ_prd					,A.publ_type					,A.publ_media					,A.shap_mat					,A.stakrm_id					,A.booksf_id					,A.first_keep_cnt					,A.cur_keep_cnt					,A.destry_rsn1					,A.destry_rsn2					,A.destry_rsn3					,A.open_div_cd					,A.open_grade					,A.part_open_rsn					,A.publ_prog_stat					,A.cr_report_ymd					,A.destry_flag					,A.creat_org_nm					,DECODE(A.destry_flag,'0','보존','폐기') destry_flag_nm					,B.com_cd_nm publ_prd_nm					,C.org_nm org_nm	        		,D.com_cd_nm publ_type_nm	        		,E.com_cd_nm org_div_nm	        		,DECODE(A.deposit_flag,'1','O','X') deposit_flag_nm	            	,DECODE(A.open_div_cd,'1','공개','2','부분공개','비공개') open_div_cd_nm        			            	,A.PUBL_REG_SEQ	            	,A.SERIALS_PUBL_FLAG            		,DECODE(A.SERIALS_PUBL_FLAG,'Y','O','') serials_publ_flag_nm      					FROM  TB_GVPUBL A 					, (SELECT com_cd, com_cd_nm				   FROM TB_ZZCOMCD				   WHERE com_type_cd = 'GV02') B				 , (SELECT org_nm,org_cd				   FROM TB_STORG 				   WHERE record_center_id = '1' ) C				, (SELECT com_cd, com_cd_nm				   FROM TB_ZZCOMCD				   WHERE com_type_cd = 'GV03') D				, (SELECT com_cd, com_cd_nm				   FROM TB_ZZCOMCD				   WHERE com_type_cd = 'GV01') E			WHERE	A.record_center_id = '1'			AND		A.publ_prd = B.com_cd(+)			AND		A.org_cd = C.org_cd(+)	   		AND		A.publ_type = D.com_cd(+)	   		AND 	A.org_div   = E.com_cd(+)		 AND 				A.publ_ymd BETWEEN '1' AND '1'			  AND 	            A.org_cd = '1'	          AND 				A.title LIKE '1'			  AND 				A.publ_reg_id = '1'			 			order by A.reg_dtime DESC			) B        WHERE ROWNUM <= '1'    ) C    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : countPublicationsPagedList
+
+		SELECT COUNT(1)		FROM  TB_GVPUBL A 				, (SELECT com_cd, com_cd_nm			   FROM TB_ZZCOMCD			   WHERE com_type_cd = 'GV02') B			 , (SELECT org_nm,org_cd			   FROM TB_STORG 			   WHERE record_center_id = '1' ) C			, (SELECT com_cd, com_cd_nm			   FROM TB_ZZCOMCD			   WHERE com_type_cd = 'GV03') D			, (SELECT com_cd, com_cd_nm			   FROM TB_ZZCOMCD			   WHERE com_type_cd = 'GV01') E		WHERE	A.record_center_id = '1'		AND		A.publ_prd = B.com_cd(+)		AND		A.org_cd = C.org_cd(+)   		AND		A.publ_type = D.com_cd(+)	   		AND 	A.org_div   = E.com_cd(+)					         AND             A.org_cd = '1'          AND 			A.publ_ymd BETWEEN '1' AND '1'		  AND 			A.title LIKE '1'		 		order by A.publ_reg_id DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : findPublIdCheck
+
+				SELECT COUNT(1) AS IDCHECK			FROM TB_GVPUBL			WHERE record_center_id = '1'			AND publ_reg_id = '1'				;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : insert
+-- Query Id : createPublications
+
+		INSERT INTO TB_GVPUBL		(			record_center_id , publ_reg_id , publ_slt_flag , org_div , org_cd 			, title , content , publ_ymd , page_cnt ,creat_org_nm			, deposit_flag , remk , publ_prd , publ_type , publ_media 			, shap_mat , stakrm_id , booksf_id , first_keep_cnt , cur_keep_cnt  			, destry_rsn1 , destry_rsn2 , destry_rsn3 , open_div_cd , open_grade 			, part_open_rsn , publ_prog_stat , cr_report_ymd , creat_yyyy, reg_dtime			, PUBL_REG_SEQ 	 , SERIALS_PUBL_FLAG		)		VALUES		(			 '1' , '1' , '1' , '1' , '1' 			, '1' , '1' , '1' , '1' , '1' 			, '1' , '1' , '1' , '1' , '1' 			, '1' , '1' , '1' , '1' , '1'			, '1' , '1' , '1' , '1' , '1'                        , '1'   , '1' 	, TO_CHAR(sysdate,'YYYYMMDD')	, SUBSTR(REPLACE('1', '-', ''),1,4)	, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')			, '1' 		  , '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : insert
+-- Query Id : createPublUpload
+
+     		insert into TB_GVPUBL_FILE ( 			record_center_id, 			publ_reg_id, 			publ_file_req, 			publ_file_id, 			publfile_path, 			store_file_nm,			PUBL_REG_SEQ		) values ( 			'1', 			'1',              '1',             '1',             '1',             '1',            '1'          )   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : findPublications
+
+	SELECT 	A.record_center_id				,A.publ_reg_id				,A.publ_slt_flag				,A.org_div				,A.org_cd				,A.title				,A.content				,A.publ_ymd				,A.page_cnt				,A.deposit_flag				,A.remk				,A.publ_prd				,A.publ_type				,A.publ_media				,A.shap_mat				,A.stakrm_id				,A.booksf_id				,A.first_keep_cnt				,A.cur_keep_cnt				,A.destry_rsn1				,A.destry_rsn2				,A.destry_rsn3				,A.open_div_cd				,A.open_grade				,A.part_open_rsn				,A.publ_prog_stat				,A.cr_report_ymd				,A.destry_flag				,A.creat_org_nm				,DECODE(A.destry_flag,'0','보존','폐기') destry_flag_nm				,B.com_cd_nm publ_prd_nm				,C.org_nm org_nm				,D.com_cd_nm publ_type_nm        		,E.com_cd_nm org_div_nm        		,DECODE(A.deposit_flag,'1','O','X') deposit_flag_nm            	,DECODE(A.open_div_cd,'1','공개','2','부분공개','비공개') open_div_cd_nm        		            	,A.PUBL_REG_SEQ            	,A.SERIALS_PUBL_FLAG            	,DECODE(A.SERIALS_PUBL_FLAG,'Y','O','') serials_publ_flag_nm          		       	FROM  TB_GVPUBL A 				, (SELECT com_cd, com_cd_nm			   FROM TB_ZZCOMCD			   WHERE com_type_cd = 'GV02') B			 , (SELECT org_nm,org_cd			   FROM TB_STORG 			   WHERE record_center_id = '1' ) C			, (SELECT com_cd, com_cd_nm			   FROM TB_ZZCOMCD			   WHERE com_type_cd = 'GV03') D			, (SELECT com_cd, com_cd_nm			   FROM TB_ZZCOMCD			   WHERE com_type_cd = 'GV01') E		WHERE	A.record_center_id = '1'		AND		A.publ_prd = B.com_cd(+)		AND		A.org_cd = C.org_cd(+)   		AND		A.publ_type = D.com_cd(+)   		AND 	A.org_div   = E.com_cd(+)				 AND 			A.publ_reg_id = '1'		  AND 			A.publ_reg_seq = '1' 		 		order by A.cr_report_ymd DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : findPublAttachFileList
+
+			select 				record_center_id				,publ_reg_id				,publ_file_req				,trim(publ_file_req) as publ_file_req_trim				,publ_file_id				,publfile_path				,store_file_nm			from TB_GVPUBL_FILE			where record_center_id = '1'			and publ_reg_id = '1'			and publ_reg_seq = '1' 			and publ_file_req between 1 and 2 	            	 	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : update
+-- Query Id : updatePublications
+
+		UPDATE TB_GVPUBL		SET  record_center_id = '1'			, org_div = '1'			, org_cd = '1'			, title = '1'			, content = '1'			, publ_ymd = '1'			, creat_yyyy = SUBSTR(REPLACE('1', '-', ''),1,4)			, page_cnt='1'			, deposit_flag = '1'			, remk = '1'			, publ_prd = '1'			, publ_type = '1'			, publ_media = '1'			, shap_mat = '1'			, stakrm_id = '1'			, booksf_id = '1'			, first_keep_cnt = '1'			, cur_keep_cnt = '1'			, destry_rsn1 = '1'			, destry_rsn2 = '1'			, destry_rsn3 = '1'			, open_div_cd = '1'			, open_grade = '1'			, part_open_rsn = '1'			, destry_flag = '1'			, publ_prog_stat = '1'			, creat_org_nm = '1'			, cr_report_ymd = TO_CHAR(sysdate,'YYYYMMDD')		WHERE record_center_id = '1'		AND   publ_reg_id = '1'		AND   publ_reg_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : findPublAttachFilePathList
+
+		select record_center_id				,publ_reg_id				,publ_file_req				,trim(publ_file_req) as publ_file_req_trim				,publ_file_id				,publfile_path				,store_file_nm			from TB_GVPUBL_FILE		where record_center_id = '1'		AND publ_reg_id = '1'		AND trim(publ_file_req) = '1'           	 	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : delete
+-- Query Id : deletePublAttachFile
+
+		delete from TB_GVPUBL_FILE		where record_center_id = '1'		and publ_reg_id = '1'		and trim(publ_file_req) = '1'		AND   publ_reg_seq = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : findMaxPublFileReq
+
+		SELECT NVL (MAX (publ_file_req), 0) + 1 publ_file_req		  FROM TB_GVPUBL_FILE		 WHERE record_center_id = '1' 		 		AND publ_reg_id =  '1'          	 		 		AND publ_reg_seq = '1'        	 	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml
+-- Query    : select
+-- Query Id : countSerialsPubl
+
+		SELECT	MAX(NVL(PUBL_REG_SEQ,0))+1 AS PUBL_CNT 		FROM TB_GVPUBL		WHERE RECORD_CENTER_ID = '1'		AND PUBL_REG_ID = '1'	 ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\publications\Publications.xml

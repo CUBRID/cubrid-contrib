@@ -1,0 +1,60 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : findClssSrchTree
+
+		SELECT B.*		FROM (			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType				, A.bis_clss_id AS id				, A.bis_clss_nm AS text                , (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'                        ELSE 'open'                    END) AS state 				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)					END) AS iconCls			FROM  TB_ZZBISCLSS A WHERE   						A.levl = 1					   AND  						A.levl = 1					   			ORDER BY A.levl, A.sort_sno		) B;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : findOrgClssSrchTree
+
+		(			SELECT D.*			FROM (				SELECT A.record_center_id AS recordCenterId					, '2' AS treeType					, C.bis_clss_id AS id					, C.bis_clss_nm AS text					, 'open' AS state					, (CASE WHEN B.del_flag = '1' THEN 'icon-file_full_delete'							ELSE 'icon-file_full_accept'						END) AS iconCls				FROM TB_STORG A					, TB_ZZBISORG B					, TB_ZZBISCLSS C				WHERE A.record_center_id = '1'				AND   A.org_cd = '1'				AND   B.org_cd = A.org_cd				AND   C.bis_clss_id = B.bis_clss_id				ORDER BY C.levl, C.sort_sno			) D		)		UNION ALL		(			SELECT D.*			FROM (				SELECT A.record_center_id AS recordCenterId					, '1' AS treeType					, A.org_cd AS id					, A.org_abbr_nm AS text					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'							ELSE 'open'						END) AS state 					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'							ELSE 'icon-folder_full_accept'						END) AS iconCls				FROM TB_STORG A				WHERE A.record_center_id = '1' 				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm			) D		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : countClssSrchFolderPagedList
+
+		SELECT COUNT(1)		FROM   TB_RDFOLDER A		WHERE  A.record_center_id = '1'		AND	   A.clss_id = '1'        AND    A.clss_div_cd = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : findClssSrchFolderPagedList
+
+		SELECT 		     E.folder_id		   , E.clss_nm		   , E.title		   , E.creat_yyyy		   , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm		   , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) AS folder_keep_state_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) AS creat_sys_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm		   , E.oper_read_range_cd		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm			   , (CASE WHEN '3'='1' AND E.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = '1') THEN 1  					WHEN (E.oper_read_range_cd='02' AND E.cur_keep_org_cd='1') THEN 1					 	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd='1') > 0 THEN 1 	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='1' AND Z.accs_user_id='1') > 0 THEN 1	               ELSE 0	          END) accs_flag		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.record_center_id						, A.folder_id						, A.clss_id						, A.clss_nm						, A.title						, A.creat_yyyy						, A.org_cd						, A.folder_keep_state_cd						, A.creat_sys_cd						, A.erecord_flag						, A.presv_term_cd						, A.oper_read_range_cd						, A.cur_keep_org_cd					FROM  TB_RDFOLDER A					WHERE A.record_center_id = '1'					AND	  A.clss_id = '1'			        AND   A.clss_div_cd = '1'					ORDER BY A.record_center_id, A.title				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : findUnitSrchTree
+
+ 			SELECT MAX(A.record_center_id) AS recordCenterId				, '1' AS treeType				, 1 AS levl                , A.lrg_cd AS lrgCd                , '' AS midCd                , '' AS smlCd                , NVL(A.lrg_cd,'EMPTY_LRG') AS id				, NVL(MAX(A.lrg_nm),'{대분류:알수없음}') AS text				, 'closed' AS state				, (CASE WHEN MIN(A.state_cd) = '2' THEN 'icon-folder_full_delete'						ELSE 'icon-folder_full_accept'					END) AS iconCls			FROM  TB_ZZUNIT A			WHERE A.record_center_id = '1'			GROUP BY A.lrg_cd			ORDER BY text ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : findOrgUnitSrchTree
+
+		(			SELECT D.*			FROM (				SELECT A.record_center_id AS recordCenterId					, '2' AS treeType					, C.unit_cd AS id					, C.unit_nm AS text					, 'open' AS state					, (CASE WHEN B.use_flag = '0' THEN 'icon-file_full_delete'							ELSE 'icon-file_full_accept'						END) AS iconCls				FROM TB_STORG A					, TB_ZZORGUNIT B					, TB_ZZUNIT C				WHERE A.record_center_id = '1'				AND   A.org_cd = '1'				AND   B.record_center_id = A.record_center_id				AND   B.org_cd = A.ORG_CD				AND   C.record_center_id = B.record_center_id				AND   C.unit_cd = B.unit_cd				ORDER BY A.levl, A.org_seq			) D		)		UNION ALL		(			SELECT D.*			FROM (				SELECT A.record_center_id AS recordCenterId					, '1' AS treeType					, A.org_cd AS id					, A.org_abbr_nm AS text					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'							ELSE 'open'						END) AS state 					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'							ELSE 'icon-folder_full_accept'						END) AS iconCls				FROM TB_STORG A				WHERE A.record_center_id = '1' 				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm			) D		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : countUnitSrchFolderPagedList
+
+		SELECT COUNT(1)		FROM   TB_RDFOLDER A		WHERE  A.record_center_id = '1'		AND    A.clss_id = '1'          AND    A.clss_div_cd = '2'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml
+-- Query    : select
+-- Query Id : findUnitSrchFolderPagedList
+
+		SELECT 		     E.folder_id		   , E.clss_nm		   , E.title		   , E.creat_yyyy		   , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm		   , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) AS folder_keep_state_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) AS creat_sys_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm		   , E.oper_read_range_cd		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm			   , (CASE WHEN '3'='1' AND E.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = '1') THEN 1  					WHEN (E.oper_read_range_cd='02' AND E.cur_keep_org_cd='1') THEN 1					 	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd='1') > 0 THEN 1 	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='1' AND Z.accs_user_id='1') > 0 THEN 1	               ELSE 0	          END) accs_flag		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.record_center_id						, A.folder_id						, A.clss_id						, A.clss_nm						, A.title						, A.creat_yyyy						, A.org_cd						, A.folder_keep_state_cd						, A.creat_sys_cd						, A.erecord_flag						, A.presv_term_cd						, A.oper_read_range_cd						, A.cur_keep_org_cd					FROM  TB_RDFOLDER A					WHERE A.record_center_id = '1'					AND   A.clss_id = '1'					AND   A.clss_div_cd = '2'										ORDER BY A.record_center_id, A.title				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\ClssSrch.xml

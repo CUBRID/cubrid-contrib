@@ -1,0 +1,18 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeCurState.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeCurState.xml
+-- Query    : select
+-- Query Id : findRcTakeCurStateTotal
+
+		SELECT 'ÃÑ°è' take_mng_no		      ,A.take_rep_cd		      ,A.take_yyyy		      ,0 take_sno		      ,A.record_center_id		      ,'' take_rep_nm		      ,'' takovr_rep_cd		      ,'' takovr_rep_nm,SUM((SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id))) AS take_folder_cnt		      ,SUM((SELECT COUNT(1) FROM TB_RDRECORD Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id))) AS take_record_cnt		FROM TB_DFTAKEPLAN A		WHERE A.record_center_id = '1'		AND   A.take_yyyy = '1'		AND   A.take_prog_state_cd = '04'	     AND 	        A.takovr_rep_cd = '1'	      AND 	        A.takovr_rep_nm like '1'	     		GROUP BY A.take_rep_cd, A.take_yyyy, A.record_center_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeCurState.xml
+-- Query    : select
+-- Query Id : findRcTakeCurStateList
+
+		SELECT A.take_rep_cd||'-'||A.take_yyyy||'-'||LPAD(A.take_sno, 6, '0') take_mng_no		      ,A.take_rep_cd		      ,A.take_yyyy		      ,A.take_sno		      ,A.record_center_id		      ,A.take_rep_nm		      ,A.takovr_rep_cd		      ,A.takovr_rep_nm                      ,(SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id)) take_folder_cnt		                            ,(SELECT COUNT(1) FROM TB_RDRECORD Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id)) take_record_cnt		FROM TB_DFTAKEPLAN A		WHERE A.record_center_id = '1'		AND   A.take_yyyy = '1'		AND   A.take_prog_state_cd = '04'	     AND 	        A.takovr_rep_cd = '1'	      AND 	        A.takovr_rep_nm like '1'	     		ORDER BY A.take_rep_cd, A.take_yyyy, A.take_sno	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeCurState.xml

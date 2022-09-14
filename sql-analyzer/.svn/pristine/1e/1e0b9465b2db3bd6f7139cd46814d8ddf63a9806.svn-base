@@ -1,0 +1,46 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+
+SelectArrCreatorCon
+Semantic: before ' )) AS SORT		FROM  TB_RDRECORDCREAT A		WHERE A.RECORD_CENTER_I...'
+Nested or invalid use of aggregate function. select [A].[AGENT_TYPE_CD], (select [Z].[COM_CD_NM] from [TB_ZZCOMCD] [Z] where [Z].[COM_CD]=[A].[AGENT_TYPE_CD] and [Z].[COM_TYPE_CD]= ?:19 ), (select (select [Y].[FULL_ORG_NM] from [TB_STORG] [Y] where [Y].[RECORD_CENTER_ID]=[Z].[RECORD_CENTER_ID] and [Y].[ORG_CD]=[Z].[HUPPER_ORG_CD]) from [TB_STORG] [Z] where [Z].[RECORD_CENTER_ID]=[A].[RECORD_CENTER_ID] and [Z].[ORG_CD]=[A].[AGENT_ORG_CD]), (select [Z].[HUPPER_ORG_CD] from [TB_STORG] [Z] where [Z].[RECORD_CENTER_ID]=[A].[RECORD_CENTER_ID] and [Z].[ORG_CD]=[A].[AGENT_ORG_CD]), nvl(case when [A].[AGENT_ORG_CD] is null  then [A].[AGENT_ORG_NM] else (select [Z].[FULL_ORG_NM] from [TB_STORG] [Z] where [Z].[RECORD_CENTER_ID]=[A].[RECORD_CENTER_ID] and [Z].[ORG_CD]=[A].[AGENT_ORG_CD]) end, [A].[AGENT_ORG_NM]), [A].[AGENT_ORG_CD], [A].[AGENT_NM], [A].[AGENT_ID], [A].[AGENT_POS_RANK_NM],  trim(both  from  to_char(row_number() over (par[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectArrCreatorCon
+
+		SELECT A.AGENT_TYPE_CD		    , (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD12' AND Z.COM_CD=A.AGENT_TYPE_CD) AS AGENT_TYPE_NM		    , (SELECT (SELECT Y.FULL_ORG_NM FROM TB_STORG Y WHERE Y.RECORD_CENTER_ID=Z.RECORD_CENTER_ID AND Y.ORG_CD=Z.HUPPER_ORG_CD) FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.AGENT_ORG_CD) AS HUPPER_ORG_NM		    , (SELECT Z.HUPPER_ORG_CD FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.AGENT_ORG_CD) AS HUPPER_ORG_CD		    , NVL(CASE WHEN A.AGENT_ORG_CD IS NULL THEN A.AGENT_ORG_NM 		               ELSE (SELECT Z.FULL_ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.AGENT_ORG_CD)		          END, A.AGENT_ORG_NM) AS AGENT_ORG_NM		    , A.AGENT_ORG_CD		    , A.AGENT_NM		    , A.AGENT_ID		    , A.AGENT_POS_RANK_NM		    , TRIM(TO_CHAR(ROW_NUMBER() OVER (PARTITION BY AGENT_TYPE_CD ORDER BY AGENT_TYPE_CD, AGENT_SNO DESC))) AS SORT		FROM  TB_RDRECORDCREAT A		WHERE A.RECORD_CENTER_ID = '1'		AND   A.RECORD_ID = '1'		AND   (A.AGENT_TYPE_CD IN ('01','02','03','05','06','08','09','22') OR (A.AGENT_TYPE_CD = '28' AND (AGENT_DUTY_TYPE_CD != '07' OR AGENT_DUTY_TYPE_CD IS NULL)))		ORDER BY A.AGENT_SNO	;
+
+SelectArrDescriptionCon
+No statement to execute.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectArrDescriptionCon
+
+;
+
+SelectArrSubjectCon
+No statement to execute.[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectArrSubjectCon
+
+;
+
+SelectStorageCon_StructureInfoCon_Folder
+Semantic: before ' 		)		ORDER BY C.RECORD_CENTER_ID, C.CREAT_SYS_CD, C.ORG_CD, C...'
+Only one column can be specified in the select list when the subquery is not introduced with EXISTS. select C.CREAT_SYS_CD|| cast('-' as varchar)||C.ORG_CD|| cas...[CAS INFO-127.0.0.1:54330,1,11229],[SESSION-41],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectStorageCon_StructureInfoCon_Folder
+
+		SELECT C.CREAT_SYS_CD||'-'||C.ORG_CD||'-'||C.CLSS_ID||'-'||C.CREAT_YYYY||'-'||C.FOLDER_REG_SEQ||' ('||C.HO_NO||')' AS OBJECT_ID		    , C.TITLE AS OBJECT_TITLE		FROM  TB_RDFOLDER C		WHERE (C.CREAT_SYS_CD, C.ORG_CD, C.CLSS_ID, C.CREAT_YYYY, C.FOLDER_REG_SEQ)		IN (		    SELECT A.CREAT_SYS_CD, A.ORG_CD, A.CLSS_ID, A.CREAT_YYYY, A.FOLDER_REG_SEQ		    FROM  TB_RDFOLDER A		    WHERE A.FOLDER_ID = '1'		    AND   (SELECT COUNT(1) FROM TB_RDFOLDER B WHERE B.CREAT_SYS_CD=A.CREAT_SYS_CD AND B.ORG_CD=A.ORG_CD AND B.CLSS_ID=A.CLSS_ID AND B.CREAT_YYYY=A.CREAT_YYYY AND B.FOLDER_REG_SEQ=A.FOLDER_REG_SEQ) > 1		)		ORDER BY C.RECORD_CENTER_ID, C.CREAT_SYS_CD, C.ORG_CD, C.CLSS_ID, C.CREAT_YYYY, C.FOLDER_REG_SEQ, C.HO_NO	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml

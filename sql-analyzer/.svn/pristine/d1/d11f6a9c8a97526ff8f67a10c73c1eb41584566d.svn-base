@@ -1,0 +1,263 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : countUnitMngAprovReqList
+
+        SELECT  COUNT(1)        FROM    		        (		    			/* 신청을 위한 신설, 변경신청 (미처리건 대상)*/		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd		                           , a. req_dtime, a.creat_sys_cd, a.take_mng_no		                  FROM TB_ZZUNITREQ a		                 WHERE  a.record_center_id = '1'		                   AND A.UNIT_REQ_TYPE_CD IN ('1','2')		                   AND NVL(A.RECV_RSLT_CD,'1') = '1' 		                    AND NOT EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST		                                                WHERE take_mng_no = a.take_mng_no)		                    		                UNION ALL		                /* 통보를 위한 폐지,처리과변경,소관부서변경 (처리완료된것 중 배포되지않은건 대상)*/		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd		                         , a. req_dtime, a.creat_sys_cd, a.take_mng_no		                  FROM TB_ZZUNITREQ a		                WHERE  a.record_center_id = '1'		                    AND A.UNIT_REQ_TYPE_CD IN ('3','4','5')		                    AND NVL(A.RECV_RSLT_CD,'1') = '1' 		                    AND EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST		                                                WHERE take_mng_no = a.take_mng_no		                                                GROUP BY take_mng_no		                                                HAVING MAX(unit_send_flag) = '0')					        		                    		                                                		             ) ta,		              TB_STORG tb		   WHERE  ta.record_center_id = tb.record_center_id		         AND ta.req_org_cd = tb.org_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngAprovReqList
+
+			SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		 SELECT ta.record_center_id, ta.unit_req_type_cd, ta.req_org_cd, tb.org_nm AS req_org_nm,                 tb.org_abbr_nm AS req_org_abbr_nm, ta.req_sno_id,		        tc.com_cd_nm AS unit_req_type_cd_nm,		        SUBSTR(ta.req_dtime,0,8) AS req_dtime, ta.creat_sys_cd, ta.take_mng_no,		        ta.aprov_req_file_nm AS aprov_req_file_full_nm, 		        SUBSTR(ta.aprov_req_file_nm,INSTR(ta.aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,		        NVL(td.com_cd_nm,'미신청') AS aprov_state_cd_nm		    FROM (   			    			/* 신청을 위한 신설, 변경신청 (미처리건 대상)*/		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd		                           , a. req_dtime, a.creat_sys_cd, a.take_mng_no		                  FROM TB_ZZUNITREQ a		                 WHERE  a.record_center_id = '1'		                   AND A.UNIT_REQ_TYPE_CD IN ('1','2')		                   AND NVL(A.RECV_RSLT_CD,'1') = '1' 		                    AND NOT EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST		                                                WHERE take_mng_no = a.take_mng_no)   		                    		                UNION ALL		                /* 통보를 위한 폐지,처리과변경,소관부서변경 (처리완료된것 중 배포되지않은건 대상)*/		                SELECT a.record_center_id, a.unit_req_type_cd, a.req_org_cd, a.req_sno_id, a.aprov_req_file_nm, a.aprov_state_cd		                         , a. req_dtime, a.creat_sys_cd, a.take_mng_no		                  FROM TB_ZZUNITREQ a		                WHERE  a.record_center_id = '1'		                    AND A.UNIT_REQ_TYPE_CD IN ('3','4','5')		                    AND NVL(A.RECV_RSLT_CD,'1') = '1' 		                    AND EXISTS (SELECT 1 FROM TB_ZZORGUNITWORKHIST		                                                WHERE take_mng_no = a.take_mng_no		                                                GROUP BY take_mng_no		                                                HAVING MAX(unit_send_flag) = '0')					        		                    		                                                		             ) ta,		              TB_STORG tb,		              (SELECT com_cd, com_cd_nm  FROM tb_zzcomcd WHERE com_type_cd = 'ZZ22') tc,		              (SELECT com_cd, com_cd_nm  FROM tb_zzcomcd WHERE com_type_cd = 'ZZ33') td		   WHERE  ta.record_center_id = tb.record_center_id		         AND ta.req_org_cd = tb.org_cd		         AND tc.com_Cd = ta.unit_req_type_cd		         AND td.com_cd(+) = ta.aprov_state_cd		ORDER BY ta.req_dtime DESC		) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngAprovReqFileList
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT unit_req_type_cd,	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22' AND com_Cd = b.unit_req_type_cd) AS unit_req_type_cd_nm, 	            aprov_req_file_nm AS aprov_req_file_full_nm, 		        SUBSTR(aprov_req_file_nm,INSTR(aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,	            aprov_state_cd,	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ33' AND com_Cd = b.aprov_state_cd) AS aprov_state_cd_nm,	            SUBSTR(req_sno_id,3)||'''' AS req_sno_id		 FROM (		             SELECT unit_req_type_cd, MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,		                    COUNT(1) AS type_cnt, COUNT(distinct req_org_cd) AS ORG_CNT, 		                    MAX(aprov_state_cd) AS aprov_state_cd, aprov_req_file_nm		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd,req_org_cd		                                  ,(ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM 		                     FROM TB_ZZUNITREQ		                    WHERE record_center_id = '1'		                         		                   )		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR unit_req_type_cd = unit_req_type_cd		             GROUP BY    unit_req_type_cd, aprov_req_file_nm		       )  b		ORDER BY  unit_req_type_cd  		) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : countUnitMngAprovReqFileList
+
+	SELECT COUNT(1) FROM	(		SELECT unit_req_type_cd,	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22' AND com_Cd = b.unit_req_type_cd) AS unit_req_type_cd_nm, 	            aprov_req_file_nm AS aprov_req_file_full_nm, 		        SUBSTR(aprov_req_file_nm,INSTR(aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,	            aprov_state_cd,	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ33' AND com_Cd = b.aprov_state_cd) AS aprov_state_cd_nm,	            SUBSTR(req_sno_id,3)||'''' AS req_sno_id		 FROM (		             SELECT unit_req_type_cd, MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,		                    COUNT(1) AS type_cnt, COUNT(distinct req_org_cd) AS ORG_CNT, 		                    MAX(aprov_state_cd) AS aprov_state_cd, aprov_req_file_nm		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd,req_org_cd		                                  ,(ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM 		                     FROM TB_ZZUNITREQ		                    WHERE record_center_id = '1'									                         		                   )		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR unit_req_type_cd = unit_req_type_cd		             GROUP BY    unit_req_type_cd, aprov_req_file_nm		       )  b	);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngNewReqInfoList
+
+		SELECT  org_cd, temp_unit_cd, unit_cd, 		           clss_cd, apply_stnd_ymd, temp_unit_nm, 		           task_descr, adm_duty_ref_term_cd, evi_data_validity_term_cd, 		           histdata_presv_term_cd, presv_term_cd, presv_term_fix_rsn, 		           presv_method_cd, presv_area_cd, funsh_record_flag, 		           funsh_record_transf_ymd, main_read_usg, transf_read_expt_cnt, 		           spcl_list_loc, spcl_list1, spcl_list2, 		           spcl_list3, rel_law_duty_term, record_center_presv_term_cd, 		          temp_unit_alias, unit_alias, 		           unit_req_state_cd, take_mng_no		  FROM TB_ZZUNITNEWREQ		WHERE record_center_id = '1'		    AND req_sno_id IN (1)		    AND unit_req_type_cd = '1'		    AND unit_req_state_cd = '0'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngModReqInfoList
+
+		SELECT 		           org_cd, 		           unit_cd, unit_req_type_cd, apply_stnd_ymd, 		           chng_bef_unit_nm, chng_aft_unit_nm, unit_nm_chng_rsn, 		           chng_bef_unit_alias, chng_aft_unit_alias, unit_alias_chng_rsn, 		           chng_bef_unit_descr, chng_aft_unit_descr, unit_descr_chng_rsn, 		           chng_bef_presv_term_cd, chng_aft_presv_term_cd, presv_term_cd_chng_rsn, 		           chng_bef_presv_method_cd, chng_aft_presv_method_cd, presv_method_cd_chng_rsn, 		           chng_bef_presv_area_cd, chng_aft_presv_area_cd, presv_area_cd_chng_rsn, 		           chng_bef_funsh_record_flag, chng_aft_funsh_record_flag, funsh_record_falg_chng_rsn, 		           bef_funsh_record_transf_ymd, aft_funsh_record_transf_ymd, funsh_record_transf_ymd_rsn, 		           chng_bef_spcl_list_loc, chng_aft_spcl_list_loc, spcl_list_loc_chng_rsn, 		           chng_bef_spcl_list1, chng_aft_spcl_list1, spcl_list1_chng_rsn, 		           chng_bef_spcl_list2, chng_aft_spcl_list2, spcl_list2_chng_rsn, 		           chng_bef_spcl_list3, chng_aft_spcl_list3, spcl_list3_chng_rsn, 		           unit_req_state_cd, take_mng_no		  FROM TB_ZZUNITCHNGREQ			 WHERE record_center_id = '1'		   AND req_sno_id IN (1)		   AND unit_req_type_cd = '2'		   AND unit_req_state_cd = '0'			  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngDelReqInfoList
+
+		SELECT apply_stnd_ymd, chng_bef_org_cd, 		       chng_bef_unit_cd, chng_rsn		  FROM TB_ZZUNITDELREQ		 WHERE record_center_id = '1'		   AND req_sno_id IN (1)		   AND unit_req_type_cd = '3'		   AND unit_req_state_cd = '1'  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngSetReqInfoList
+
+		SELECT apply_stnd_ymd,		            chng_bef_org_cd,		            chng_aft_org_cd,		            chng_rsn		  FROM  TB_ZZUNITSETREQ		 WHERE record_center_id = '1'		   AND req_sno_id IN (1)		   AND unit_req_type_cd = '4'		   AND unit_req_state_cd = '1'  		  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngMovReqInfoList
+
+		 SELECT apply_stnd_ymd, chng_bef_org_cd,  chng_aft_org_cd,		        chng_bef_unit_cd, chng_rsn 		   FROM TB_ZZUNITMOVEREQ			 WHERE record_center_id = '1'		   AND req_sno_id IN (1)		   AND unit_req_type_cd = '5'		   AND unit_req_state_cd = '1'  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateUnitMngAproveReqFile
+
+		 UPDATE TB_ZZUNITREQ		    		    SET APROV_REQ_DTIME		= TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')              , APROV_STATE_CD		= '1'     		 WHERE record_center_id = '1'		   AND req_sno_id IN (1)		   AND unit_req_type_cd =  '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : countUnitMngAprovReqFileMng
+
+        SELECT  COUNT(1)        FROM    ( 					SELECT unit_req_type_cd, aprov_req_file_nm                       FROM TB_ZZUNITREQ                     WHERE record_center_id = '1'				       AND aprov_req_file_nm IS NOT NULL				       AND aprov_state_Cd IN ('1','2')		          	     		             GROUP BY    unit_req_type_cd, aprov_req_file_nm		          )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngAprovReqFileMng
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT unit_req_type_cd,	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22' AND com_Cd = b.unit_req_type_cd) AS unit_req_type_cd_nm, 	            aprov_req_file_nm AS aprov_req_file_full_nm, 		        SUBSTR(aprov_req_file_nm,INSTR(aprov_req_file_nm,'CLASS')) AS aprov_req_file_nm,	            aprov_state_cd,	           (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ33' AND com_Cd = b.aprov_state_cd) AS aprov_state_cd_nm,	            SUBSTR( req_sno_id,3)||'''' AS req_sno_id,	            aprov_req_dtime		 FROM (		             SELECT unit_req_type_cd, 		             		MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,		                    MAX(SUBSTR(aprov_req_dtime,0,8)) as aprov_req_dtime, 		                    MAX(aprov_state_cd) AS aprov_state_cd, 		                    aprov_req_file_nm,		                    SUM(aprov_cnt) AS aprov_cnt		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd, aprov_Req_Dtime,		                          (ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd,aprov_req_file_nm  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM,		                           (SELECT count(1) FROM TB_ZZORGUNITWORKHIST WHERE RECORD_CENTER_ID = a.RECORD_CENTER_ID AND TAKE_MNG_NO = a.TAKE_MNG_NO ) as aprov_cnt		                     FROM TB_ZZUNITREQ a		                    WHERE record_center_id = '1'						    AND aprov_req_file_nm IS NOT NULL						    AND aprov_state_Cd IN ('1','2')						    AND unit_req_type_cd IN ('1','2')     		                   )		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR aprov_req_file_nm = aprov_req_file_nm		             GROUP BY    unit_req_type_cd, aprov_req_file_nm		             HAVING SUM(aprov_cnt) = 0		             UNION ALL		             SELECT unit_req_type_cd, 		             		MAX(SYS_CONNECT_BY_PATH(REQ_SNO_ID,''','''))  AS REQ_SNO_ID,		                    MAX(SUBSTR(aprov_req_dtime,0,8)) as aprov_req_dtime, 		                    MAX(aprov_state_cd) AS aprov_state_cd, 		                    aprov_req_file_nm,		                    SUM(aprov_cnt) AS aprov_cnt		              FROM (SELECT unit_req_type_cd, REQ_SNO_ID, aprov_req_file_nm, aprov_state_cd, aprov_Req_Dtime,		                          (ROW_NUMBER () OVER (PARTITION BY unit_req_type_cd,aprov_req_file_nm  ORDER BY unit_req_type_cd,REQ_SNO_ID )) RNUM,		                           (SELECT count(1) FROM TB_ZZORGUNITWORKHIST WHERE RECORD_CENTER_ID = a.RECORD_CENTER_ID AND TAKE_MNG_NO = a.TAKE_MNG_NO ) as aprov_cnt		                     FROM TB_ZZUNITREQ a		                    WHERE record_center_id = '1'						    AND aprov_req_file_nm IS NOT NULL						    AND aprov_state_Cd IN ('1','2')						    AND unit_req_type_cd IN ('3','4','5')     		                   )		             START WITH RNUM = 1 CONNECT BY PRIOR RNUM = (RNUM - 1) AND PRIOR aprov_req_file_nm = aprov_req_file_nm		             GROUP BY    unit_req_type_cd, aprov_req_file_nm		             		       )  b		ORDER BY  aprov_req_dtime desc, unit_req_type_cd  		) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateUnitMngAproveReqFileBefInfo
+
+		 UPDATE TB_ZZUNITREQ		    SET APROV_REQ_FILE_NM 	= NULL		      , APROV_REQ_DTIME		= NULL              , APROV_STATE_CD		= '0'			 WHERE record_center_id 	= '1'		   AND unit_req_type_cd		= '1' 		   AND REQ_SNO_ID 	= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateUnitMngAproveReqFileList
+
+		 UPDATE TB_ZZUNITREQ		    		    SET APROV_REQ_DTIME		= TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')              , APROV_STATE_CD		= '1'		 WHERE record_center_id = '1'		   AND unit_req_type_cd =  '1'		   AND REQ_SNO_ID 	= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : countUnitMngAprovReqRsltList
+
+        SELECT  COUNT(1)	    FROM (	 SELECT 1		              FROM TB_ZZUNITREQ A, TB_ZZUNITNEWREQ B, TB_ZZUNIT C		            WHERE A.record_center_id = b.record_center_id		                AND A.req_sno_id = B.req_sno_id		                AND A.unit_req_type_cd = B.unit_req_type_cd		                AND B.temp_unit_cd = c.temp_unit_cd(+)		                AND b.unit_cd = c.unit_cd (+)		                AND A.aprov_state_cd >  '1'		               		             UNION ALL		            SELECT 1		              FROM TB_ZZUNITREQ A, TB_ZZUNITCHNGREQ B, TB_ZZUNIT C		            WHERE A.record_center_id = b.record_center_id		                AND A.req_sno_id = B.req_sno_id		                AND A.unit_req_type_cd = B.unit_req_type_cd		                AND b.unit_cd = c.unit_cd 		                AND A.aprov_state_cd >  '1'		            			       )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngAprovReqRsltList
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT t.req_dtime		          , t.unit_cd		          , t.temp_unit_cd		          , t.unit_nm		          /*, t.presv_term_cd */		          , t.unit_req_type_cd		          , t.unit_req_state_cd		          , t.aprov_state_Cd		          , t.creat_stnd_ymd	AS apply_stnd_ymd		          , t.nars_handl_dtime		          , t1.com_cd_nm AS unit_req_state		          , t2.com_cd_nm AS unit_req_type		          , t3.com_cd_nm AS presv_term_cd		          , t.org_cd       			  , t4.org_abbr_nm      			  , t4.org_nm	      			  , t.record_center_id	      			  , t.req_sno_id        			  , t.take_mng_no       			  ,(SELECT com_cd_nm from tb_zzcomcd where com_type_cd ='ZZ31' and com_cd = NVL(t5.unit_send_flag,0)) as unit_send_flag 		FROM(  		            SELECT SUBSTR(a.req_dtime,0,8) AS req_dtime		                     , NVL(c.unit_cd, b.unit_cd) AS unit_Cd		                     , NVL(c.temp_unit_Cd, b.temp_unit_cd) AS temp_unit_cd		                     , NVL(c.unit_nm, b.temp_unit_nm) AS unit_nm		                     , DECODE(NVL(c.presv_term_cd, b.presv_term_cd),'20','25',NVL(c.presv_term_cd, b.presv_term_cd)) AS presv_term_cd		                     , b.unit_req_type_cd		                     , b.unit_req_state_cd		                     , a.aprov_state_cd		                     , NVL(c.creat_stnd_ymd, b.apply_stnd_ymd) AS creat_stnd_ymd		                     , SUBSTR(NVL(c.nars_handl_dtime, a.aprov_req_dtime),0,8) AS nars_handl_dtime		                     , b.org_cd		                     , a.record_center_id		                     , a.req_sno_id		                     , b.take_mng_no		              FROM TB_ZZUNITREQ A, TB_ZZUNITNEWREQ B, TB_ZZUNIT C		            WHERE A.record_center_id = b.record_center_id		                AND A.req_sno_id = B.req_sno_id		                AND A.unit_req_type_cd = B.unit_req_type_cd		                AND B.temp_unit_cd = c.temp_unit_cd(+)		                AND b.unit_cd = c.unit_cd (+)		                AND A.aprov_state_cd >  '1'		            	                         		             UNION ALL		            SELECT SUBSTR(a.req_dtime,0,8) AS req_dtime		                     , c.unit_cd AS unit_Cd		                     , '' AS temp_unit_cd		                     , c.unit_nm AS unit_nm		                     , DECODE(c.presv_term_cd,'20','25',c.presv_term_cd) AS presv_term_cd		                     , b.unit_req_type_cd		                     , b.unit_req_state_cd		                     , a.aprov_state_cd		                     , b.apply_stnd_ymd AS creat_stnd_ymd		                     , SUBSTR( a.aprov_req_dtime,0,8) AS nars_handl_dtime		                     , b.org_Cd		                     , a.record_center_id		                     , a.req_sno_id		                     , b.take_mng_no		              FROM TB_ZZUNITREQ A, TB_ZZUNITCHNGREQ B, TB_ZZUNIT C		            WHERE A.record_center_id = b.record_center_id		                AND A.req_sno_id = B.req_sno_id		                AND A.unit_req_type_cd = B.unit_req_type_cd		                AND b.unit_cd = c.unit_cd 		                AND A.aprov_state_cd >  '1'		            			                                		) t,		(SELECT com_Cd, com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ23') t1,		(SELECT com_Cd, com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='ZZ22') t2,		(SELECT com_Cd, com_cd_nm FROM TB_ZZCOMCD WHERE COM_TYPE_CD ='RD07') t3,		 TB_STORG t4,		 TB_ZZORGUNITWORKHIST t5		WHERE t.unit_req_state_cd = t1.COM_CD(+) 		  AND t.unit_req_type_cd = t2.COM_CD(+) 		  AND t.presv_term_cd = t3.COM_CD(+)		  AND t.org_Cd = t4.org_Cd       	  AND t.record_center_id = t5.record_center_id(+)          AND t.org_Cd = t5.org_Cd(+)          AND t.unit_cd = t5.unit_cd(+)          AND t.take_mng_no = t5.take_mng_no(+)           /* AND t.work_type_Cd =  t5.work_type_Cd(+) */                 	  ) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : countUnitMngAprovReqRsltFileList
+
+        SELECT  COUNT(1)	    FROM TB_ZZUNITRSLT	   WHERE record_center_id ='1'	   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngAprovReqRsltFileList
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT /*+ INDEX_DESC(A TB_ZZUNITRSLT_PK) */		        RSLT_MNG_NO, RSLT_CD, UNIT_CNT, REG_DTIME, /*SUBSTR(REG_DTIME,0,8) AS reg_dtime,*/ REG_USER_ID,	            RSLT_FILE_NM AS RSLT_FILE_FULL_NM,	            SUBSTR(RSLT_FILE_NM,INSTR(RSLT_FILE_NM,'CLASS_NOTICE')) AS RSLT_FILE_NM	    FROM TB_ZZUNITRSLT A	   WHERE record_center_id ='1'	   		   	   ) C			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitRsltMngNo
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_ZZUNITRSLT_SQ01.nextval), 6, '0') FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitCdExists
+
+		SELECT COUNT(1)		  FROM TB_ZZUNIT		 WHERE record_center_id = '1'		   AND unit_cd = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createUnitRslt
+
+ 		 	INSERT INTO TB_ZZUNITRSLT 	 	(	   		RECORD_CENTER_ID, 	   		RSLT_MNG_NO, 	   		RSLT_FILE_NM, 	   		RSLT_CD, 	   		UNIT_CNT, 	   		REG_DTIME, 	   		REG_USER_ID	   	) 	   	VALUES (		   	'1',		   	'1',		   	'1',		   	'1',		   	'1',		   			   	to_char(sys_datetime,'yyyymmddhh24miss'),		   	'1'	   	)   	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findNewReqInfo
+
+          SELECT   req_sno_id, take_mng_no, temp_unit_alias AS unit_alias 				FROM  	TB_ZZUNITNEWREQ a			WHERE 	record_center_id = '1'			AND   	unit_req_type_cd = '1'			AND   	org_cd = '1'				AND   	temp_unit_cd = '1'				AND 	unit_req_state_cd = '0'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzUnitCom
+
+		INSERT INTO TB_ZZUNIT (  				record_center_id,				unit_cd,				unit_nm,				unit_descr,				nars_handl_dtime,				creat_stnd_ymd,				temp_unit_cd,				lrg_cd,				lrg_nm,				mid_cd,				mid_nm,				sml_cd,				sml_nm,				presv_term_cd,				presv_term_fix_rsn,				presv_method_cd,				presv_area_cd,				funsh_record_flag,				funsh_record_transf_ymd,				main_read_usg,				transf_read_expt_cnt,				spcl_list_loc,				spcl_list1,				spcl_list2,				spcl_list3,				state_cd,				take_flag,				reg_user_id,				reg_dtime,				presvterm_state_cd,				com_unit_flag,				take_takovr_mng_no,				presvterm_chng_rsn_cd,				take_mng_no,				unit_alias		) 		VALUES (					/*SELECT */                                        					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1',					'1', 					'0', 					'1',										to_char(sys_datetime,'yyyymmddhh24miss'),					'0',					'1',					'',					'0',					'1',					'1' 							)			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzOrgUnitCom
+
+	INSERT INTO TB_ZZORGUNIT		(			record_center_id,			org_cd,			unit_cd,			use_flag,			take_flag,			reg_dtime,			com_unit_flag,			take_takovr_mng_no,			take_mng_no,			state_cd		)		(			SELECT	record_center_id,					org_cd,					'1',					'1',					'0',					to_char(sys_datetime,'yyyymmddhh24miss'),					'1', /*'0',*/					'',					'1',					'1' /*'1'*/			FROM  	TB_STORG			WHERE 	record_center_id = '1'		)		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzOrgUnitHistCom
+
+	INSERT INTO TB_ZZORGUNITWORKHIST		(			record_center_id,			org_cd,			unit_cd,			work_type_cd,			work_dtime,			apply_stnd_ymd,			unit_send_flag,			take_mng_no		)		(			SELECT	record_center_id,					org_cd,					'1',					'1',	/*0:신설,1:폐지,2:변경,3:부서변경신설, 4:부서변경폐지*/					to_char(sys_datetime,'yyyymmddhh24miss'),					'1',					'0',					'1'			                                 			FROM  	TB_STORG			WHERE 	record_center_id = '1'		)			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzOrgUnitData
+
+	INSERT INTO TB_ZZORGUNIT		(			record_center_id,			org_cd,			unit_cd,			use_flag,			take_flag,			reg_dtime,			com_unit_flag,			take_takovr_mng_no,			take_mng_no,			state_cd			) VALUES (			'1',			'1',			'1',			'1',			'0',			to_char(sys_datetime,'yyyymmddhh24miss'),			'1', /*'0',*/			'',		    '1',			'1' /*'1'*/		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzOrgUnitHistData
+
+	INSERT INTO TB_ZZORGUNITWORKHIST		(			record_center_id,			org_cd,			unit_cd,			work_type_cd,			work_dtime,			apply_stnd_ymd,			unit_send_flag,			take_mng_no		)		VALUES (			'1',			'1',			'1',			'1',	/*0:신설,1:폐지,2:변경,3:부서변경신설, 4:부서변경폐지*/			to_char(sys_datetime,'yyyymmddhh24miss'),			'1',			'0',			'1'				)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzUnitPresvTermHistData
+
+		INSERT INTO TB_ZZUNITPRESVTERMHIST		(			record_center_id,			unit_cd,			org_presv_term_cd,			org_opin,			org_fix_ymd,			record_center_presv_term_cd,			record_center_opin,			record_center_check_ymd,			take_mng_no		) (          SELECT record_center_id,                 '1',                 presv_term_cd,                 presv_term_fix_rsn,                 apply_stnd_ymd,                 '1',                 '1',                 SUBSTR('1',0,8),                 take_mng_no              FROM TB_ZZUNITNEWREQ            WHERE     record_center_id = '1'                        AND       unit_req_type_cd = '1'            AND       org_cd = '1'                AND       temp_unit_cd = '1'            AND       unit_req_state_cd = '0'	    				)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateZzUnitNewReq
+
+		UPDATE	TB_ZZUNITNEWREQ		SET		record_center_presv_term_cd = '1',				record_center_opin = '1',  		    	rslt_mng_no = '1',		    	unit_cd = '1',		    	unit_req_state_cd = '1'   						WHERE 	record_center_id = '1'	    AND   	req_sno_id = '1'		AND   	unit_req_type_cd = '1'		AND   	org_cd = '1'			AND   	temp_unit_cd = '1'			AND     unit_req_state_cd = '0'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findChngReqInfo
+
+          SELECT   req_sno_id, take_mng_no 				FROM  	TB_ZZUNITCHNGREQ a			WHERE 	record_center_id = '1'			AND   	unit_req_type_cd = '2'			AND   	org_cd = '1'				AND   	unit_cd = '1'				AND 	unit_req_state_cd = '0'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzUnitChngHist
+
+	    INSERT INTO TB_ZZUNITCHNGHIST        (            record_center_id,            unit_cd,            chng_seq,            chng_ymd,            chng_item_cd,            chng_bef_val,            chng_aft_val,            chng_rsn,            take_mng_no        )        SELECT a.record_center_id,                a.unit_cd,                (SELECT NVL(MAX(to_number(chng_seq)), 0) FROM tb_zzunitchnghist) + rownum AS chng_seq,               '1' AS chng_ymd, /* to_char(sysdate,'YYYYMMDD') AS chng_ymd, */                a.item_cd,                a.chng_bef_val,                a.chng_aft_Val                		FROM(   /* 01 :단위업무명 */ 		        SELECT record_center_id, unit_cd, '01' as item_cd, 		         	   unit_nm  as chng_bef_val, '1' as chng_aft_val		          FROM TB_ZZUNIT		         WHERE record_center_id = '1'  		           AND unit_cd = '1'		           AND unit_nm != '1'		        UNION ALL /* 02 :단위업무가명 */		        SELECT record_center_id, unit_cd,'02' as item_cd, 		               unit_alias as chng_bef_val, '1' as chng_aft_val		          FROM TB_ZZUNIT		         WHERE record_center_id = '1' 		           AND unit_cd = '1'		           AND unit_alias != '1'		        UNION ALL /* 03 :단위업무설명 */		        SELECT record_center_id, unit_cd,'03' as item_cd, 		               UNIT_DESCR as chng_bef_val, '1' as chng_aft_val		          FROM TB_ZZUNIT		         WHERE record_center_id = '1' 		           AND unit_cd = '1'		           AND UNIT_DESCR != '1'		        UNION ALL /* 04 :보존기간코드 */		        SELECT record_center_id, unit_cd,'04' as item_cd, 		               PRESV_TERM_CD as chng_bef_val, DECODE('1','20','25','1') as chng_aft_val		          FROM TB_ZZUNIT		         WHERE record_center_id = '1'		           AND unit_cd = '1'		           AND PRESV_TERM_CD != DECODE('1','20','25','1')                UNION ALL /* 05 :보존방법 */                SELECT record_center_id, unit_cd,'05' as item_cd,                        presv_method_cd as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND presv_method_cd != '1'                UNION ALL /* 06 :보존장소 */                SELECT record_center_id, unit_cd,'06' as item_cd,                        presv_area_cd as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND presv_area_cd != '1'                UNION ALL /* 07 :비치기록물여부 */                SELECT record_center_id, unit_cd,'07' as item_cd,                        funsh_record_flag as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND funsh_record_flag != '1'                UNION ALL /* 08 :비치기록물이관시기 */                SELECT record_center_id, unit_cd,'08' as item_cd,                        funsh_record_transf_ymd as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND funsh_record_transf_ymd != '1'                UNION ALL /* 09 :특수목록위치 */                SELECT record_center_id, unit_cd,'09' as item_cd,                        spcl_list_loc as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND spcl_list_loc != '1'                UNION ALL /* 10 :제 1 특수목록 */                SELECT record_center_id, unit_cd,'10' as item_cd,                        spcl_list1 as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND spcl_list1 != '1'                UNION ALL /* 11 :제 2 특수목록 */                SELECT record_center_id, unit_cd,'10' as item_cd,                        spcl_list1 as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND spcl_list1 != '1'                UNION ALL /* 12 :제 3 특수목록 */                SELECT record_center_id, unit_cd,'10' as item_cd,                        spcl_list3 as chng_bef_val, '1' as chng_aft_val                  FROM TB_ZZUNIT                 WHERE record_center_id = '1'                   AND unit_cd = '1'                   AND spcl_list3 != '1'		        ) a;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateChngZzUnit
+
+        UPDATE  TB_ZZUNIT        SET     unit_nm = '1',                unit_descr = '1',                unit_alias = '1',                nars_handl_dtime = '1', /*to_char(sysdate,'yyyymmddhh24miss'),*/                presv_term_cd = '1',                presv_term_fix_rsn = '1',                presv_method_cd = '1',                 presv_area_cd = '1',                 funsh_record_flag = '1',                 funsh_record_transf_ymd = '1',                spcl_list_loc = '1',                spcl_list1 = '1',                spcl_list2 = '1',                 spcl_list3 = '1',                take_mng_no = '1',                state_cd = '1'        WHERE   record_center_id = '1'        and     unit_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateChngZzOrgUnit
+
+        UPDATE    TB_ZZORGUNIT        SET       state_cd = '1',                  take_mng_no = '1'        	                            WHERE     record_center_id = '1'        AND       org_cd = '1'        and       unit_cd = '1'  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateZzUnitChngReq
+
+        UPDATE  TB_ZZUNITCHNGREQ        SET     UNIT_REQ_STATE_CD = '1',        		RSLT_MNG_NO = '1'        WHERE   record_center_id = '1'            AND     req_sno_id = '1'        AND     org_cd = '1'        AND     unit_cd = '1'        AND     unit_req_type_cd = '2'        AND		UNIT_REQ_STATE_CD = '0'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : update
+-- Query Id : updateZzUnitCloseUpdate
+
+		UPDATE    TB_ZZORGUNIT        SET       use_flag = '0'        		, state_cd = '2'        WHERE     record_center_id = '1'        AND       org_cd = '1'        and       unit_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : insert
+-- Query Id : createZzOrgUnitCloseHist
+
+		INSERT INTO TB_ZZORGUNITWORKHIST			(				record_center_id	,				org_cd	            ,				unit_cd	            ,				work_type_cd	    ,				work_dtime	        ,				apply_stnd_ymd	    ,				unit_send_flag			) VALUES (				'1' ,				'1'	,				'1' ,				'2'									,				to_char(sys_datetime,'yyyymmddhh24miss')	, 				'1'				,				'0'			);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml
+-- Query    : select
+-- Query Id : findUnitMngReqOrgCd
+
+		SELECT req_org_cd		  FROM  TB_ZZUNITREQ		 WHERE record_center_id = '1'		   AND req_sno_id = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\UnitMngCAMS.xml

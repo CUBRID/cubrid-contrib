@@ -1,0 +1,895 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.confset">
+	
+	<!-- 환경설정 기록관환경설정 기록관설정  -->
+	<resultMap id="recordCenterSetOrg-result" 		class="rms.sys.confset.domain.Org" >
+		<result property="orgCd"			column="org_cd"></result>
+		<result property="orgNm"			column="org_nm"></result>
+		<result property="orgAbbrNm"		column="org_abbr_nm"></result>
+		<result property="hupperOrgCd"		column="hupper_org_cd"></result>
+		<result property="upperOrgCd"		column="upper_org_cd"></result>
+		<result property="levl"				column="levl"></result>
+		<result property="orgSeq"			column="org_seq"></result>
+		<result property="closeFlag"		column="close_flag"></result>
+		<result property="applyStartYmd"	column="apply_start_ymd"></result>
+		<result property="applyCloseYmd"	column="apply_close_ymd"></result>
+		<result property="recordCenterId"	column="record_center_id"></result>
+		<result property="takeOrgFlag"		column="take_org_flag"></result>
+		<result property="fullOrgNm"		column="full_org_nm"></result>
+		<result property="recordCenterNm"	column="record_center_nm"></result>
+		<result property="recordCenterFlag"	column="record_center_flag"></result>
+		<result property="lowerOrgCnt"		column="lower_org_cnt"></result>
+		<result property="remk"				column="remk"></result>
+		<result property="recordCenterCd"	column="record_center_cd"></result>
+		<result property="repOrgNm"			column="rep_org_nm"></result>
+		<result property="folderCnt"		column="folder_cnt"></result>
+		<result property="orgFolderCnt"		column="org_folder_cnt"></result>
+		<result property="levlFlag"			column="levl_flag"></result>
+	</resultMap>
+	<!-- 환경설정 기록관 환경설정 기록관설정 기록관 상세정보를 조회한다.  -->
+	<select id="findMultiRecordCenterSetRc" parameterClass="rms.sys.confset.domain.Org" resultMap="recordCenterSetOrg-result">
+		SELECT A.org_cd
+		     , A.org_nm
+		     , A.org_abbr_nm
+		     , A.hupper_org_cd
+		     , A.upper_org_cd
+		     , A.levl
+		     , A.org_seq
+		     , A.close_flag
+		     , A.apply_start_ymd
+		     , A.apply_close_ymd
+		     , A.record_center_id
+		     , A.take_org_flag
+		     , A.full_org_nm
+		     , B.record_center_nm
+		     , '1' record_center_flag
+		     , NVL((SELECT COUNT(1) FROM TB_STORG O WHERE O.record_center_id=A.record_center_id),1)-1 lower_org_cnt
+		     , B.remk
+		     , B.record_center_cd
+		     , B.rep_org_nm
+		     , (SELECT COUNT(1) FROM TB_RDFOLDER F WHERE F.record_center_id=A.record_center_id) AS folder_cnt
+		     , 0 AS org_folder_cnt
+		     , '1' AS levl_flag
+		FROM  TB_STORG A
+		    , TB_STRECORDCENTER B
+		WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.org_cd = B.record_center_cd
+	</select>
+	<!-- 환경설정 기록관 환경설정 기록관설정 기관 상세정보를 조회한다. -->
+	<select id="findMultiRecordCenterSetOrg" parameterClass="rms.sys.confset.domain.Org" resultMap="recordCenterSetOrg-result">
+		SELECT C.org_cd
+		     , C.org_nm
+		     , C.org_abbr_nm
+		     , C.hupper_org_cd
+		     , C.upper_org_cd
+		     , C.levl
+		     , C.org_seq
+		     , C.close_flag
+		     , C.apply_start_ymd
+		     , C.apply_close_ymd
+		     , C.record_center_id
+		     , C.take_org_flag
+		     , C.full_org_nm
+		     , C.record_center_nm
+		     , C.record_center_flag
+		     , C.lower_org_cnt
+		     , C.remk
+		     , C.record_center_cd
+		     , C.rep_org_nm
+		     , DECODE(C.record_center_flag,0,(SELECT COUNT(1)
+		                                      FROM TB_RDFOLDER D
+		                                      WHERE D.record_center_id=#recordCenterId:VARCHAR#
+		                                      AND D.org_cd IN (
+		                                      		SELECT E.org_cd
+		                                           	FROM TB_STORG E
+		                                           	WHERE E.record_center_id=#recordCenterId:VARCHAR#
+		                                           	START WITH E.org_cd = #orgCd:VARCHAR# AND  E.record_center_id = #recordCenterId:VARCHAR#
+		                                           	CONNECT BY PRIOR E.org_cd = E.upper_org_cd AND   E.record_center_id = #recordCenterId:VARCHAR#)
+		                                      )
+		                  , (SELECT COUNT(1) FROM TB_RDFOLDER D WHERE D.record_center_id=#recordCenterId:VARCHAR#)) folder_cnt
+			 , (SELECT COUNT(1) FROM TB_RDFOLDER D WHERE D.record_center_id=#recordCenterId:VARCHAR# AND   D.org_cd = #orgCd:VARCHAR#) org_folder_cnt
+             , (CASE WHEN NVL((SELECT '1' FROM TB_STRECORDCENTER B WHERE B.record_center_cd=C.org_cd),'0')='1' THEN '1'
+                     WHEN NVL((SELECT '1' FROM TB_STORG B WHERE B.record_center_id=C.record_center_id AND B.org_cd=C.upper_org_cd),'0')='0' THEN '1'
+                     ELSE '0' END) AS levl_flag
+		FROM (
+			SELECT A.org_cd
+			     , A.org_nm
+			     , A.org_abbr_nm
+			     , A.hupper_org_cd
+			     , A.upper_org_cd
+			     , A.levl
+			     , A.org_seq
+			     , A.close_flag
+			     , A.apply_start_ymd
+			     , A.apply_close_ymd
+			     , A.record_center_id
+			     , A.take_org_flag
+			     , A.full_org_nm
+				 , (SELECT B.record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) record_center_nm
+				 , '0' record_center_flag
+				 , NVL((SELECT COUNT(1) FROM TB_STORG C WHERE C.record_center_id=A.record_center_id),1)-1 lower_org_cnt
+				 , (SELECT B.remk FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) remk
+				 , (SELECT B.record_center_cd FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) record_center_cd
+				 , (SELECT B.rep_org_nm FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) rep_org_nm
+			FROM TB_STORG A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+		) C
+	</select>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: A. 기록관 테이블에 새로운 기록관ID 생성 
+	 -->
+	<insert id="createMultiRecordCenter" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STRECORDCENTER
+		(record_center_id, record_center_cd, record_center_nm, reg_dtime, remk, rep_org_nm)
+		VALUES(( SELECT LPAD(NVL(SUBSTR(MAX(record_center_id),6),0)+1, 7, '0')
+				 FROM TB_STRECORDCENTER)
+		       , #orgCd:VARCHAR#
+		       , #recordCenterNm:VARCHAR#
+		       , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		       , #remk:VARCHAR#
+		       , #repOrgNm:VARCHAR# )
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: A-1.새로 생성된 기록관ID 조회 
+	 -->
+	<resultMap id="recordCenterId-result" 		class="rms.sys.confset.domain.Org" >
+		<result property="recordCenterId"	column="record_center_id"></result>
+	</resultMap>
+	<select id="findMultiRecordCenter" parameterClass="rms.sys.confset.domain.Org" resultMap="recordCenterId-result">
+		SELECT MAX(record_center_id) record_center_id
+		FROM   TB_STRECORDCENTER
+	</select>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: B.새로운 기록관ID로 기관코드 테이블에 해당 기관코드 추가 (하위기관포함) 
+	-->
+	<insert id="createMultiRecordCenterSetOrg" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STORG
+		(    
+		     record_center_id
+		     , org_cd, org_nm, org_abbr_nm, full_org_nm, hupper_org_cd
+			 , upper_org_cd, levl, org_seq, close_flag, apply_start_ymd
+			 , apply_close_ymd, take_org_flag, link_trgt_id
+		)
+		(
+			SELECT #newRecordCenterId:VARCHAR#
+			     , A.org_cd, A.org_nm, A.org_abbr_nm, A.full_org_nm, A.hupper_org_cd
+				 , A.upper_org_cd, A.levl, A.org_seq, A.close_flag, A.apply_start_ymd
+				 , A.apply_close_ymd, A.take_org_flag, A.link_trgt_id
+			FROM  TB_STORG A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.org_cd IN
+			          (SELECT org_cd
+			           FROM  TB_STORG
+			           WHERE record_center_id = #recordCenterId:VARCHAR#
+			           START WITH org_cd = #orgCd:VARCHAR#
+			                 AND  record_center_id = #recordCenterId:VARCHAR#
+			           CONNECT BY PRIOR org_cd = upper_org_cd
+			                      AND   record_center_id = #recordCenterId:VARCHAR#)
+    		AND   NOT EXISTS (SELECT 1 FROM TB_STORG O WHERE O.RECORD_CENTER_ID=#newRecordCenterId:VARCHAR# AND O.ORG_CD=A.ORG_CD)
+		)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: C.조직 테이블의 기록관ID 갱신 
+	 -->
+	<update id="updateMultiRecordCenterSetDept" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STDEPT
+		SET   record_center_id = #newRecordCenterId:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   org_cd IN
+		          (SELECT org_cd
+		           FROM  TB_STORG
+		           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+		           START WITH org_cd = #orgCd:VARCHAR#
+		                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+		           CONNECT BY PRIOR org_cd = upper_org_cd
+		                      AND   record_center_id = #newRecordCenterId:VARCHAR#)
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: C_1.기록관의 대표기관명에 따라 생산시스템 테이블 기록관ID갱신
+	 -->
+	<update id="updateMultiRecordCenterSetCreatSys" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STCREATSYS
+		SET   record_center_id = #newRecordCenterId:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   org_cd IN
+		          (SELECT org_cd
+		           FROM  TB_STORG
+		           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+		           START WITH org_cd = #orgCd:VARCHAR#
+		                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+		           CONNECT BY PRIOR org_cd = upper_org_cd
+		                      AND   record_center_id = #newRecordCenterId:VARCHAR#)
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: D.사용자 테이블의 기록관ID 갱신
+	 -->
+	<update id="updateMultiRecordCenterSetUser" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STUSER
+		SET   record_center_id = #newRecordCenterId:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   dept_cd IN
+				(SELECT dept_cd
+				 FROM  TB_STDEPT
+				 WHERE record_center_id = #newRecordCenterId:VARCHAR#
+				 AND   org_cd IN
+				          (SELECT org_cd
+				           FROM  TB_STORG
+				           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+				           START WITH org_cd = #orgCd:VARCHAR#
+				                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+				           CONNECT BY PRIOR org_cd = upper_org_cd
+				                      AND   record_center_id = #newRecordCenterId:VARCHAR#)
+				)
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: D_1.그룹정보 테이블에 권한그룹 기본(001,002) 생성
+	 -->
+	<insert id="createMultiRecordCenterSetGrantGrp" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STGRANTGRP (record_center_id, grant_grp_cd, grant_grp_nm, grant_grp_descr, use_flag, work_user_id, work_dtime)
+		(
+		SELECT #newRecordCenterId:VARCHAR#, '001', '심의위원그룹', '폐기 및 재평가 심의위원 그룹', '1', '0000000000', TO_CHAR (sys_datetime, 'YYYYMMDDHH24MISS') FROM DUAL
+		UNION 
+		SELECT #newRecordCenterId:VARCHAR#, '002', '공개심의위원', '공개 심의위원', '1', '0000000000', TO_CHAR (sys_datetime, 'YYYYMMDDHH24MISS') FROM DUAL
+		)
+	</insert>	
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: E.단위업무 테이블의 기록관ID 생성
+	 -->
+	<insert id="createMultiRecordCenterSetUnit" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_ZZUNIT
+		(
+		       record_center_id
+		     , unit_cd, unit_nm, unit_descr, nars_handl_dtime, creat_stnd_ymd
+			 , temp_unit_cd, lrg_cd, lrg_nm, mid_cd, mid_nm
+			 , sml_cd, sml_nm, presv_term_cd, presv_term_fix_rsn, presv_method_cd
+			 , presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg, transf_read_expt_cnt
+			 , spcl_list_loc, spcl_list1, spcl_list2, spcl_list3, state_cd
+			 , reg_user_id, reg_dtime, take_flag
+		)
+		(
+			SELECT #newRecordCenterId:VARCHAR#
+			     , A.unit_cd, A.unit_nm, A.unit_descr, A.nars_handl_dtime, A.creat_stnd_ymd
+				 , A.temp_unit_cd, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm
+				 , A.sml_cd, A.sml_nm, A.presv_term_cd, A.presv_term_fix_rsn, A.presv_method_cd
+				 , A.presv_area_cd, A.funsh_record_flag, A.funsh_record_transf_ymd, A.main_read_usg, A.transf_read_expt_cnt
+				 , A.spcl_list_loc, A.spcl_list1, A.spcl_list2, A.spcl_list3, A.state_cd
+				 , A.reg_user_id, A.reg_dtime, A.take_flag
+			FROM TB_ZZUNIT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.unit_cd IN
+					(SELECT DISTINCT unit_cd
+					 FROM  TB_ZZORGUNIT
+					 WHERE record_center_id = #recordCenterId:VARCHAR#
+					 AND   org_cd IN
+					          (SELECT org_cd
+					           FROM  TB_STORG
+					           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+					           START WITH org_cd = #orgCd:VARCHAR#
+					                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+					           CONNECT BY PRIOR org_cd = upper_org_cd
+					                      AND   record_center_id = #newRecordCenterId:VARCHAR#)
+					 )
+			AND   (SELECT COUNT(1)
+			       FROM TB_ZZUNIT B
+			       WHERE B.record_center_id = #newRecordCenterId:VARCHAR#
+			       AND   B.unit_cd = A.unit_cd) = 0
+		)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: F.처리과별단위업무 테이블의 기록관ID 갱신
+	 -->
+	<update id="updateMultiRecordCenterSetUnitOrg" parameterClass="rms.sys.confset.domain.Org">
+                <!--cubgrid update-->
+		UPDATE TB_ZZORGUNIT
+		SET   record_center_id = #newRecordCenterId:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   (org_cd||unit_cd) IN
+				(SELECT DISTINCT org_cd||unit_cd
+				 FROM TB_ZZORGUNIT
+				 WHERE record_center_id = #recordCenterId:VARCHAR#
+				 AND   org_cd IN
+				          (SELECT org_cd
+				           FROM TB_STORG
+				           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+				           START WITH org_cd = #orgCd:VARCHAR#
+				                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+				           CONNECT BY PRIOR org_cd = upper_org_cd
+				                      AND   record_center_id = #newRecordCenterId:VARCHAR#))
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: G.단위업무 테이블의 변경전 단위업무 제거
+	 -->
+	<delete id="deleteMultiRecordCenterSetUnit" parameterClass="rms.sys.confset.domain.Org">
+		DELETE TB_ZZUNIT a
+		WHERE a.record_center_id = #recordCenterId:VARCHAR#
+		AND   a.unit_cd IN
+				(SELECT DISTINCT unit_cd
+				 FROM TB_ZZORGUNIT
+				 WHERE record_center_id = #newRecordCenterId:VARCHAR#
+				 AND   org_cd IN
+				          (SELECT org_cd
+				           FROM TB_STORG
+				           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+				           START WITH org_cd = #orgCd:VARCHAR#
+				                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+				           CONNECT BY PRIOR org_cd = upper_org_cd
+				                      AND   record_center_id = #newRecordCenterId:VARCHAR#)
+				 )
+		AND   (SELECT COUNT(1)
+		       FROM TB_ZZORGUNIT B
+		       WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		       AND   B.unit_cd = A.unit_cd) = 0
+	</delete>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: H.기관코드 테이블의 변경전 기관코드 제거
+	 -->
+	<delete id="deleteMultiRecordCenterSetOrg" parameterClass="rms.sys.confset.domain.Org">
+		DELETE TB_STORG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   org_cd IN
+		          (SELECT org_cd
+		           FROM  TB_STORG
+		           WHERE record_center_id = #newRecordCenterId:VARCHAR#
+		           START WITH org_cd = #orgCd:VARCHAR#
+		                 AND  record_center_id = #newRecordCenterId:VARCHAR#
+		           CONNECT BY PRIOR org_cd = upper_org_cd
+		                      AND   record_center_id = #newRecordCenterId:VARCHAR#)
+	</delete>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: I.기록관의 대표기관명에 따라 기관코드 테이블의 기관명 갱신
+	 -->
+	<update id="updateMultiRecordCenterSetOrgNm" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STORG A
+		SET    A.org_nm
+		       = NVL(TRIM(SUBSTR(A.FULL_ORG_NM, DECODE(INSTR(A.FULL_ORG_NM, 
+														       (SELECT B.rep_org_nm
+																FROM TB_STRECORDCENTER B
+																WHERE B.record_center_id=A.record_center_id))
+														,1,LENGTH((SELECT B.rep_org_nm
+																FROM TB_STRECORDCENTER B
+																WHERE B.record_center_id=A.record_center_id))+1,0) )),A.FULL_ORG_NM)
+	</update>
+	
+	<!--
+		기록관환경설정_기록관설정 
+		: I_2.기록관의 대표기관명에 따라 기관코드 테이블의 조직명 갱신
+	 -->
+	<update id="updateMultiRecordCenterSetOrgDeptNm" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STDEPT A
+		SET    A.dept_nm = (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd)
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: L.새로운 기록관ID로 메뉴 테이블에 메뉴 생성
+	 -->
+	<insert id="createMultiRecordCenterSetMenu" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STMENU
+		(record_center_id, menu_id, menu_nm, upper_menu_id, menu_div_cd, menu_sort_sno, use_flag, work_dtime, menu_link_sno, menu_grant_levl)
+		(
+		    SELECT #newRecordCenterId:VARCHAR#, menu_id, menu_nm, upper_menu_id, menu_div_cd, menu_sort_sno, use_flag, work_dtime, menu_link_sno, menu_grant_levl
+		    FROM  TB_STMENU
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: M.새로운 기록관ID로 사용자메뉴권한 테이블의 사용자메뉴권한 생성
+	 -->
+	<insert id="createMultiRecordCenterSetMenuGrantGrp" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STMENUGRANTGRP 
+		(
+			record_center_id, menu_grant_grp_cd, menu_grant_grp_nm, menu_grant_grp_descr, use_flag, work_user_id, work_dtime, default_grant_div
+		)
+		(
+			SELECT #newRecordCenterId:VARCHAR# record_center_id
+				, menu_grant_grp_cd
+				, menu_grant_grp_nm
+				, menu_grant_grp_descr
+				, use_flag
+				, work_user_id
+				, work_dtime
+				, TO_NUMBER(menu_grant_grp_cd)
+			FROM  TB_STMENUGRANTGRP
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND   menu_grant_grp_cd IN ('001','002','003','004')
+		)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: N.사용자메뉴권한 테이블의 변경전 사용자메뉴권한 제거
+	 -->
+	<insert id="createMultiRecordCenterSetMenuGrantLink" parameterClass="rms.sys.confset.domain.Org">
+		INSERT INTO TB_STMENUGRANTLINK
+		(
+		    RECORD_CENTER_ID, MENU_GRANT_GRP_CD, MENU_ID, WORK_DTIME
+		)
+		(
+		    SELECT #newRecordCenterId:VARCHAR#, MENU_GRANT_GRP_CD, MENU_ID, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		    FROM TB_STMENUGRANTLINK
+		    WHERE record_center_id = #recordCenterId:VARCHAR#
+		    AND   TO_NUMBER(MENU_GRANT_GRP_CD) <![CDATA[<=]]> 4
+		)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+	    : O.새로운 기록관ID로 파일 확장자 테이블에 파일 확장자 생성
+	 -->
+	<insert id="createMultiRecordCenterSetFileExt" parameterClass="rms.sys.confset.domain.Org">
+	 	INSERT INTO TB_STFILEEXTMNG (
+	 		RECORD_CENTER_ID, FILE_EXT, FILE_EXT_NM, FILE_EXT_DESC, FILE_TRANS_FLAG, REG_DTIME, UPD_DTIME, WORK_USER_ID
+	 	) (
+	 		SELECT #newRecordCenterId:VARCHAR#, FILE_EXT, FILE_EXT_NM, FILE_EXT_DESC, FILE_TRANS_FLAG, REG_DTIME, UPD_DTIME, WORK_USER_ID
+	 		FROM TB_STFILEEXTMNG
+	 		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	 	)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: J.기록관 테이블의 기록관 정보 갱신
+	 -->
+	<update id="updateMultiRecordCenter" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STRECORDCENTER
+		SET    record_center_nm = #recordCenterNm:VARCHAR#
+		     , remk = #remk:VARCHAR#
+		     , rep_org_nm = #repOrgNm:VARCHAR#
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: 대표기록관코드 변경
+	 -->
+	<update id="updateMultiRecordCenterSetRc" parameterClass="rms.sys.confset.domain.Org">
+		UPDATE TB_STRECORDCENTER
+		SET   record_center_cd = #recordCenterCd:VARCHAR#
+			, record_center_nm = #recordCenterNm:VARCHAR#
+			, rep_org_nm = #repOrgNm:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		: A-2.기록관지정 해제시 갱신할 상위레벨의 기록관ID 조회
+	 -->
+	<select id="findMultiRecordCenterUpper" parameterClass="rms.sys.confset.domain.Org" resultMap="recordCenterId-result">
+		SELECT record_center_id
+		FROM  TB_STORG
+		WHERE org_cd =
+		    (SELECT upper_org_cd
+		     FROM   TB_STORG
+		     WHERE  record_center_id = #recordCenterId:VARCHAR#
+		     AND    org_cd = #orgCd:VARCHAR#)
+	</select>
+	
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		D_3.그룹정보 테이블에 권한그룹 제거
+	 -->
+	<update id="deleteMultiRecordCenterSetGrantGrp" parameterClass="rms.sys.confset.domain.Org">
+		DELETE FROM TB_STGRANTGRP
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		: J.기록관 테이블에 변경전 기록관 삭제
+	 -->
+	<delete id="deleteMultiRecordCenter" parameterClass="rms.sys.confset.domain.Org">
+		DELETE TB_STRECORDCENTER
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		: L. 사용자메뉴권한 테이블의 변경전 사용자메뉴권한 제거
+	 -->
+	<delete id="deleteMultiRecordCenterSetUserMenuGrant" parameterClass="rms.sys.confset.domain.Org">
+		DELETE TB_STUSERMENUGRANT
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND    user_id IN (SELECT B.user_id
+		                   FROM  TB_STUSERMENUGRANT B
+		                   WHERE B.record_center_id = #newRecordCenterId:VARCHAR#)
+	</delete>
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		 : M.사용자메뉴권한 테이블의 변경전 사용자메뉴권한 제거
+	 -->
+	<delete id="deleteMultiRecordCenterSetMenuGrantLink" parameterClass="rms.sys.confset.domain.Org">
+		DELETE FROM TB_STMENUGRANTLINK 
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		: N. 사용자메뉴권한그룹 제거
+	 -->
+	<delete id="deleteMultiRecordCenterSetMenuGrantGrp" parameterClass="rms.sys.confset.domain.Org">
+		DELETE FROM TB_STMENUGRANTGRP
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!--
+		기록관환경설정_기록관설정 (기록관지정취소)
+		: N.메뉴 테이블에 변경전 메뉴 제거
+	-->
+	<delete id="deleteMultiRecordCenterSetMenu" parameterClass="rms.sys.confset.domain.Org">
+		DELETE TB_STMENU
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록관환경설정_기록관설정 (기록관지정취소)
+		: O.파일확장자 테이블에 해당기록관의 파일확장자 제거 
+	 -->
+	<delete id="deleteMultiRecordCenterSetFileExt" parameterClass="rms.sys.confset.domain.Org">
+	 	DELETE TB_STFILEEXTMNG
+	 	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		기록관환경설정_기록관설정
+		: 소속기록관이동시 새로운 기록관ID를 조회한다.
+	 -->
+	<resultMap id="findNewRecordCenterId-result" class="rms.sys.confset.domain.Org">
+		<result property="recordCenterId"			column="RECORD_CENTER_ID"/>
+		<result property="recordCenterNm"			column="RECORD_CENTER_NM"/>
+	</resultMap>
+	<select id="findNewRecordCenterId" parameterClass="rms.sys.confset.domain.Org" resultMap="findNewRecordCenterId-result">
+		SELECT RECORD_CENTER_ID, RECORD_CENTER_NM FROM TB_STRECORDCENTER WHERE RECORD_CENTER_ID != #recordCenterId:VARCHAR#
+	</select>
+	
+	<resultMap id="config-result" 		class="rms.sys.confset.domain.RecordCenterConfig" >
+		<result property="recordCenterId"		column="record_center_id"></result>
+		<result property="nomlMngNoRule"		column="noml_mng_no_rule"></result>
+		<result property="spclMngNoRule"		column="spcl_mng_no_rule"></result>
+		<result property="handlOrgCd"			column="handl_org_cd"></result>
+		<result property="linkServerIp"			column="link_server_ip"></result>
+		<result property="linkServerPort"		column="link_server_port"></result>
+		<result property="linkServerUserId"		column="link_server_user_id"></result>
+		<result property="linkServerPwd"		column="link_server_pwd"></result>
+		<result property="linkServerClass"		column="link_server_class"></result>
+		<result property="linkServerLang"		column="link_server_lang"></result>
+		<result property="handlOrgNm"			column="handl_org_nm"></result>
+		<result property="presvBoxIdRule"		column="presv_box_id_rule"></result>
+	</resultMap>
+	<!-- 환경설정 기록관 환경설정 기록관관리 상세정보를 조회한다. -->
+	<select id="findRecordCenterSet" parameterClass="rms.sys.confset.domain.RecordCenterConfig" resultMap="config-result">
+		SELECT A.record_center_id
+		     , A.noml_mng_no_rule
+			 , A.spcl_mng_no_rule
+			 , A.handl_org_cd
+			 , A.link_server_ip
+			 , A.link_server_port
+			 , A.link_server_user_id
+			 , A.link_server_pwd
+			 , A.link_server_class
+			 , A.link_server_lang
+			 , (SELECT B.org_nm FROM  TB_STORG B WHERE B.record_center_id=A.record_center_id AND   B.org_cd=A.handl_org_cd) handl_org_nm
+			 , A.presv_box_id_rule 
+		FROM TB_STCONFIG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 공통 기록관 환경정보 -->
+	<select id="findConfig" parameterClass="java.lang.String" resultMap="config-result">
+		SELECT A.record_center_id
+		     , A.noml_mng_no_rule
+			 , A.spcl_mng_no_rule
+			 , A.handl_org_cd
+			 , A.link_server_ip
+			 , A.link_server_port
+			 , A.link_server_user_id
+			 , A.link_server_pwd
+			 , A.link_server_class
+			 , A.link_server_lang
+			 , (SELECT B.org_nm
+			    FROM  TB_STORG B
+				WHERE B.record_center_id=A.record_center_id
+				AND   B.org_cd=A.handl_org_cd) handl_org_nm
+			 , A.presv_box_id_rule         
+		FROM TB_STCONFIG A
+		WHERE A.record_center_id = #value#
+	</select>
+	
+	<!-- 
+		기록관환경설정_기록관관리
+		: 기록관환경정보 저장시 COUNT
+	 -->
+	<select id="countRecordCenterSet" parameterClass="rms.sys.confset.domain.RecordCenterConfig" resultClass="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM TB_STCONFIG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록관환경설정_기록관관리
+		: 기록관환경정보 저장
+	 -->
+	<insert id="createRecordCenterSet" parameterClass="rms.sys.confset.domain.RecordCenterConfig">
+		INSERT INTO TB_STCONFIG (
+			record_center_id, noml_mng_no_rule, spcl_mng_no_rule, handl_org_cd, link_server_ip
+	  	   ,link_server_port, link_server_user_id, link_server_pwd, link_server_class, link_server_lang
+	  	   ,presv_box_id_rule
+		) VALUES (
+			#recordCenterId:VARCHAR#
+	       ,#nomlMngNoRule:VARCHAR#
+	       ,#spclMngNoRule:VARCHAR#
+	       ,#handlOrgCd:VARCHAR#
+	       ,#linkServerIp:VARCHAR#
+	       ,#linkServerPort:VARCHAR#
+	       ,#linkServerUserId:VARCHAR#
+	       ,#linkServerPwd:VARCHAR#
+	       ,#linkServerClass:VARCHAR#
+	       ,#linkServerLang:VARCHAR#
+	       ,#presvBoxIdRule:VARCHAR# <!-- 보존상자번호부여규칙 추가(1:서고+서가+층+열+상자ID(3), 2:처리과코드+보존기간+생산연도+상자ID(6) -->
+		)    
+	</insert>
+	
+	<!-- 
+		기록관환경설정_기록관관리
+		: 기록관환경정보 저장
+	 -->
+	<update id="updateRecordCenterSet" parameterClass="rms.sys.confset.domain.RecordCenterConfig">
+		UPDATE TB_STCONFIG
+		SET  noml_mng_no_rule = #nomlMngNoRule:VARCHAR#
+			,spcl_mng_no_rule = #spclMngNoRule:VARCHAR#
+			<!-- ,handl_org_cd = #handlOrgCd:VARCHAR# -->
+			,link_server_ip = #linkServerIp:VARCHAR#
+			,link_server_port = #linkServerPort:VARCHAR#
+			,link_server_user_id = #linkServerUserId:VARCHAR#
+			,link_server_pwd = #linkServerPwd:VARCHAR#
+			,link_server_class = #linkServerClass:VARCHAR#
+			,link_server_lang = #linkServerLang:VARCHAR#
+			,presv_box_id_rule = #presvBoxIdRule:VARCHAR#   <!-- 보존상자번호부여규칙 추가(1:서고+서가+층+열+상자ID(3), 2:처리과코드+보존기간+생산연도+상자ID(6) --> 
+		WHERE record_center_id = #recordCenterId:VARCHAR#   
+	</update>
+	
+	<resultMap id="CreatSysList-result" 		class="rms.sys.confset.domain.CreatSys" >
+		<result property="recordCenterId"		column="record_center_id"></result>
+		<result property="orgCd"				column="org_cd"></result>
+		<result property="creatSysCd"			column="creat_sys_cd"></result>
+		<result property="orgNm"				column="org_nm"></result>
+		<result property="creatSysNm"			column="creat_sys_nm"></result>
+	</resultMap>
+	<!-- 
+		환경설정 기록관환경설정 생산시스템관리 목록을 조회한다.  
+	--> 
+	<select id="findCreatSysPagedList" parameterClass="rms.sys.confset.domain.CreatSys" resultMap="CreatSysList-result">
+		SELECT  F.record_center_id
+			, F.org_cd
+			, F.creat_sys_cd
+		    , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id = F.record_center_id AND B.org_cd = F.org_cd) org_nm
+			, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD17' AND C.com_cd = F.creat_sys_cd) creat_sys_nm
+		FROM (
+			SELECT E.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, D.*
+				FROM (
+					SELECT A.record_center_id
+						, A.org_cd
+						, A.creat_sys_cd
+					FROM  TB_STCREATSYS A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty prepend="AND" property="orgCd">
+						A.org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="arrCreatSysCd">
+						A.creat_sys_cd IN <iterate property="arrCreatSysCd" open="(" close=")" conjunction=",">#arrCreatSysCd[]:VARCHAR#</iterate>
+					</isNotEmpty>
+					ORDER BY org_cd
+				) D
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) E
+			WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) F		
+	</select>
+	<!-- 
+		COUNT - 환경설정 기록관환경설정 생산시스템관리 목록을 조회한다.  
+	--> 
+	<select id="countCreatSysPagedList" parameterClass="rms.sys.confset.domain.CreatSys" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_STCREATSYS A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="orgCd">
+			A.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="arrCreatSysCd">
+			A.creat_sys_cd IN <iterate property="arrCreatSysCd" open="(" close=")" conjunction=",">#arrCreatSysCd[]:VARCHAR#</iterate>
+		</isNotEmpty>
+	</select>
+	
+	<!--
+		기록관환경설정_생산시스템관리 
+		: 생산시스템등록시 이전등록된값 삭제
+	 -->
+	<delete id="deleteCreatSys" parameterClass="rms.sys.confset.domain.CreatSys">
+		DELETE FROM TB_STCREATSYS 
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		<isEqual property="applyLowerOrg" compareValue="Y">			
+			AND org_cd in(  SELECT org_cd
+							FROM TB_STORG
+							START WITH org_cd = #orgCd:VARCHAR#
+							       AND  record_center_id = #recordCenterId:VARCHAR#
+							CONNECT BY PRIOR org_cd = upper_org_cd
+					            AND   record_center_id = #recordCenterId:VARCHAR#)	
+		</isEqual>			
+		<isNotEqual property="applyLowerOrg" compareValue="Y">			
+			AND org_cd = #orgCd:VARCHAR#
+		</isNotEqual>	
+	</delete>	
+	
+	<!-- 
+		기록관환경설정_생산시스템관리
+		: 생산시스템등록
+	 -->
+	<insert id="createCreatSys" parameterClass="rms.sys.confset.domain.CreatSys">
+		INSERT INTO TB_STCREATSYS ( record_center_id, org_cd, creat_sys_cd )
+		<isEqual property="applyLowerOrg" compareValue="Y">			
+			SELECT record_center_id, org_cd, #creatSysCd:VARCHAR#
+			 FROM  TB_STORG a
+			 WHERE record_center_id = #recordCenterId:VARCHAR#
+			 START WITH org_cd = #orgCd:VARCHAR#
+			       AND  record_center_id = #recordCenterId:VARCHAR#
+			 CONNECT BY PRIOR org_cd = upper_org_cd
+	            AND   record_center_id = #recordCenterId:VARCHAR#	
+		</isEqual>			
+		<isNotEqual property="applyLowerOrg" compareValue="Y">			
+			VALUES ( #recordCenterId:VARCHAR#, #orgCd:VARCHAR#, #creatSysCd:VARCHAR#)
+		</isNotEqual>			
+	</insert>
+	
+	<!-- 
+		기록관환경설정_생산시스템관리
+		: 해당 생산시스템을 사용하는 부서가 있는지 조회
+	 -->
+	<select id="countCreatSysUse" parameterClass="rms.sys.confset.domain.CreatSys" resultClass="int">
+		SELECT count(1) 
+		FROM TB_STCREATSYS
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND creat_sys_cd = #csCd:VARCHAR#
+		AND ROWNUM=1       
+	</select>	
+	
+	<!-- 
+		기록관환경설정_생산시스템관리
+		: 생산시스템별 종속적 메뉴가 있을때 해당메뉴 사용불가처리
+	 -->
+	<update id="updateMenuUse" parameterClass="rms.sys.confset.domain.CreatSys">
+		UPDATE TB_STMENU
+		SET use_flag = #params[0].useFlag:VARCHAR#
+		WHERE record_center_id = #params[0].recordCenterId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")" conjunction="OR">
+				(menu_id = #params[].menuId:VARCHAR#)
+			</iterate>
+		</dynamic>
+	</update>
+	
+	<!-- 
+		기록관환경설정_생산시스템관리
+		: 부서에 설정된 생산시스템코드를 조회한다.
+	 -->
+	<select id="findRegCreatSys" parameterClass="rms.sys.confset.domain.CreatSys" resultClass="java.lang.String">
+		SELECT CREAT_SYS_CD FROM TB_STCREATSYS WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND ORG_CD = #orgCd:VARCHAR#
+	</select>
+	
+	<resultMap id="LinkTrgtSetOrg-result" 		class="rms.sys.confset.domain.LinkTrgtConfig" >
+		<result property="linkTrgtId"			column="link_trgt_id"></result>
+		<result property="linkTrgtNm"			column="link_trgt_nm"></result>
+		<result property="linkIp"				column="link_ip"></result>
+		<result property="linkPort"				column="link_port"></result>
+		<result property="linkUserId"			column="link_user_id"></result>
+		<result property="linkPwd"				column="link_pwd"></result>
+		<result property="linkClass"			column="link_class"></result>
+		<result property="linkLang"				column="link_lang"></result>
+		<result property="creatSysCd"			column="creat_sys_cd"></result>
+		<result property="linkCnt"				column="link_cnt"></result>
+	</resultMap>
+	<!-- 
+		환경설정 기록관환경설정 연계관리 상세정보를 조회한다.
+	 -->
+	<select id="findLinkTrgtSetOrg" parameterClass="rms.sys.confset.domain.LinkTrgtConfig" resultMap="LinkTrgtSetOrg-result">
+		SELECT A.link_trgt_id
+		    , A.link_trgt_nm
+			, A.link_ip
+			, A.link_port
+			, A.link_user_id
+			, A.link_pwd
+			, A.link_class
+			, A.link_lang
+			, A.creat_sys_cd
+			, (SELECT COUNT(1) FROM TB_STORG B WHERE B.link_trgt_id=A.link_trgt_id) link_cnt
+		FROM TB_STLINKTRGT A
+		WHERE A.link_trgt_id = #linkTrgtId:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록관환경설정_연계관리
+		: 연계대상 ID Max값을 조회한다.
+	 -->
+	<select id="findLinkTrgtId" resultClass="string">
+		SELECT 'L'||LPAD(SUBSTR(NVL(MAX(link_trgt_id),0),2,6) + 1, 6, '0') FROM TB_STLINKTRGT 
+	</select>
+	
+	<!-- 
+		기록관환경설정_연계관리
+		: 연계대상 생산시스템정보를 등록, 수정전 삭제한다.
+	 -->
+	<delete id="deleteLinkTrgt" parameterClass="java.lang.String">
+		DELETE FROM TB_STLINKTRGT WHERE LINK_TRGT_ID = #value:VARCHAR#
+	</delete>
+
+	<!-- 
+		기록관환경설정_연계관리
+		: 연계대상 생산시스템을 등록한다.
+	 -->
+	<insert id="createLinkTrgt" parameterClass="rms.sys.confset.domain.LinkTrgtConfig">
+		INSERT INTO TB_STLINKTRGT (
+			link_trgt_id, link_trgt_nm, link_ip, link_port, link_user_id
+		   ,link_pwd, link_class, link_lang, creat_sys_cd, monitor_port
+		) VALUES (
+	  		  #linkTrgtId:VARCHAR#
+			 ,#linkTrgtNm:VARCHAR#
+			 ,#linkIp:VARCHAR#
+			 ,#linkPort:VARCHAR#
+			 ,#linkUserId:VARCHAR#
+			 ,#linkPwd:VARCHAR#
+			 ,#linkClass:VARCHAR#
+			 ,#linkLang:VARCHAR#
+			 ,#creatSysCd:VARCHAR#
+			 ,DECODE(#creatSysCd:VARCHAR#,'04','9610')
+		)
+	</insert>
+	
+	<!-- 
+		기록관환경설정_연계관리
+		: 연계대상지정처리를 한다.
+	 -->
+	<update id="updateLinkTrgtSetOrg" parameterClass="rms.sys.confset.domain.LinkTrgtConfig">
+		UPDATE TB_STORG
+		SET   link_trgt_id = #linkTrgtId:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   org_cd IN
+		          (SELECT org_cd
+		           FROM TB_STORG
+		           WHERE record_center_id = #recordCenterId:VARCHAR#
+		           START WITH org_cd = #orgCd:VARCHAR#
+		                 AND  record_center_id = #recordCenterId:VARCHAR#
+		           CONNECT BY PRIOR org_cd = upper_org_cd
+		                      AND   record_center_id = #recordCenterId:VARCHAR#)
+	</update>
+	
+</sqlMap>

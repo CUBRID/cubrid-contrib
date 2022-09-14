@@ -1,0 +1,151 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortTrgtSelRecordList
+
+		SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, A.*			FROM (				SELECT /*+ ordered index(r TB_RDRECORD_IX10) */ r.record_center_id					, r.record_id					, r.folder_id					, r.org_cd					, r.title					, r.oper_read_range_cd					, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd ='RD53' AND Z.com_cd = r.oper_read_range_cd) oper_read_range_nm					, r.read_range					, r.record_detl_type_cd					, r.clss_id					, r.creat_yyyy					, r.last_read_resort_yyyy					, r.last_read_resort_yyyy as bef_resort_yyyy					, r.take_mng_no					, f.take_yyyy					, (CASE WHEN r.clss_div_cd = '1' THEN (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = r.clss_id)				            WHEN r.clss_div_cd = '2' THEN (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = r.record_center_id and unit_cd = r.clss_id)				       END) as clss_nm				    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND z.org_cd=r.org_cd) org_nm				    , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND z.org_cd=r.org_cd) handl_org_nm				    , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = r.record_detl_type_cd) as record_detl_type_nm				    , (CASE WHEN (SELECT COUNT(1) FROM tb_rdrangeresortopin Z WHERE Z.record_center_id = R.record_center_id AND Z.record_id = R.record_id) > 0 THEN '02'				            ELSE NVL(O.resort_prog_state_cd, '01')				       END) AS resort_prog_state_cd				    , o.case_type				    , o.org_cd as handl_org_cd				    , o.resort_seq				    , o.resort_yyyy				    , o.resort_case				    , f.title as folder_title				    , f.cur_keep_org_cd				    , f.folder_keep_state_cd				FROM tb_rdfolder f, tb_rdrecord r					LEFT OUTER JOIN tb_rdrangeresortopin o 				    ON 	r.record_center_id = o.record_center_id 				    AND r.record_id = o.record_id 				    AND o.resort_prog_state_cd != '06' AND   				        	o.resort_case = '1'				           AND 				        o.case_type = '1' 				     				WHERE r.record_center_id = '1'				AND r.folder_id = f.folder_id AND 					f.folder_id = '1'				  AND 					r.record_id = '1'				 				AND f.folder_keep_state_cd in ('01', '04')				 AND  						f.cur_keep_org_cd = '1'					    					AND r.last_read_resort_yyyy is null					   							AND f.take_yyyy BETWEEN '1' AND '1'						    AND 					r.clss_id = '1'				  AND 					r.oper_read_range_cd = '1'				  AND 					r.title like '1'				    						AND	r.open_div_cd = '1'						AND	r.oper_read_range_cd in ('02', '03')   AND 					f.title like '1'				  AND 					r.last_read_resort_yyyy =  '1'				 			) A			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : countRangeResortTrgtSelRecordList
+
+		SELECT COUNT(1)		FROM tb_rdfolder f, tb_rdrecord r		    LEFT OUTER JOIN tb_rdrangeresortopin o 		    ON 	r.record_center_id = o.record_center_id 		    AND r.record_id = o.record_id 		    AND o.resort_prog_state_cd != '06' AND   		        	o.resort_case = '1'		           AND 		        o.case_type = '1' 		     		WHERE r.record_center_id = '1'		AND r.folder_id = f.folder_id AND 			f.folder_id = '1'		  AND 			r.record_id = '1'		 		AND f.folder_keep_state_cd in ('01', '04')		 AND  				f.cur_keep_org_cd = '1'			    			AND     r.last_read_resort_yyyy is null			   					AND     f.take_yyyy BETWEEN '1' AND '1'				    AND 			r.clss_id = '1'		  AND 			r.oper_read_range_cd = '1'		  AND 			r.title like '1'		    				AND	r.open_div_cd = '1'				AND	r.oper_read_range_cd in ('02', '03')   AND 			f.title like '1'		  AND 			r.last_read_resort_yyyy =  '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortTrgtSelRecordBatchList
+
+		SELECT /*+ ordered index(r TB_RDRECORD_IX10) */ r.record_center_id			, r.record_id			, r.folder_id			, r.org_cd			, r.title			, r.oper_read_range_cd			, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd ='RD53' AND Z.com_cd = r.oper_read_range_cd) oper_read_range_nm			, r.read_range			, r.record_detl_type_cd			, r.clss_id			, r.creat_yyyy			, r.last_read_resort_yyyy			, r.last_read_resort_yyyy as bef_resort_yyyy			, r.take_mng_no			, f.take_yyyy			, (CASE WHEN r.clss_div_cd = '1' THEN (SELECT bis_clss_nm FROM tb_zzbisclss WHERE bis_clss_id = r.clss_id)		            WHEN r.clss_div_cd = '2' THEN (SELECT unit_nm FROM tb_zzunit WHERE record_center_id = r.record_center_id and unit_cd = r.clss_id)		       END) as clss_nm		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND z.org_cd=r.org_cd) org_nm		    , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND z.org_cd=r.org_cd) handl_org_nm		    , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD03' AND com_cd = r.record_detl_type_cd) as record_detl_type_nm		    , (CASE WHEN (SELECT COUNT(1) FROM tb_rdrangeresortopin Z WHERE Z.record_center_id = R.record_center_id AND Z.record_id = R.record_id) > 0 THEN '02'		            ELSE NVL(O.resort_prog_state_cd, '01')		       END) AS resort_prog_state_cd		    , o.case_type		    , o.org_cd as handl_org_cd		    , o.resort_seq		    , o.resort_yyyy		    , o.resort_case		    , f.title as folder_title		    , f.cur_keep_org_cd		    , f.folder_keep_state_cd		FROM tb_rdfolder f, tb_rdrecord r			LEFT OUTER JOIN tb_rdrangeresortopin o 		    ON 	r.record_center_id = o.record_center_id 		    AND r.record_id = o.record_id 		    AND o.resort_prog_state_cd != '06'		     AND   		        	o.resort_case = '1'		           AND 		        o.case_type = '1' 		     		WHERE r.record_center_id = '1'		AND r.folder_id = f.folder_id AND 			f.folder_id = '1'		  AND 			r.record_id = '1'		 		AND f.folder_keep_state_cd in ('01', '04')		 AND  				f.cur_keep_org_cd = '1'			    			AND r.last_read_resort_yyyy is null			   					AND f.take_yyyy BETWEEN '1' AND '1'				    AND 			r.clss_id = '1'		  AND 			r.oper_read_range_cd = '1'		  AND 			r.title like '1'		    				AND	r.open_div_cd = '1'				AND	r.oper_read_range_cd in ('02', '03')   AND 			f.title like '1'		  AND 			r.last_read_resort_yyyy =  '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortTrgtSelReasonRegList
+
+		SELECT RECORD_CENTER_ID			, RESORT_YYYY			, RESORT_CASE			, RESORT_CASE_NO			, RESORT_REASON		FROM TB_RDrangeRESORTREASON		WHERE RECORD_CENTER_ID = '1'		AND RESORT_YYYY = '1'		AND RESORT_CASE = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : insert
+-- Query Id : createRangeResortReason
+
+		INSERT	INTO TB_RDRANGERESORTREASON (record_center_id			, resort_yyyy			, resort_case			, resort_case_no			, resort_reason		) VALUES ('1'			, '1'			, '1'			, (SELECT nvl(max(resort_case_no),0) FROM tb_rdrangeresortreason WHERE record_center_id = '1' AND resort_yyyy = '1' AND resort_case = '1') + 1			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : getMaxResortCaseNo
+
+		SELECT nvl(max(resort_case_no),0) as resort_case_no		FROM tb_rdrangeresortreason		WHERE record_center_id = '1'		AND resort_yyyy = '1'		AND resort_case = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : insert
+-- Query Id : createRangeResortTrgtSel
+
+		INSERT	INTO tb_rdrangeresortopin (record_center_id			, record_id			, folder_id			, resort_seq			, resort_case			, choice_ymd			, rjct_flag			, resort_prog_state_cd			, resort_yyyy			, case_type			, take_yyyy			, bef_resort_yyyy			, resort_case_no			, org_oper_range_bef			, org_cd			, org_opin			, org_opin_ymd			, org_oper_range_aft			, org_userid			, expert_opin			, expert_oper_read_range_aft			, expert_opin_reg_ymd			, expert_user_id			, confirm_cd			, take_mng_no			, excel_dwn_flag			, center_sel_flag		) VALUES ('1'			, '1'			, '1'			, (select nvl(max(resort_seq),0)+1 from tb_rdrangeresortopin where record_center_id = '1' and record_id = '1')			, '1'			, to_char(sysdate, 'yyyyMMdd')			, '0'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, (SELECT OPER_READ_RANGE_CD FROM TB_RDRECORD WHERE RECORD_CENTER_ID = '1' AND RECORD_ID = '1')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '0'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : delete
+-- Query Id : deleteRangeResortTrgtSel
+
+		DELETE	FROM tb_rdrangeresortopin		WHERE	record_center_id = '1'		AND		record_id = '1'		 AND 			resort_seq = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : delete
+-- Query Id : deleteRangeResortTrgtSelBatch
+
+		DELETE FROM tb_rdrangeresortopin AAA		WHERE 				EXISTS (SELECT 1			FROM tb_rdfolder f, tb_rdrecord r				LEFT OUTER JOIN tb_rdrangeresortopin o 			    ON 	r.record_center_id = o.record_center_id 			    AND r.record_id = o.record_id 			    AND o.resort_prog_state_cd != '06' AND   			        	o.resort_case = '1'			           AND 			        o.case_type = '1' 			     			WHERE r.record_center_id = '1'			AND r.folder_id = f.folder_id			AND AAA.record_center_id = R.record_center_id		  AND AAA.record_id = R.record_id AND 				f.folder_id = '1'			  AND 				r.record_id = '1'			 			AND f.folder_keep_state_cd in ('01', '04')			 AND  					f.cur_keep_org_cd = '1'				    				AND r.last_read_resort_yyyy is null				   						AND f.take_yyyy BETWEEN '1' AND '1'					    AND 				r.clss_id = '1'			  AND 				r.oper_read_range_cd = '1'			  AND 				r.title like '1'			    					AND	r.open_div_cd = '1'					AND	r.oper_read_range_cd in ('02', '03')   AND 				f.title like '1'			  AND 				r.last_read_resort_yyyy =  '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateRangeResortRecord
+
+		UPDATE TB_RDRECORD	    SET READ_RANGERESORT_PROG_STATE_CD = '1'	    WHERE RECORD_ID = '1'	    AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateRangeResortRecordBatch
+
+	  	UPDATE TB_RDRECORD AAA	    SET READ_RANGERESORT_PROG_STATE_CD = '1'	    WHERE 	    		EXISTS (SELECT 1			FROM tb_rdfolder f, tb_rdrecord r				LEFT OUTER JOIN tb_rdrangeresortopin o 			    ON 	r.record_center_id = o.record_center_id 			    AND r.record_id = o.record_id 			    AND o.resort_prog_state_cd != '06' AND   			        	o.resort_case = '1'			           AND 			        o.case_type = '1' 			     			WHERE r.record_center_id = '1'			AND r.folder_id = f.folder_id			AND AAA.record_center_id = R.record_center_id			AND AAA.record_id = R.record_id AND 				f.folder_id = '1'			  AND 				r.record_id = '1'			 			AND f.folder_keep_state_cd in ('01', '04')			 AND  					f.cur_keep_org_cd = '1'				    				AND r.last_read_resort_yyyy is null				   						AND f.take_yyyy BETWEEN '1' AND '1'					    AND 				r.clss_id = '1'			  AND 				r.oper_read_range_cd = '1'			  AND 				r.title like '1'			    					AND	r.open_div_cd = '1'					AND	r.oper_read_range_cd in ('02', '03')   AND 				f.title like '1'			  AND 				r.last_read_resort_yyyy =  '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortDeptSetRecordPagedList
+
+ 		SELECT G.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (				SELECT D.record_center_id				    , D.record_id				    , D.folder_id				    , D.org_cd				    , D.cur_keep_org_cd				    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.org_cd) org_nm					, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.org_cd) org_abbr_nm					, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.cur_keep_org_cd) cur_keep_org_nm				    , D.clss_id				    , D.clss_nm				    , D.title				    , D.handl_org_cd				    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.handl_org_cd) handl_org_nm				    , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.handl_org_cd) handl_org_abbr_nm				    , D.creat_yyyy				    , D.oper_read_range_cd				    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=D.oper_read_range_cd) oper_read_range_nm				    , D.selflagcd				    , DECODE(D.selflagcd,1,'지정','미지정') selflagnm				    , D.resort_seq				    , trim(d.resort_prog_state_cd) as resort_prog_state_cd				    , decode(trim(d.resort_prog_state_cd), '02', '미지정', '03', '지정', '04', '진행중', '05', '진행중') as stateNm				    , D.resort_yyyy				    , D.resort_case_no				    , d.ORG_OPER_RANGE_BEF				    , decode(trim(d.org_oper_range_bef), '01', '전체열람', '02', '목록열람', '03', '열람제한') as org_oper_range_befnm				    , D.folder_keep_state_cd				FROM ( 				    SELECT C.record_center_id				        , C.record_id				        , C.folder_id				        , C.org_cd				        , C.cur_keep_org_cd				        , C.clss_id				        , C.clss_nm				        , C.title				        , C.creat_yyyy				        , C.oper_read_range_cd				        , DECODE(C.handl_org_cd,'',0,1) selflagcd				        , C.resort_seq				        , c.resort_prog_state_cd				        , c.resort_yyyy				        , c.resort_case_no				        , c.org_oper_range_bef		                , c.handl_org_cd		                , c.folder_keep_state_cd				    FROM (				        SELECT B.record_center_id				            , B.record_id				            , B.folder_id				            , B.org_cd				            , NVL(B.cur_keep_org_cd,B.org_cd) cur_keep_org_cd				            , B.clss_div_cd				            , B.clss_id				            , B.clss_nm				            , B.title				            , B.creat_yyyy				            , B.oper_read_range_cd				            , B.resort_seq				            , B.resort_prog_state_cd				            , B.resort_yyyy				            , B.resort_case_no				            , b.org_oper_range_bef		                    , b.handl_org_cd		                    , B.folder_keep_state_cd				        FROM (				            SELECT A.record_center_id				                , A.record_id				                , A.folder_id				                , A.org_cd				                , F.cur_keep_org_cd				                , A.clss_div_cd				                , A.clss_id				                , A.clss_nm				                , A.title				                , A.creat_yyyy				                , A.oper_read_range_cd				                , r.resort_seq				                , r.resort_prog_state_cd				                , r.resort_yyyy				                , r.resort_case_no				                , A.oper_read_range_cd as org_oper_range_bef		                        , r.org_cd as handl_org_cd		                        , F.folder_keep_state_cd				            FROM TB_RDRECORD A join TB_RDFOLDER F		                	on   F.record_center_id = A.record_center_id				            AND  F.folder_id = A.folder_id		                	join tb_rdrangeresortopin r		                	on   r.resort_prog_state_cd between '02' and '03'		                	and  a.record_center_id = r.record_center_id		                	and  a.record_id = r.record_id				            WHERE A.record_center_id = '1' AND 								r.resort_yyyy = '1'							  AND  									F.cur_keep_org_cd = '1'								   AND 								(A.clss_div_cd = '1' AND A.clss_id = '1')							  AND 								A.title LIKE '1'							  AND 								A.oper_read_range_cd = '1'							  AND 								A.folder_id = '1'							 				        ) B				    ) C				) D				 WHERE  						D.handl_org_cd = '1'					  AND 						D.handl_org_cd = '1'					  AND 						D.selflagcd = '1'					  AND 						trim(D.resort_Prog_State_Cd) in (1)					  				ORDER BY D.record_center_id, D.record_id			) E			WHERE ROWNUM <= '1'		) G		WHERE G.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : countRangeResortDeptSetRecordPagedList
+
+		SELECT count(1)		FROM ( 		    SELECT C.record_center_id		        , C.record_id		        , C.org_cd		        , C.clss_id		        , C.clss_nm		        , C.title		        , C.creat_yyyy		        , C.oper_read_range_cd		        , DECODE(C.handl_org_cd,''		            , DECODE((SELECT Z.close_flag FROM TB_STORG Z WHERE Z.record_center_id=C.record_center_id AND Z.org_cd=C.cur_keep_org_cd),'0',C.cur_keep_org_cd		                , (DECODE(C.clss_div_cd,'1',NVL((SELECT X.org_cd FROM TB_ZZBISORG X WHERE X.bis_clss_id=C.clss_id AND X.del_flag='0'),''),'')		              )		          ),C.handl_org_cd) handl_org_cd		        , DECODE(C.handl_org_cd,'',0,1) selflagcd		        , C.resort_seq		        , c.resort_prog_state_cd		        , c.resort_yyyy		        , c.resort_case_no		    FROM (		        SELECT B.record_center_id		            , B.record_id		            , B.org_cd		            , NVL(B.cur_keep_org_cd,B.org_cd) cur_keep_org_cd		            , B.clss_div_cd		            , B.clss_id		            , B.clss_nm		            , B.title		            , B.creat_yyyy		            , B.oper_read_range_cd		            , NVL((SELECT Z.handl_org_cd		                    FROM TB_RDRECORDREADRANG Z		                    WHERE Z.record_center_id = B.record_center_id		                    AND   Z.record_id = B.record_id		                    AND  (Z.handl_fin_ymd IS NULL OR Z.handl_fin_ymd = '')),'') handl_org_cd 		            , B.resort_seq		            , B.resort_prog_state_cd		            , B.resort_yyyy		            , b.resort_case_no		        FROM (		            SELECT A.record_center_id		                , A.record_id		                , A.org_cd		                , F.cur_keep_org_cd		                , A.clss_div_cd		                , A.clss_id		                , A.clss_nm		                , A.title		                , A.creat_yyyy		                , A.oper_read_range_cd		                , r.resort_seq		                , r.resort_prog_state_cd		                , r.resort_yyyy		                , r.resort_case_no		            FROM TB_RDRECORD A join TB_RDFOLDER F                	on   F.record_center_id = A.record_center_id		            AND  F.folder_id = A.folder_id                	join tb_rdrangeresortopin r                	on   r.resort_prog_state_cd between '02' and '03'                	                	and  a.record_center_id = r.record_center_id                	and  a.record_id = r.record_id		            WHERE A.record_center_id = '1'		             AND 						r.resort_yyyy = '1'					  AND  							F.cur_keep_org_cd = '1'						   AND 						(A.clss_div_cd = '1' AND A.clss_id = '1')					  AND 						A.title LIKE '1'					  AND 						A.oper_read_range_cd = '1'					 		        ) B		    ) C		) D		 WHERE  				D.handl_org_cd = '1'			  AND 				D.handl_org_cd = '1'			  AND 				D.selflagcd = '1'			  AND 				trim(D.resort_Prog_State_Cd) in (1)			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortDeptSetRecordList
+
+ 		SELECT D.record_center_id		    , D.record_id		    , D.folder_id		    , D.org_cd		    , D.cur_keep_org_cd		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.org_cd) org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.org_cd) org_abbr_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.cur_keep_org_cd) cur_keep_org_nm		    , D.clss_id		    , D.clss_nm		    , D.title		    , D.handl_org_cd		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.handl_org_cd) handl_org_nm		    , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=D.record_center_id AND Z.org_cd=D.handl_org_cd) handl_org_abbr_nm		    , D.creat_yyyy		    , D.oper_read_range_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=D.oper_read_range_cd) oper_read_range_nm		    , D.selflagcd		    , DECODE(D.selflagcd,1,'지정','미지정') selflagnm		    , D.resort_seq		    , trim(d.resort_prog_state_cd) as resort_prog_state_cd		    , decode(trim(d.resort_prog_state_cd), '02', '미지정', '03', '지정', '04', '진행중', '05', '진행중') as stateNm		    , D.resort_yyyy		    , D.resort_case_no		    , d.ORG_OPER_RANGE_BEF		    , decode(trim(d.org_oper_range_bef), '01', '전체열람', '02', '목록열람', '03', '열람제한') as org_oper_range_befnm		    , D.folder_keep_state_cd		FROM ( 		    SELECT C.record_center_id		        , C.record_id		        , C.folder_id		        , C.org_cd		        , C.cur_keep_org_cd		        , C.clss_id		        , C.clss_nm		        , C.title		        , C.creat_yyyy		        , C.oper_read_range_cd		        , DECODE(C.handl_org_cd,'',0,1) selflagcd		        , C.resort_seq		        , c.resort_prog_state_cd		        , c.resort_yyyy		        , c.resort_case_no		        , c.org_oper_range_bef                , c.handl_org_cd                , c.folder_keep_state_cd		    FROM (		        SELECT B.record_center_id		            , B.record_id		            , B.folder_id		            , B.org_cd		            , NVL(B.cur_keep_org_cd,B.org_cd) cur_keep_org_cd		            , B.clss_div_cd		            , B.clss_id		            , B.clss_nm		            , B.title		            , B.creat_yyyy		            , B.oper_read_range_cd		            , B.resort_seq		            , B.resort_prog_state_cd		            , B.resort_yyyy		            , B.resort_case_no		            , b.org_oper_range_bef                    , b.handl_org_cd                    , B.folder_keep_state_cd		        FROM (		            SELECT A.record_center_id		                , A.record_id		                , A.folder_id		                , A.org_cd		                , F.cur_keep_org_cd		                , A.clss_div_cd		                , A.clss_id		                , A.clss_nm		                , A.title		                , A.creat_yyyy		                , A.oper_read_range_cd		                , r.resort_seq		                , r.resort_prog_state_cd		                , r.resort_yyyy		                , r.resort_case_no		                , A.oper_read_range_cd as org_oper_range_bef                        , r.org_cd as handl_org_cd                        , F.folder_keep_state_cd		            FROM TB_RDRECORD A join TB_RDFOLDER F                	on   F.record_center_id = A.record_center_id		            AND  F.folder_id = A.folder_id                	join tb_rdrangeresortopin r                	on   r.resort_prog_state_cd between '02' and '03'                	and  a.record_center_id = r.record_center_id                	and  a.record_id = r.record_id		            WHERE A.record_center_id = '1'		             AND 						r.resort_yyyy = '1'					  AND  							F.cur_keep_org_cd = '1'   AND 						(A.clss_div_cd = '1' AND A.clss_id = '1')					  AND 						A.title LIKE '1'					  AND 						A.oper_read_range_cd = '1'					  AND 						A.folder_id = '1'					 		        ) B		    ) C		) D		 WHERE  				D.handl_org_cd = '1'			  AND 				D.handl_org_cd = '1'			  AND 				D.selflagcd = '1'			  AND 				trim(D.resort_Prog_State_Cd) in (1)			  		ORDER BY D.record_center_id, D.record_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortSelReasonPagedList
+
+		SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, A.*			FROM (				SELECT RECORD_CENTER_ID					, RESORT_YYYY					, RESORT_CASE					, RESORT_CASE_NO					, RESORT_REASON				FROM TB_RDrangeRESORTREASON				WHERE RECORD_CENTER_ID = '1' AND 				    RESORT_YYYY = '1'				 				AND RESORT_CASE = '1'			) A			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1' 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : countRangeResortSelReasonPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT RECORD_CENTER_ID				, RESORT_YYYY				, RESORT_CASE				, RESORT_CASE_NO				, RESORT_REASON			FROM TB_RDrangeRESORTREASON			WHERE RECORD_CENTER_ID = '1'			 AND 			    RESORT_YYYY = '1'			 			AND RESORT_CASE = '1'		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : select
+-- Query Id : findRangeResortSelOrgCd
+
+		SELECT NVL(			DECODE((SELECT D.close_flag		        FROM TB_STORG D		        WHERE D.record_center_id = '1'		        AND   D.org_cd=a.cur_keep_org_cd),'0',a.cur_keep_org_cd		        	,(DECODE(A.clss_div_cd,'1',DECODE((SELECT COUNT(1)		                                               FROM TB_ZZBISORG E		                           					   WHERE E.bis_clss_id=A.clss_id		                           					   AND   E.del_flag = '0'),1,(		                           					   SELECT E.org_cd		                                               FROM TB_ZZBISORG E		                                    		   WHERE E.bis_clss_id=A.clss_id		                                  			   AND   E.del_flag = '0'),'')		                  ,'')		    		)		    	) , 'x') as org_cd		FROM  TB_RDFOLDER a  , TB_RDRECORD b		WHERE a.record_center_id = '1'		AND   a.folder_id = b.folder_id		AND   b.record_center_id = '1'		AND   b.record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateRangeResortOpinRecordState
+
+	  	UPDATE tb_rdrangeresortopin	    SET resort_prog_state_cd   = '1'	    	, org_cd = '1'	    	, rjct_flag = '0'	    	, org_oper_range_bef = (SELECT oper_read_range_cd FROM tb_rdrecord 	                                WHERE record_center_id = '1'	                                AND record_id = '1')			 , 				center_sel_flag = '1'						 	    WHERE RECORD_ID = '1'	    AND RECORD_CENTER_ID = '1'	    AND resort_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateRangeResortOpinRecordStateBatch
+
+	    update tb_rdrangeresortopin 	    set(resort_prog_state_cd	    	, org_cd, rjct_flag	    	, org_oper_range_bef	    )=(			SELECT '1' as resort_prog_state_cd				, DECODE(					(						SELECT D.close_flag						FROM TB_STORG D						WHERE D.record_center_id = '1'						AND   D.org_cd=a.cur_keep_org_cd					),'0',a.cur_keep_org_cd					,(DECODE(A.clss_div_cd,'1',DECODE(						(							SELECT COUNT(1)							FROM TB_ZZBISORG E							WHERE E.bis_clss_id=A.clss_id							AND   E.del_flag = '0'						),1,(							SELECT E.org_cd							FROM TB_ZZBISORG E							WHERE E.bis_clss_id=A.clss_id							AND   E.del_flag = '0'),''),'')					)				 ) org_cd				, '0' rjct_flag				, b.oper_read_range_cd			FROM  TB_RDFOLDER a , TB_RDRECORD b			WHERE a.record_center_id = '1'			AND   a.folder_id = b.folder_id			AND   b.record_center_id = '1'			AND   b.record_id = '1'		)		WHERE RECORD_ID = '1'	    AND RECORD_CENTER_ID = '1'	    AND resort_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateRangeResortRecordState
+
+		UPDATE TB_RDRECORD	    SET READ_RANGERESORT_PROG_STATE_CD = '1'	    WHERE RECORD_ID = '1'	    AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml
+-- Query    : update
+-- Query Id : updateRangeCurKeepOrgCdChng
+
+		UPDATE tb_rdfolder		SET bef_keep_org_cd = (SELECT cur_keep_org_cd FROM tb_rdfolder where record_center_id = '1' AND folder_id = '1')			, cur_keep_org_cd = '1'		WHERE record_center_id = '1' AND folder_id = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinTrgtChoice.xml

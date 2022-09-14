@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.srch">
+	
+	<!-- 
+		전문검색 조회된 기록물건에 대하여 기관코드를 조회한다.
+	 -->
+	<resultMap id="findFtrOrgInfo-result" class="rms.srch.srch.domain.FtrOrg">
+		<result property="orgCd"			column="org_cd" />
+		<result property="orgNm" 			column="org_nm" />
+		<result property="orgAbbrNm" 		column="org_abbr_nm" />
+	</resultMap>
+	<select id="findFtrOrgInfo" parameterClass="rms.srch.srch.domain.FtrOrg" resultMap="findFtrOrgInfo-result">
+		SELECT A.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_abbr_nm
+		FROM  TB_RDRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_id = #recordId:VARCHAR#
+	</select>
+	
+	<!--
+		전문검색 조회된 기록물철에 대하여 권한을 조회한다.
+	 -->
+	<select id="findFolderAccsFlag" parameterClass="rms.srch.srch.domain.Ftr" resultClass="string">
+		SELECT (CASE WHEN '3' = #userDiv:VARCHAR# THEN '1'
+					<isEqual property="orgUserAccsType" compareValue="1">
+					WHEN ((SELECT Z.oper_read_range_cd FROM TB_RDFOLDER Z WHERE Z.record_center_id = #recordCenterId# and Z.folder_id = #folderId:VARCHAR#)='02' AND #orgCd:VARCHAR#=#sessionOrgCd:VARCHAR#) THEN '1'
+					</isEqual>
+					<isEqual property="orgUserAccsType" compareValue="2">
+					WHEN #orgCd:VARCHAR#=#sessionOrgCd:VARCHAR# THEN '1'
+					</isEqual>
+		            WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id = #recordCenterId# and Z.folder_id = #folderId:VARCHAR# and Z.accs_type_cd='2' AND z.accs_dept_cd=#sessionOrgCd:VARCHAR#) > 0 THEN '1'
+		            WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id = #recordCenterId# and Z.folder_id = #folderId:VARCHAR# and Z.accs_type_cd='1' AND z.accs_user_id=#sessionUserId:VARCHAR#) > 0 THEN '1'
+		            ELSE '0'
+		       END) AS accs_flag
+		FROM DUAL
+	</select>
+	
+	<!-- 
+		전문검색 조회된 기록물건에 대하여 권한을 조회한다.
+	 -->
+	<select id="findRecordAccsFlag" parameterClass="rms.srch.srch.domain.Ftr" resultClass="string">
+		SELECT (CASE WHEN '3' = #userDiv:VARCHAR# THEN '1'
+					<isEqual property="orgUserAccsType" compareValue="1">
+					WHEN ((SELECT Z.oper_read_range_cd FROM TB_RDRECORD Z WHERE Z.record_center_id = #recordCenterId# and Z.record_id = #recordId:VARCHAR#)='02' AND #orgCd:VARCHAR#=#sessionOrgCd:VARCHAR#) THEN '1'
+					</isEqual>
+					<isEqual property="orgUserAccsType" compareValue="2">
+					WHEN #orgCd:VARCHAR#=#sessionOrgCd:VARCHAR# THEN '1'
+					</isEqual>
+		            WHEN (SELECT COUNT(1) FROM TB_RDRECORDACCS Z WHERE Z.record_center_id = #recordCenterId# and Z.record_id = #recordId:VARCHAR# and Z.accs_type_cd='2' AND z.accs_dept_cd=#sessionOrgCd:VARCHAR#) > 0 THEN '1'
+		            WHEN (SELECT COUNT(1) FROM TB_RDRECORDACCS Z WHERE Z.record_center_id = #recordCenterId# and Z.record_id = #recordId:VARCHAR# and Z.accs_type_cd='1' AND z.accs_user_id=#sessionUserId:VARCHAR#) > 0 THEN '1'
+		            ELSE '0'
+		       END) AS accs_flag
+		FROM DUAL
+	</select>
+</sqlMap>

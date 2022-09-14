@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.tree">
+
+	<!-- 
+		단위업무검색
+	 -->
+	<resultMap id="findUnitNm-resultMap" class="rms.common.tree.domain.TreeUnit">
+		<result property="unitCd"	column="unit_cd" />
+		<result property="unitNm"	column="unit_nm" />
+		<result property="orgCd"	column="org_cd" />
+		<result property="orgNm"	column="org_nm" />
+		<result property="useFlag"	column="use_flag" />		
+	</resultMap>
+	<select id="countUnitNm" parameterClass="rms.common.tree.domain.TreeUnit" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STORG A
+			, TB_ZZORGUNIT B
+			, TB_ZZUNIT C
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	    <isNotEmpty prepend="AND" property="orgCd">
+			A.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		AND   B.record_center_id = A.record_center_id
+		AND   B.org_cd = A.org_cd
+		<isNotEmpty property="useFlag">
+			<isEqual prepend="AND" property="useFlag" compareValue="3">
+				(B.use_flag IS NULL OR B.use_flag = '0' OR B.use_flag = '1')
+			</isEqual>
+			<isNotEqual prepend="AND" property="useFlag" compareValue="3">
+				B.use_flag = #useFlag:VARCHAR#
+			</isNotEqual>
+	    </isNotEmpty>
+		AND   C.record_center_id = B.record_center_id
+		AND   C.unit_cd = B.unit_cd
+		<isNotEmpty prepend="AND" property="unitCd">
+			C.unit_cd LIKE #unitCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="unitNm">
+			C.unit_nm LIKE #unitNm:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findUnitNm" parameterClass="rms.common.tree.domain.TreeUnit" resultMap="findUnitNm-resultMap">
+		SELECT E.unit_cd
+			, E.unit_nm
+			, E.org_nm
+			, E.org_cd
+			, E.use_flag
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+			    SELECT C.unit_cd 
+					, C.unit_nm
+					, A.org_cd
+					, A.org_nm
+					, (CASE WHEN B.use_flag='0' THEN '폐지' ELSE '현존' END) AS use_flag
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			    <isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				<isNotEmpty property="useFlag">
+					<isEqual prepend="AND" property="useFlag" compareValue="3">
+						(B.use_flag IS NULL OR B.use_flag = '0' OR B.use_flag = '1')
+					</isEqual>
+					<isNotEqual prepend="AND" property="useFlag" compareValue="3">
+						B.use_flag = #useFlag:VARCHAR#
+					</isNotEqual>
+			    </isNotEmpty>
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				<isNotEmpty prepend="AND" property="unitCd">
+					C.unit_cd LIKE #unitCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="unitNm">
+					C.unit_nm LIKE #unitNm:VARCHAR#
+				</isNotEmpty>
+				ORDER BY C.unit_nm, A.org_nm
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		단위업무 트리 검색 
+	-->
+	<select id="findUnitTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, C.unit_cd AS id
+					, C.unit_nm AS text
+					, 'open' AS state
+					, (CASE WHEN B.use_flag = '0' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.org_cd = #id:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				ORDER BY A.levl, A.org_seq
+			) D
+		)
+		UNION ALL
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.org_cd AS id
+					, A.org_abbr_nm AS text
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+				<isEqual prepend="AND" property="treeType" compareValue="0">
+					NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+				</isEqual>
+				<isNotEqual prepend="AND" property="treeType" compareValue="0">
+					A.upper_org_cd = #id:VARCHAR#
+				</isNotEqual>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+			) D
+		)
+	</select>
+	
+	<!-- 
+		단위업무 트리 검색 
+	-->
+	<select id="findOrgUnitTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, C.unit_cd AS id
+					, C.unit_nm AS text
+					, 'open' AS state
+					, (CASE WHEN B.use_flag = '0' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.org_cd = #id:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				ORDER BY A.levl, A.org_seq
+			) D
+		)
+		UNION ALL
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.org_cd AS id
+					, A.org_abbr_nm AS text
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				<isEqual prepend="AND" property="treeType" compareValue="0">
+					A.org_cd = #orgCd:VARCHAR#
+				</isEqual>
+				<isNotEqual prepend="AND" property="treeType" compareValue="0">
+					0 = 1
+				</isNotEqual>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+			) D
+		)
+	</select>
+</sqlMap>

@@ -1,0 +1,1778 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.booksf">
+	
+	<!-- 
+		반출/반입_열람반출
+		: 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findReadCarryOutPagedList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 				column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 					column="ORG_NM"/>				<!-- 생산부서 -->
+		<result property="title" 					column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="stakrmMngNo"				column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->		
+		<result property="arngInfo"					column="ARNG_INFO"/>
+		<result property="readUserId"	    		column="READ_USER_ID"/>			<!-- 배치정보 -->	
+		<result property="readUserDeptNm"			column="READ_USER_DEPT_NM"/>    <!-- 열람자소속명 -->
+		<result property="readUserNm"				column="READ_USER_NM"/>			<!-- 열람자 -->
+		<result property="outFlagNm"				column="OUT_FLAG_NM"/>          <!-- 반출여부 -->
+		<result property="readReqNo"        		column="READ_REQNO"/>
+		<result property="outFlag"          		column="OUT_FLAG"/>
+		<result property="booksfArngFlag"   		column="BOOKSF_ARNG_FLAG"/>
+		<result property="rdTitle"          		column="RD_TITLE"/>
+		<result property="readReqDivNm"     		column="READ_REQ_DIV_NM"/>
+		<result property="recordId"     			column="RECORD_ID"/>
+		<result property="readReqProgStateCd"     	column="READ_REQ_PROG_STATE_CD"/>
+		<result property="readAprovCd"     			column="READ_APROV_CD"/>
+		<result property="status"     				column="STATUS"/>
+		<result property="readRsn"          		column="READ_RSN"/>
+		<result property="readStartYmd"  			column="READ_START_YMD"/>
+		<result property="readCloseYmd"     		column="READ_CLOSE_YMD"/>		
+	</resultMap>
+	<select id="countReadCarryOutPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT /*+ ORDERED*/ 
+                    C.RECORD_CENTER_ID,C.FOLDER_ID,C.TITLE,C.STAKRM_MNG_NO,C.CREAT_YYYY
+                   ,D.ORG_NM,K.READ_USER_ID,K.READ_USER_NM,K.READ_USER_DEPT_NM,K.READ_REQNO
+                   ,C.OUT_FLAG,C.BOOKSF_ARNG_FLAG,K.RD_TITLE,K.READ_REQ_DIV_NM,K.RECORD_ID
+                   ,K.READ_REQ_PROG_STATE_CD,K.READ_APROV_CD,K.READ_RSN,K.READ_START_YMD,K.READ_CLOSE_YMD
+            FROM (
+                SELECT B.RECORD_CENTER_ID
+                        ,B.FOLDER_ID
+                        ,A.READ_USER_ID
+                        ,A.READ_USER_NM
+                        ,A.READ_USER_DEPT_NM
+                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO
+                        ,'' RD_TITLE
+                        ,'1' READ_REQ_DIV_NM
+                        ,'' RECORD_ID
+                        ,B.READ_REQ_PROG_STATE_CD
+                        ,B.READ_APROV_CD
+                        ,A.READ_RSN
+                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD
+                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD
+                FROM  TB_RDREADREQ A, TB_RDFOLDERREADDETL B
+                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+                AND A.READ_REQNO = B.READ_REQNO
+                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                AND A.READ_START_YMD <![CDATA[<=]]>TO_CHAR (SYSDATE, 'YYYYMMDD')
+                AND A.READ_CLOSE_YMD <![CDATA[>=]]> TO_CHAR (SYSDATE, 'YYYYMMDD')
+                AND B.READ_APROV_CD='2'
+                <isEqual prepend="AND" property="status" compareValue="1">
+                    B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'
+                </isEqual>
+                <isEqual prepend="AND" property="status" compareValue="2">
+                    B.READ_REQ_PROG_STATE_CD = '4'
+                </isEqual>
+                UNION ALL
+                SELECT C.RECORD_CENTER_ID
+                        ,C.FOLDER_ID
+                        ,A.READ_USER_ID
+                        ,A.READ_USER_NM
+                        ,A.READ_USER_DEPT_NM
+                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO
+                        ,C.TITLE AS RD_TITLE
+                        ,'2' READ_REQ_DIV_NM
+                        ,B.RECORD_ID
+                        ,B.READ_REQ_PROG_STATE_CD
+                        ,B.READ_APROV_CD
+                        ,A.READ_RSN
+                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD
+                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD
+                FROM TB_RDREADREQ A,TB_RDRECORDREADDETL B,TB_RDRECORD C
+                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+                AND A.READ_REQNO = B.READ_REQNO
+                AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+                AND B.RECORD_ID = C.RECORD_ID                 
+                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                AND A.READ_START_YMD <![CDATA[<=]]> TO_CHAR (SYSDATE, 'YYYYMMDD')
+                AND A.READ_CLOSE_YMD <![CDATA[>=]]> TO_CHAR (SYSDATE, 'YYYYMMDD')                 
+                AND B.READ_APROV_CD='2'
+                AND C.ERECORD_FLAG IN ('2','3')
+                <isEqual prepend="AND" property="status" compareValue="1">
+                    B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'
+                </isEqual>
+                <isEqual prepend="AND" property="status" compareValue="2">
+                    B.READ_REQ_PROG_STATE_CD = '4'
+                </isEqual>
+                ) K, TB_RDFOLDER C, TB_STORG D
+            WHERE K.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+            AND K.FOLDER_ID = C.FOLDER_ID
+            AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+            AND C.ORG_CD = D.ORG_CD
+            AND C.ERECORD_FLAG IN ('2','3')
+            AND C.FOLDER_KEEP_STATE_CD IN ('01','04')
+            <isNotEmpty prepend="AND" property="outUserNm">
+                K.READ_USER_NM LIKE #outUserNm:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                (C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            ORDER BY K.READ_REQNO DESC
+        )
+	</select>
+	<select id="findReadCarryOutPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findReadCarryOutPagedList-result">
+		SELECT G.folder_id
+		      ,G.title
+		      ,G.stakrm_mng_no
+		      ,G.creat_yyyy
+		      ,G.org_nm
+		      ,G.read_user_id
+		      ,G.read_user_nm
+		      ,G.read_user_dept_nm
+		      ,(SELECT Z.stakrm_id||'-'||Z.booksf_id||'-'||Z.booksf_shelf_cno||'-'||Z.booksf_shelf_rno FROM TB_SRBOOKSFARNGDETL Z WHERE Z.record_center_id = G.record_center_id AND Z.folder_id = G.folder_id) AS arng_info
+		      ,DECODE(G.out_flag,'1','반출','보유') AS out_flag_nm
+		      ,G.read_reqno
+		      ,G.out_flag
+		      ,G.booksf_arng_flag
+		      ,G.rd_title
+		      ,G.read_req_div_nm
+		      ,G.record_id
+		      ,G.read_req_prog_state_cd
+		      ,G.read_aprov_cd
+		      ,G.read_rsn
+		      ,G.read_start_ymd
+		      ,G.read_close_ymd
+		      ,(CASE WHEN G.read_req_prog_state_cd = '3' AND G.read_aprov_cd ='2' THEN '열람대기' WHEN  G.read_req_prog_state_cd = '4' THEN '열람완료' END) AS status
+		FROM (
+		    SELECT F.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,E.*
+		        FROM (
+		            SELECT /*+ ORDERED*/ 
+		                    C.RECORD_CENTER_ID,C.FOLDER_ID,C.TITLE,C.STAKRM_MNG_NO,C.CREAT_YYYY
+		                   ,D.ORG_NM,K.READ_USER_ID,K.READ_USER_NM,K.READ_USER_DEPT_NM,K.READ_REQNO
+		                   ,C.OUT_FLAG,C.BOOKSF_ARNG_FLAG,K.RD_TITLE,K.READ_REQ_DIV_NM,K.RECORD_ID
+		                   ,K.READ_REQ_PROG_STATE_CD,K.READ_APROV_CD,K.READ_RSN,K.READ_START_YMD,K.READ_CLOSE_YMD
+		            FROM (
+		                SELECT B.RECORD_CENTER_ID
+		                        ,B.FOLDER_ID
+		                        ,A.READ_USER_ID
+		                        ,A.READ_USER_NM
+		                        ,A.READ_USER_DEPT_NM
+		                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO
+		                        ,'' RD_TITLE
+		                        ,'1' READ_REQ_DIV_NM
+		                        ,'' RECORD_ID
+		                        ,B.READ_REQ_PROG_STATE_CD
+		                        ,B.READ_APROV_CD
+		                        ,A.READ_RSN
+		                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD
+		                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD
+		                FROM  TB_RDREADREQ A, TB_RDFOLDERREADDETL B
+		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		                AND A.READ_REQNO = B.READ_REQNO
+		                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                AND A.READ_START_YMD <![CDATA[<=]]>TO_CHAR (SYSDATE, 'YYYYMMDD')
+		                AND A.READ_CLOSE_YMD <![CDATA[>=]]> TO_CHAR (SYSDATE, 'YYYYMMDD')
+		                AND B.READ_APROV_CD='2'
+	                    <isEqual prepend="AND" property="status" compareValue="1">
+	                        B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'
+	                    </isEqual>
+	                    <isEqual prepend="AND" property="status" compareValue="2">
+	                        B.READ_REQ_PROG_STATE_CD = '4'
+	                    </isEqual>
+		                UNION ALL
+		                SELECT C.RECORD_CENTER_ID
+		                        ,C.FOLDER_ID
+		                        ,A.READ_USER_ID
+		                        ,A.READ_USER_NM
+		                        ,A.READ_USER_DEPT_NM
+		                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO
+		                        ,C.TITLE AS RD_TITLE
+		                        ,'2' READ_REQ_DIV_NM
+		                        ,B.RECORD_ID
+		                        ,B.READ_REQ_PROG_STATE_CD
+		                        ,B.READ_APROV_CD
+		                        ,A.READ_RSN
+		                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD
+		                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD
+		                FROM TB_RDREADREQ A,TB_RDRECORDREADDETL B,TB_RDRECORD C
+		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		                AND A.READ_REQNO = B.READ_REQNO
+		                AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		                AND B.RECORD_ID = C.RECORD_ID                 
+		                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                AND A.READ_START_YMD <![CDATA[<=]]> TO_CHAR (SYSDATE, 'YYYYMMDD')
+		                AND A.READ_CLOSE_YMD <![CDATA[>=]]> TO_CHAR (SYSDATE, 'YYYYMMDD')                 
+		                AND B.READ_APROV_CD='2'
+		                AND C.ERECORD_FLAG IN ('2','3')
+	                    <isEqual prepend="AND" property="status" compareValue="1">
+	                        B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'
+	                    </isEqual>
+	                    <isEqual prepend="AND" property="status" compareValue="2">
+	                        B.READ_REQ_PROG_STATE_CD = '4'
+	                    </isEqual>
+		                ) K, TB_RDFOLDER C, TB_STORG D
+		            WHERE K.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND K.FOLDER_ID = C.FOLDER_ID
+		            AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            AND C.ORG_CD = D.ORG_CD
+		            AND C.ERECORD_FLAG IN ('2','3')
+		            AND C.FOLDER_KEEP_STATE_CD IN ('01','04')
+	                <isNotEmpty prepend="AND" property="outUserNm">
+	                    K.READ_USER_NM LIKE #outUserNm:VARCHAR#
+	                </isNotEmpty>
+	                <isNotEmpty prepend="AND" property="title">
+	                    (C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#)
+	                </isNotEmpty>
+		            ORDER BY K.READ_REQNO DESC
+		        ) E
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) F
+		    WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) G
+		ORDER BY G.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_열람반출
+		: 반출서 작성시 일련번호를 구한다.
+	 -->
+	<select id="findCarryOutSno" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.String">
+		SELECT NVL(MAX(OUT_SNO),0) + 1 OUT_SNO
+		  FROM TB_SROUT
+		 WHERE OUT_YYYY = #outYyyy:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		반출/반입_열람반출
+		: 반출서를 작성한다.
+	-->
+	<insert id="createReadCarryOut" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_SROUT (
+			RECORD_CENTER_ID, OUT_ID, OUT_YYYY, OUT_SNO, OUT_YMD, OUT_TYPE_CD, RETRN_EXPT_YMD, OUT_USER_NM,OUT_USER_POS_RANK_NM,OUT_USER_ORG_NM,OUT_FOLDER_CNT,OUT_RSN, WORK_USER_ID
+		) VALUES (
+			#recordCenterId#, REPLACE(#outId:VARCHAR#, '-', ''), #outYyyy#, #outSno#, #outYmd#, '5', #retrnExptYmd#, #outUserNm#,'',#outUserOrgNm#, #outFolderCnt#, #outRsn#, #workUserId#
+		)
+	</insert>
+	
+	<!-- 
+		반출/반입_열람반출
+		: 반출 기록물철 목록을 등록한다.
+	-->
+	<insert id="createInOutFolder" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_SRINOUTFOLDER (
+			RECORD_CENTER_ID, OUT_ID, FOLDER_ID, IN_ID, IN_FLAG, REG_DTIME
+		) VALUES (
+			#recordCenterId:VARCHAR#, REPLACE(#outId:VARCHAR#, '-', ''), #folderId:VARCHAR#, '', '0'
+		<!--cubrid , (SELECT TO_CHAR(SYSDATE,'YYYYMMDDHHMMSS') FROM DUAL)-->
+		, (SELECT TO_CHAR(sys_datetime,'YYYYMMDDHHMMSS') FROM DUAL)
+		)
+	</insert>
+	
+	<!-- 
+		반출/반입_열람반출
+		: 기록물철 반출여부를 갱신한다.
+	-->
+	<update id="updateOutFolder" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_RDFOLDER
+		   SET OUT_FLAG = #outFlag:VARCHAR#
+		 WHERE FOLDER_ID IN (SELECT FOLDER_ID
+		                       FROM TB_SRINOUTFOLDER
+		                      WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                        AND OUT_ID = REPLACE(#outId:VARCHAR#, '-', ''))
+           AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#		                        
+	</update>
+	
+	<!-- 
+		반출/반입_열람반출
+		: 기록물철 열람신청진행상태를 갱신한다 (4:열람)
+	 -->
+	<update id="updateReadCarryOutWriteFolder" parameterClass="rms.presv.booksf.domain.CarryInOut">	          
+          UPDATE TB_RDFOLDERREADDETL
+          SET READ_REQ_PROG_STATE_CD = '4'
+          WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+          AND READ_REQNO = REPLACE(#readReqNo:VARCHAR#, '-', '')
+          AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		반출/반입_열람반출
+		: 기록물건 열람신청진행상태를 갱신한다. (4:열람)
+	 -->
+	<update id="updateReadCarryOutWriteRecord" parameterClass="rms.presv.booksf.domain.CarryInOut">	          
+          UPDATE TB_RDRECORDREADDETL
+          SET READ_REQ_PROG_STATE_CD = '4'
+          WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+          AND READ_REQNO = REPLACE(#readReqNo:VARCHAR#, '-', '')
+          AND RECORD_ID = #recordId:VARCHAR#
+	</update>
+	
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryOutPagedList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="outId" 			column="OUT_ID"/>				<!-- 반출서번호 -->
+		<result property="outYmd" 			column="OUT_YMD"/>				<!-- 반출일자 -->
+		<result property="outTypeCd" 		column="OUT_TYPE_CD"/>			<!-- 반출형태 -->
+		<result property="outTypeNm" 		column="OUT_TYPE_NM"/>			<!-- 반출형태 -->
+		<result property="retrnExptYmd" 	column="RETRN_EXPT_YMD"/>		<!-- 반입예정일자 -->
+		<result property="outUserNm"		column="OUT_USER_NM"/>			<!-- 반출자 -->
+		<result property="outUserOrgNm"		column="OUT_USER_ORG_NM"/>		<!-- 소속 -->
+		<result property="outUserPosRankNm"	column="OUT_USER_POS_RANK_NM"/>	<!-- 직급 -->
+		<result property="outRsn"			column="OUT_RSN"/>				<!-- 사유 -->
+	</resultMap>
+	<select id="countCarryOutPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SROUT A, TB_ZZCOMCD B
+        WHERE (A.OUT_TYPE_CD = B.COM_CD and B.COM_TYPE_CD = 'SR01')
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="outId">
+                A.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="outTypeCd">
+                A.OUT_TYPE_CD = #outTypeCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="outYmd">
+                A.OUT_YMD = #outYmd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="outUserNm">
+                A.OUT_USER_NM = #outUserNm:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findCarryOutPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryOutPagedList-result">
+		SELECT SUBSTR(E.out_id, 1, 4)||'-'||SUBSTR(E.out_id, 5, 6) AS out_id
+		      ,E.out_ymd
+		      ,E.com_cd AS out_type_cd
+		      ,E.com_cd_nm AS out_type_nm
+		      ,E.retrn_expt_ymd
+		      ,E.out_user_nm
+		      ,E.out_user_org_nm
+		      ,E.out_user_pos_rank_nm
+		      ,E.out_rsn
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.*, B.*
+		            FROM TB_SROUT A, TB_ZZCOMCD B
+		            WHERE (A.OUT_TYPE_CD = B.COM_CD and B.COM_TYPE_CD = 'SR01')
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="outId">
+		                    A.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outTypeCd">
+		                    A.OUT_TYPE_CD = #outTypeCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outYmd">
+		                    A.OUT_YMD = #outYmd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outUserNm">
+		                    A.OUT_USER_NM = #outUserNm:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY A.record_center_id, A.out_id
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서작성 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryOutWriteList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 			column="ORG_NM"/>				<!-- 생산부서 -->
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 		column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo"		column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->	
+		<result property="outFlagNm"		column="OUT_FLAG_NM"/>			<!-- 반출여부 -->	
+		<result property="arngInfo"			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+		<result property="boxId"			column="BOX_ID"/>				<!-- 보존상자ID -->
+		<result property="outId"			column="OUT_ID"/>	
+	</resultMap>
+	<select id="countCarryOutWriteList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT  /*+ ORDERED */
+                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+                   ,B.STAKRM_MNG_NO
+                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM
+                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM
+                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID
+                   ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID
+            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D,
+            TB_STORG E
+            WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            AND  A.REMK = 'CARRYOUT'
+            AND  A.USER_ID = #userId:VARCHAR#
+            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+            AND  A.TRGT_ID = B.FOLDER_ID
+            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+            AND  A.TRGT_ID = C.FOLDER_ID
+            AND  C.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+            AND  B.FOLDER_ID = D.FOLDER_ID
+            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+            AND  B.ORG_CD = E.ORG_CD
+            UNION 
+            SELECT  /*+ ORDERED */
+                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+                   ,B.STAKRM_MNG_NO
+                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM
+                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM
+                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID
+                   ,'' OUT_ID
+            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRBOOKSFARNGDETL D, TB_STORG E
+            WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            AND  A.REMK = 'CARRYOUT'
+            AND  A.USER_ID = #userId:VARCHAR#
+            AND  NOT EXISTS (SELECT FOLDER_ID TRGT_ID 
+                             FROM TB_SRINOUTFOLDER
+                             WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+                             AND RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                             AND FOLDER_ID = A.TRGT_ID
+                             AND OUT_ID=REPLACE(#outId:VARCHAR#, '-', '')
+                             )
+            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+            AND  A.TRGT_ID = B.FOLDER_ID
+            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+            AND  B.FOLDER_ID = D.FOLDER_ID
+            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+            AND  B.ORG_CD = E.ORG_CD  
+        ) E
+	</select>
+	<select id="findCarryOutWriteList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryOutWriteList-result">
+		SELECT G.folder_id
+		      ,G.org_nm
+		      ,G.org_abbr_nm
+		      ,G.title
+		      ,G.creat_yyyy
+		      ,G.presv_term_nm
+		      ,G.stakrm_mng_no
+		      ,G.out_flag_nm
+		      ,G.arng_info
+		      ,G.box_id
+		      ,G.out_id
+		FROM (
+		    SELECT F.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,E.*
+		        FROM (
+		            SELECT  /*+ ORDERED */
+		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+		                   ,B.STAKRM_MNG_NO
+		                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM
+		                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM
+		                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+		                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID
+		                   ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID
+		            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D,
+		            TB_STORG E
+		            WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND  A.REMK = 'CARRYOUT'
+		            AND  A.USER_ID = #userId:VARCHAR#
+		            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = B.FOLDER_ID
+		            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = C.FOLDER_ID
+		            AND  C.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            AND  B.FOLDER_ID = D.FOLDER_ID
+		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		            AND  B.ORG_CD = E.ORG_CD
+		            UNION 
+		            SELECT  /*+ ORDERED */
+		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+		                   ,B.STAKRM_MNG_NO
+		                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM
+		                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM
+		                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+		                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID
+		                   ,'' OUT_ID
+		            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRBOOKSFARNGDETL D, TB_STORG E
+		            WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND  A.REMK = 'CARRYOUT'
+		            AND  A.USER_ID = #userId:VARCHAR#
+		            AND  NOT EXISTS (SELECT FOLDER_ID TRGT_ID 
+		                             FROM TB_SRINOUTFOLDER
+		                             WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		                             AND RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		                             AND FOLDER_ID = A.TRGT_ID
+		                             AND OUT_ID=REPLACE(#outId:VARCHAR#, '-', '')
+		                             )
+		            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = B.FOLDER_ID
+		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            AND  B.FOLDER_ID = D.FOLDER_ID
+		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		            AND  B.ORG_CD = E.ORG_CD  
+		        ) E
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) F
+		    WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) G
+		ORDER BY G.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 작성, 수정전 임시테이블을 삭제한다.
+	 -->
+	<delete id="deleteCarryOutTempAll" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND USER_ID = #userId:VARCHAR# AND REMK ='CARRYOUT'
+	</delete>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서작성 시 추가할 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryOutFolderPagedList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 			column="ORG_NM"/>				<!-- 생산부서 -->
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 		column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo"		column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->	
+		<result property="outFlagNm"		column="OUT_FLAG_NM"/>			<!-- 반출여부 -->	
+		<result property="arngInfo"			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+		<result property="boxId"			column="BOX_ID"/>				<!-- 보존상자ID -->	
+	</resultMap>
+	<select id="countCarryOutFolderPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+         FROM TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_STORG F
+         WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+         AND NVL(A.OUT_FLAG,'0') = '0'  
+         AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+         AND A.FOLDER_KEEP_STATE_CD IN ('01','04')
+         AND A.FOLDER_ID = B.FOLDER_ID
+         AND A.ORG_CD =  F.ORG_CD
+         AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+         AND A.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+         AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+         AND NOT EXISTS (SELECT D.FOLDER_ID 
+                         FROM TB_DFDISUSEHIST D
+                         WHERE D.LAST_DISUSE_EVAL_DIV_CD = '1'                        
+                         AND D.RECORD_CENTER_ID =  #recordCenterId:VARCHAR#
+                         AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                         AND D.FOLDER_ID = A.FOLDER_ID)
+         AND NOT EXISTS (SELECT E.FOLDER_ID 
+                         FROM TB_DFTRANSFHIST E
+                         WHERE E.CONFM_TRANSF_DIV_CD IN ('1','3')                        
+                         AND E.RECORD_CENTER_ID =  #recordCenterId:VARCHAR#
+                         AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+                         AND A.FOLDER_ID = E.FOLDER_ID)        
+         AND NOT EXISTS (SELECT F.TRGT_ID
+                         FROM TB_ZZREQLISTTEMP F
+                         WHERE F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                         AND F.USER_ID = #userId:VARCHAR#
+                         AND F.TRGT_ID = A.FOLDER_ID
+                         AND F.REMK = 'CARRYOUT'
+                         AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+         )      
+         <dynamic prepend="AND">
+             <isNotEmpty prepend="AND" property="orgCd">
+                 A.ORG_CD = #orgCd:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="creatYyyyF">
+                 (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="presvTermCd">
+                 A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="title">
+                 (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="clssId">
+                 (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+             </isNotEmpty>
+         </dynamic> 
+	</select>
+	<select id="findCarryOutFolderPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryOutFolderPagedList-result">
+		SELECT I.folder_id
+		      ,I.org_nm
+		      ,I.org_abbr_nm
+		      ,I.title
+		      ,I.creat_yyyy
+		      ,I.presv_term_nm
+		      ,I.stakrm_mng_no
+		      ,I.out_flag_nm
+		      ,I.arng_info
+		      ,I.box_id
+		FROM (
+		    SELECT H.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,G.*
+		        FROM (
+		            SELECT A.FOLDER_ID, F.ORG_NM, F.ORG_ABBR_NM, A.TITLE, A.CREAT_YYYY
+		                  ,C.COM_CD_NM PRESV_TERM_NM, A.STAKRM_MNG_NO
+		                  ,DECODE(A.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM
+		                  ,(B.STAKRM_ID||'-'||B.BOOKSF_ID||'-'||B.BOOKSF_SHELF_CNO||'-'||B.BOOKSF_SHELF_RNO) ARNG_INFO
+		                  ,SUBSTR(A.PRESV_BOX_ID,13,3) BOX_ID
+		            FROM TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_STORG F
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND NVL(A.OUT_FLAG,'0') = '0'  
+		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+		            AND A.FOLDER_KEEP_STATE_CD IN ('01','04')
+		            AND A.FOLDER_ID = B.FOLDER_ID
+		            AND A.ORG_CD =  F.ORG_CD
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            AND A.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+		            AND NOT EXISTS (SELECT D.FOLDER_ID 
+		                            FROM TB_DFDISUSEHIST D
+		                            WHERE D.LAST_DISUSE_EVAL_DIV_CD = '1'                        
+		                            AND D.RECORD_CENTER_ID =  #recordCenterId:VARCHAR#
+		                            AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		                            AND D.FOLDER_ID = A.FOLDER_ID)
+		            AND NOT EXISTS (SELECT E.FOLDER_ID 
+		                            FROM TB_DFTRANSFHIST E
+		                            WHERE E.CONFM_TRANSF_DIV_CD IN ('1','3')                        
+		                            AND E.RECORD_CENTER_ID =  #recordCenterId:VARCHAR#
+		                            AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		                            AND A.FOLDER_ID = E.FOLDER_ID)        
+		            AND NOT EXISTS (SELECT F.TRGT_ID
+		                            FROM TB_ZZREQLISTTEMP F
+		                            WHERE F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                            AND F.USER_ID = #userId:VARCHAR#
+		                            AND F.TRGT_ID = A.FOLDER_ID
+		                            AND F.REMK = 'CARRYOUT'
+		                            AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            )      
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="presvTermCd">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>
+		            </dynamic>   
+		        ) G
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) H
+		    WHERE H.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) I 
+		ORDER BY I.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 기록물철을 임시테이블에 등록한다.
+	-->
+	<insert id="createCarryOutTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_ZZREQLISTTEMP (
+			RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK
+		) VALUES (
+			#recordCenterId:VARCHAR#, #userId:VARCHAR#,#trgtId:VARCHAR#,'CARRYOUT'
+		) 
+	</insert>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 기록물철을 임시테이블에서 삭제한다.
+	 -->
+	<delete id="deleteCarryOutTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND TRGT_ID = #trgtId:VARCHAR# AND USER_ID = #userId:VARCHAR# AND REMK = 'CARRYOUT'
+	</delete>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 임시테이블에서 반출 기록물철 목록을 조회한다. 
+	-->
+	<resultMap id="findCarryOutTemp-result"		class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+	</resultMap>
+	<select id="findCarryOutTemp" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryOutTemp-result">
+		SELECT TRGT_ID FOLDER_ID
+		  FROM TB_ZZREQLISTTEMP
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND USER_ID = #userId:VARCHAR#
+		   AND REMK='CARRYOUT'
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서를 작성한다.
+	-->
+	<insert id="createCarryOut" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_SROUT (
+			RECORD_CENTER_ID, OUT_ID, OUT_YYYY, OUT_SNO, OUT_YMD
+		   ,OUT_TYPE_CD, RETRN_EXPT_YMD, OUT_USER_NM, OUT_USER_ORG_NM, OUT_USER_POS_RANK_NM
+		   ,OUT_FOLDER_CNT,OUT_RSN, WORK_USER_ID
+		) VALUES (
+			#recordCenterId:VARCHAR#, REPLACE(#outId:VARCHAR#, '-', ''), #outYyyy:VARCHAR#, #outSno:NUMBER#, #outYmd:VARCHAR#
+		   ,#outTypeCd:VARCHAR#, #retrnExptYmd:VARCHAR#, #outUserNm:VARCHAR#, #outUserOrgNm:VARCHAR#, #outUserPosRankNm:VARCHAR#
+		   ,#outFolderCnt:NUMBER#, #outRsn:VARCHAR#, #workUserId:VARCHAR#
+		)
+	</insert>
+	
+	<!--
+		반출/반입_반출서작성
+		: 반출서작성완료후 임시테이블에 반출서번호 등록
+	-->
+	<update id="updateCarryOutTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_ZZREQLISTTEMP
+		   SET INOUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND USER_ID = #userId:VARCHAR#
+		   AND TRGT_ID = #folderId:VARCHAR#
+		   AND REMK = 'CARRYOUT'
+	</update>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 수정전 임시테이블에 수정대상 목록을 등록한다.
+	 -->
+	<insert id="createModifyCarryOutTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK, INOUT_ID)
+		(
+			SELECT #recordCenterId# RECORD_CENTER_ID, #userId# USER_ID, A.FOLDER_ID,'CARRYOUT', DECODE(A.OUT_ID, '', A.IN_ID, A.OUT_ID)
+	 		FROM TB_SRINOUTFOLDER A
+			WHERE A.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+		)
+	</insert>
+	
+	 <!-- 
+		반출/반입_반입서작성
+		: 반입서 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryInPagedList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="inId" 			column="IN_ID"/>				<!-- 반입서번호 -->
+		<result property="inYmd" 			column="IN_YMD"/>				<!-- 반입일자 -->
+		<result property="inUserNm"			column="IN_USER_NM"/>			<!-- 반출자 -->
+		<result property="inUserOrgNm"		column="IN_USER_ORG_NM"/>		<!-- 소속 -->	
+		<result property="inUserPosRankNm"	column="IN_USER_POS_RANK_NM"/>	<!-- 직급 -->	
+		<result property="inRsn"			column="IN_RSN"/>				<!-- 사유 -->
+	</resultMap>
+	<select id="countCarryInPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRIN A
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="inId">
+                A.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="inYmd">
+                A.IN_YMD = #inYmd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="inUserNm">
+                A.IN_USER_NM LIKE #inUserNm:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findCarryInPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryInPagedList-result">
+		SELECT SUBSTR(D.in_id, 1, 4)||'-'||SUBSTR(D.in_id, 5, 6) AS in_id
+		      ,D.in_ymd
+		      ,D.in_user_nm
+		      ,D.in_user_org_nm
+		      ,D.in_user_pos_rank_nm
+		      ,D.in_rsn
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,B.*
+		        FROM (
+		            SELECT *
+		            FROM TB_SRIN A
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="inId">
+		                    A.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="inYmd">
+		                    A.IN_YMD = #inYmd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="inUserNm">
+		                    A.IN_USER_NM LIKE #inUserNm:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY A.RECORD_CENTER_ID, A.IN_ID
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+	 
+	 <!-- 
+		반출/반입_반출서작성
+		: 반출서 수정 작성완료시 반출입기록물철 테이블을 삭제한다.
+	 -->
+	<delete id="deleteCarryInOutFolder" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_SRINOUTFOLDER WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+	</delete>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 수정시 반출기록물철 수량 갱신
+	 -->
+	<update id="updateCarryOutFolderCnt" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_SROUT A
+		SET OUT_FOLDER_CNT = (
+						  SELECT COUNT(1) 
+						  FROM TB_SRINOUTFOLDER B 
+						  WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+						  AND A.OUT_ID = B.OUT_ID 
+						 )
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+	</update>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 수정시 추가할 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryOutChngTemp-result"		class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+	</resultMap>
+	<select id="findCarryOutChngTemp" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryOutChngTemp-result">
+		SELECT TRGT_ID FOLDER_ID
+		  FROM TB_ZZREQLISTTEMP
+		 WHERE USER_ID = #userId:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND REMK='CARRYOUT'
+		   AND TRGT_ID NOT IN (SELECT FOLDER_ID TRGT_ID 
+                                 FROM TB_SRINOUTFOLDER
+                                WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+                                  AND OUT_ID=REPLACE(#outId:VARCHAR#, '-', ''))
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서를 삭제한다
+	 -->
+	<delete id="deleteCarryOut" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_SROUT WHERE OUT_ID = REPLACE(#outId:VARCHAR#, '-', '') AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</delete>
+
+	<!-- 
+		반출/반입_반출서작성
+		: 바코드등록시 서고관리번호의 철목록 조회
+	-->
+	<resultMap id="findCarryInOutFolder-result"		class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+	</resultMap>
+	<select id="findCarryInOutFolder" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryInOutFolder-result">
+		SELECT FOLDER_ID 
+		  FROM TB_RDFOLDER
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND REPLACE(STAKRM_MNG_NO,'-','') = #stakrmMngNo:VARCHAR#
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출가능여부 검증 
+	-->
+	<select id="countCarryOutInfo" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="int">
+		SELECT COUNT(1)
+		  FROM TB_RDFOLDER A, 
+		  	   TB_SRBOOKSFARNGDETL B,
+			   TB_ZZCOMCD C,  
+		  	   TB_STORG F
+		 WHERE NVL(A.OUT_FLAG,'0') = '0'	<!-- 반출안된것 -->
+		   AND A.BOOKSF_ARNG_FLAG IN ('1', '2')	<!-- 서가배치된것 -->
+		   AND A.FOLDER_ID = B.FOLDER_ID
+		   AND A.ORG_CD =  F.ORG_CD
+		   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND A.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+		   AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+		   AND NOT EXISTS (SELECT D.FOLDER_ID 
+		                 FROM TB_DFDISUSEHIST D
+		   				WHERE D.LAST_DISUSE_EVAL_DIV_CD = '1'						
+		   				  AND D.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						  AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+						  AND D.FOLDER_ID = A.FOLDER_ID)
+           AND NOT EXISTS (SELECT E.FOLDER_ID 
+		                 FROM TB_DFTRANSFHIST E
+		   				WHERE E.CONFM_TRANSF_DIV_CD IN ('1','3')						
+		   				  AND E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						  AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+						  AND A.FOLDER_ID = E.FOLDER_ID)		
+           AND NOT EXISTS (SELECT F.TRGT_ID
+		                 FROM TB_ZZREQLISTTEMP F
+		   				WHERE F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						  AND F.USER_ID = #userId:VARCHAR#
+						  AND F.TRGT_ID = A.FOLDER_ID
+						  AND F.REMK='CARRYOUT'
+						  AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID)	  
+		   AND A.FOLDER_ID=#folderId:VARCHAR#
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 출력시 헤더정보를 조회한다.
+	 -->
+	<resultMap id="findPrintDocCarryOutHead-result"			class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="outId" 			column="OUT_ID"/>				<!-- 반출서번호 -->
+		<result property="outYmd" 			column="OUT_YMD"/>				<!-- 반출일자 -->
+		<result property="outTypeNm" 		column="OUT_TYPE_NM"/>			<!-- 반출형태 -->
+		<result property="retrnExptYmd" 	column="RETRN_EXPT_YMD"/>		<!-- 반입예정일자 -->
+		<result property="outUserNm"		column="OUT_USER_NM"/>			<!-- 반출자 -->
+		<result property="outUserOrgNm"		column="OUT_USER_ORG_NM"/>		<!-- 소속 -->	
+		<result property="outUserPosRankNm"	column="OUT_USER_POS_RANK_NM"/>	<!-- 직급 -->	
+		<result property="outRsn"			column="OUT_RSN"/>				<!-- 사유 -->	
+	</resultMap>
+	<select id="findPrintDocCarryOutHead" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findPrintDocCarryOutHead-result">
+		SELECT SUBSTR(A.OUT_ID, 1, 4)||'-'||SUBSTR(A.OUT_ID, 5, 6) OUT_ID
+			 , to_char(to_date(A.OUT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') OUT_YMD
+		     , B.COM_CD_NM OUT_TYPE_NM
+		     , to_char(to_date(A.RETRN_EXPT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') RETRN_EXPT_YMD
+		     , A.OUT_USER_NM
+		     , A.OUT_USER_ORG_NM
+		     , A.OUT_USER_POS_RANK_NM
+		     , A.OUT_RSN
+		  FROM TB_SROUT A, TB_ZZCOMCD B  
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND (A.OUT_TYPE_CD = B.COM_CD and B.COM_TYPE_CD = 'SR01')
+		   AND A.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서 출력시 데이터정보를 조회한다.
+	 -->
+	<resultMap id="findPrintDocCarryOutData-result"			class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 			column="org_cd"/>
+		<result property="clssId" 			column="clss_id"/>
+		<result property="creatYyyy" 		column="creat_yyyy"/>
+		<result property="folderRegSeq" 	column="folder_reg_seq"/>
+		<result property="hoNo" 			column="ho_no"/>														
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="folderType"		column="FOLDER_TYPE_DIV_CD"/>	<!-- 철행태 -->
+		<result property="arngInfo"			column="ARNG_INFO"/>			<!-- 배치정보 -->
+		<result property="outFolderCnt"		column="RECORD_CNT"/>			<!-- 철수량 -->
+		<result property="hoNoCnt"			column="HO_NO_CNT"/>			<!-- 권호수 카운트 -->
+	</resultMap>
+	<select id="findPrintDocCarryOutData" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findPrintDocCarryOutData-result">
+		SELECT A.CREAT_SYS_CD 
+			 , A.FOLDER_ID
+		     , A.org_cd
+		     , A.clss_id
+		     , A.creat_yyyy
+		     , A.folder_reg_seq
+		     , A.ho_no		
+		     , A.TITLE
+			 , C.COM_CD_NM FOLDER_TYPE_DIV_CD
+			 , (SELECT COUNT(*) FROM TB_RDRECORD D WHERE A.FOLDER_ID = D.FOLDER_ID) RECORD_CNT
+			 , DECODE(A.PRESV_BOX_ID,'', (D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) 
+			                           , SUBSTR(A.PRESV_BOX_ID, 0,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 4,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 7,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 10,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 13,3) 
+									   ) ARNG_INFO
+		     ,(SELECT COUNT(*)
+	          FROM TB_RDFOLDER
+	          WHERE CREAT_SYS_CD = A.CREAT_SYS_CD
+	          AND ORG_CD = A.ORG_CD
+	          AND CLSS_ID = A.CLSS_ID
+	          AND CREAT_YYYY = A.CREAT_YYYY
+	          AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS HO_NO_CNT
+		  FROM TB_RDFOLDER A, TB_SRINOUTFOLDER B, TB_ZZCOMCD C, TB_SRBOOKSFARNGDETL D
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND A.FOLDER_ID = B.FOLDER_ID 
+		   AND B.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+		   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+		   AND A.FOLDER_ID = D.FOLDER_ID
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	</select>
+
+	<!-- 
+		반출/반입_반입서작성
+		: 반입서 작성, 수정전 임시테이블을 삭제한다.
+	 -->
+	<delete id="deleteCarryInTempAll" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND USER_ID = #userId:VARCHAR# AND REMK ='CARRYIN'
+	</delete>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반입서작성 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryInWriteList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 			column="ORG_NM"/>				<!-- 생산부서 -->
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 		column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo"		column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->	
+		<result property="outId"			column="OUT_ID"/>				<!-- 반출서번호 -->	
+		<result property="arngInfo"			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+		<result property="inFlag"			column="IN_FLAG"/>
+	</resultMap>
+	<select id="countCarryInWriteList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT   /*+ ORDERED */ 
+                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM
+                    ,B.STAKRM_MNG_NO
+                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID
+                    ,C.IN_FLAG
+            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E
+            WHERE  A.RECORD_CENTER_ID =#recordCenterId:VARCHAR#
+            AND  A.REMK='CARRYIN'
+            AND  A.USER_ID=#userId:VARCHAR#
+            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+            AND  A.TRGT_ID = B.FOLDER_ID
+            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+            AND  A.TRGT_ID = C.FOLDER_ID
+            AND  C.IN_ID=REPLACE(#inId:VARCHAR#, '-', '')
+            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+            AND  B.FOLDER_ID = D.FOLDER_ID
+            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+            AND  B.ORG_CD= E.ORG_CD
+            UNION 
+            SELECT   /*+ ORDERED */ 
+                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM
+                    ,B.STAKRM_MNG_NO
+                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID
+                    ,C.IN_FLAG
+            FROM  (SELECT * 
+                        FROM TB_ZZREQLISTTEMP X
+                        WHERE X.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+                        AND NOT EXISTS (SELECT Z.FOLDER_ID
+                                        FROM TB_SRINOUTFOLDER Z
+                                        WHERE Z.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+                                        AND Z.RECORD_CENTER_ID = X.RECORD_CENTER_ID
+                                        AND Z.FOLDER_ID = X.TRGT_ID
+                                        AND IN_ID=REPLACE(#inId:VARCHAR#, '-', '')
+                                       ))A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E
+            WHERE  A.RECORD_CENTER_ID =#recordCenterId:VARCHAR#
+            AND  A.REMK='CARRYIN'
+            AND  A.USER_ID=#userId:VARCHAR#
+            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+            AND  A.TRGT_ID = B.FOLDER_ID
+            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+            AND  A.TRGT_ID = C.FOLDER_ID
+            AND  C.IN_FLAG='0'
+            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+            AND  B.FOLDER_ID = D.FOLDER_ID
+            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+            AND  B.ORG_CD= E.ORG_CD
+        ) 
+	</select>
+	<select id="findCarryInWriteList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryInWriteList-result">
+		SELECT H.folder_id
+		      ,H.org_nm
+		      ,H.org_abbr_nm
+		      ,H.title
+		      ,H.creat_yyyy
+		      ,H.presv_term_nm
+		      ,H.stakrm_mng_no
+		      ,H.arng_info
+		      ,H.out_id
+		      ,H.in_flag
+		FROM (
+		    SELECT G.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,F.*
+		        FROM (
+		            SELECT   /*+ ORDERED */ 
+		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+		                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM
+		                    ,B.STAKRM_MNG_NO
+		                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+		                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID
+		                    ,C.IN_FLAG
+		            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E
+		            WHERE  A.RECORD_CENTER_ID =#recordCenterId:VARCHAR#
+		            AND  A.REMK='CARRYIN'
+		            AND  A.USER_ID=#userId:VARCHAR#
+		            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = B.FOLDER_ID
+		            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = C.FOLDER_ID
+		            AND  C.IN_ID=REPLACE(#inId:VARCHAR#, '-', '')
+		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            AND  B.FOLDER_ID = D.FOLDER_ID
+		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		            AND  B.ORG_CD= E.ORG_CD
+		            UNION 
+		            SELECT   /*+ ORDERED */ 
+		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY
+		                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM
+		                    ,B.STAKRM_MNG_NO
+		                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO
+		                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID
+		                    ,C.IN_FLAG
+		            FROM  (SELECT * 
+		                        FROM TB_ZZREQLISTTEMP X
+		                        WHERE X.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		                        AND NOT EXISTS (SELECT Z.FOLDER_ID
+		                                        FROM TB_SRINOUTFOLDER Z
+		                                        WHERE Z.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		                                        ANd Z.RECORD_CENTER_ID = X.RECORD_CENTER_ID
+		                                        AND Z.FOLDER_ID = X.TRGT_ID
+		                                        AND IN_ID=REPLACE(#inId:VARCHAR#, '-', '')
+		                                       ))A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E
+		            WHERE  A.RECORD_CENTER_ID =#recordCenterId:VARCHAR#
+		            AND  A.REMK='CARRYIN'
+		            AND  A.USER_ID=#userId:VARCHAR#
+		            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = B.FOLDER_ID
+		            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND  A.TRGT_ID = C.FOLDER_ID
+		            AND  C.IN_FLAG='0'
+		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            AND  B.FOLDER_ID = D.FOLDER_ID
+		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		            AND  B.ORG_CD= E.ORG_CD
+		        ) F
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) G
+		    WHERE G.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) H
+		ORDER BY H.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_반출서작성
+		: 반출서작성 시 추가할 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findCarryInFolderPagedList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 			column="ORG_NM"/>				<!-- 생산부서 -->
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 		column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo"		column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->	
+		<result property="outId"			column="OUT_ID"/>				<!-- 반출서번호 -->	
+		<result property="arngInfo"			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+		<result property="inFlag"			column="IN_FLAG"/>
+	</resultMap>
+	<select id="countCarryInFolderPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		 SELECT COUNT(1)
+         FROM   TB_SRINOUTFOLDER D, TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_SROUT F, TB_STORG E
+         WHERE  D.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+         AND  D.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+         AND  D.IN_FLAG = '0'
+         AND  D.RECORD_CENTER_ID=A.RECORD_CENTER_ID
+         AND  D.FOLDER_ID = A.FOLDER_ID
+         AND  D.OUT_ID = F.OUT_ID
+         AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+         AND  A.FOLDER_ID = B.FOLDER_ID
+         AND  A.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+         AND  A.ORG_CD = E.ORG_CD
+         AND (A.PRESV_TERM_CD = C.COM_CD AND C.COM_TYPE_CD = 'RD07')
+         AND NOT EXISTS (SELECT   F.TRGT_ID folder_id
+                         FROM   TB_ZZREQLISTTEMP F
+                         WHERE       F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                         AND F.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+                         AND F.TRGT_ID = D.folder_id
+                         AND F.REMK='CARRYIN'
+                         AND F.USER_ID = #userId:VARCHAR#
+                        )
+         <dynamic prepend="AND">
+             <isNotEmpty prepend="AND" property="orgCd">
+                 A.ORG_CD = #orgCd:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="creatYyyyF">
+                 (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="presvTermCd">
+                 A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="title">
+                 (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="outId">
+                 D.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="outUserNm">
+                 F.OUT_USER_NM LIKE #outUserNm:VARCHAR#
+             </isNotEmpty>
+         </dynamic>  
+	</select>
+	<select id="findCarryInFolderPagedList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryInFolderPagedList-result">
+		SELECT H.folder_id
+		      ,H.org_nm
+		      ,H.org_abbr_nm
+		      ,H.title
+		      ,H.creat_yyyy
+		      ,H.presv_term_nm
+		      ,H.stakrm_mng_no
+		      ,H.out_id
+		      ,H.in_flag
+		      ,H.arng_info
+		FROM(
+		    SELECT G.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,F.*
+		        FROM (
+		            SELECT  /*+ordered*/
+		                    A.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, A.TITLE, A.CREAT_YYYY,
+		                    C.COM_CD_NM PRESV_TERM_NM, A.STAKRM_MNG_NO,
+		                    SUBSTR(D.OUT_ID, 1, 4)||'-'||SUBSTR(D.OUT_ID, 5, 6) OUT_ID,
+		                    '' IN_FLAG,
+		                    (B.STAKRM_ID|| '-'|| B.BOOKSF_ID|| '-'|| B.BOOKSF_SHELF_CNO|| '-'|| B.BOOKSF_SHELF_RNO) AS ARNG_INFO
+		            FROM   TB_SRINOUTFOLDER D, TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_SROUT F, TB_STORG E
+		            WHERE  D.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		            AND  D.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+		            AND  D.IN_FLAG = '0'
+		            AND  D.RECORD_CENTER_ID=A.RECORD_CENTER_ID
+		            AND  D.FOLDER_ID = A.FOLDER_ID
+		            AND  D.OUT_ID = F.OUT_ID
+		            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            AND  A.FOLDER_ID = B.FOLDER_ID
+		            AND  A.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		            AND  A.ORG_CD = E.ORG_CD
+		            AND (A.PRESV_TERM_CD = C.COM_CD AND C.COM_TYPE_CD = 'RD07')
+		            AND NOT EXISTS (SELECT   F.TRGT_ID folder_id
+		                            FROM   TB_ZZREQLISTTEMP F
+		                            WHERE       F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                            AND F.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		                            AND F.TRGT_ID = D.folder_id
+		                            AND F.REMK='CARRYIN'
+		                            AND F.USER_ID = #userId:VARCHAR#
+		                           )
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="presvTermCd">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outId">
+		                    D.OUT_ID = REPLACE(#outId:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outUserNm">
+		                    F.OUT_USER_NM LIKE #outUserNm:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>  
+		        ) F
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) G
+		    WHERE G.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) H
+		ORDER BY H.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 기록물철을 임시테이블에 등록한다.
+	-->
+	<insert id="createCarryInTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK)
+		VALUES (#recordCenterId#, #userId#,#trgtId#,'CARRYIN') 
+	</insert>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 기록물철을 임시테이블에서 삭제한다.
+	 -->
+	<delete id="deleteCarryInTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND TRGT_ID = #trgtId:VARCHAR# AND USER_ID = #userId:VARCHAR# AND REMK = 'CARRYIN'
+	</delete>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반입서 순번을 조회한다.
+	 -->
+	<select id="findCarryInSno" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.String">
+		SELECT NVL(MAX(IN_SNO),0) + 1 IN_SNO
+		  FROM TB_SRIN
+		 WHERE IN_YYYY = #inYyyy:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반입서를 등록한다.
+	 -->
+	<insert id="createCarryIn" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_SRIN (
+			RECORD_CENTER_ID, IN_ID, IN_YYYY, IN_SNO, IN_YMD, IN_USER_NM
+		   ,IN_USER_ORG_NM, IN_USER_POS_RANK_NM, IN_FOLDER_CNT, IN_RSN, WORK_USER_ID
+		) VALUES (
+			#recordCenterId#, REPLACE(#inId:VARCHAR#, '-', ''), #inYyyy#, #inSno#, #inYmd#, #inUserNm#
+		   ,#inUserOrgNm#, #inUserPosRankNm#, #inFolderCnt#, #inRsn#, #workUserId#
+		)
+	</insert>	
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반출입기록물 테이블에 반입여부 및 반입서번호를 갱신한다.
+	 -->
+	<update id="updateInFolderFin" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_SRINOUTFOLDER
+		   SET IN_FLAG = '1'
+		     , IN_ID   = REPLACE(#inId:VARCHAR#, '-', '')
+		 WHERE IN_FLAG = '0'		 
+		   AND FOLDER_ID IN (SELECT TRGT_ID
+		                       FROM TB_ZZREQLISTTEMP
+		                      WHERE USER_ID = #userId:VARCHAR#
+		                        AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                        AND REMK='CARRYIN')
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반출기록물철 정보의 반출여부를 미반출로 갱신한다.
+	 -->
+	<update id="updateInFolder" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_RDFOLDER
+		   SET OUT_FLAG = '0'
+		 WHERE FOLDER_ID IN (SELECT FOLDER_ID
+		                       FROM TB_SRINOUTFOLDER
+		                      WHERE IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		                        AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반입 정보를 Clear 한다.
+	 --> 
+	<update id="updateInOutFolder" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_SRINOUTFOLDER
+		   SET IN_FLAG = '0', IN_ID = ''
+		 WHERE IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		   AND FOLDER_ID IN (SELECT FOLDER_ID FROM TB_SRINOUTFOLDER
+		                      WHERE IN_ID =REPLACE(#inId:VARCHAR#, '-', '')
+		                        AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 임시테이블에 반입정보를 갱신한다.
+	 -->
+	<update id="updateCarryInTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_ZZREQLISTTEMP
+		   SET INOUT_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND USER_ID = #userId:VARCHAR#
+		   AND TRGT_ID = #folderId:VARCHAR#
+		   AND REMK = 'CARRYIN'
+	</update>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반입서 수정전 임시테이블에 수정대상 목록을 등록한다.
+	 -->
+	<insert id="createCarryInOutTemp" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK, INOUT_ID)
+		(
+			SELECT #recordCenterId# RECORD_CENTER_ID, #userId# USER_ID, A.FOLDER_ID,'CARRYIN', IN_ID 
+	 		FROM TB_SRINOUTFOLDER A
+			WHERE A.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		)
+	</insert>
+	
+	<!-- 반입서삭제 -->
+	<delete id="deleteCarryIn" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		DELETE FROM TB_SRIN
+		 WHERE IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#		 
+	</delete>
+	
+ 	<!-- 
+ 		반출반입_반입서작성
+ 		: 바코드등록시 반입가능여부를 체크한다. 
+ 	-->
+	<select id="countCarryInInfo" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="int">
+ 		SELECT COUNT(1)
+ 		  FROM TB_SRINOUTFOLDER D,
+        	   TB_RDFOLDER A,
+        	   TB_SRBOOKSFARNGDETL B,
+        	   TB_ZZCOMCD C,
+	           TB_STORG E
+		 WHERE D.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		   AND D.IN_FLAG = '0'
+		   AND D.RECORD_CENTER_ID=A.RECORD_CENTER_ID
+		   AND D.FOLDER_ID = A.FOLDER_ID
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND A.FOLDER_ID = B.FOLDER_ID
+		   AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID
+		   AND A.ORG_CD = E.ORG_CD
+		   AND (A.PRESV_TERM_CD = C.COM_CD AND C.COM_TYPE_CD = 'RD07')
+		   AND D.FOLDER_ID NOT IN
+               (SELECT   F.TRGT_ID FOLDER_ID
+                  FROM   TB_ZZREQLISTTEMP F
+                 WHERE       F.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                         AND F.remk='CARRYIN'
+                         AND F.USER_ID = #userId:VARCHAR#)
+          AND  A.FOLDER_ID=#folderId:VARCHAR#             
+ 	</select>
+ 	
+ 	<!-- 
+ 		반출/반입_반입서작성
+ 		: 반출입기록물철에 반입서 정보를 갱신한다.
+ 	 -->
+ 	<update id="updateInFolderBarCode" parameterClass="rms.presv.booksf.domain.CarryInOut">
+		UPDATE TB_SRINOUTFOLDER
+		   SET IN_FLAG = #inFlag:VARCHAR#
+		     , IN_ID   = REPLACE(#inId:VARCHAR#, '-', '')
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		반출/반입_반입서작성
+		: 반입서 작성시 반입서 헤더정보를 조회한다.
+	 -->
+	<resultMap id="findPrintDocCarryInHead-result"			class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="inId" 			column="IN_ID"/>				<!-- 반입서번호 -->
+		<result property="inYmd" 			column="IN_YMD"/>				<!-- 반입일자 -->
+		<result property="inUserNm"			column="IN_USER_NM"/>			<!-- 반출자 -->
+		<result property="inUserOrgNm"		column="IN_USER_ORG_NM"/>		<!-- 소속 -->	
+		<result property="inUserPosRankNm"	column="IN_USER_POS_RANK_NM"/>	<!-- 직급 -->	
+		<result property="inRsn"			column="IN_RSN"/>				<!-- 사유 -->
+		<result property="outYmd" 			column="OUT_YMD"/>				<!-- 반출일자 -->
+	</resultMap>
+	<select id="findPrintDocCarryInHead" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findPrintDocCarryInHead-result">
+		SELECT DISTINCT SUBSTR(A.IN_ID, 1, 4)||'-'||SUBSTR(A.IN_ID, 5, 6) IN_ID
+		     , to_char(to_date(A.IN_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') IN_YMD
+			 , A.IN_USER_NM
+		     , A.IN_USER_ORG_NM
+		     , A.IN_USER_POS_RANK_NM
+		     , A.IN_RSN
+			 , to_char(to_date(B.OUT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') OUT_YMD
+		  FROM TB_SRIN A, TB_SROUT B, TB_SRINOUTFOLDER C
+		 WHERE 
+		       A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		   AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		   AND B.OUT_ID = C.OUT_ID
+		   AND A.IN_ID = C.IN_ID
+		   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+   	</select>
+   	
+   	<!-- 
+		반출/반입_반입서작성
+		: 반입서 작성시 반입서 데이터정보를 조회한다.
+	 -->
+   	<resultMap id="carryInPrintData-result"			class="rms.presv.booksf.domain.CarryInOut" >
+		<result property="creatSysCd" 	column="CREAT_SYS_CD"/>		<!-- 생산시스템코드 -->
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 			column="org_cd"/>
+		<result property="clssId" 			column="clss_id"/>
+		<result property="creatYyyy" 		column="creat_yyyy"/>
+		<result property="folderRegSeq" 	column="folder_reg_seq"/>
+		<result property="hoNo" 			column="ho_no"/>		
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="folderType"		column="FOLDER_TYPE_DIV_CD"/>	<!-- 철행태 -->
+		<result property="arngInfo"			column="ARNG_INFO"/>			<!-- 배치정보 -->
+		<result property="inFolderCnt"		column="RECORD_CNT"/>			<!-- 철수량 -->
+		<result property="hoNoCnt"			column="HO_NO_CNT"/>			<!-- 권호수 카운트 -->
+	</resultMap>
+   	<select id="findPrintDocCarryInData" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="carryInPrintData-result">
+		SELECT A.CREAT_SYS_CD
+			 , A.FOLDER_ID
+		     , A.org_cd
+		     , A.clss_id
+		     , A.creat_yyyy
+		     , A.folder_reg_seq
+		     , A.ho_no		
+		     , A.TITLE
+			 , C.COM_CD_NM FOLDER_TYPE_DIV_CD
+			 , (SELECT COUNT(*) FROM TB_RDRECORD D WHERE A.FOLDER_ID = D.FOLDER_ID) RECORD_CNT
+			 , DECODE(A.PRESV_BOX_ID,'', (D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) 
+			                           , SUBSTR(A.PRESV_BOX_ID, 0,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 4,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 7,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 10,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 13,3) 
+									   ) ARNG_INFO
+	         ,(SELECT COUNT(*)
+	          FROM TB_RDFOLDER
+	          WHERE CREAT_SYS_CD = A.CREAT_SYS_CD
+	          AND ORG_CD = A.ORG_CD
+	          AND CLSS_ID = A.CLSS_ID
+	          AND CREAT_YYYY = A.CREAT_YYYY
+	          AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS HO_NO_CNT
+		  FROM TB_RDFOLDER A, TB_SRINOUTFOLDER B, TB_ZZCOMCD C, TB_SRBOOKSFARNGDETL D
+		 WHERE B.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		   AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND A.FOLDER_ID = B.FOLDER_ID
+		   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+		   AND A.FOLDER_ID = D.FOLDER_ID
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	</select>
+
+	<!-- 
+		반출/반입_반출현황
+		: 반출현황을 조회한다.
+	 -->
+	<resultMap id="findCarryOutList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 			column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>			<!-- 생산부서명(간략) -->
+		<result property="orgCd"			column="ORG_CD"/>				<!-- 생산부서 -->
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="stakrmMngNo"		column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->	
+		<result property="outId"			column="OUT_ID"/>				<!-- 반출서번호 -->			
+		<result property="outYmd" 			column="OUT_YMD"/>				<!-- 반출일자 -->
+		<result property="outUserNm"		column="OUT_USER_NM"/>			<!-- 반출자 -->
+		<result property="retrnExptYmd"		column="RETRN_EXPT_YMD"/>		<!-- 반입예정일 -->	
+		<result property="divNm"			column="DIV_NM"/>				<!-- 구분 -->	
+	</resultMap>
+	<select id="countCarryOutList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDFOLDER A, TB_SROUT B, TB_SRINOUTFOLDER C, TB_STORG D
+        WHERE A.FOLDER_ID = C.FOLDER_ID
+        AND B.OUT_ID = C.OUT_ID
+        AND A.ORG_CD = D.ORG_CD
+        AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+        AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+        AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+        <dynamic prepend="AND">
+            <isEqual prepend="AND" property="divCd" compareValue="0">
+                (B.RETRN_EXPT_YMD <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')
+            </isEqual>
+            <isEqual prepend="AND" property="divCd" compareValue="3">
+                (B.RETRN_EXPT_YMD <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')
+            </isEqual>
+            <isEqual prepend="AND" property="divCd" compareValue="1">
+                (C.IN_FLAG = '1')
+            </isEqual>
+            <isEqual prepend="AND" property="divCd" compareValue="2">
+                (C.IN_FLAG = '0')
+            </isEqual>                  
+            <isNotEmpty prepend="AND" property="outId">
+                (B.OUT_ID = REPLACE(#outId:VARCHAR#, '-', ''))
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="outTypeCd">
+                (B.OUT_TYPE_CD = #outTypeCd:VARCHAR#)
+            </isNotEmpty>            
+            <isNotEmpty prepend="AND" property="outYmdF">
+                (B.OUT_YMD BETWEEN #outYmdF:VARCHAR# AND #outYmdT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="retrnExptYmd">
+                B.RETRN_EXPT_YMD = #retrnExptYmd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="outUserNm">
+                B.OUT_USER_NM LIKE #outUserNm:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>           
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findCarryOutList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryOutList-result">
+		SELECT G.folder_id
+			  ,G.org_cd
+		      ,G.org_nm
+		      ,G.org_abbr_nm
+		      ,G.title
+		      ,G.stakrm_mng_no
+		      ,SUBSTR(G.out_id, 1, 4)||'-'||SUBSTR(G.out_id, 5, 6) AS out_id
+		      ,G.out_ymd
+		      ,G.out_user_nm
+		      ,G.retrn_expt_ymd
+		      ,(CASE WHEN G.in_flag = 0 AND G.retrn_expt_ymd <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYYMMDD')  THEN '반출(기일초과)'
+		             WHEN G.in_flag = '0' AND G.retrn_expt_ymd <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYYMMDD') THEN '반출(기일내)'
+		             WHEN G.in_flag = '1' THEN '반입완료'             
+		        END) AS div_nm
+		FROM (
+		    SELECT F.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,E.*
+		        FROM (
+		            SELECT A.FOLDER_ID, D.ORG_NM, D.ORG_ABBR_NM, D.ORG_CD, A.TITLE
+		                  ,A.STAKRM_MNG_NO,B.OUT_ID, B.OUT_YMD, B.OUT_USER_NM, B.RETRN_EXPT_YMD
+		                  ,C.IN_FLAG
+		            FROM TB_RDFOLDER A, TB_SROUT B, TB_SRINOUTFOLDER C, TB_STORG D
+		            WHERE A.FOLDER_ID = C.FOLDER_ID
+		            AND B.OUT_ID = C.OUT_ID
+		            AND A.ORG_CD = D.ORG_CD
+		            AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            <dynamic prepend="AND">
+		                <isEqual prepend="AND" property="divCd" compareValue="0">
+		                    (B.RETRN_EXPT_YMD <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')
+		                </isEqual>
+		                <isEqual prepend="AND" property="divCd" compareValue="3">
+		                    (B.RETRN_EXPT_YMD <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')
+		                </isEqual>
+		                <isEqual prepend="AND" property="divCd" compareValue="1">
+		                    (C.IN_FLAG = '1')
+		                </isEqual>
+		                <isEqual prepend="AND" property="divCd" compareValue="2">
+		                    (C.IN_FLAG = '0')
+		                </isEqual>                  
+		                <isNotEmpty prepend="AND" property="outId">
+		                    (B.OUT_ID = REPLACE(#outId:VARCHAR#, '-', ''))
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outTypeCd">
+		                    (B.OUT_TYPE_CD = #outTypeCd:VARCHAR#)
+		                </isNotEmpty>            
+		                <isNotEmpty prepend="AND" property="outYmdF">
+		                    (B.OUT_YMD BETWEEN #outYmdF:VARCHAR# AND #outYmdT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="retrnExptYmd">
+		                    B.RETRN_EXPT_YMD = #retrnExptYmd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="outUserNm">
+		                    B.OUT_USER_NM LIKE #outUserNm:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>           
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		            </dynamic>
+		            <dynamic>
+		            	<isEqual property="order" compareValue="1">
+		                    ORDER BY B.OUT_YMD
+		                </isEqual>
+		                <isEqual property="order" compareValue="2">
+		                    ORDER BY B.OUT_YMD DESC
+		                </isEqual>
+		            </dynamic>
+		        ) E
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) F
+		    WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) G
+		ORDER BY G.rnum
+	</select>
+	
+	<!-- 
+		반출/반입_반입현황
+		: 반입현황을 조회한다.
+	 -->
+	<resultMap id="findCarryInList-result" class="rms.presv.booksf.domain.CarryInOut">
+		<result property="folderId" 		column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 			column="ORG_CD"/>				<!-- 생산부서 -->
+		<result property="orgNm" 			column="ORG_NM"/>				<!-- 생산부서 -->
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 			column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 		column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm" 		column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo"		column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->	
+		<result property="inId"				column="IN_ID"/>				<!-- 반입서번호 -->			
+		<result property="inUserNm"			column="IN_USER_NM"/>			<!-- 반입자 -->		
+		<result property="inYmd" 			column="IN_YMD"/>				<!-- 반입일자 -->
+	</resultMap>
+	<select id="countCarryInList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDFOLDER A, TB_SRINOUTFOLDER C, TB_SRIN D, TB_ZZCOMCD E, TB_STORG F
+        WHERE A.FOLDER_ID = C.FOLDER_ID
+        AND D.IN_ID  = C.IN_ID
+        AND A.ORG_CD = F.ORG_CD
+        AND (A.PRESV_TERM_CD = E.COM_CD and E.COM_TYPE_CD = 'RD07')
+        AND C.IN_FLAG = '1'
+        AND D.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+        AND D.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+        AND D.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="inId">
+                C.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="inYmdF">
+                (D.IN_YMD BETWEEN #inYmdF:VARCHAR# AND #inYmdT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="inUserNm">
+                D.IN_USER_NM LIKE #inUserNm:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>           
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findCarryInList" parameterClass="rms.presv.booksf.domain.CarryInOut" resultMap="findCarryInList-result">
+		SELECT I.folder_id
+			  ,I.org_cd
+		      ,I.org_nm
+		      ,I.org_abbr_nm
+		      ,I.title
+		      ,I.creat_yyyy
+		      ,I.presv_term_nm
+		      ,I.stakrm_mng_no
+		      ,I.in_id
+		      ,I.in_user_nm
+		      ,I.in_ymd
+		FROM (
+		    SELECT H.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,G.*
+		        FROM (
+		            SELECT A.FOLDER_ID, F.ORG_NM, F.ORG_ABBR_NM, A.TITLE, A.CREAT_YYYY
+		                  ,E.COM_CD_NM PRESV_TERM_NM, A.STAKRM_MNG_NO, SUBSTR(D.IN_ID, 1, 4)||'-'||SUBSTR(D.IN_ID, 5, 6) IN_ID, D.IN_USER_NM, D.IN_YMD
+		                  ,F.ORG_CD
+		            FROM TB_RDFOLDER A, TB_SRINOUTFOLDER C, TB_SRIN D, TB_ZZCOMCD E, TB_STORG F
+		            WHERE A.FOLDER_ID = C.FOLDER_ID
+		            AND D.IN_ID  = C.IN_ID
+		            AND A.ORG_CD = F.ORG_CD
+		            AND (A.PRESV_TERM_CD = E.COM_CD and E.COM_TYPE_CD = 'RD07')
+		            AND C.IN_FLAG = '1'
+		            AND D.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND D.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		            AND D.RECORD_CENTER_ID = F.RECORD_CENTER_ID
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="inId">
+		                    C.IN_ID = REPLACE(#inId:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="inYmdF">
+		                    (D.IN_YMD BETWEEN #inYmdF:VARCHAR# AND #inYmdT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="inUserNm">
+		                    D.IN_USER_NM LIKE #inUserNm:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>           
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		            </dynamic>
+		        ) G
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) H
+		    WHERE H.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) I
+		ORDER BY I.rnum
+	</select>
+	
+</sqlMap>

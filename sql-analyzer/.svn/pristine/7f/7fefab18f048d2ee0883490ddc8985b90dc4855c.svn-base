@@ -1,0 +1,130 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : countReadRangeMngFolderPagedList
+
+		SELECT /*+ index(A, TB_RDFOLDER_IX12) */ COUNT(1)        FROM  TB_RDFOLDER A        WHERE A.record_center_id = '1'                AND NVL(A.read_range_mng_fin_flag, '0') != '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findReadRangeMngFolderPagedList
+
+		SELECT E.org_cd		      ,E.folder_id		      ,E.title		      ,E.creat_yyyy		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_abbr_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) presv_term_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) creat_sys_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm		      ,(SELECT Z.agent_nm FROM TB_RDFOLDERCREAT Z WHERE Z.record_center_id=E.record_center_id AND   Z.folder_id=E.folder_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDFOLDERCREAT Y WHERE Y.record_center_id=E.record_center_id AND Y.folder_id=E.folder_id)) agent_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) folder_keep_state_nm		      ,E.creat_sys_cd		      ,E.oper_read_range_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm		      ,NVL(E.read_range_mng_fin_flag,'0') read_range_mng_fin_flag		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ZZ23' AND Z.com_cd=NVL(E.read_range_mng_fin_flag,'0')) read_range_mng_fin_flag_nm		      ,NVL(E.neo_trans_state,'0') neo_trans_state		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST02' AND Z.com_cd = NVL(E.neo_trans_state,'0')) AS neo_trans_state_nm		      ,(SELECT count(z.folder_id) FROM TB_RDFOLDERREADRANG Z WHERE Z.record_center_id = E.record_center_id AND  Z.folder_id = E.folder_id AND Z.handl_fin_ymd IS NULL) AS read_rang_cnt		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT /*+ index(A, TB_RDFOLDER_IX12) */		                    A.record_center_id, A.folder_id, A.creat_sys_cd, A.org_cd, A.clss_div_cd		                   ,A.clss_id,A.clss_nm,A.new_clss_id,A.new_clss_nm,A.creat_yyyy		                   ,A.title,A.presv_term_cd,A.erecord_flag,A.folder_keep_state_cd,A.oper_read_range_cd		                   ,A.read_range_mng_fin_flag, A.neo_trans_state		            FROM  TB_RDFOLDER A		            WHERE A.record_center_id = '1'		            		            AND NVL(A.read_range_mng_fin_flag, '0') != '1'		        ) C		        WHERE ROWNUM <= '1'		    )D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : insert
+-- Query Id : createReadRangeMngFolderInc
+
+		INSERT INTO TB_RDRECORDREADRANG (			record_center_id, record_id, chng_hist_no, handl_org_cd, choice_ymd, handl_org_opin, opin_reg_ymd, oper_read_range_bef, oper_read_range_aft, handl_fin_ymd		) (		  			SELECT 	  A.record_center_id				    , A.record_id				    , A.chng_hist_no					, '1' 				  	, '1' 				    , '1'			  	    , '1'					, A.oper_read_range_cd					, '1'					, '1'			FROM (					SELECT	A.record_center_id						   ,A.record_id						   ,NVL(B.chng_hist_no,0)+1 chng_hist_no						   ,NVL(B.handl_fin_yn,'0') handl_fin_yn						   ,A.oper_read_range_cd  					FROM TB_RDRECORD A, (SELECT B.record_center_id												  ,B.record_id												  ,MAX(chng_hist_no) chng_hist_no												  ,SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn											FROM 	TB_RDRECORDREADRANG B											WHERE 	B.record_center_id = '1'											GROUP BY B.record_center_id, B.record_id) B					WHERE A.record_center_id = '1'					AND A.folder_id = '1'					AND (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')						AND A.read_range_mng_fin_flag IS NULL 					AND A.record_center_id = B.record_center_id(+)					AND A.record_id = B.record_id(+)					) A				WHERE A.handl_fin_yn = '0'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : update
+-- Query Id : updateReadRangeMngFolderInc
+
+		UPDATE TB_RDRECORD Z	  	SET oper_read_range_cd = '1'	  	   ,read_range_mng_fin_flag = '1'	                WHERE 		EXISTS (  			SELECT 1		 	FROM (SELECT A.record_center_id						,A.record_id						,NVL(B.handl_fin_yn,'0') handl_fin_yn				  FROM TB_RDRECORD A, (SELECT B.record_center_id				  							 ,B.record_id				  							 ,SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn					         		   FROM TB_RDRECORDREADRANG B					         		   WHERE B.record_center_id = '1'					         		   GROUP BY B.record_center_id, B.record_id) B					WHERE A.record_center_id = '1'					AND A.folder_id = '1'					AND A.read_range_mng_fin_flag IS NULL					AND (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')					AND A.record_center_id = B.record_center_id(+)					AND A.record_id = B.record_id(+)			) A			WHERE A.handl_fin_yn = '0'                        AND A.record_center_id = Z.record_center_id                        AND A.record_id = Z.record_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : insert
+-- Query Id : createReadRangeMngFolder
+
+		INSERT INTO TB_RDFOLDERREADRANG (			record_center_id, folder_id, chng_hist_no,handl_org_cd, choice_ymd, handl_org_opin,opin_reg_ymd, oper_read_range_bef, oper_read_range_aft,handl_fin_ymd	  	) (			  SELECT A.record_center_id					 , A.folder_id					 , (SELECT NVL(MAX(chng_hist_no),0)+1 						FROM 	TB_RDFOLDERREADRANG B						WHERE B.record_center_id = A.record_center_id						AND   B.folder_id = A.folder_id)					 , '1' 				  	 , '1' 				     , '1'					 , '1'					 , A.oper_read_range_cd					 , '1'					 , '1'				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND	  A.folder_id = '1'				AND	  (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')					AND	  A.read_range_mng_fin_flag IS NULL		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : update
+-- Query Id : updateReadRangeMngFolder
+
+		UPDATE 	TB_RDFOLDER	  	SET     oper_read_range_cd = '1'	  	      , read_range_mng_fin_flag = '1'	    WHERE 	record_center_id = '1'  	  	AND    	folder_id = '1'  	  	AND	   (neo_trans_state IS NULL OR neo_trans_state = '0')			AND	    read_range_mng_fin_flag IS NULL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findExcelReadRangeMngFolderRecordList
+
+		SELECT    (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_nm		        , (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_abbr_nm		        , (CASE WHEN (SELECT Z.close_flag FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) = '0' THEN B.org_cd                        ELSE ''                   END) org_cd 		        , (CASE WHEN B.clss_div_cd = '1' THEN (SELECT Z.bis_clss_nm FROM tb_zzbisclss Z WHERE Z.bis_clss_id = B.clss_id)		                WHEN B.clss_div_cd = '2' THEN (SELECT Z.unit_nm FROM tb_zzunit Z WHERE Z.record_center_id = B.record_center_id AND Z.unit_cd = B.clss_id)		           END) clss_nm		        , B.title folder_title		        , B.creat_yyyy		        , B.presv_term_cd		        , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'RD07' AND Z.com_cd = B.presv_term_cd) presv_term_nm		        , A.title record_title		        , A.record_detl_type_cd		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD03' AND Z.com_cd = A.record_detl_type_cd) record_detl_type_nm		        , SUBSTR(A.creat_reg_dtime, 1, 8) creat_reg_dtime		        , A.creat_reg_no		        , A.open_div_cd		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD05' AND Z.com_cd = A.open_div_cd) open_div_nm		        , A.oper_read_range_cd		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD53' AND Z.com_cd = A.oper_read_range_cd) oper_read_range_nm		        , A.record_center_id		        , B.creat_sys_cd||'-'||B.org_cd||'-'||B.clss_Id||'-'||B.creat_yyyy||'-'||B.folder_reg_seq||'-'||B.ho_no folder_clss_no		        , B.ho_no		        , A.creat_sys_cd||'-'||A.org_cd||'-'||A.creat_yyyy||'-'||A.creat_reg_no||'-'||A.dtch_reg_no record_reg_no		        , B.folder_keep_state_cd		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD32' AND Z.com_cd = B.folder_keep_state_cd) folder_keep_state_nm		        , (SELECT COUNT (*)           		  FROM TB_RDFOLDER          		  WHERE CREAT_SYS_CD = B.CREAT_SYS_CD                  AND ORG_CD = B.ORG_CD                  AND CLSS_ID = B.CLSS_ID                  AND CREAT_YYYY = B.CREAT_YYYY                  AND FOLDER_REG_SEQ = B.FOLDER_REG_SEQ) ho_no_cnt		FROM tb_rdrecord A, tb_rdfolder B		WHERE   A.record_center_id = '1'		AND     A.record_center_id = B.record_center_id 		AND     A.folder_id = B.folder_id		AND        NVL(A.read_range_mng_fin_flag, '0') != '1'				ORDER BY B.record_center_id, B.org_cd, folder_clss_no, record_reg_no	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : countReadRangeMngRecordPagedList
+
+		SELECT COUNT(1)	    FROM TB_RDRECORD A	    WHERE A.record_center_id = '1'		AND A.folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findReadRangeMngRecordPagedList
+
+		SELECT E.record_center_id		      ,E.record_org_cd		      ,E.folder_id		      ,E.record_id		      ,E.title		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.record_org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.record_org_cd) AS org_abbr_nm		      ,SUBSTR(E.creat_reg_dtime,0,8) AS creat_reg_dtime		      ,E.oper_read_range_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm		      ,E.erecord_flag		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm		      ,E.open_div_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm		      ,NVL(E.read_range_mng_fin_flag,'0') AS read_range_mng_fin_flag		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ZZ23' AND Z.com_cd=NVL(E.read_range_mng_fin_flag,'0')) AS read_range_mng_fin_flag_nm		      ,NVL(E.neo_trans_state,'0') neo_trans_state		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST02' AND Z.com_cd = NVL(E.neo_trans_state,'0')) AS neo_trans_state_nm		      ,(SELECT count(z.record_id) FROM TB_RDRECORDREADRANG Z WHERE Z.record_center_id = E.record_center_id AND Z.record_id = E.record_id AND Z.handl_fin_ymd IS NULL) AS read_rang_cnt		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		    FROM (		        SELECT A.record_center_id, A.org_cd AS record_org_cd, A.folder_id, A.record_id, A.title		              ,A.creat_reg_dtime, A.oper_read_range_cd, A.erecord_flag, A.open_div_cd, A.read_range_mng_fin_flag		              ,A.neo_trans_state                FROM TB_RDRECORD A                WHERE A.record_center_id = '1'				AND A.folder_id = '1'                ORDER BY A.record_center_id, A.title		        ) C		        WHERE ROWNUM <= '1'    		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : insert
+-- Query Id : createReadRangeMngRecord
+
+		INSERT INTO TB_RDRECORDREADRANG (			record_center_id, record_id, chng_hist_no, handl_org_cd, choice_ymd, handl_org_opin, opin_reg_ymd, oper_read_range_bef, oper_read_range_aft, handl_fin_ymd		) (		  			SELECT  A.record_center_id				   ,A.record_id				   ,(SELECT NVL(MAX(chng_hist_no),0)+1 FROM TB_RDRECORDREADRANG B WHERE B.record_center_id = A.record_center_id AND B.record_id = A.record_id)				   ,'1' 				   ,'1' 				   ,'1'			  	   ,'1'				   ,A.oper_read_range_cd				   ,'1'				   ,'1'			FROM TB_RDRECORD A			WHERE A.record_center_id = '1'			AND	  A.record_id = '1'			AND	 (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')				AND	 A.read_range_mng_fin_flag IS NULL  			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : update
+-- Query Id : updateReadRangeMngRecord
+
+		UPDATE 	TB_RDRECORD	  	SET     oper_read_range_cd = '1'	  	      , read_range_mng_fin_flag = '1'	    WHERE 	record_center_id = '1'  	  	AND    	record_id = '1'  	  	AND	   (neo_trans_state IS NULL OR neo_trans_state = '0')			AND	    read_range_mng_fin_flag IS NULL  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findOpenMngNonFinCount
+
+		SELECT COUNT(1) FROM TB_RDRECORD A		WHERE RECORD_CENTER_ID = '1'		AND FOLDER_ID = '1'		AND (neo_trans_state IS NULL OR neo_trans_state = '0')		AND READ_RANGE_MNG_FIN_FLAG IS NULL		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : insert
+-- Query Id : createBatchReadRangeMngRecord
+
+		INSERT INTO TB_RDRECORDREADRANG (			record_center_id, record_id, chng_hist_no, handl_org_cd, choice_ymd, handl_org_opin, opin_reg_ymd, oper_read_range_bef, oper_read_range_aft, handl_fin_ymd	    ) (			SELECT	  A.record_center_id					, A.record_id					, A.chng_hist_no					, '1' 		  			, '1' 		 			, '1'	  	  			, '1'				    , A.oper_read_range_cd				    , '1'		 		    , '1'		 	FROM (	    				 	SELECT	  A.record_center_id							, A.record_id							, NVL(B.chng_hist_no,0)+1 chng_hist_no							, NVL(B.handl_fin_yn,'0') handl_fin_yn							, A.oper_read_range_cd    					FROM 	TB_RDRECORD A,							(SELECT B.record_center_id, B.record_id, 									MAX(chng_hist_no) chng_hist_no,									SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn					         FROM 	TB_RDRECORDREADRANG B					         WHERE 	B.record_center_id = '1'					         GROUP BY B.record_center_id, B.record_id) B					WHERE 	A.record_center_id = '1'					AND	  	A.folder_id = '1'					AND		A.read_range_mng_fin_flag IS NULL					AND	   (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')					AND	   A.record_center_id = B.record_center_id(+)					AND	   A.record_id = B.record_id(+)										) A			WHERE A.handl_fin_yn = '0'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : update
+-- Query Id : updateBatchReadRangeMngRecord
+
+		UPDATE 	TB_RDRECORD Z	  	SET     oper_read_range_cd = '1'	  	      , read_range_mng_fin_flag = '1'	                WHERE 		EXISTS (  		SELECT	  1	 	FROM (	    			 	SELECT	  A.record_center_id						, A.record_id						, NVL(B.handl_fin_yn,'0') handl_fin_yn				FROM 	TB_RDRECORD A,						(SELECT B.record_center_id, B.record_id,								SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn				         FROM 	TB_RDRECORDREADRANG B				         WHERE 	B.record_center_id = '1'				         GROUP BY B.record_center_id, B.record_id) B				WHERE 	A.record_center_id = '1'				AND	  	A.folder_id = '1'				AND		A.read_range_mng_fin_flag IS NULL				AND	   (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')				AND	   A.record_center_id = B.record_center_id(+)				AND	   A.record_id = B.record_id(+)								) A			WHERE A.handl_fin_yn = '0'                        AND A.record_center_id = Z.record_center_id                        AND A.record_id = Z.record_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findReadRangeMngRecordFinFlag
+
+		SELECT	read_range_mng_fin_flag		FROM 	tb_rdrecord		WHERE	record_center_id = '1'		AND		record_id		 = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findReadRangeMngFolderId
+
+		SELECT 	folder_id		FROM 	tb_rdfolder		WHERE 	record_center_id = '1'		AND 	creat_sys_cd 	 = '1'		AND 	org_cd			 = '1'		AND 	clss_id			 = '1'		AND		creat_yyyy		 = '1'		AND		folder_reg_seq	 = '1'		AND		ho_no			 = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findReadRangeMngRecordId
+
+		SELECT	record_id		FROM 	tb_rdrecord		WHERE	record_center_id = '1'		AND		creat_sys_cd 	 = '1'		AND		org_cd			 = '1'		AND		creat_yyyy		 = '1'		AND		creat_reg_no	 = '1'		AND		dtch_reg_no		 = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml
+-- Query    : select
+-- Query Id : findReadRangeMngBatchRegErrorXls
+
+		SELECT file_nm, file_key FROM TB_ZZREQEXCELLIST WHERE REQ_USER_ID = '1' AND REQ_MENU_ID = '1' AND REQ_INDEX = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\ReadRangeMng.xml

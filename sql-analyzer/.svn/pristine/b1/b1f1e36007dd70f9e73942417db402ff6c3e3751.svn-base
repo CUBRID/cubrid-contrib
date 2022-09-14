@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : findRangeResortRsltApplPagedList
+
+		SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, A.*			FROM (				SELECT t.resort_case					, t.resort_case_no					, t.resort_reason					, t.resort_yyyy					, t.choice_cnt					, t.conti_cnt					, t.opin_cnt					, t.rslt_cnt				FROM (					SELECT o.resort_case						, o.resort_case_no						, o.resort_reason						, o.resort_yyyy						, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd in ('02','03','04','05','06')) as choice_cnt						, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd in ('03', '04')) as conti_cnt						, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd = '05') as opin_cnt						, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd = '06') as rslt_cnt					FROM (						SELECT resort_case							, resort_case_no							, resort_reason							, '1' as record_center_id							, resort_yyyy						FROM tb_rdrangeresortreason						WHERE record_center_id = '1' AND 							resort_yyyy = '1'						  AND 							resort_case = '1'						 						ORDER BY resort_case, resort_case_no asc					) o				)t				WHERE (t.choice_cnt+t.conti_cnt+t.opin_cnt+t.rslt_cnt) > 0			) A			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : countRangeResortRsltApplPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT t.resort_case				, t.resort_case_no				, t.resort_reason				, t.resort_yyyy				, t.choice_cnt				, t.conti_cnt				, t.opin_cnt				, t.rslt_cnt			FROM (				SELECT o.resort_case					, o.resort_case_no					, o.resort_reason					, o.resort_yyyy					, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd in ('02','03','04','05','06')) as choice_cnt					, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd in ('03', '04')) as conti_cnt					, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd = '05') as opin_cnt					, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd = '06') as rslt_cnt				FROM (					SELECT resort_case						, resort_case_no						, resort_reason						, '1' as record_center_id						, resort_yyyy					FROM tb_rdrangeresortreason					WHERE record_center_id = '1'					 AND 						resort_yyyy = '1'					  AND 						resort_case = '1'					 					ORDER BY resort_case, resort_case_no asc				) o			)t			WHERE (t.choice_cnt+t.conti_cnt+t.opin_cnt+t.rslt_cnt) > 0		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : findRangeResortRsltApplList
+
+		SELECT t.resort_case			, t.resort_case_no			, t.resort_reason			, t.resort_yyyy			, t.choice_cnt			, t.conti_cnt			, t.opin_cnt			, t.rslt_cnt		FROM (			SELECT o.resort_case				, o.resort_case_no				, o.resort_reason				, o.resort_yyyy				, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd in ('02','03','04','05','06')) as choice_cnt				, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd in ('03', '04')) as conti_cnt				, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd = '05') as opin_cnt				, (select count(*) from tb_rdrangeresortopin where record_center_id = o.record_center_id and resort_yyyy = o.resort_yyyy and resort_case = o.resort_case and resort_case_no = o.resort_case_no and resort_prog_state_cd = '06') as rslt_cnt			FROM (				SELECT resort_case					, resort_case_no					, resort_reason					, '1' as record_center_id					, resort_yyyy				FROM tb_rdrangeresortreason				WHERE record_center_id = '1'				 AND 					resort_yyyy = '1'				  AND 					resort_case = '1'				 				ORDER BY resort_case, resort_case_no asc			) o		)t		WHERE (t.choice_cnt+t.conti_cnt+t.opin_cnt+t.rslt_cnt) > 0;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : findRangeResortOpinRecordPagedList
+
+		SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, A.*			FROM (				SELECT o.record_id					, o.record_center_id					, o.resort_seq					, o.resort_prog_state_cd					, r.title					, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)							THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))							WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))							THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)							ELSE doc_no					    END) as doc_no_nm					, (select folder_keep_state_cd from tb_rdfolder where record_center_id = r.record_center_id and folder_id = r.folder_id) folder_keep_state_cd				FROM tb_rdrecord r, tb_rdrangeresortopin o				WHERE o.record_center_id = '1'				AND	o.record_center_id = r.record_center_id				AND	o.record_id = r.record_id				AND	o.resort_yyyy = '1'				AND	o.resort_case = '1'				AND	o.resort_case_no = '1' AND 					title like '1'				 				ORDER BY o.resort_prog_state_cd DESC, o.record_id ASC			) A			WHERE ROWNUM <= '1'		) B		WHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : countRangeResortOpinRecordPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT o.record_id				, o.record_center_id				, o.resort_seq				, o.resort_prog_state_cd				, r.title				, (CASE WHEN ((r.creat_sys_cd='02' OR r.creat_sys_cd='05' OR r.creat_sys_cd='06') AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7))=1)						THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=SUBSTR(r.creat_reg_no,1,7)),SUBSTR(r.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(r.creat_reg_no,8))						WHEN (r.creat_sys_cd='05' OR ((r.creat_sys_cd='01' OR r.creat_sys_cd='04') AND r.record_detl_type_cd='01'))						THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=r.record_center_id AND Z.org_cd=r.org_cd),r.org_cd) ||'-'|| TO_NUMBER(r.doc_no)						ELSE doc_no				    END) as doc_no_nm				, (select folder_keep_state_cd from tb_rdfolder where record_center_id = r.record_center_id and folder_id = r.folder_id) folder_keep_state_cd			FROM tb_rdrecord r, tb_rdrangeresortopin o			WHERE o.record_center_id = '1'			AND	o.record_center_id = r.record_center_id			AND	o.record_id = r.record_id			AND	o.resort_yyyy = '1'			AND	o.resort_case = '1'			AND	o.resort_case_no = '1'			 AND 				title like '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : findRangeResortOpinList
+
+		SELECT o.record_center_id			, o.record_id			, o.resort_seq			, o.folder_id			, o.resort_yyyy			, o.resort_case			, o.resort_case_no			, o.choice_ymd			, o.resort_prog_state_cd			, o.org_cd			, o.org_oper_range_bef			, o.org_oper_range_aft			, o.org_opin			, o.org_opin_ymd			, o.org_userid			, o.expert_oper_read_range_aft			, o.expert_opin			, o.expert_opin_reg_ymd			, o.expert_user_id			, o.rslt_reg_ymd			, o.confirm_cd			, o.take_mng_no			, o.rjct_flag			, o.resort_opin_cd			, o.take_yyyy			, o.case_type			, o.bef_resort_yyyy			, o.excel_dwn_flag			, o.center_sel_flag			, (select oper_read_range_cd from tb_rdrecord where record_center_id = o.record_center_id and record_id = o.record_id) as oper_read_range_bef			FROM tb_rdrangeresortopin o		WHERE record_center_id = '1' AND 			resort_yyyy = '1'		  AND 			resort_case = '1'		  AND 			resort_case_no = '1'		  AND 			resort_prog_state_cd = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : update
+-- Query Id : updateRangeResortOpinRsltApply
+
+		UPDATE tb_rdrangeresortopin		SET   resort_prog_state_cd = '1'			, rslt_reg_ymd = to_char(sysdate, 'yyyyMMdd')		WHERE record_center_id = '1'		AND	  record_id = '1'		AND	  resort_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : insert
+-- Query Id : createRangeResortHist
+
+		INSERT INTO tb_rdrangeresorthist (record_center_id			, record_id			, resort_chng_hist_no			, oper_read_range_bef			, oper_read_range_aft			, chng_ymd			, chng_opin			, chng_user_id			, take_mng_no			, handl_org_cd			, resort_case			, resort_case_no			, resort_yyyy		) VALUES ('1'			, '1'			, (select nvl(max(resort_chng_hist_no),0)+1 from tb_rdrangeresorthist WHERE record_center_id = '1' AND record_id = '1')			, '1'			, '1'			, to_char(sysdate, 'yyyyMMdd')			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : update
+-- Query Id : updateRangeResortRecordRslt
+
+	  	UPDATE 	tb_rdrecord	    SET	  read_rangeresort_prog_state_cd = '1'	    	, read_range_mng_fin_flag = '0'	    	, oper_read_range_cd = '1'	    	, last_read_resort_yyyy = '1'		WHERE record_center_id = '1'	    AND	  record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : update
+-- Query Id : updateRangeResortFolderRslt
+
+		UPDATE	tb_rdfolder		SET		oper_read_range_cd = '1'		WHERE	record_center_id = '1'		AND		folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml
+-- Query    : select
+-- Query Id : findRecordCount
+
+		SELECT count(*)		FROM tb_rdrecord		WHERE record_center_id = '1'		AND folder_id = '1'		AND oper_read_range_cd in ('02', '03')	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\eval\rangeresortopin\RangeResortOpinRslt.xml

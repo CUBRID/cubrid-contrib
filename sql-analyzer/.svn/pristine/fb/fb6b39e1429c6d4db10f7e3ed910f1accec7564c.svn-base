@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="open.srchTotal">
+
+	<!--
+		통합검색시스템 제공목록선정 목록 조회
+	-->
+	<resultMap id="findSrchTotalChoicePagedList-result" class="rms.open.srchTotal.domain.SrchTotal">
+		<result property="title" 				column="title"					/>
+		<result property="folderId" 			column="folder_id"				/>
+		<result property="orgCd" 				column="org_cd"		    		/>
+		<result property="orgNm" 				column="org_nm"					/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"			/>
+		<result property="clssId" 		    	column="clss_id"				/>
+		<result property="clssNm" 		    	column="clss_nm"				/>
+		<result property="clssDivCd" 		    column="clss_div_cd"			/>
+		<result property="creatSysCd" 			column="creat_sys_cd"			/>
+		<result property="creatSysNm" 			column="creat_sys_nm"			/>
+		<result property="creatYyyy" 		    column="creat_yyyy"				/>
+		<result property="takeYyyy" 		    column="take_yyyy"				/>
+		<result property="creatUserOrgCd" 		column="creat_user_org_cd"		/>
+		<result property="creatUserOrgNm" 		column="creat_user_org_nm"		/>
+		<result property="takeOrgCd" 		    column="take_org_cd"			/>
+		<result property="takeOrgNm" 		    column="take_org_nm"			/>
+		<result property="takeOrgAbbrNm" 		column="take_org_abbr_nm"		/>
+		<result property="erecordFlag" 	    	column="erecord_flag"   	   	/>
+		<result property="erecordFlagNm" 	    column="erecord_flag_nm"		/>
+		<result property="operReadRangeCd" 		column="oper_read_range_cd"		/>
+		<result property="operReadRangeNm"	 	column="oper_read_range_nm"		/>
+		<result property="openlistSetNm" 		column="openlist_set_nm"		/>
+		<result property="openlistSetCd" 		column="openlist_set_cd"		/>
+	</resultMap>
+	<select id="countSrchTotalChoicePagedList" parameterClass="rms.open.srchTotal.domain.SrchTotal" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_RDFOLDER A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="creatSysCd">
+			A.creat_sys_cd = #creatSysCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgCd">
+			A.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			A.title LIKE #title:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatFromYyyy">
+			<isNotEmpty property="creatToYyyy">
+				(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+			</isNotEmpty>
+			<isEmpty property="creatToYyyy">
+				A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+			</isEmpty>
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="creatFromYyyy">
+			<isNotEmpty property="creatToYyyy">
+				A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+			</isNotEmpty>
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="takeYyyy">
+			A.take_yyyy = #takeYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+		    A.clss_id = #clssId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="takeOrgCd">
+			A.take_org_cd = #takeOrgCd:VARCHAR#
+		</isNotEmpty>		
+		<isNotEmpty prepend="AND" property="erecordFlag">
+			A.erecord_flag = #erecordFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="operReadRangeCd">
+			A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="openlistSetCd">
+			A.openlist_set_cd = #openlistSetCd:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findSrchTotalChoicePagedList" parameterClass="rms.open.srchTotal.domain.SrchTotal" resultMap="findSrchTotalChoicePagedList-result">
+		SELECT E.record_center_id
+			, E.folder_id
+			, E.title
+			, E.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm
+			, E.clss_div_cd
+			, E.clss_id
+			, E.clss_nm
+			, E.creat_sys_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) AS creat_sys_nm
+			, E.creat_yyyy
+			, E.take_yyyy
+			, E.creat_user_org_cd
+			, E.creat_user_org_nm
+			, E.take_org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.take_org_cd) AS take_org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.take_org_cd) AS take_org_abbr_nm
+			, E.erecord_flag
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm
+			, E.oper_read_range_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm
+			, E.openlist_set_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD58' AND Z.com_cd=E.openlist_set_cd) AS openlist_set_nm
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.record_center_id
+						, A.folder_id
+						, A.title
+						, A.org_cd
+						, A.clss_div_cd
+						, A.clss_id
+						, A.clss_nm
+						, A.creat_sys_cd
+						, A.creat_yyyy
+						, A.take_yyyy
+						, A.creat_user_org_cd
+						, A.creat_user_org_nm
+						, A.take_org_cd
+						, A.erecord_flag
+						, A.oper_read_range_cd
+						, A.openlist_set_cd
+					FROM  TB_RDFOLDER A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty prepend="AND" property="creatSysCd">
+						A.creat_sys_cd = #creatSysCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="orgCd">
+						A.org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="title">
+						A.title LIKE #title:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="creatFromYyyy">
+						<isNotEmpty property="creatToYyyy">
+							(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+						</isNotEmpty>
+						<isEmpty property="creatToYyyy">
+							A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+						</isEmpty>
+					</isNotEmpty>
+					<isEmpty prepend="AND" property="creatFromYyyy">
+						<isNotEmpty property="creatToYyyy">
+							A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+						</isNotEmpty>
+					</isEmpty>
+					<isNotEmpty prepend="AND" property="takeYyyy">
+						A.take_yyyy = #takeYyyy:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="clssId">
+					    A.clss_id = #clssId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="takeOrgCd">
+						A.take_org_cd = #takeOrgCd:VARCHAR#
+					</isNotEmpty>		
+					<isNotEmpty prepend="AND" property="erecordFlag">
+						A.erecord_flag = #erecordFlag:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="operReadRangeCd">
+						A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="openlistSetCd">
+						A.openlist_set_cd = #openlistSetCd:VARCHAR#
+					</isNotEmpty>
+					ORDER BY A.record_center_id, A.title
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		통합검색시스템 제공목록선정 목록
+		: 설정제외 처리 (1:미설정->3:제외)
+	 -->
+	<update id="updateSrchTotalExceptList" parameterClass="rms.open.srchTotal.domain.SrchTotal">
+		UPDATE TB_RDFOLDER
+		SET   openlist_set_cd = '3'
+			<!--cubrid , chng_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, chng_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#
+		AND   (openlist_set_cd IS NULL OR openlist_set_cd = '1')
+	</update>
+	
+	<!-- 
+		통합검색시스템 제공목록선정 목록
+		: 목록설정 처리 (1:미설정/3:제외->2:설정)
+	 -->
+	<update id="updateSrchTotalChoiceList" parameterClass="rms.open.srchTotal.domain.SrchTotal">
+		UPDATE TB_RDFOLDER
+		SET   openlist_set_cd = '2'
+			<!--cubrid , chng_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, chng_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_id = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		통합검색시스템 제공목록선정 목록
+		: 일괄설정 처리 (1:미설정->2:설정)
+	 -->
+	<update id="updateSrchTotalChoiceBatch" parameterClass="rms.open.srchTotal.domain.SrchTotal">
+		UPDATE TB_RDFOLDER A
+		SET   A.openlist_set_cd = '2'
+			<!--cubrid , A.chng_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, A.chng_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   (A.openlist_set_cd IS NULL OR A.openlist_set_cd = '1')
+		<isNotEmpty prepend="AND" property="creatSysCd">
+			A.creat_sys_cd = #creatSysCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="orgCd">
+			A.org_cd = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			A.title LIKE #title:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatFromYyyy">
+			<isNotEmpty property="creatToYyyy">
+				(A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#)
+			</isNotEmpty>
+			<isEmpty property="creatToYyyy">
+				A.creat_yyyy <![CDATA[>=]]> #creatFromYyyy:VARCHAR#
+			</isEmpty>
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="creatFromYyyy">
+			<isNotEmpty property="creatToYyyy">
+				A.creat_yyyy <![CDATA[<=]]> #creatToYyyy:VARCHAR#
+			</isNotEmpty>
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="takeYyyy">
+			A.take_yyyy = #takeYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+		    A.clss_id = #clssId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="takeOrgCd">
+			A.take_org_cd = #takeOrgCd:VARCHAR#
+		</isNotEmpty>		
+		<isNotEmpty prepend="AND" property="erecordFlag">
+			A.erecord_flag = #erecordFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="operReadRangeCd">
+			A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="openlistSetCd">
+			A.openlist_set_cd = #openlistSetCd:VARCHAR#
+		</isNotEmpty>
+	</update>
+
+</sqlMap>

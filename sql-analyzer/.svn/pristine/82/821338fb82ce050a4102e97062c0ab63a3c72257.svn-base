@@ -1,0 +1,947 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.scan">
+	 
+	 <!-- 
+		디지털변환_디지털변환
+		: 생산부서별 디지털변환대상 목록을 조회한다.
+	 -->
+	 <resultMap id="findScanTrgtList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="orgNm" 				column="ORG_NM"/>				<!-- 기록물 생산부서 Name -->
+	 	<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>			<!-- 기록물 생산부서 Name -->
+		<result property="erecCnt" 				column="ERECCNT"/>				<!-- 이관-->
+		<result property="scanCnt1" 			column="SCANCNT1"/>				<!-- 생산부서요청 -->
+		<result property="scanCnt2"				column="SCANCNT2"/>				<!-- 기록관추가 -->
+	 </resultMap>
+	 <select id="countScanTrgtList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+	    FROM (
+	        SELECT A.*
+	        FROM (
+	            SELECT ORG_CD, ORG_NM, SUM(acnt) AS erecCnt, SUM(ccnt) AS scanCnt1, SUM(dcnt) AS scanCnt2
+	            FROM (SELECT A.ORG_CD, B.ORG_NM                                             
+	                                , DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG) ,0) acnt  <!-- 이관 -->
+	                                , DECODE(A.SCAN_REQ_TYPE_CD, '1', COUNT(A.SCAN_REQ_TYPE_CD), 0) ccnt  <!-- 생산부서요청 -->
+	                                , DECODE(A.SCAN_REQ_TYPE_CD, '2', COUNT(A.SCAN_REQ_TYPE_CD), 0) dcnt  <!-- 기록관추가 -->                
+	                       FROM TB_RDFOLDER A, TB_STORG B
+	                       WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+	                       AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+	                       AND A.ORG_CD = B.ORG_CD
+	                       AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                       AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	                       GROUP BY A.ORG_CD, B.ORG_NM, A.BOOKSF_ARNG_FLAG, A.SCAN_REQ_TYPE_CD
+	            )
+	            GROUP BY ORG_CD, ORG_NM 
+	            ORDER BY ORG_CD
+	        ) A
+	    ) B
+	 </select>
+	 <select id="findScanTrgtList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanTrgtList-result">
+	 	SELECT C.org_cd
+		        ,C.org_nm
+		        ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id ANd Z.org_cd = C.org_cd) AS org_abbr_nm
+		        ,C.erecCnt
+		        ,C.scanCnt1
+		        ,C.scanCnt2
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , A.*
+		        FROM (
+		            SELECT RECORD_CENTER_ID, ORG_CD, ORG_NM, SUM(acnt) AS erecCnt, SUM(ccnt) AS scanCnt1, SUM(dcnt) AS scanCnt2
+		            FROM (SELECT A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM                                             
+	                            ,DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG) ,0) acnt  <!-- 이관 -->
+	                            ,DECODE(A.SCAN_REQ_TYPE_CD, '1', COUNT(A.SCAN_REQ_TYPE_CD), 0) ccnt  <!-- 생산부서요청 -->
+	                            ,DECODE(A.SCAN_REQ_TYPE_CD, '2', COUNT(A.SCAN_REQ_TYPE_CD), 0) dcnt  <!-- 기록관추가 -->                
+	                      FROM TB_RDFOLDER A, TB_STORG B
+	                      WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+	                      AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+	                      AND A.ORG_CD = B.ORG_CD
+	                      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                      AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	                      GROUP BY A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM, A.BOOKSF_ARNG_FLAG, A.SCAN_REQ_TYPE_CD
+		            )
+		            GROUP BY RECORD_CENTER_ID, ORG_CD, ORG_NM 
+		            ORDER BY ORG_CD
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	 </select>
+	 
+	 <!-- 
+		디지털변환_대상선정
+		: 기록물철 목록을 조회한다. (전체)
+	 -->
+	 <resultMap id="findScanTrgtAllPagedList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서-->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>			<!-- 생산부서명(간략) -->
+		<result property="clssNm"				column="CLSS_NM"/>				<!-- 분류체계명 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->		
+		<result property="presvTermNm"			column="PRESV_TERM_NM"/>		<!-- 보존기간명 -->		
+		<result property="pageTotal"			column="PAGE_TOTAL"/>			<!-- 총페이지 -->
+		<result property="scanProgStateNm"		column="SCAN_PROG_STATE_NM"/>	<!-- 상태 -->	
+	 </resultMap>
+	 <select id="countScanTrgtAllPagedList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	 SELECT COUNT(1)
+         FROM (
+             SELECT A.FOLDER_ID
+                   ,A.ORG_CD
+                   ,B.ORG_NM            
+                   ,A.CLSS_NM
+                   ,A.TITLE
+                   ,A.CREAT_YYYY
+                   ,C.COM_CD_NM PRESV_TERM_NM
+                   ,(SELECT SUM(D.RECORD_PAGE_CNT)  FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL
+                   ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM
+             FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C
+             WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+             AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','5')
+             AND NVL(A.OUT_FLAG,'0') = '0'
+             AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+             AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+             AND A.ORG_CD = B.ORG_CD
+             AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#   
+             AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+             <dynamic prepend="AND">
+                 <isNotEmpty prepend="AND" property="orgCd">
+                     A.ORG_CD = #orgCd:VARCHAR#
+                 </isNotEmpty>
+                 <isNotEmpty prepend="AND" property="clssId">
+                     (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+                 </isNotEmpty>                    
+                 <isNotEmpty prepend="AND" property="title">
+                     (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+                 </isNotEmpty>
+                 <isNotEmpty prepend="AND" property="scanReqTypeCd">
+                     A.SCAN_REQ_TYPE_CD = #scanReqTypeCd:VARCHAR#     
+                 </isNotEmpty>
+             </dynamic>
+             UNION
+             SELECT A.FOLDER_ID
+                   ,A.ORG_CD
+                   ,B.ORG_NM            
+                   ,A.CLSS_NM
+                   ,A.TITLE
+                   ,A.CREAT_YYYY
+                   ,C.COM_CD_NM PRESV_TERM_NM
+                   ,(SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL
+                   ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM
+             FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C
+             WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+             AND A.SCAN_PROG_STATE_CD = '2'
+             AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+             AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+             AND A.ORG_CD = B.ORG_CD
+             AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#  
+             AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+             <dynamic prepend="AND">
+                 <isNotEmpty prepend="AND" property="orgCd">
+                     A.ORG_CD = #orgCd:VARCHAR#
+                 </isNotEmpty>
+                 <isNotEmpty prepend="AND" property="clssId">
+                     (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+                 </isNotEmpty>                    
+                 <isNotEmpty prepend="AND" property="title">
+                     (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+                 </isNotEmpty>
+                 <isNotEmpty prepend="AND" property="scanReqTypeCd">
+                     A.SCAN_REQ_TYPE_CD = #scanReqTypeCd:VARCHAR#     
+                 </isNotEmpty>
+             </dynamic>
+         ) 
+	 </select>
+	 <select id="findScanTrgtAllPagedList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanTrgtAllPagedList-result">
+	 	SELECT F.folder_id
+		      ,F.org_cd
+		      ,F.org_abbr_nm
+		      ,F.org_nm
+		      ,F.clss_nm
+		      ,F.title
+		      ,F.creat_yyyy
+		      ,F.presv_term_nm
+		      ,F.page_total
+		      ,F.scan_prog_state_nm
+		FROM (
+		    SELECT E.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,D.*
+		        FROM (
+		            SELECT A.FOLDER_ID
+		                  ,A.ORG_CD
+		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) AS org_abbr_nm
+		                  ,B.ORG_NM            
+		                  ,A.CLSS_NM
+		                  ,A.TITLE
+		                  ,A.CREAT_YYYY
+		                  ,C.COM_CD_NM PRESV_TERM_NM
+		                  ,(SELECT SUM(D.RECORD_PAGE_CNT)  FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL
+		                  ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM
+		            FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C
+		            WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		            AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','5')
+		            AND NVL(A.OUT_FLAG,'0') = '0'
+		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+		            AND A.ORG_CD = B.ORG_CD
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#   
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>                    
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="scanReqTypeCd">
+		                    A.SCAN_REQ_TYPE_CD = #scanReqTypeCd:VARCHAR#     
+		                </isNotEmpty>
+		            </dynamic>
+		            UNION
+		            SELECT A.FOLDER_ID
+		                  ,A.ORG_CD
+		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) AS org_abbr_nm
+		                  ,B.ORG_NM            
+		                  ,A.CLSS_NM
+		                  ,A.TITLE
+		                  ,A.CREAT_YYYY
+		                  ,C.COM_CD_NM PRESV_TERM_NM
+		                  ,(SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL
+		                  ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM
+		            FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C
+		            WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		            AND A.SCAN_PROG_STATE_CD = '2'
+		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+		            AND A.ORG_CD = B.ORG_CD
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#  
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>                    
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="scanReqTypeCd">
+		                    A.SCAN_REQ_TYPE_CD = #scanReqTypeCd:VARCHAR#     
+		                </isNotEmpty>
+		            </dynamic>
+		        ) D
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) E
+		    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) F
+		ORDER BY F.rnum
+	 </select>
+	 
+	  <!-- 
+		디지털변환_대상선정
+		: 기록물철 목록을 조회한다.
+	 -->
+	 <resultMap id="findScanTrgtPagedList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서-->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>			<!-- 생산부서명(간략) -->
+		<result property="clssNm"				column="CLSS_NM"/>				<!-- 분류체계명 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->		
+		<result property="presvTermNm"			column="PRESV_TERM_NM"/>		<!-- 보존기간명 -->		
+		<result property="pageTotal"			column="PAGE_TOTAL"/>			<!-- 총페이지 -->
+		<result property="scanProgStateNm"		column="SCAN_PROG_STATE_NM"/>	<!-- 상태 -->	
+	 </resultMap>
+	 <select id="countScanTrgtPagedList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+        FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C
+        WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+        AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','2','5')
+        AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+        AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+        AND A.ORG_CD = B.ORG_CD
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID    
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>                    
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="scanProgStateCd">
+                NVL(A.SCAN_PROG_STATE_CD, '1') = #scanProgStateCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="scanReqTypeCd">
+                A.SCAN_REQ_TYPE_CD = #scanReqTypeCd:VARCHAR#     
+            </isNotEmpty>
+            <isEqual prepend="AND" property="scanProgStateCd" compareValue="1">  <!-- 미선정 -->
+                A.OUT_FLAG = '0'
+            </isEqual>            
+        </dynamic>
+	 </select>
+	 <select id="findScanTrgtPagedList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanTrgtPagedList-result">
+	 	SELECT F.folder_id
+		      ,F.org_cd
+		      ,F.org_abbr_nm
+		      ,F.org_nm
+		      ,F.clss_nm
+		      ,F.title
+		      ,F.creat_yyyy
+		      ,F.presv_term_nm
+		      ,F.page_total
+		      ,F.scan_prog_state_nm
+		FROM (
+		    SELECT E.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,D.*
+		        FROM (
+		            SELECT A.FOLDER_ID
+		                  ,A.ORG_CD
+		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) AS org_abbr_nm
+		                  ,B.ORG_NM            
+		                  ,A.CLSS_NM
+		                  ,A.TITLE
+		                  ,A.CREAT_YYYY
+		                  ,C.COM_CD_NM PRESV_TERM_NM
+		                  ,(SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.FOLDER_ID = A.FOLDER_ID AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID) PAGE_TOTAL
+		                  ,DECODE(NVL(A.SCAN_PROG_STATE_CD,'1'), '2','선정','미선정') SCAN_PROG_STATE_NM
+		            FROM TB_RDFOLDER A, TB_STORG B, TB_ZZCOMCD C
+		            WHERE A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		            AND NVL(A.SCAN_PROG_STATE_CD,'1') IN ('1','2','5')
+		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')
+		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+		            AND A.ORG_CD = B.ORG_CD
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID    
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>                    
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="scanProgStateCd">
+		                    NVL(A.SCAN_PROG_STATE_CD, '1') = #scanProgStateCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="scanReqTypeCd">
+		                    A.SCAN_REQ_TYPE_CD = #scanReqTypeCd:VARCHAR#     
+		                </isNotEmpty>
+		                <isEqual prepend="AND" property="scanProgStateCd" compareValue="1">  <!-- 미선정  --> 
+		                    A.OUT_FLAG = '0'
+		                </isEqual>            
+		            </dynamic>
+		        ) D
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) E
+		    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) F
+		ORDER BY F.rnum
+	 </select>
+	 
+	 
+	 <!-- 
+		디지털변환_스캐닝
+		: 기록물철 목록을 조회한다.
+	 -->
+	 <resultMap id="findScanFolderPagedList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서-->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>			<!-- 생산부서명(간략) -->
+		<result property="clssNm"				column="CLSS_NM"/>				<!-- 분류체계명 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->		
+		<result property="presvTermNm"			column="PRESV_TERM_NM"/>		<!-- 보존기간명 -->		
+		<result property="pageTotal"			column="PAGE_TOTAL"/>			<!-- 총페이지 -->
+		<result property="scanProgStateCd"		column="SCAN_PROG_STATE_CD"/>	<!-- 상태 -->
+		<result property="scanProgStateNm"		column="SCAN_PROG_STATE_NM"/>	<!-- 상태 -->		
+	 </resultMap>
+	 <select id="countScanFolderPagedList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1) 
+        FROM TB_RDFOLDER A
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic prepend="AND">
+            <isEqual prepend="AND" property="scanCd" compareValue="1">  <!--  스캐닝=1,검사=2  -->
+                A.SCAN_PROG_STATE_CD IN ('2','3','4')
+            </isEqual>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+	        <isNotEmpty property="presvTermCd">
+		        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+		            A.PRESV_TERM_CD IN ('20','25')
+	            </isEqual>
+		        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+	            </isNotEqual>		            
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>                    
+            <isNotEmpty prepend="AND" property="scanProgStateCd">    <!-- 검사=3-->
+                A.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+            </isNotEmpty>            
+        </dynamic>
+	 </select>
+	 <select id="findScanFolderPagedList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanFolderPagedList-result">
+	 	SELECT D.folder_id
+		      ,D.org_cd
+		      ,(SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_nm
+		      ,(SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_abbr_nm
+		      ,D.clss_nm
+		      ,D.title
+		      ,D.creat_yyyy
+		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD07' AND C.COM_CD=DECODE(D.presv_term_cd, '20', '25', D.presv_term_cd)) AS presv_term_nm
+		      ,(SELECT SUM(Z.record_page_cnt) FROM TB_RDRECORD Z WHERE Z.folder_id = D.folder_id) AS page_total
+		      ,D.scan_prog_state_cd
+		      ,DECODE(D.scan_prog_state_cd, '2','미스캔', '3','스캔', '4','반려','') AS scan_prog_state_nm
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,B.*
+		        FROM (
+		            SELECT A.* 
+		            FROM TB_RDFOLDER A
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic prepend="AND">
+		                <isEqual prepend="AND" property="scanCd" compareValue="1">  <!--  스캐닝=1,검사=2  -->
+		                    A.SCAN_PROG_STATE_CD IN ('2','3','4')
+		                </isEqual>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+				        <isNotEmpty property="presvTermCd">
+					        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+					            A.PRESV_TERM_CD IN ('20','25')
+				            </isEqual>
+					        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				            </isNotEqual>		            
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>                    
+		                <isNotEmpty prepend="AND" property="scanProgStateCd">    <!-- 검사=3-->
+		                    A.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+		                </isNotEmpty>            
+		            </dynamic>
+		            ORDER BY A.RECORD_CENTER_ID, A.TITLE
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	 </select>
+	 
+	  <!-- 
+		디지털변환_스캐닝
+		: 기록물철 목록을 조회한다.
+	 -->
+	 <resultMap id="findScanRecordPagedList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="recordId" 			column="RECORD_ID"/>			<!-- 기록물철ID -->
+		<result property="title" 				column="TITLE"/>				<!-- 건제목 -->
+		<result property="creatRegDtime" 		column="CREAT_REG_DTIME"/>		<!-- 생산일자 -->
+		<result property="recordDetlTypeNm" 	column="RECORD_DETL_TYPE_NM"/>	<!-- 건유형 -->
+		<result property="recordPageCnt" 		column="RECORD_PAGE_CNT"/>		<!-- 기록물쪽수 -->
+		<result property="recordStartPage" 		column="RECORD_START_PAGE"/>	<!-- 시작페이지 -->
+		<result property="recordEndPage" 		column="RECORD_END_PAGE"/>		<!-- 끝페이지 -->
+		<result property="scanFinFlag" 			column="SCAN_FIN_FLAG"/>		<!-- 상태 -->
+		<result property="scanFinFlagNm"		column="SCAN_FIN_FLAG_NM"/>		<!-- 상태 -->
+		<result property="scanTestDivCd"		column="SCAN_TEST_DIV_CD"/>		<!-- 검사오류 -->
+		<result property="scanTestDivNm" 		column="SCAN_TEST_DIV_NM"/>		<!-- 검사오류 -->
+        <result property="scanHistFlag" 		column="SCAN_HIST_FLAG"/>		<!-- 스캔이력남김여부-->
+	 </resultMap>
+	 <select id="countScanRecordPagedList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+        FROM TB_RDRECORD B   
+        WHERE B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND B.FOLDER_ID = #folderId:VARCHAR#
+        AND B.ERECORD_FLAG = '2' <!-- 비전자 -->
+        <dynamic prepend="AND">
+        	<isNotEmpty prepend="AND" property="title">
+                (B.TITLE LIKE #title:VARCHAR# OR B.SUB_TITLE LIKE #title:VARCHAR# OR B.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isEqual prepend="AND" property="scanCd" compareValue="2">      <!-- 상태:미스캔 -->
+                NVL(B.SCAN_FIN_FLAG, '0') = '0'
+            </isEqual>
+            <isEqual prepend="AND" property="scanCd" compareValue="3">      <!-- 상태:스캔 -->
+                NVL(B.SCAN_FIN_FLAG, '0') = '1'
+            </isEqual>
+            <isEqual prepend="AND" property="scanCd" compareValue="4">      <!-- 상태:검사오류 -->
+                NVL(B.SCAN_TEST_DIV_CD, '0') = '2'
+            </isEqual>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+                (B.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="recordDetlTypeCd">
+                B.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="recordClssCd">
+                B.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	 </select>
+	 <select id="findScanRecordPagedList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanRecordPagedList-result">
+	 	SELECT E.record_id
+		      ,E.title
+		      ,SUBSTR(E.CREAT_REG_DTIME,0,12)||'00' CREAT_REG_DTIME
+		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD03' AND C.com_cd=E.record_detl_type_cd) AS record_detl_type_nm
+		      ,(SELECT NVL(SUM(A.page_cnt), '0') FROM TB_STORIGNFILE A WHERE A.record_center_id=E.record_center_id AND A.orign_id=E.orign_id AND A.doc_type_cd='10') AS record_page_cnt
+		      ,E.record_start_page
+		      ,E.record_end_page
+		      ,E.scan_fin_flag
+		      ,DECODE(E.scan_fin_flag, '0','미스캔', '1','스캔', '') AS scan_fin_flag_nm <!-- SCAN_PROG_STATE_NM  -->
+		      ,E.scan_test_div_cd
+		      ,DECODE(E.scan_test_div_cd,'1','정상','2','오류','') AS scan_test_div_nm
+		      ,DECODE(E.scan_check_fin_flag,'1',DECODE(E.record_clss_cd,'','N','Y'),'N') AS scan_hist_flag
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT *
+		            FROM TB_RDRECORD B   
+		            WHERE B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND B.FOLDER_ID = #folderId:VARCHAR#
+		            AND B.ERECORD_FLAG = '2' <!-- 비전자 -->
+		            <dynamic prepend="AND">
+		            	<isNotEmpty prepend="AND" property="title">
+		                    (B.TITLE LIKE #title:VARCHAR# OR B.SUB_TITLE LIKE #title:VARCHAR# OR B.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isEqual prepend="AND" property="scanCd" compareValue="2">      <!-- 상태:미스캔 -->
+		                    NVL(B.SCAN_FIN_FLAG, '0') = '0'
+		                </isEqual>
+		                <isEqual prepend="AND" property="scanCd" compareValue="3">      <!-- 상태:스캔 -->
+		                    NVL(B.SCAN_FIN_FLAG, '0') = '1'
+		                </isEqual>
+		                <isEqual prepend="AND" property="scanCd" compareValue="4">      <!-- 상태:검사오류 -->
+		                    NVL(B.SCAN_TEST_DIV_CD, '0') = '2'
+		                </isEqual>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (B.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordDetlTypeCd">
+		                    B.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordClssCd">
+		                    B.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	 </select>
+	 
+	 <!-- 
+		디지털변환_스캐닝검사
+		: 기록물철 목록을 조회한다.
+	 -->
+	 <resultMap id="findScanCheckFolderPagedList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서-->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>			<!-- 생산부서명(간략) -->
+		<result property="clssNm"				column="CLSS_NM"/>				<!-- 분류체계명 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->		
+		<result property="presvTermNm"			column="PRESV_TERM_NM"/>		<!-- 보존기간명 -->		
+		<result property="pageTotal"			column="PAGE_TOTAL"/>			<!-- 총페이지 -->
+		<result property="scanProgStateNm"		column="SCAN_PROG_STATE_NM"/>	<!-- 상태 -->		
+	 </resultMap>
+	 <select id="countScanCheckFolderPagedList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+        FROM TB_RDFOLDER A
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic prepend="AND">
+            <isEqual prepend="AND" property="scanCd" compareValue="1">  <!-- 스캐닝=1,검사=2 -->
+                A.SCAN_PROG_STATE_CD IN ('2','3','4')
+            </isEqual>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+	        <isNotEmpty property="presvTermCd">
+		        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+		            A.PRESV_TERM_CD IN ('20','25')
+	            </isEqual>
+		        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+	            </isNotEqual>		            
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>                    
+            <isNotEmpty prepend="AND" property="scanProgStateCd">    <!-- 검사=3-->
+                A.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+            </isNotEmpty>            
+        </dynamic>
+	 </select>
+	 <select id="findScanCheckFolderPagedList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanCheckFolderPagedList-result">
+	 	SELECT D.folder_id
+		      ,D.org_cd
+		      ,(SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_nm
+		      ,(SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=D.record_center_id AND B.org_cd=D.org_cd) AS org_abbr_nm
+		      ,D.clss_nm
+		      ,D.title
+		      ,D.creat_yyyy
+		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD07' AND C.com_cd=DECODE(D.presv_term_cd, '20', '25', D.presv_term_cd)) AS presv_term_nm
+		      ,(SELECT SUM(C.record_page_cnt) FROM TB_RDRECORD C WHERE C.folder_id = D.folder_id) AS page_total
+		      ,DECODE(D.scan_prog_state_cd, '2','미스캔', '3','스캔', '4','반려','') AS scan_prog_state_nm
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,B.*
+		        FROM (
+		            SELECT *
+		            FROM TB_RDFOLDER A
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic prepend="AND">
+		                <isEqual prepend="AND" property="scanCd" compareValue="1">  <!-- 스캐닝=1,검사=2 -->
+		                    A.SCAN_PROG_STATE_CD IN ('2','3','4')
+		                </isEqual>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+				        <isNotEmpty property="presvTermCd">
+					        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+					            A.PRESV_TERM_CD IN ('20','25')
+				            </isEqual>
+					        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				            </isNotEqual>		            
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>                    
+		                <isNotEmpty prepend="AND" property="scanProgStateCd">    <!-- 검사=3-->
+		                    A.SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+		                </isNotEmpty>            
+		            </dynamic>
+		             ORDER BY A.RECORD_CENTER_ID, A.TITLE
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	 </select>
+	 
+	  <!-- 
+		디지털변환_스캐닝검사
+		: 기록물건 목록을 조회한다.
+	 -->
+	 <resultMap id="findScanCheckRecordPagedList-result" class="rms.presv.scan.domain.Scan">
+	 	<result property="recordId" 			column="RECORD_ID"/>			<!-- 기록물철ID -->
+		<result property="title" 				column="TITLE"/>				<!-- 건제목 -->
+		<result property="creatRegDtime" 		column="CREAT_REG_DTIME"/>		<!-- 생산일자 -->
+		<result property="recordDetlTypeNm" 	column="RECORD_DETL_TYPE_NM"/>	<!-- 건유형 -->
+		<result property="recordPageCnt" 		column="RECORD_PAGE_CNT"/>		<!-- 기록물쪽수 -->
+		<result property="recordStartPage" 		column="RECORD_START_PAGE"/>	<!-- 시작페이지 -->
+		<result property="recordEndPage" 		column="RECORD_END_PAGE"/>		<!-- 끝페이지 -->
+		<result property="scanFinFlag" 			column="SCAN_FIN_FLAG"/>		<!-- 상태 -->
+		<result property="scanFinFlagNm"		column="SCAN_FIN_FLAG_NM"/>		<!-- 상태 -->
+		<result property="scanTestDivCd"		column="SCAN_TEST_DIV_CD"/>		<!-- 검사오류 -->
+		<result property="scanTestDivNm" 		column="SCAN_TEST_DIV_NM"/>		<!-- 검사오류 -->	
+	 </resultMap>
+	 <select id="countScanCheckRecordPagedList" parameterClass="rms.presv.scan.domain.Scan" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+        FROM TB_RDRECORD B
+        WHERE B.RECORD_CENTER_ID = #recordCenterId#
+        AND B.FOLDER_ID = #folderId:VARCHAR#
+        AND B.ERECORD_FLAG = '2' <!-- 비전자 -->
+        <dynamic prepend="AND">
+        	<isNotEmpty prepend="AND" property="title">
+                (B.TITLE LIKE #title:VARCHAR# OR B.SUB_TITLE LIKE #title:VARCHAR# OR B.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isEqual prepend="AND" property="scanCd" compareValue="2">      <!-- 상태:미검사 -->
+                NVL(B.SCAN_TEST_DIV_CD, '0') = '0'
+            </isEqual>
+            <isEqual prepend="AND" property="scanCd" compareValue="3">      <!-- 상태:검사오류 -->
+                NVL(B.SCAN_TEST_DIV_CD, '0') = '2'
+            </isEqual>
+            <isEqual prepend="AND" property="scanCd" compareValue="4">      <!-- 상태:정상검사 -->
+                NVL(B.SCAN_TEST_DIV_CD, '0') = '1'
+            </isEqual>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+                (B.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="recordDetlTypeCd">
+                B.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="recordClssCd">
+                B.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	 </select>
+	 <select id="findScanCheckRecordPagedList" parameterClass="rms.presv.scan.domain.Scan" resultMap="findScanCheckRecordPagedList-result">
+	 	SELECT E.record_id
+		      ,E.title
+		      ,SUBSTR(E.creat_reg_dtime,0,12)||'00' AS creat_reg_dtime
+		      ,(SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd='RD03' AND C.com_cd=E.record_detl_type_cd) AS record_detl_type_nm
+		      ,E.record_page_cnt
+		      ,E.record_start_page
+		      ,E.record_end_page
+		      ,E.scan_fin_flag
+		      ,DECODE(E.scan_fin_flag, '0','미스캔', '1','스캔', '') AS scan_fin_flag_nm <!-- SCAN_PROG_STATE_NM  -->
+		      ,E.scan_test_div_cd
+		      ,DECODE(E.scan_test_div_cd,'1','정상','2','오류','') AS scan_test_div_nm
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT *
+		            FROM TB_RDRECORD B
+		            WHERE B.RECORD_CENTER_ID = #recordCenterId#
+		            AND B.FOLDER_ID = #folderId:VARCHAR#
+		            AND B.ERECORD_FLAG = '2' <!-- 비전자 -->
+		            <dynamic prepend="AND">
+		            	<isNotEmpty prepend="AND" property="title">
+		                    (B.TITLE LIKE #title:VARCHAR# OR B.SUB_TITLE LIKE #title:VARCHAR# OR B.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isEqual prepend="AND" property="scanCd" compareValue="2">      <!-- 상태:미검사 -->
+		                    NVL(B.SCAN_TEST_DIV_CD, '0') = '0'
+		                </isEqual>
+		                <isEqual prepend="AND" property="scanCd" compareValue="3">      <!-- 상태:검사오류 -->
+		                    NVL(B.SCAN_TEST_DIV_CD, '0') = '2'
+		                </isEqual>
+		                <isEqual prepend="AND" property="scanCd" compareValue="4">      <!-- 상태:정상검사 -->
+		                    NVL(B.SCAN_TEST_DIV_CD, '0') = '1'
+		                </isEqual>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (B.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordDetlTypeCd">
+		                    B.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordClssCd">
+		                    B.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	 </select>
+	 
+	 <!-- 
+	 	기록물건 세부유형을 조회한다.
+	  -->
+	 <resultMap id="findRecordClssCd-result" class="rms.common.code.domain.Code">
+	 	<result property="type" 			column="COM_TYPE_CD"/>
+		<result property="code" 			column="COM_CD"/>
+		<result property="name" 			column="COM_CD_NM"/>
+	 </resultMap>
+	 <select id="findRecordClssCd" parameterClass="rms.common.code.domain.Code" resultMap="findRecordClssCd-result">
+	 	SELECT com_type_cd,com_cd,com_cd_nm
+		FROM TB_ZZCOMCD 
+		WHERE com_type_cd  = (SELECT sub_com_type_cd
+                              FROM TB_ZZCOMCD 
+                              WHERE com_type_cd = #type:VARCHAR#
+                              AND com_cd = #code:VARCHAR#)
+        AND use_flag = '1'
+	 </select>
+	 
+	 <!-- UPDATE(선정:2,취소:1) -->
+	<update id="updateScanTrgt" parameterClass="rms.presv.scan.domain.Scan">
+		UPDATE TB_RDFOLDER
+		   SET SCAN_PROG_STATE_CD = #scanProgStateCd#
+		     , SCAN_REQ_TYPE_CD   = DECODE((SELECT SCAN_REQ_TYPE_CD FROM TB_RDFOLDER
+			                                 WHERE FOLDER_ID = #folderId#
+			                                   AND RECORD_CENTER_ID = #recordCenterId#), '1','1',#scanReqTypeCd#) 
+		 WHERE FOLDER_ID = #folderId#
+		   AND RECORD_CENTER_ID = #recordCenterId#
+	</update>
+	
+	<resultMap id="findOrignFileId-result" 			class="rms.presv.scan.domain.Scan" >
+		<result property="orignFileId" 		column="ORIGN_FILE_ID"/>
+		<result property="scanImageFile"	column="FILE_NM"/>		
+	</resultMap>
+	<select id="findOrignFileId" parameterClass="rms.presv.scan.domain.Scan" resultMap="findOrignFileId-result">
+                <!--cubrid select-->
+		SELECT ORIGN_FILE_ID,
+		       FILE_NM
+		FROM TB_RDRECORD A, TB_STORIGNFILE B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		  AND A.RECORD_ID = #recordId:VARCHAR#
+		  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		  AND A.ORIGN_ID = B.ORIGN_ID
+		  <!--order by rownum desc-->
+	</select>
+	
+	<!-- 건 원문ID -->    
+	<resultMap id="recordOrignId-result" 			class="rms.presv.scan.domain.Scan" >
+		<result property="orignId"		 		column="ORIGN_ID"/>				<!-- 원문ID -->
+	</resultMap>	
+	
+	<!-- SELECT(건 원문ID조회) -->	
+	<select id="findRecordOrignId" parameterClass="rms.presv.scan.domain.Scan" resultMap="recordOrignId-result">
+		SELECT ORIGN_ID
+		  FROM TB_RDRECORD
+		 WHERE RECORD_CENTER_ID = #recordCenterId#
+		   AND RECORD_ID = #recordId:VARCHAR#
+	</select>
+	
+	<!-- 건 기록물쪽수, 시작페이지, 끝페이지 조회 -->    
+	<resultMap id="frontRecordEndPage-result" 			class="rms.presv.scan.domain.Scan" >
+		<result property="recordEndPage" 		column="RECORD_END_PAGE"/>		<!-- 끝페이지 -->
+	</resultMap>
+	
+	<!-- SELECT(기록물건:스캔완료:저장할 기록물건의 앞 기록물건의 끝페이지조회) -->	
+	<select id="findFrontRecord" parameterClass="rms.presv.scan.domain.Scan" resultMap="frontRecordEndPage-result">
+		SELECT NVL(SUM(RECORD_PAGE_CNT), '0') RECORD_END_PAGE
+		  FROM TB_RDRECORD
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND FOLDER_ID = #folderId:VARCHAR#
+		   AND RECORD_ID <![CDATA[ < ]]> #recordId:VARCHAR#
+		   AND SCAN_FIN_FLAG = '1'
+	</select>
+	
+	<!-- UPDATE(기록물건:스캔완료) -->
+	<update id="updateScanRecord" parameterClass="rms.presv.scan.domain.Scan">
+		UPDATE TB_RDRECORD
+		   SET SCAN_FIN_FLAG = #scanFinFlag:VARCHAR#			<!-- 스캐닝완료여부(0=아니오,1=예) -->
+		     , ORIGN_ID 	 = #orignId:VARCHAR#				<!-- 원문ID -->
+		     , RECORD_START_PAGE = #recordStartPage:VARCHAR#	<!-- 시작페이지 -->
+		     , RECORD_END_PAGE   = #recordEndPage:VARCHAR#		<!-- 끝페이지 -->
+		     , RECORD_PAGE_CNT   = #recordPageCnt:VARCHAR#		<!-- 기록물쪽수 -->
+		 WHERE RECORD_CENTER_ID = #recordCenterId#
+		   AND RECORD_ID = #recordId:VARCHAR#
+	</update>
+	
+	<!-- UPDATE(기록물건:스캔완료 후 시작,종료페이지 갱신) -->
+	<update id="updateScanRecordPage" parameterClass="rms.presv.scan.domain.Scan">
+		UPDATE TB_RDRECORD Z
+		SET (Z.RECORD_START_PAGE, Z.RECORD_END_PAGE) = (
+			(
+				SELECT (TO_NUMBER(E.END_PAGE)-TO_NUMBER(E.RECORD_PAGE_CNT)+1) START_PAGE, E.END_PAGE
+				FROM (
+					SELECT RNUM A
+					, A.RECORD_CENTER_ID
+					, A.FOLDER_ID
+					, A.RECORD_ID
+					, A.TITLE
+					, A.RECORD_PAGE_CNT
+					, A.RECORD_START_PAGE
+					, A.RECORD_END_PAGE
+					, ( SELECT SUM(B.RECORD_PAGE_CNT)
+						FROM (
+							SELECT ROWNUM RNUM, C.RECORD_PAGE_CNT
+							FROM (
+								SELECT RECORD_PAGE_CNT
+								FROM  TB_RDRECORD
+								WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+								AND   FOLDER_ID = #folderId:VARCHAR#
+								AND   ERECORD_FLAG = '2'
+								ORDER BY record_center_id, creat_reg_dtime, creat_reg_no
+							) C
+						) B
+						WHERE B.RNUM <![CDATA[ <= ]]> A.RNUM ) END_PAGE
+					FROM (
+						SELECT ROWNUM RNUM, D.*
+						FROM (
+							SELECT *
+							FROM  TB_RDRECORD
+							WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+							AND   FOLDER_ID = #folderId:VARCHAR#
+							AND   ERECORD_FLAG = '2'
+							ORDER BY record_center_id, creat_reg_dtime, creat_reg_no
+						) D
+					) A
+				) E
+				WHERE E.RECORD_CENTER_ID=Z.RECORD_CENTER_ID
+				AND   E.RECORD_ID=Z.RECORD_ID
+			)
+		)
+		WHERE Z.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   Z.FOLDER_ID = #folderId:VARCHAR#
+		AND   Z.SCAN_FIN_FLAG = '1'
+	</update>
+	
+	<!-- UPDATE(기록물철:스캐닝진행상태:스캔완료=3,반려=4,검사완료=5) -->
+	<update id="updateScanFolder" parameterClass="rms.presv.scan.domain.Scan">
+		UPDATE TB_RDFOLDER
+		   SET SCAN_PROG_STATE_CD = #scanProgStateCd:VARCHAR#
+         WHERE RECORD_CENTER_ID = #recordCenterId#
+           AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!-- UPDATE(기록물건:스캔검사완료) -->
+	<update id="updateScanFinCheckRecord" parameterClass="rms.presv.scan.domain.Scan">
+		UPDATE TB_RDRECORD
+			<isEqual  prepend="SET" property="scanProgStateCd" compareValue="5">  	<!-- 상태:미검사 -->
+				SCAN_CHECK_FIN_FLAG = '1'	
+			</isEqual>
+			<isNotEqual prepend="SET"   property="scanProgStateCd" compareValue="5">  	<!-- 상태:검사오류 -->
+				SCAN_CHECK_FIN_FLAG = '0'	
+			</isNotEqual>	
+		 WHERE RECORD_CENTER_ID     = #recordCenterId#
+		   AND FOLDER_ID            = #folderId:VARCHAR#
+	</update>
+	
+	<!-- UPDATE(기록물건:검사완료) -->	
+	<update id="updateScanCheckRecord" parameterClass="rms.presv.scan.domain.Scan">
+		UPDATE TB_RDRECORD
+		   SET SCAN_TEST_DIV_CD  = #scanTestDivCd:VARCHAR#		<!-- 스캔검사구분(1=검사정상,2=검사오류) -->
+		     , SCAN_ERROR_DIV_CD = #scanErrorDivCd:VARCHAR#		<!-- 스캔오류구분 -->
+		     , SCAN_ERROR_CONT   = #scanErrorCont:VARCHAR#		<!-- 오류내용 -->
+		 WHERE RECORD_CENTER_ID = #recordCenterId#
+		   AND RECORD_ID = #recordId:VARCHAR#
+	</update>
+</sqlMap>

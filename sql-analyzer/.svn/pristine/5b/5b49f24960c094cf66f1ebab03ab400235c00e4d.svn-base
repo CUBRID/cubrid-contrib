@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="transf.rcTake">
+
+	<!-- 기록물인수_처리부서지정
+		: 기관간인수 기록물인수 인수계획번호조회 
+	-->
+	<resultMap id="findRcTakePlanList-result" class="rms.transf.rcTake.domain.RcTakePlan">
+		<result property="takeMngNo" 			column="TAKE_MNG_NO"/>
+		<result property="takeProgStateCd"		column="TAKE_PROG_STATE_CD"/>
+	</resultMap>
+	<select id="findRcTakePlanList" parameterClass="rms.transf.rcTake.domain.RcTakePlan" resultMap="findRcTakePlanList-result">
+		SELECT take_rep_cd||'-'||take_yyyy||'-'||LPAD(take_sno, 6, '0') take_mng_no
+			, take_prog_state_cd
+		FROM  TB_DFTAKEPLAN
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		ORDER BY take_rep_cd, take_yyyy, take_sno DESC
+	</select>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 기관간인수 기록물인수 처리부서지정 
+	-->
+	<resultMap id="findRcTakeSetCurKeepOrgPagedList-result" class="rms.transf.rcTake.domain.RcTakeSetCurKeepOrg">
+		<result property="recordCenterId"				column="RECORD_CENTER_ID"/>
+		<result property="orgCd"						column="ORG_CD"/>
+		<result property="orgNm"						column="ORG_NM"/>
+		<result property="orgAbbrNm"					column="ORG_ABBR_NM"/>
+		<result property="folderCnt01"					column="FOLDER_CNT01"/>
+		<result property="recordCnt01"					column="RECORD_CNT01"/>
+		<result property="folderCnt02"				    column="FOLDER_CNT02"/>
+		<result property="recordCnt02"				    column="RECORD_CNT02"/>
+		<result property="fixedFlag"				    column="FIXED_FLAG"/>
+	</resultMap>
+	<select id="countRcTakeSetCurKeepOrgPagedList" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrg" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT B.record_center_id
+		    	,B.org_cd
+		        ,COUNT (1) folder_cnt
+		        ,SUM (B.record_reg_cnt) record_cnt
+		    FROM tb_rdfolder B
+		    WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		    <isNotEmpty prepend="AND" property="orgCd">
+		    	B.org_cd = #orgCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="clssId">
+		        <isEqual property="clssDivCd" compareValue="1">
+		            (B.clss_id = #clssId:VARCHAR# OR B.new_clss_id = #clssId:VARCHAR#)
+		        </isEqual>
+		        <isEqual property="clssDivCd" compareValue="2">
+		        	B.clss_id = #clssId:VARCHAR#
+		        </isEqual>
+		    </isNotEmpty>
+		    AND B.folder_keep_state_cd IN ('02','03','04')
+		    AND EXISTS (
+			    	SELECT Z.rd_folder_id
+			        FROM TB_RCTAKEFOLDERLIST Z
+			        WHERE Z.record_center_id = B.record_center_id
+			        AND Z.rd_folder_id = B.folder_id
+			        AND Z.rd_folder_id = B.folder_id
+			        AND Z.take_rep_cd = #takeRepCd:VARCHAR#
+			        AND Z.take_yyyy = #takeYyyy:VARCHAR#
+			        AND Z.take_sno = #takeSno:NUMBER#
+		        )
+		 	GROUP BY B.record_center_id, B.org_cd
+		)
+	</select>
+	<select id="findRcTakeSetCurKeepOrgPagedList" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrg" resultMap="findRcTakeSetCurKeepOrgPagedList-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+				SELECT C.record_center_id
+				    , C.org_cd
+				    , (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_nm
+				    , (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_abbr_nm
+				    , C.folder_cnt folder_cnt01
+				    , C.record_cnt record_cnt01
+				    , (SELECT COUNT(1) 
+					   FROM TB_RCTAKEFOLDERLIST X, TB_RDFOLDER Y
+					   WHERE X.record_center_id = Y.record_center_id
+					   AND X.rd_folder_id = Y.folder_id
+					   <isNotEmpty prepend="AND" property="orgCd">
+					       Y.org_cd = #orgCd:VARCHAR#
+					   </isNotEmpty>
+					   <isNotEmpty prepend="AND" property="clssId">
+					       <isEqual property="clssDivCd" compareValue="1">
+					           (Y.clss_id = #clssId:VARCHAR# OR Y.new_clss_id = #clssId:VARCHAR#)
+					       </isEqual>
+					       <isEqual property="clssDivCd" compareValue="2">
+					           Y.clss_id = #clssId:VARCHAR#
+						   </isEqual>
+				       </isNotEmpty>    
+					   AND X.take_rep_cd = #takeRepCd:VARCHAR#
+					   AND X.take_yyyy = #takeYyyy:VARCHAR#
+					   AND X.take_sno = #takeSno:NUMBER#
+					   AND X.cur_keep_org_flag = '0'
+					   AND Y.org_cd = C.org_cd) folder_cnt02
+				    , (SELECT NVL(SUM(TO_NUMBER(record_reg_cnt)), 0)
+				       FROM TB_RCTAKEFOLDERLIST X, TB_RDFOLDER Y
+				       WHERE X.record_center_id = Y.record_center_id
+				       AND X.rd_folder_id = Y.folder_id
+				       <isNotEmpty prepend="AND" property="orgCd">
+				           Y.org_cd = #orgCd:VARCHAR#
+				       </isNotEmpty>
+				       <isNotEmpty prepend="AND" property="clssId">
+				           <isEqual property="clssDivCd" compareValue="1">
+				               (Y.clss_id = #clssId:VARCHAR# OR Y.new_clss_id = #clssId:VARCHAR#)
+				           </isEqual>
+				           <isEqual property="clssDivCd" compareValue="2">
+				               Y.clss_id = #clssId:VARCHAR#
+				           </isEqual>
+				        </isNotEmpty>
+				        AND X.take_rep_cd = #takeRepCd:VARCHAR#
+				        AND X.take_yyyy = #takeYyyy:VARCHAR#
+				        AND X.take_sno = #takeSno:NUMBER#
+				        AND X.cur_keep_org_flag = '0'
+				        AND Y.org_cd = C.org_cd) record_cnt02
+				     , (SELECT NVL(MIN(X.cur_keep_org_flag), '0')
+				        FROM TB_RCTAKEFOLDERLIST X, TB_RDFOLDER Y
+				        WHERE X.record_center_id = Y.record_center_id
+				        AND X.rd_folder_id = Y.folder_id
+				        <isNotEmpty prepend="AND" property="orgCd">
+				            Y.org_cd = #orgCd:VARCHAR#
+				        </isNotEmpty>
+				        <isNotEmpty prepend="AND" property="clssId">
+				            <isEqual property="clssDivCd" compareValue="1">
+				                (Y.clss_id = #clssId:VARCHAR# OR Y.new_clss_id = #clssId:VARCHAR#)
+				            </isEqual>
+				            <isEqual property="clssDivCd" compareValue="2">
+				                Y.clss_id = #clssId:VARCHAR#
+				            </isEqual>
+				        </isNotEmpty>    
+				        AND X.take_rep_cd = #takeRepCd:VARCHAR#
+				        AND X.take_yyyy = #takeYyyy:VARCHAR#
+				        AND X.take_sno = #takeSno:NUMBER#
+				        AND Y.org_cd = C.org_cd) fixed_flag     
+				FROM (
+					SELECT B.record_center_id
+				    	,B.org_cd
+				        ,COUNT (1) folder_cnt
+				        ,SUM (B.record_reg_cnt) record_cnt
+				    FROM tb_rdfolder B
+				    WHERE B.record_center_id = #recordCenterId:VARCHAR#
+				    <isNotEmpty prepend="AND" property="orgCd">
+				    	B.org_cd         = #orgCd:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="clssId">
+				    	<isEqual property="clssDivCd" compareValue="1">
+				        	(B.clss_id = #clssId:VARCHAR# OR B.new_clss_id = #clssId:VARCHAR#)
+				        </isEqual>
+				    	<isEqual property="clssDivCd" compareValue="2">
+				        	B.clss_id = #clssId:VARCHAR#
+				        </isEqual>
+				    </isNotEmpty>
+				    AND B.folder_keep_state_cd IN ('02','03','04')
+				    AND EXISTS (
+					    	SELECT Z.rd_folder_id
+					        FROM TB_RCTAKEFOLDERLIST Z
+					        WHERE Z.record_center_id = B.record_center_id
+					        AND Z.rd_folder_id = B.folder_id
+					        AND Z.rd_folder_id = B.folder_id
+					        AND Z.take_rep_cd = #takeRepCd:VARCHAR#
+					        AND Z.take_yyyy = #takeYyyy:VARCHAR#
+					        AND Z.take_sno = #takeSno:NUMBER#
+				        )
+				 	GROUP BY B.record_center_id, B.org_cd
+				) C
+				ORDER BY C.record_center_id, C.org_cd
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 생산부서별 처리부서지정 처리
+	 -->
+	<update id="updateRcTakeSetCurKeepOrgFixed" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrg">
+	 	UPDATE TB_RDFOLDER A 
+		SET    A.cur_keep_org_cd = #handlOrgCd:VARCHAR#
+		<!--cubrid WHERE (A.record_center_id, A.folder_id) 
+		IN (    SELECT B.record_center_id, C.folder_id-->
+		WHERE
+		EXISTS (    SELECT 1
+		        FROM TB_RCTAKEFOLDERLIST B, TB_RDFOLDER C
+		        WHERE B.record_center_id   = #recordCenterId:VARcHAR#
+		        AND   B.take_rep_cd        = #takeRepCd:VARCHAR#
+		        AND   B.take_yyyy          = #takeYyyy:VARCHAR#
+		        AND   B.take_sno           = #takeSno:NUMBER#
+		        AND   C.org_cd 			   = #orgCd:VARCHAR#
+		        AND   B.record_center_id   = C.record_center_id
+		        AND   B.rd_folder_id       = C.folder_id
+			<!--cubrid-->
+			AND   B.record_center_id = A.record_center_id
+			AND   C.folder_id = A.folder_id
+       )
+	</update>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 생산부서별 처리부서지정여부 갱신 (flag)
+	 -->
+	<update id="updateRcTakeSetCurKeepOrgFixedFlag" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrg">
+		UPDATE TB_RCTAKEFOLDERLIST A
+		SET    A.cur_keep_org_flag = #curKeepOrgFlag:VARCHAR#
+		<!--cubrid WHERE (A.record_center_id, A.rd_folder_id) 
+		IN (    SELECT B.record_center_id, C.folder_id-->
+		WHERE 
+		EXISTS (    SELECT 1
+		        FROM TB_RCTAKEFOLDERLIST B, TB_RDFOLDER C
+		        WHERE B.record_center_id   = #recordCenterId:VARcHAR#
+		        AND   B.take_rep_cd        = #takeRepCd:VARCHAR#
+		        AND   B.take_yyyy          = #takeYyyy:VARCHAR#
+		        AND   B.take_sno           = #takeSno:NUMBER#
+		        AND   C.org_cd 			   = #orgCd:VARCHAR#
+		        AND   B.record_center_id   = C.record_center_id
+		        AND   B.rd_folder_id       = C.folder_id
+			<!--cubrid-->
+			AND   B.record_center_id = A.record_center_id
+			AND   C.folder_id = A.rd_folder_id
+       ) 
+	</update>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 생산부서별 처리부서지정 취소처리 
+	 -->
+	<update id="updateRcTakeSetCurKeepOrgFixedCancel" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrg">
+		UPDATE TB_RDFOLDER B
+		SET    B.cur_keep_org_cd = ''
+		<!--cubrid WHERE (B.record_center_id, B.folder_id) 
+		IN (	SELECT B.record_center_id, C.folder_id-->
+		WHERE 
+		EXISTS (	SELECT 1
+		        FROM TB_RCTAKEFOLDERLIST B, TB_RDFOLDER C
+		        WHERE B.record_center_id   = #recordCenterId:VARcHAR#
+		        AND   B.take_rep_cd        = #takeRepCd:VARCHAR#
+		        AND   B.take_yyyy          = #takeYyyy:VARCHAR#
+		        AND   B.take_sno           = #takeSno:NUMBER#
+		        AND   C.org_cd 			   = #orgCd:VARCHAR#
+		        AND   B.record_center_id   = C.record_center_id
+		        AND   B.rd_folder_id       = C.folder_id
+                        <!--cubrid-->
+                        AND   B.record_center_id = B.record_center_id
+                        AND   C.folder_id = B.rd_folder_id
+		) 
+	</update>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 기관간인수 기록물인수 처리부서지정 생산기관별 기록물철 목록 
+	-->
+	<resultMap id="findRcTakeSetCurKeepOrgFolderPagedList-result" class="rms.transf.rcTake.domain.RcTakeSetCurKeepOrgFolder">
+		<result property="recordCenterId" 			column="RECORD_CENTER_ID"/>
+		<result property="folderId" 				column="FOLDER_ID"/>
+		<result property="orgCd" 					column="ORG_CD"/>
+		<result property="orgNm" 					column="ORG_NM"/>
+		<result property="orgAbbrNm" 				column="ORG_ABBR_NM"/>
+		<result property="title" 					column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="curKeepOrgFlag" 			column="CUR_KEEP_ORG_FLAG"/>
+		<result property="curKeepOrgFlagNm" 		column="CUR_KEEP_ORG_FLAG_NM"/>
+	</resultMap>
+	<select id="countRcTakeSetCurKeepOrgFolderPagedList" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrgFolder" resultClass="java.lang.Long">
+	 	SELECT COUNT(1)
+		FROM (
+			SELECT B.*
+			    ,(SELECT Z.cur_keep_org_flag FROM TB_RCTAKEFOLDERLIST Z WHERE Z.record_center_id = B.record_center_id AND Z.rd_folder_id = B.folder_id) cur_keep_org_flag
+			FROM tb_rdfolder B
+			WHERE B.record_center_id = #recordCenterId:VARCHAR#
+			AND B.folder_keep_state_cd IN ('02','03','04')
+			AND EXISTS (
+					SELECT Z.rd_folder_id
+				    FROM TB_RCTAKEFOLDERLIST Z
+				    WHERE Z.record_center_id = B.record_center_id
+				    AND   Z.rd_folder_id 	 = B.folder_id
+		            AND   Z.take_rep_cd 	 = #takeRepCd:VARCHAR#
+		            AND   Z.take_yyyy   	 = #takeYyyy:VARCHAR#
+		            AND   Z.take_sno 		 = #takeSno:NUMBER#
+	            )
+		) C
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="orgCd">
+		        C.org_cd = #orgCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="clssId">
+		        <isEqual property="clssDivCd" compareValue="1">
+		            (C.clss_id = #clssId:VARCHAR# OR C.new_clss_id = #clssId:VARCHAR#)
+		        </isEqual>
+		        <isEqual property="clssDivCd" compareValue="2">
+		            C.clss_id = #clssId:VARCHAR#
+		        </isEqual>
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="title">
+		        C.title like #title:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="curKeepOrgFlag">
+		     	C.cur_keep_org_flag = #curKeepOrgFlag:VARCHAR#
+		    </isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findRcTakeSetCurKeepOrgFolderPagedList" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrgFolder" resultMap="findRcTakeSetCurKeepOrgFolderPagedList-result">
+	 	SELECT F.record_center_id
+		      ,F.folder_id
+		      ,F.org_cd
+		      ,F.org_nm
+		      ,F.org_abbr_nm
+		      ,F.title
+		      ,F.creat_yyyy
+		      ,F.cur_keep_org_flag
+		      ,(CASE WHEN F.cur_keep_org_flag = '1' THEN '지정' ELSE '미지정' END) AS cur_keep_org_flag_nm
+		FROM (
+		    SELECT E.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,D.*
+		        FROM (
+		            SELECT C.*
+		            FROM (
+		                SELECT B.record_center_id
+		                    , B.folder_id
+		                    , B.org_cd
+		                    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_nm
+		                    , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_abbr_nm      
+		                    , B.title
+		                    , B.creat_yyyy
+		                    , B.clss_id
+		                    , B.new_clss_id
+		                    , (SELECT Z.cur_keep_org_flag FROM TB_RCTAKEFOLDERLIST Z WHERE Z.record_center_id = B.record_center_id AND Z.rd_folder_id = B.folder_id) cur_keep_org_flag
+		                FROM tb_rdfolder B
+		                WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		                AND B.folder_keep_state_cd IN ('02','03','04')
+		                AND EXISTS (
+		                        SELECT Z.rd_folder_id
+		                        FROM TB_RCTAKEFOLDERLIST Z
+		                        WHERE Z.record_center_id = B.record_center_id
+		                        AND   Z.rd_folder_id     = B.folder_id
+		                        AND   Z.take_rep_cd      = #takeRepCd:VARCHAR#
+		                        AND   Z.take_yyyy        = #takeYyyy:VARCHAR#
+		                        AND   Z.take_sno         = #takeSno:NUMBER#
+		                    )
+		            ) C
+		            <dynamic prepend="WHERE">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    C.org_cd = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    <isEqual property="clssDivCd" compareValue="1">
+		                        (C.clss_id = #clssId:VARCHAR# OR C.new_clss_id = #clssId:VARCHAR#)
+		                    </isEqual>
+		                    <isEqual property="clssDivCd" compareValue="2">
+		                        C.clss_id = #clssId:VARCHAR#
+		                    </isEqual>
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    C.title like #title:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="curKeepOrgFlag">
+		                     C.cur_keep_org_flag = #curKeepOrgFlag:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY C.record_center_id, C.title
+		        ) D
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) E
+		    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) F
+		ORDER BY F.rnum
+	</select>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 처리부서지정 처리 (기록물철)
+	 -->
+	<update id="updateRcTakeSetCurKeepOrgFolderFixed" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrgFolder">
+	 	UPDATE TB_RDFOLDER A 
+		SET    A.cur_keep_org_cd 	= #handlOrgCd:VARCHAR#
+		WHERE  A.record_center_id 	= #recordCenterId:VARCHAR#
+		AND    A.folder_id 			= #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 처리부서지정여부 갱신 (기록물철)
+	 -->
+	<update id="updateRcTakeSetCurKeepOrgFolderFixedFlag" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrgFolder">
+		UPDATE TB_RCTAKEFOLDERLIST B
+		SET    B.cur_keep_org_flag = #curKeepOrgFlag:VARCHAR#
+		WHERE  B.take_rep_cd   	   = #takeRepCd:VARCHAR#
+		AND    B.take_yyyy         = #takeYyyy:VARCHAR#
+		AND    B.take_sno          = #takeSno:NUMBER#
+		AND    B.record_center_id  = #recordCenterId:VARCHAR#
+		AND    B.rd_folder_id 	   = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수_처리부서지정
+		: 처리부서지정취소 처리 (기록물철)
+	 -->
+	<update id="updateRcTakeSetCurKeepOrgFolderFixedCancel" parameterClass="rms.transf.rcTake.domain.RcTakeSetCurKeepOrgFolder">
+		UPDATE TB_RDFOLDER B
+		SET    B.cur_keep_org_cd = ''
+		WHERE  B.record_center_id = #recordCenterId:VARCHAR#
+		AND    B.folder_id = #folderId:VARCHAR#
+	</update>
+	
+	
+</sqlMap>

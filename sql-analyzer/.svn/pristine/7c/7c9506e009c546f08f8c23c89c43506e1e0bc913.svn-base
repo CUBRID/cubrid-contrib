@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.rfid">
+	
+	<!-- 
+		RFID태그발행_기록물철태그발행
+		: 기록물철 태그발행 목록을 조회한다.
+	 -->
+	 <resultMap id="findRfidNomlTagPubPagedList-result" class="rms.presv.rfid.domain.RfidNomlTagPub">
+	 	<result property="creatYyyy"        column="CREAT_YYYY"/> 
+		<result property="folderId"         column="FOLDER_ID"/>
+		<result property="presvTermCd"      column="PRESV_TERM_CD"/>
+		<result property="recordCenterId"   column="RECORD_CENTER_ID"/>
+		<result property="tagId"            column="TAG_ID"/>
+		<result property="tagPubState"      column="TAG_PUB_STATE"/>
+		<result property="title"            column="TITLE"/>
+		<result property="folderTypeDivCd"  column="FOLDER_TYPE_DIV_CD"/>
+		<result property="orgCd"            column="ORG_CD"/>
+		<result property="orgNm"            column="ORG_NM"/>
+		<result property="orgAbbrNm"            column="ORG_ABBR_NM"/>
+		<result property="stakrmMngNo"      column="STAKRM_MNG_NO"/>
+		<result property="row"              column="rnum"/>
+	 </resultMap>
+	 <select id="countRfidNomlTagPubPagedList" parameterClass="rms.presv.rfid.domain.RfidNomlTagPub" resultClass="java.lang.Long">
+		SELECT  COUNT(1)
+		FROM TB_RDFOLDER A, TB_RFTABPUB B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		AND A.FOLDER_ID        = B.FOLDER_ID(+)
+		AND A.ERECORD_FLAG     != '1'
+		AND A.STAKRM_MNG_NO IS NOT NULL
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="orgCd">
+		    A.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatYyyyFrom">
+		    A.CREAT_YYYY BETWEEN #creatYyyyFrom:VARCHAR# AND #creatYyyyTo:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+		    A.TITLE LIKE #title:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="tagPubState">
+		    <isEqual prepend="AND" property="tagPubState" compareValue="01">
+		        B.TAG_PUB_STATE IS NULL
+		    </isEqual>
+		    <isNotEqual prepend="AND" property="tagPubState" compareValue="01">
+		        B.TAG_PUB_STATE = #tagPubState:VARCHAR#
+		    </isNotEqual>
+		</isNotEmpty>
+	 </select>
+	 <select id="findRfidNomlTagPubPagedList" parameterClass="rms.presv.rfid.domain.RfidNomlTagPub" resultMap="findRfidNomlTagPubPagedList-result">
+	 	SELECT E.title
+		      ,E.creat_yyyy
+		      ,E.folder_id
+		      ,E.record_center_id
+		      ,E.org_cd
+		      ,(SELECT org_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_nm
+		      ,(SELECT org_abbr_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_abbr_nm  
+		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_cd = E.folder_type_div_cd AND com_type_cd = 'RD01') AS FOLDER_TYPE_DIV_CD
+		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_cd = E.presv_term_cd AND COM_TYPE_CD = 'RD07') AS presv_term_cd
+		      ,NVL(E.tag_issue_org_cd || E.tag_issue_user_cd || E.tag_pub_user_cd || E.tag_ver || LPAD(E.tag_seq,5,'0'), '') AS tag_id
+		      ,NVL((SELECT com_cd_NM FROM TB_ZZCOMCD WHERE com_cd = E.tag_pub_state AND com_type_cd = 'RF08'), '미발행') AS tag_pub_state
+		      ,E.stakrm_mng_no
+		      ,E.rnum
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		            , C.*
+		        FROM (
+		            SELECT  A.title
+		                    ,A.creat_yyyy
+		                    ,A.folder_id
+		                    ,A.record_center_id
+		                    ,A.folder_type_div_cd 
+		                    ,A.presv_term_cd
+		                    ,A.org_cd
+		                    ,B.tag_issue_org_cd
+		                    ,B.tag_issue_user_cd
+		                    ,B.tag_pub_user_cd
+		                    ,B.tag_ver
+		                    ,B.tag_seq
+		                    ,B.tag_pub_state
+		                    ,ROWNUM       
+		                    ,A.stakrm_mng_no 
+		            FROM TB_RDFOLDER A, TB_RFTABPUB B
+		            WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		            AND A.FOLDER_ID        = B.FOLDER_ID(+)
+		            AND A.ERECORD_FLAG     != '1'
+		            AND A.STAKRM_MNG_NO IS NOT NULL
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                A.ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="creatYyyyFrom">
+		                A.CREAT_YYYY BETWEEN #creatYyyyFrom:VARCHAR# AND #creatYyyyTo:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="title">
+		                A.TITLE LIKE #title:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty property="tagPubState">
+		                <isEqual prepend="AND" property="tagPubState" compareValue="01">
+		                    B.TAG_PUB_STATE IS NULL
+		                </isEqual>
+		                <isNotEqual prepend="AND" property="tagPubState" compareValue="01">
+		                    B.TAG_PUB_STATE = #tagPubState:VARCHAR#
+		                </isNotEqual>
+		            </isNotEmpty>      
+					<isEmpty property="order">
+		            ORDER BY A.TITLE
+					</isEmpty>		            
+					<isEqual property="order" compareValue="0">
+						ORDER BY A.STAKRM_MNG_NO DESC
+					</isEqual>
+					<isEqual property="order" compareValue="1">
+						ORDER BY A.TITLE
+					</isEqual>							            
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	 </select>
+	 
+	 <!-- 
+	 	RFID태그발행_RFID태그발행현황
+	 	: RFID태그발행현황을 조회한다.
+	  -->
+	 <resultMap id="findRfidTagpubStatePagedList-result" class="rms.presv.rfid.domain.RfidTagPubState">
+	 	<result property="firstTab"         column="FIRST_TAB"/>
+		<result property="secondTab"        column="SECOND_TAB"/>
+		<result property="totalCnt"         column="TOTALCNT"/>
+		<result property="pubCnt"           column="PUBCNT"/>
+		<result property="rtnCnt"           column="RTNCNT"/>
+	 </resultMap>
+	 <select id="countRfidTagpubStatePagedList" parameterClass="rms.presv.rfid.domain.RfidTagPubState" resultClass="java.lang.Long">
+	 	<isNotEmpty property="flag">
+			<!-- 1 : 일반기록물 -->
+			<isEqual property="flag" compareValue="1">
+	            SELECT COUNT(1)
+	            FROM (
+	            	SELECT U.folder_type_div_cd
+		            FROM (
+		              (
+		              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID
+		              FROM TB_RDFOLDER A, TB_RFTABPUB B
+		              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		            AND A.FOLDER_ID = B.FOLDER_ID(+)
+		                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="regDtimeFrom" >
+		                  B.REG_DTIME = #regDtimeFrom#
+		                </isNotEmpty>
+		              ) UNION ALL (
+		              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID
+		              FROM TB_NKFOLDER A, TB_RFTABPUB B
+		              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		            AND A.FOLDER_ID = B.FOLDER_ID(+)
+		                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="regDtimeFrom" >
+		                  B.REG_DTIME = #regDtimeFrom#
+		                </isNotEmpty>
+		              )
+		            ) U
+		            GROUP BY U.FOLDER_TYPE_DIV_CD, U.PRESV_TERM_CD
+		            ORDER BY U.FOLDER_TYPE_DIV_CD ASC, U.PRESV_TERM_CD DESC
+	            )
+			</isEqual>
+		</isNotEmpty>
+	 </select>
+	 <select id="findRfidTagpubStatePagedList" parameterClass="rms.presv.rfid.domain.RfidTagPubState" resultMap="findRfidTagpubStatePagedList-result">
+		 <isNotEmpty property="flag">
+			<!-- 1 : 일반기록물 -->
+			<isEqual property="flag" compareValue="1">
+				SELECT E.first_tab, E.second_tab, E.totalcnt, e.pubcnt, e.rtncnt
+				FROM (
+				    SELECT D.*
+				    FROM (
+				        SELECT ROWNUM AS rnum
+				                    , C.*
+				        FROM (
+				            SELECT   (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = U.FOLDER_TYPE_DIV_CD AND COM_TYPE_CD = 'RD01') AS FIRST_TAB
+				                  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = U.PRESV_TERM_CD      AND COM_TYPE_CD = 'RD07') AS SECOND_TAB
+				                  ,COUNT(U.FOLDER_ID) AS TOTALCNT
+				                  ,COUNT(U.TAG_ID) AS PUBCNT 
+				                  ,(COUNT(U.FOLDER_ID) - COUNT(U.TAG_ID)) AS RTNCNT
+				            FROM (
+				              (
+				              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID
+				              FROM TB_RDFOLDER A, TB_RFTABPUB B
+				              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+				            AND A.FOLDER_ID = B.FOLDER_ID(+)
+				                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                <isNotEmpty prepend="AND" property="regDtimeFrom" >
+				                  B.REG_DTIME = #regDtimeFrom#
+				                </isNotEmpty>
+				              ) UNION ALL (
+				              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID
+				              FROM TB_NKFOLDER A, TB_RFTABPUB B
+				              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+				            AND A.FOLDER_ID = B.FOLDER_ID(+)
+				                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                <isNotEmpty prepend="AND" property="regDtimeFrom" >
+				                  B.REG_DTIME = #regDtimeFrom#
+				                </isNotEmpty>
+				              )
+				            ) U
+				            GROUP BY U.FOLDER_TYPE_DIV_CD, U.PRESV_TERM_CD
+				            ORDER BY U.FOLDER_TYPE_DIV_CD ASC, U.PRESV_TERM_CD DESC
+				        ) C
+				        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				    ) D
+				    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				) E
+				ORDER BY E.rnum
+			</isEqual>
+		</isNotEmpty>
+	</select>
+	
+	<!-- 
+			태그발행 이력 조회 (COUNT)
+	-->
+	<select id="countTagPubHistList" parameterClass="rms.presv.rfid.domain.RfidTagPub" resultClass="java.lang.Long">
+		SELECT COUNT(*)
+			FROM
+				(
+					SELECT RECORD_CENTER_ID
+						,TAG_ID 
+						,TAG_PUB_USER_CD
+					FROM TB_RFTABPUB
+					<dynamic prepend="WHERE">
+						<isNotEmpty prepend="AND" property="tagIssueOrgCd">
+							TAG_ISSUE_ORG_CD = #tagIssueOrgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="tagIssueUserCd">
+							TAG_ISSUE_USER_CD = #tagIssueUserCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="tagPubUserCd">
+							TAG_PUB_USER_CD = #tagPubUserCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="tagVer">
+							TAG_VER = '1'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="tagSeq">
+							TAG_SEQ = LPAD(#tagSeq:VARCHAR#, 5, '0')
+						</isNotEmpty>       
+						<isEmpty prepend="AND" property="tagIssueOrgCd">
+							1 = 0
+						</isEmpty>
+					</dynamic>
+				) A, TB_RFTABPUBHIST B
+			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+				AND A.TAG_ID = B.TAG_ID    
+			ORDER BY B.PUB_DT DESC     
+	</select>
+	
+	<!-- 
+		태그발행 이력 조회
+	-->
+	<resultMap id="tagPubHist-common-result" class="rms.presv.rfid.domain.RfidTagPub" >
+		<result property="pubDt"          column="PUB_DT"/> 
+		<result property="pubDeptNm"      column="PUB_DEPT_NM"/>
+		<result property="tagPubUserCd"   column="TAG_PUB_USER_CD"/>
+		<result property="row"            column="RNUM"/>
+		<result property="pubRsn"         column="PUB_RSN"/>
+	 </resultMap>	
+	<select id="findTagPubHistList" parameterClass="rms.presv.rfid.domain.RfidTagPub" resultMap="tagPubHist-common-result">
+    SELECT D.*
+    FROM (
+        SELECT ROWNUM AS rnum
+                    , C.*
+        FROM (
+			SELECT ROWNUM
+			,	PUB_DT
+			,	PUB_DEPT_NM
+			,	PUB_RSN
+			,	TAG_PUB_USER_CD
+			FROM (
+				SELECT B.PUB_DT
+					,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = A.TAG_PUB_USER_CD AND COM_TYPE_CD = 'RF15') AS TAG_PUB_USER_CD
+					,B.PUB_DEPT_NM
+					,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = B.PUB_RSN AND COM_TYPE_CD = 'RF09') AS PUB_RSN
+				FROM
+					(
+						SELECT RECORD_CENTER_ID
+							,TAG_ID 
+							,TAG_PUB_USER_CD
+						FROM TB_RFTABPUB
+						<dynamic prepend="WHERE">
+							<isNotEmpty prepend="AND" property="tagIssueOrgCd">
+								TAG_ISSUE_ORG_CD = #tagIssueOrgCd:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="tagIssueUserCd">
+								TAG_ISSUE_USER_CD = #tagIssueUserCd:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="tagPubUserCd">
+								TAG_PUB_USER_CD = #tagPubUserCd:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="tagVer">
+								TAG_VER = '1'
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="tagSeq">
+								TAG_SEQ = LPAD(#tagSeq:VARCHAR#, 5, '0')
+							</isNotEmpty>       
+							<isEmpty prepend="AND" property="tagIssueOrgCd">
+								1 = 0
+							</isEmpty>
+						</dynamic>
+					) A, TB_RFTABPUBHIST B
+				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+					AND A.TAG_ID = B.TAG_ID    
+				ORDER BY B.PUB_DT DESC
+				) AA
+        ) C
+        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+    ) D
+    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<select id="countTagFolderId" parameterClass="java.lang.String" resultClass="int">
+		SELECT	COUNT(1)
+		FROM TB_RFTABPUB
+		WHERE FOLDER_ID = #value:VARCHAR#
+	</select>
+	
+	<!-- 태그발행 -->
+	<resultMap id="tagPub-common-result" class="rms.presv.rfid.domain.RfidTagPub" >
+		<result property="tagIssueUserCd"		column="TAG_ISSUE_USER_CD"/>
+		<result property="tagSeq"				column="TAG_SEQ"/>
+	</resultMap>	
+	<select id="findTagSeqMax" parameterClass="rms.presv.rfid.domain.RfidTagPub" resultMap="tagPub-common-result">
+	  SELECT	TB_RFTABPUB_SQ01.NEXTVAL AS TAG_SEQ
+	  , (SELECT KKR_ORG_CD FROM TB_RFRECORDCENTER WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#) AS TAG_ISSUE_USER_CD
+	    FROM DUAL
+	</select>
+	
+	<!-- 
+		태그발행 이력 등록
+    -->
+	<insert id="createTagPubHist" parameterClass="rms.presv.rfid.domain.RfidTagPub">
+		INSERT INTO TB_RFTABPUBHIST
+		(
+			RECORD_CENTER_ID, TAG_ID, PUB_SNO, TAGPRINT_ID, PUB_DT, TAG_PUB_USER_CD, PUB_DEPT_CD, PUB_DEPT_NM, PUB_RSN, REG_DTIME
+		)
+		VALUES 
+		(
+			#recordCenterId#
+		    , #tagId#
+		    ,(SELECT NVL(MAX(PUB_SNO)+1,1) FROM TB_RFTABPUBHIST WHERE TAG_ID = #tagId#) 
+		    ,#tagprintId#
+		    <!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		    ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		    ,#tagPubUserCd#
+		    ,#pubDeptCd#
+		    ,#pubDeptNm#
+		    ,#pubRsn#
+		    <!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		    ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		RFID 태그발행
+		TB_RFTAGPUB 등록 (INSERT) 
+	-->
+	<insert id="createTagPub" parameterClass="rms.presv.rfid.domain.RfidTagPub">
+		INSERT INTO TB_RFTABPUB
+		(
+			TAG_ID ,TAG_ISSUE_ORG_CD ,TAG_ISSUE_USER_CD ,TAG_PUB_USER_CD ,TAG_VER ,TAG_SEQ ,TAG_PUB_STATE ,TAG_ISSUE_TYPE 
+			,REG_DTIME ,RECORD_CENTER_ID,FOLDER_ID 
+		)
+		VALUES 
+		(
+			#tagId# ,#tagIssueOrgCd# ,#tagIssueUserCd# ,#tagPubUserCd# ,#tagVer# ,#tagSeq# ,#tagPubState# ,#tagIssueType# 
+			<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') ,#recordCenterId#,#folderId#   -->
+			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') ,#recordCenterId#,#folderId#   
+		)
+	</insert>
+	
+	<!-- 태그 발행용 정보 조회 (라벨) -->
+	<resultMap id="tagPub-findTagId-result"		class="rms.presv.rfid.domain.RfidTagPub" >
+		<result property="tagIssueOrgCd"		column="TAG_ISSUE_ORG_CD"/>  
+		<result property="tagIssueUserCd"    	column="TAG_ISSUE_USER_CD"/>
+		<result property="tagPubUserCd"      	column="TAG_PUB_USER_CD"/>
+		<result property="tagVer"            	column="TAG_VER"/>
+		<result property="tagSeq"            	column="TAG_SEQ"/>
+		<result property="tagId"             	column="TAG_ID"/>
+		<result property="dtsdata"           	column="DTSDATA"/>  
+		<result property="stakrmMngNo"       	column="STAKRM_MNG_NO"/>
+		<result property="orgNm"       		 	column="ORG_NM"/>
+		<result property="creatYyyy"       		column="CREAT_YYYY"/>
+		<result property="presvTermNm"       	column="PRESV_TERM_NM"/>
+		<result property="recordCenterId"     	column="RECORD_CENTER_ID"/>
+		<result property="recordCenterNm"       column="RECORD_CENTER_NM"/>
+	</resultMap>
+	
+	<select id="findTagId" parameterClass="rms.presv.rfid.domain.RfidTagPub" resultMap="tagPub-findTagId-result">
+		SELECT  A.TAG_ID
+		    , A.TAG_ISSUE_ORG_CD
+		    , A.TAG_ISSUE_USER_CD
+		    , A.TAG_PUB_USER_CD
+		    , A.TAG_VER
+		    , A.TAG_SEQ           
+		    , (SELECT (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD) 
+		                                ||','|| CREAT_YYYY 
+		                                ||','|| (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = AA.PRESV_TERM_CD) 
+		                                ||','|| STAKRM_MNG_NO 
+		                          FROM TB_RDFOLDER AA WHERE FOLDER_ID = A.FOLDER_ID) AS DTSDATA
+		    , B.STAKRM_MNG_NO AS STAKRM_MNG_NO
+		    , (SELECT ORG_ABBR_NM FROM TB_STORG BB WHERE BB.ORG_CD = B.ORG_CD) AS ORG_NM
+		    , B.CREAT_YYYY AS CREAT_YYYY
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD BB WHERE BB.COM_TYPE_CD= 'RD07' AND BB.COM_CD = B.PRESV_TERM_CD) AS PRESV_TERM_NM
+		    , B.RECORD_CENTER_ID AS RECORD_CENTER_ID
+		    , (SELECT RECORD_CENTER_NM FROM  TB_STRECORDCENTER BB WHERE BB.RECORD_CENTER_ID = B.RECORD_CENTER_ID) AS RECORD_CENTER_NM
+		FROM TB_RFTABPUB A, TB_RDFOLDER B
+		WHERE A.FOLDER_ID = B.FOLDER_ID
+		    AND A.TAG_VER = '1'
+		<isNotEmpty prepend="AND" property="tagId">
+			A.TAG_ID = #tagId:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tagIssueOrgCd">
+			A.TAG_ISSUE_ORG_CD = #tagIssueOrgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tagIssueUserCd">
+			A.TAG_ISSUE_USER_CD = #tagIssueUserCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tagPubUserCd">
+			A.TAG_PUB_USER_CD = #tagPubUserCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="tagSeq">
+			A.TAG_SEQ = #tagSeq:VARCHAR#
+		</isNotEmpty>	    
+	</select>	
+	 
+</sqlMap>

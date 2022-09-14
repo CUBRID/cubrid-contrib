@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace">
+
+	<resultMap id="accs-worklevltrace-result" class="rms.accs.trace.domain.WorkLevlTrace" >
+		<result property="folderId" 			column="FOLDER_ID"/>
+		<result property="title" 				column="TITLE"/>
+		<result property="orgNm" 				column="ORG_NM"/>
+		<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>
+		<result property="creatYyyy"			column="CREAT_YYYY"/>
+		<result property="location"				column="LOCATION"/>
+		<result property="folderKeepStateCd"	column="FOLDER_KEEP_STATE_CD"/>
+		<result property="outFlag"				column="OUT_FLAG"/>
+		<result property="efileDelFlag"			column="EFILE_DEL_FLAG"/>
+	</resultMap>
+	<!-- 
+		감사추적 위치추적 목록화면을 조회한다.
+	 -->
+	<select id="findWorkLevlTrace" parameterClass="rms.accs.trace.domain.WorkLevlTrace" resultMap="accs-worklevltrace-result">
+		SELECT AA.FOLDER_ID		
+			, AA.TITLE
+			, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_NM
+			, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_ABBR_NM
+			, AA.CREAT_YYYY
+			, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ14' AND USE_FLAG='1' AND COM_CD=AA.LOC ) LOCATION
+			, AA.FOLDER_KEEP_STATE_CD
+			, AA.OUT_FLAG
+			, AA.EFILE_DEL_FLAG
+		FROM (
+			SELECT Z.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, Y.*
+				FROM (
+					SELECT U.FOLDER_ID		
+						, U.TITLE
+						, U.ORG_CD
+						, U.CREAT_YYYY
+						, U.FOLDER_KEEP_STATE_CD
+						, U.OUT_FLAG
+						, U.EFILE_DEL_FLAG
+						, (CASE WHEN U.FOLDER_KEEP_STATE_CD IN ('01','04') AND U.OUT_FLAG != '1' THEN '1'
+								WHEN u.FOLDER_KEEP_STATE_CD IN ('01','04') AND U.OUT_FLAG = '1' THEN '2'
+								WHEN U.FOLDER_KEEP_STATE_CD = '03' AND U.EFILE_DEL_FLAG != '1' THEN '3'
+								WHEN U.FOLDER_KEEP_STATE_CD = '03' AND U.EFILE_DEL_FLAG = '1' THEN '4'
+								WHEN U.FOLDER_KEEP_STATE_CD = '02' AND U.EFILE_DEL_FLAG != '1' THEN '5'
+								WHEN U.FOLDER_KEEP_STATE_CD = '02' AND U.EFILE_DEL_FLAG = '1' THEN '6'
+								WHEN U.FOLDER_KEEP_STATE_CD = '05' AND U.EFILE_DEL_FLAG != '1' THEN '7'
+								WHEN U.FOLDER_KEEP_STATE_CD = '05' AND U.EFILE_DEL_FLAG = '1' THEN '8'
+								ELSE ''
+							END) AS LOC
+					FROM (
+						(
+						SELECT A.FOLDER_ID		
+							, A.TITLE
+							, A.ORG_CD
+							, A.CREAT_YYYY
+							, A.FOLDER_KEEP_STATE_CD
+							, A.OUT_FLAG
+							, A.EFILE_DEL_FLAG
+						FROM TB_RDFOLDER A
+						WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						<dynamic>		
+							<isNotEmpty prepend="AND" property="title">
+								(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#) 
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="creatYyyyStart">
+								<![CDATA[
+									A.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+								]]>
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="creatYyyyEnd">
+								<![CDATA[
+									A.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+								]]>
+							</isNotEmpty>
+							<isNotEmpty property="location">
+								<isEqual prepend="AND" property="location" compareValue="1">
+									A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="2">
+									A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG = '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="3">
+									A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="4">
+									A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG = '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="5">
+									A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="6">
+									A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG = '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="7">
+									A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="8">
+									A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG = '1'
+								</isEqual>
+							</isNotEmpty>
+						</dynamic>
+						) UNION ALL (
+						SELECT A.FOLDER_ID		
+							, A.TITLE
+							, A.ORG_CD
+							, A.CREAT_YYYY
+							, A.FOLDER_KEEP_STATE_CD
+							, A.OUT_FLAG
+							, A.EFILE_DEL_FLAG
+						FROM TB_NKFOLDER A
+						WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						<dynamic>		
+							<isNotEmpty prepend="AND" property="title">
+								(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#) 
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="creatYyyyStart">
+								<![CDATA[
+									A.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+								]]>
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="creatYyyyEnd">
+								<![CDATA[
+									A.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+								]]>
+							</isNotEmpty>
+							<isNotEmpty property="location">
+								<isEqual prepend="AND" property="location" compareValue="1">
+									A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="2">
+									A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG = '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="3">
+									A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="4">
+									A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG = '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="5">
+									A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="6">
+									A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG = '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="7">
+									A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG != '1'
+								</isEqual>
+								<isEqual prepend="AND" property="location" compareValue="8">
+									A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG = '1'
+								</isEqual>
+							</isNotEmpty>
+						</dynamic>
+						)
+					) U
+				) Y
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) Z
+			WHERE z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) AA
+		ORDER BY AA.rnum
+	</select>
+	<!--
+		COUNT - 감사추적 위치추적 목록화면을 조회한다.
+	-->
+	<select id="countWorkLevlTrace" parameterClass="rms.accs.trace.domain.WorkLevlTrace" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			(
+			SELECT 1
+			FROM TB_RDFOLDER A		
+			WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="title">
+					(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#) 
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyStart">
+					<![CDATA[
+						A.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+					]]>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyEnd">
+					<![CDATA[
+						A.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+					]]>
+				</isNotEmpty>
+				<isNotEmpty property="location">
+					<isEqual prepend="AND" property="location" compareValue="1">
+						A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="2">
+						A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG = '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="3">
+						A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="4">
+						A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG = '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="5">
+						A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="6">
+						A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG = '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="7">
+						A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="8">
+						A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG = '1'
+					</isEqual>
+				</isNotEmpty>
+			</dynamic>
+			) UNION ALL (
+			SELECT 1
+			FROM TB_NKFOLDER A		
+			WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="title">
+					(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#) 
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyStart">
+					<![CDATA[
+						A.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+					]]>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyEnd">
+					<![CDATA[
+						A.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+					]]>
+				</isNotEmpty>
+				<isNotEmpty property="location">
+					<isEqual prepend="AND" property="location" compareValue="1">
+						A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="2">
+						A.FOLDER_KEEP_STATE_CD IN ('01','04') AND A.OUT_FLAG = '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="3">
+						A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="4">
+						A.FOLDER_KEEP_STATE_CD = '03' AND A.EFILE_DEL_FLAG = '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="5">
+						A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="6">
+						A.FOLDER_KEEP_STATE_CD = '02' AND A.EFILE_DEL_FLAG = '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="7">
+						A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG != '1'
+					</isEqual>
+					<isEqual prepend="AND" property="location" compareValue="8">
+						A.FOLDER_KEEP_STATE_CD = '05' AND A.EFILE_DEL_FLAG = '1'
+					</isEqual>
+				</isNotEmpty>
+			</dynamic>
+			)
+		) U
+	</select>
+</sqlMap>

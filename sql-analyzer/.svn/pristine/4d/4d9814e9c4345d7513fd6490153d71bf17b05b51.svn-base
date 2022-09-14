@@ -1,0 +1,46 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+-- Query    : select
+-- Query Id : countReadFolderPagedList
+
+ 		SELECT COUNT(1)        FROM   TB_RDREADREQ A, TB_RDFOLDERREADDETL B, TB_RDFOLDER C        WHERE C.record_center_id = B.keep_record_center_id        AND   C.folder_id = B.folder_id        AND   B.read_reqno = A.read_reqno        AND   A.record_center_id = B.record_center_id        AND   A.read_user_id = '1'        AND   A.record_center_id = '1'        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+-- Query    : select
+-- Query Id : findReadFolderPagedList
+
+		SELECT E.record_center_id AS keep_record_center_id		     ,(SELECT Z.record_center_nm FROM TB_STRECORDCENTER Z WHERE Z.record_center_id = E.record_center_id) AS KEEP_RECORD_CENTER_NM		     ,'1' AS div_cd		     ,SUBSTR(E.read_reqno, 1, 4)||'-'||SUBSTR(E.read_reqno, 5, 6) AS read_reqno		     ,E.org_cd		     ,E.folder_id		     ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.org_cd = E.org_cd AND Z.record_center_id = E.record_center_id) AS org_nm		     ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.org_cd = E.org_cd AND Z.record_center_id = E.record_center_id) AS org_abbr_nm		     ,E.title		     ,E.creat_yyyy		     ,E.clss_nm		     ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.org_cd = E.read_range AND Z.record_center_id = E.record_center_id) AS read_range_nm		     ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.org_cd = E.read_range AND Z.record_center_id = E.record_center_id) AS read_abbr_range_nm		     ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD05' AND Z.com_cd = E.open_div_cd) AS open_div_nm		     ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD23' AND Z.com_cd = E.erecord_flag) AS erecord_flag_nm		     ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD40' AND Z.com_cd = NVL(E.out_flag, '0')) AS out_flag_nm		     ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = E.creat_sys_cd) AS creat_sys_nm		     ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD25' AND Z.com_cd = E.read_aprov_cd) AS read_req_prog_state_nm		     ,E.read_aprov_cd AS real_read_aprov_cd		     ,DECODE(E.read_aprov_cd, 1, 0, 2, 1, 3, 0) AS read_aprov_cd		     ,TO_NUMBER((SELECT TO_CHAR(SYSDATE,'YYYYMMDD') FROM DUAL))-TO_NUMBER(E.read_start_ymd) AS startno		     ,TO_NUMBER(E.read_close_ymd)-TO_NUMBER((SELECT TO_CHAR(SYSDATE,'YYYYMMDD') FROM DUAL)) AS closeno		     ,E.read_aprov_ymd		     ,E.read_start_ymd		     ,E.read_close_ymd		     ,E.read_user_nm		     ,E.read_user_dept_nm		     ,E.read_rsn		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT C.record_center_id, '1' DIV_CD, A.read_reqno, C.org_cd, B.folder_id		                  ,C.title, C.creat_yyyy, C.clss_nm, C.read_range, C.open_div_cd		                  ,C.erecord_flag, C.out_flag, C.creat_sys_cd, B.read_aprov_cd, A.read_start_ymd		                  ,A.read_close_ymd, B.read_aprov_ymd, A.read_user_nm, A.read_user_dept_nm, A.read_rsn               		            FROM   TB_RDREADREQ A, TB_RDFOLDERREADDETL B, TB_RDFOLDER C		            WHERE C.record_center_id = B.keep_record_center_id		            AND   C.folder_id = B.folder_id		            AND   B.read_reqno = A.read_reqno		            AND   A.record_center_id = B.record_center_id		            AND   A.read_user_id = '1'		            AND   A.record_center_id = '1'                                        ORDER BY A.record_center_id, A.read_reqno DESC, C.title                ) C                WHERE ROWNUM <= '1'	        ) D 	        WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+-- Query    : select
+-- Query Id : findReadFolderImprtyReturnRsn
+
+		SELECT A.read_reqno			, B.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) AS org_nm			, B.title			, A.read_aprov_rsn			, A.read_return_rsn		FROM  TB_RDFOLDERREADDETL A			, TB_RDFOLDER B		WHERE A.record_center_id = '1'		AND   A.read_reqno = '1'		AND   A.folder_id = '1'		AND   A.keep_record_center_id = B.record_center_id		AND   A.folder_id = B.folder_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+-- Query    : select
+-- Query Id : countReadRecordPagedList
+
+		SELECT COUNT(1)		FROM TB_RDREADREQ A ,TB_RDRECORDREADDETL B ,TB_RDRECORD C		WHERE C.RECORD_CENTER_ID = B.KEEP_RECORD_CENTER_ID		AND   C.RECORD_ID = B.RECORD_ID		AND   B.READ_REQNO = A.READ_REQNO		AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.READ_USER_ID = '1'		AND   A.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+-- Query    : select
+-- Query Id : findReadRecordPagedList
+
+		SELECT E.record_center_id AS keep_record_center_id		      ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_id = E.record_center_id) AS keep_record_center_nm		      ,SUBSTR(E.READ_REQNO, 1, 4)||'-'||SUBSTR(E.READ_REQNO, 5, 6) read_reqno 		      ,E.read_user_nm		      ,(CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN E.read_start_ymd AND E.read_close_ymd THEN '1' ELSE '0' END) AS read_ymd_flag		      ,E.read_aprov_cd		      ,E.read_aprov_ymd		      ,E.read_start_ymd		      ,E.read_close_ymd		      ,E.record_id		      ,E.folder_id		      ,E.org_cd		      ,E.title		      ,SUBSTR(E.creat_reg_dtime,0,8) AS creat_dtime		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD25' AND Z.COM_CD=E.read_aprov_cd) AS read_req_prog_state_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.COM_CD=E.record_detl_type_cd) AS record_detl_type_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.COM_CD=E.open_div_cd) AS open_div_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.COM_CD=E.erecord_flag) AS erecord_flag_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.COM_CD=E.oper_read_range_cd) AS oper_read_range_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD40' AND Z.COM_CD=(SELECT NVL(F.out_flag, '0') FROM TB_RDFOLDER F WHERE F.record_center_id=E.record_center_id AND F.folder_id=E.folder_id)) AS out_flag_nm		      ,E.read_user_dept_nm		      ,E.read_rsn		FROM (		    SELECT D.*			FROM (			    SELECT ROWNUM AS rnum			          ,C.*				FROM (			        SELECT C.record_center_id, A.read_reqno, A.read_user_nm,A.read_start_ymd,A.read_close_ymd			                    , B.read_aprov_cd, B.read_aprov_ymd, C.record_id, C.folder_id, C.org_cd			                    , C.title, C.creat_reg_dtime, C.record_detl_type_cd, C.open_div_cd, C.erecord_flag			                    , C.oper_read_range_cd, A.read_user_dept_nm, A.read_rsn			        FROM TB_RDREADREQ A ,TB_RDRECORDREADDETL B ,TB_RDRECORD C			        WHERE C.RECORD_CENTER_ID = B.KEEP_RECORD_CENTER_ID			        AND   C.RECORD_ID = B.RECORD_ID			        AND   B.READ_REQNO = A.READ_REQNO			        AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			        AND   A.READ_USER_ID = '1'			        AND   A.RECORD_CENTER_ID = '1'			          			        ORDER BY A.record_center_id, A.read_reqno DESC, C.title			    ) C				WHERE ROWNUM <= '1'			)D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml
+-- Query    : select
+-- Query Id : findReadRecordImprtyReturnRsn
+
+		SELECT A.read_reqno			, B.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) AS org_nm			, B.title			, A.read_aprov_rsn			, A.read_return_rsn		FROM  TB_RDRECORDREADDETL A			, TB_RDRECORD B		WHERE A.RECORD_CENTER_ID = '1'		AND   A.READ_REQNO = '1'		AND   A.RECORD_ID = '1'		AND   A.KEEP_RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.RECORD_ID = B.RECORD_ID	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\read\Read.xml

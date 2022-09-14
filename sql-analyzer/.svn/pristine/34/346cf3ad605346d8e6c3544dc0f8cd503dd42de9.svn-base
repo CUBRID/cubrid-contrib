@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.open">
+
+	<!-- 
+		공개정보 저장
+		: 해당기록물철에 포함되어있는 기록물건을 기준으로 정보공개 대상기록물을 생성한다.
+		: 2014년 이후 생산된 기록물을 대상으로 하며, 초기값은 [0:미선정] 으로 설정한다.
+		: 단, 환경설정에서 검색화면 열람범위 관리유형가 [0:열람불가 목록숨기기] 인 경우 열람불가 기록물은 [2:제외] 로 초기 설정한다.
+	 -->
+	<insert id="createOpenFolder" parameterClass="rms.common.open.domain.OpenFolder">
+		INSERT INTO TB_OPOPENLIST
+		(
+		    record_center_id, open_sys_cd, open_state, open_dtime, org_cd
+		    , folder_id, record_id, creat_sys_cd, creat_yyyy, reg_dtime
+		)
+		(
+		    SELECT B.record_center_id, '01'
+		        , (CASE WHEN '0' = #readRangeType:VARCHAR# THEN (CASE WHEN B.oper_read_range_cd = '01' THEN '0' ELSE '2' END) ELSE '0' END)
+		        <!--cubrid , '', A.org_cd, B.folder_id, B.record_id, A.creat_sys_cd, SUBSTR(B.creat_reg_dtime,1,4), TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		        , '', A.org_cd, B.folder_id, B.record_id, A.creat_sys_cd, SUBSTR(B.creat_reg_dtime,1,4), TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		    FROM  TB_RDFOLDER A
+		        , TB_RDRECORD B
+		    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		    AND   A.folder_id = #folderId:VARCHAR#
+		    AND   B.record_center_id = A.record_center_id
+		    AND   B.folder_id = A.folder_id
+		    AND   SUBSTR(B.creat_reg_dtime,1,4) >= '2014'
+		)
+	</insert>
+
+</sqlMap>

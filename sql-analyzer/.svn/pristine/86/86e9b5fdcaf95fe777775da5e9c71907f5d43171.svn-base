@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.disuseeval">
+
+
+	<!-- 평가폐기 결과반영 -->
+	<resultMap id="dis-use-final-rslt-reg-result" class="rms.eval.disuseeval.domain.DisuseDiscuDoc">
+		<result property="discuYyyySeq"		column="DISCU_YYYY_SEQ" />
+		<result property="discuYyyySeqNo"	column="DISCU_YYYY_SEQ_NO" />
+		<result property="discuChoiceRsn"	column="DISCU_CHOICE_RSN" />
+		<result property="discuReqFlag"		column="DISCU_REQ_FLAG" />
+		<result property="discuReqFlagNm"	column="DISCU_REQ_FLAG_NM" />
+		<result property="totCnt1"			column="TOT_CNT1"  />
+		<result property="opin1Cnt1"		column="OPIN1_CNT1"	 />
+		<result property="opin2Cnt1"		column="OPIN2_CNT1"  />
+		<result property="opin3Cnt1"		column="OPIN3_CNT1"  />
+		<result property="opin4Cnt1"		column="OPIN4_CNT1"  />
+		<result property="reviewDocNo"		column="REVIEW_DOC_NO" />
+		<result property="confirmFlag"		column="CONFIRM_FLAG" />
+		<result property="reviewCofirmCd"	column="REVIEW_COFIRM_CD" />
+		<result property="reviewNotCnt"		column="REVIEW_NOT_CNT" />
+	</resultMap>
+	<!-- 
+		SELECT - 평가폐기 결과반영
+	 -->
+	<select id="findDisuseFinalRsltRegPagedList" parameterClass="rms.eval.disuseeval.domain.DisuseDiscuDoc" resultMap="dis-use-final-rslt-reg-result" >
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+				SELECT A.DISCU_YYYY_SEQ
+				    , MAX(C.DISCU_YYYY || '-' || LPAD(C.DISCU_YYYY_SEQ,6,'0')) AS DISCU_YYYY_SEQ_NO
+				    , MAX(C.DISCU_CHOICE_RSN) AS DISCU_CHOICE_RSN
+				    , MAX(C.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG
+				    , MAX((SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = C.DISCU_REQ_FLAG)) AS DISCU_REQ_FLAG_NM     
+				    , COUNT(*) AS TOT_CNT1
+				    , SUM(CASE WHEN A.REVIEW_COFIRM_CD = '0' THEN 1 ELSE 0 END) AS OPIN1_CNT1
+				    , SUM(CASE WHEN A.REVIEW_COFIRM_CD = '1' AND ( (A.DISCU_REQ_FLAG='0' AND A.REVIEW_DIV_CD = '1') OR (A.DISCU_REQ_FLAG='1' AND A.NAT_CMT_DIV_CD = '1') ) THEN 1 ELSE 0 END) AS OPIN2_CNT1
+				    , SUM(CASE WHEN A.REVIEW_COFIRM_CD = '1' AND ( (A.DISCU_REQ_FLAG='0' AND A.REVIEW_DIV_CD = '2') OR (A.DISCU_REQ_FLAG='1' AND A.NAT_CMT_DIV_CD = '2') ) THEN 1 ELSE 0 END) AS OPIN3_CNT1
+				    , SUM(CASE WHEN A.REVIEW_COFIRM_CD = '1' AND ( (A.DISCU_REQ_FLAG='0' AND A.REVIEW_DIV_CD = '3') OR (A.DISCU_REQ_FLAG='1' AND A.NAT_CMT_DIV_CD = '3') ) THEN 1 ELSE 0 END) AS OPIN4_CNT1
+				    , MAX(A.REVIEW_DOC_NO) AS REVIEW_DOC_NO
+				    , MAX(C.CONFIRM_FLAG) AS CONFIRM_FLAG
+				    , MAX(A.REVIEW_COFIRM_CD) AS REVIEW_COFIRM_CD
+				    , SUM(CASE WHEN A.REVIEW_COFIRM_CD = '0' AND A.DISCU_PROG_STATE_CD <![CDATA[<=]]> '06' THEN 1 ELSE 0 END) AS REVIEW_NOT_CNT
+				FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B, TB_DFDISUSEDISCUDOC C
+				WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+				AND A.DISCU_PROG_STATE_CD IN ('06','07','08','09')
+				AND A.DISCU_YYYY_SEQ IS NOT NULL
+				<isNotEmpty property="discuYyyySeq">
+					<isNotEqual property="discuYyyySeq" prepend="AND" compareValue="0">
+				 		A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+					</isNotEqual>
+				</isNotEmpty>
+				AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+				AND B.FOLDER_ID        = A.FOLDER_ID
+				AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+				AND C.DISCU_YYYY       = A.DISCU_YYYY
+				AND C.DISCU_YYYY_SEQ   = A.DISCU_YYYY_SEQ 
+				GROUP BY A.DISCU_YYYY_SEQ
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 평가폐기 결과반영
+	 -->
+	<select id="countDisuseFinalRsltRegPagedList" parameterClass="rms.eval.disuseeval.domain.DisuseDiscuDoc" resultClass="java.lang.Long" >
+		SELECT COUNT(1)
+		FROM (
+			SELECT A.DISCU_YYYY_SEQ
+			FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B, TB_DFDISUSEDISCUDOC C
+			WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+			AND A.DISCU_PROG_STATE_CD IN ('06','07','08','09')
+			AND A.DISCU_YYYY_SEQ IS NOT NULL
+			<isNotEmpty property="discuYyyySeq">
+				<isNotEqual property="discuYyyySeq" prepend="AND" compareValue="0">
+			 		A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+				</isNotEqual>
+			</isNotEmpty>
+			AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			AND B.FOLDER_ID        = A.FOLDER_ID
+			AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+			AND C.DISCU_YYYY       = A.DISCU_YYYY
+			AND C.DISCU_YYYY_SEQ   = A.DISCU_YYYY_SEQ 
+			GROUP BY A.DISCU_YYYY_SEQ
+		)
+	</select>
+	
+	
+	<!-- 평가폐기 결과반여 심의서번호별 기록물철 목록(상세) -->
+	<resultMap id="dis-use-final-rslt-reg-detail-result" class="rms.eval.disuseeval.domain.Disuse">
+		<result property="folderId"				column="FOLDER_ID"				nullValue="" />
+		<result property="bisClssNm"			column="BIS_CLSS_NM"			nullValue="" />
+		<result property="title"				column="TITLE"					nullValue="" />
+		<result property="creatYyyy"			column="CREAT_YYYY"    			nullValue="" />
+		<result property="handlOrgDisuDivCd"	column="HANDL_ORG_DISU_DIV_CD"  nullValue="" />
+		<result property="expertDisuDivCd"		column="EXPERT_DISU_DIV_CD"    	nullValue="" />
+		<result property="discuProgStateCd"		column="DISCU_PROG_STATE_CD"    nullValue="" />
+		<result property="expertDisuDivCd"		column="EXPERT_DISU_DIV_CD"     nullValue="" />
+		<result property="expertDisuDeferCd"	column="EXPERT_DISU_DEFER_CD"   nullValue="" />
+		<result property="expertDisuTermCd"		column="EXPERT_DISU_TERM_CD"    nullValue="" />
+		<result property="expertDisuRsn"		column="EXPERT_DISU_RSN"     	nullValue="" />
+		<result property="reviewDivCd"			column="REVIEW_DIV_CD"     		nullValue="" />
+		<result property="reviewDeferCd"		column="REVIEW_DEFER_CD"     	nullValue="" />
+		<result property="reviewTermCd"			column="REVIEW_TERM_CD"     	nullValue="" />
+		<result property="reviewRsn"			column="REVIEW_RSN"     		nullValue="" />
+		<result property="reviewTermCdSkip"		column="REVIEW_TERM_CD_SKIP"    nullValue="" />		
+		<result property="curPresvTermNm"		column="CUR_PRESV_TERM_NM"     	nullValue="" />
+		<result property="handlOrgDeferNm"		column="HANDL_ORG_DEFER_NM"     nullValue="" />
+		<result property="handlOrgTermNm"		column="HANDL_ORG_TERM_NM"     	nullValue="" />
+		<result property="expertDisuDeferNm"	column="EXPERT_DISU_DEFER_NM"	nullValue="" />
+		<result property="expertDisuTermNm"		column="EXPERT_DISU_TERM_NM"    nullValue="" />
+		<result property="reviewDeferNm"		column="REVIEW_DEFER_NM"     	nullValue="" />
+		<result property="reviewTermNm"			column="REVIEW_TERM_NM"     	nullValue="" />
+		<result property="reviewDocNo"			column="REVIEW_DOC_NO"     		nullValue="" />
+		<result property="reviewCofirmCd"		column="REVIEW_COFIRM_CD"     	nullValue="" />
+		<result property="natCmtTermCdSkip"		column="NAT_CMT_TERM_CD_SKIP" 	nullValue="" />
+		<result property="natCmtDivCd"			column="NAT_CMT_DIV_CD"			nullValue="" />
+		<result property="natCmtDeferCd"		column="NAT_CMT_DEFER_CD"		nullValue="" />
+		<result property="natCmtTermCd"			column="NAT_CMT_TERM_CD"	 	nullValue="" />
+		<result property="natCmtRsn"			column="NAT_CMT_RSN" 			nullValue="" />
+		<result property="natCmtDivNm"			column="NAT_CMT_DIV_NM" 		nullValue="" />
+		<result property="natCmtDeferNm"		column="NAT_CMT_DEFER_NM" 		nullValue="" />
+		<result property="natCmtTermNm"			column="NAT_CMT_TERM_NM" 		nullValue="" />
+		<result property="folderKeepStateCd"	column="folder_keep_state_cd"	nullValue="" />
+	</resultMap>
+	<!-- 
+		SELECT - 평가폐기 결과반여 심의서번호별 기록물철 목록(상세)
+	 -->
+	<select id="findDisuseFinalRsltRegDetailPagedList" parameterClass="rms.eval.disuseeval.domain.Disuse" resultMap="dis-use-final-rslt-reg-detail-result" >
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.FOLDER_ID
+					, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)
+						    WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)
+					   END) AS BIS_CLSS_NM
+				    , B.TITLE
+				    , B.CREAT_YYYY
+				    , A.DISCU_PROG_STATE_CD
+				    , CASE WHEN A.CUR_PRESV_TERM_CD = '01' THEN '01'
+				           WHEN A.CUR_PRESV_TERM_CD = '03' THEN '01,03'
+				           WHEN A.CUR_PRESV_TERM_CD = '05' THEN '01,03,05'
+				           WHEN A.CUR_PRESV_TERM_CD = '10' THEN '01,03,05,10'
+				           WHEN A.CUR_PRESV_TERM_CD = '25' THEN '01,03,05,10,25'
+				           WHEN A.CUR_PRESV_TERM_CD = '30' THEN '01,03,05,10,25,30'
+				           WHEN A.CUR_PRESV_TERM_CD = '40' THEN '01,03,05,10,25,30,40'
+				      END AS REVIEW_TERM_CD_SKIP
+				    , A.HANDL_ORG_DISU_DIV_CD
+				    , A.HANDL_ORG_DEFER_CD
+				    , A.HANDL_ORG_TERM_CD
+				    , A.HANDL_ORG_RSN
+				    , A.EXPERT_DISU_DIV_CD
+				    , A.EXPERT_DISU_DEFER_CD
+				    , A.EXPERT_DISU_TERM_CD
+				    , A.EXPERT_DISU_RSN
+				    , A.REVIEW_DIV_CD
+				    , A.REVIEW_DEFER_CD
+				    , A.REVIEW_REFIX_AFT_PRESV_TERM AS REVIEW_TERM_CD
+				    , A.REVIEW_REFIX_AFT_RSN AS REVIEW_RSN
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.CUR_PRESV_TERM_CD) AS CUR_PRESV_TERM_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.HANDL_ORG_DEFER_CD) AS HANDL_ORG_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.HANDL_ORG_TERM_CD) AS HANDL_ORG_TERM_NM     
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.EXPERT_DISU_DEFER_CD) AS EXPERT_DISU_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.EXPERT_DISU_TERM_CD) AS EXPERT_DISU_TERM_NM     
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.REVIEW_DEFER_CD) AS REVIEW_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.REVIEW_REFIX_AFT_PRESV_TERM) AS REVIEW_TERM_NM
+				    , A.REVIEW_DOC_NO
+				    , A.REVIEW_COFIRM_CD
+				    , CASE WHEN A.CUR_PRESV_TERM_CD = '01' THEN '01'
+				           WHEN A.CUR_PRESV_TERM_CD = '03' THEN '01,03'
+				           WHEN A.CUR_PRESV_TERM_CD = '05' THEN '01,03,05'
+				           WHEN A.CUR_PRESV_TERM_CD = '10' THEN '01,03,05,10'
+				           WHEN A.CUR_PRESV_TERM_CD = '25' THEN '01,03,05,10,25'
+				           WHEN A.CUR_PRESV_TERM_CD = '30' THEN '01,03,05,10,25,30'
+				           WHEN A.CUR_PRESV_TERM_CD = '40' THEN '01,03,05,10,25,30,40'
+				      END AS NAT_CMT_TERM_CD_SKIP
+				    , A.NAT_CMT_DIV_CD
+				    , A.NAT_CMT_DEFER_CD
+				    , A.NAT_CMT_REFIX_AFT_PRESV_TERM AS NAT_CMT_TERM_CD
+				    , A.NAT_CMT_REFIX_AFT_RSN AS NAT_CMT_RSN
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.NAT_CMT_DIV_CD) AS NAT_CMT_DIV_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.NAT_CMT_DEFER_CD) AS NAT_CMT_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.NAT_CMT_REFIX_AFT_PRESV_TERM) AS NAT_CMT_TERM_NM
+				    , B.folder_keep_state_cd
+				FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B
+				WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+				AND A.DISCU_PROG_STATE_CD IN ('06','07','08','09')
+				<isNotEmpty property="discuYyyySeq">
+				   	<isNotEqual property="discuYyyySeq" prepend="AND" compareValue="0">
+						A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+					</isNotEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="reviewDivCd">
+					A.REVIEW_DIV_CD = #reviewDivCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="natCmtDivCd">
+					A.NAT_CMT_DIV_CD = #natCmtDivCd:VARCHAR#
+				</isNotEmpty>	
+				AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+				AND B.FOLDER_ID = A.FOLDER_ID
+				<isNotEmpty prepend="AND" property="orgCd">
+					B.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="startYyyy">
+					<isNotEmpty property="endYyyy" prepend="AND">
+				 		B.CREAT_YYYY BETWEEN #startYyyy:VARCHAR# AND #endYyyy:VARCHAR#
+					</isNotEmpty>
+				</isNotEmpty>
+				<isNotEmpty property="clssId">
+					<isNotEmpty prepend="AND" property="clssDivCd">
+						B.CLSS_DIV_CD = #clssDivCd:VARCHAR#
+					</isNotEmpty>	
+					<isNotEmpty prepend="AND" property="clssId">
+						B.CLSS_ID = #clssId:VARCHAR#
+					</isNotEmpty>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="presvTermCd">
+					B.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					B.TITLE LIKE #title:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.ORG_CD, A.FOLDER_ID
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 평가폐기 결과반여 심의서번호별 기록물철 목록(상세)
+	 -->
+	<select id="countDisuseFinalRsltRegDetailPagedList" resultClass="java.lang.Long" parameterClass="rms.eval.disuseeval.domain.Disuse" >
+		SELECT COUNT(*)
+		FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.DISCU_PROG_STATE_CD IN ('06','07','08','09')
+		<isNotEmpty property="discuYyyySeq">
+		   	<isNotEqual property="discuYyyySeq" prepend="AND" compareValue="0">
+				A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+			</isNotEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="reviewDivCd">
+			A.REVIEW_DIV_CD = #reviewDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="natCmtDivCd">
+			A.NAT_CMT_DIV_CD = #natCmtDivCd:VARCHAR#
+		</isNotEmpty>	
+		AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		AND B.FOLDER_ID = A.FOLDER_ID
+		<isNotEmpty prepend="AND" property="orgCd">
+			B.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="startYyyy">
+			<isNotEmpty property="endYyyy" prepend="AND">
+		 		B.CREAT_YYYY BETWEEN #startYyyy:VARCHAR# AND #endYyyy:VARCHAR#
+			</isNotEmpty>
+		</isNotEmpty>
+		<isNotEmpty property="clssId">
+			<isNotEmpty prepend="AND" property="clssDivCd">
+				B.CLSS_DIV_CD = #clssDivCd:VARCHAR#
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="clssId">
+				B.CLSS_ID = #clssId:VARCHAR#
+			</isNotEmpty>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="presvTermCd">
+			B.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			B.TITLE LIKE #title:VARCHAR#
+		</isNotEmpty>
+	</select>
+	
+	<!-- 
+		평가폐기 결과반영 공개목록변경 감사추적 등록 내용을 조회한다.
+	 -->
+	<resultMap id="result-findTraceList" class="rms.common.trace.domain.OpenListChng">
+	 	<result	property="orgCd" 				column="ORG_CD"/>
+	 	<result	property="folderId" 			column="FOLDER_ID"/>
+	 	<result	property="presvTermCd" 			column="PRESV_TERM_CD"/>
+	 	<result	property="chngRsn"	 			column="REVIEW_REFIX_AFT_RSN"/>
+	 	<result	property="folderKey" 			column="FOLDER_KEY"/>
+	 	<result	property="recordCenterId" 			column="RECORD_CENTER_ID"/>
+	</resultMap>
+	<select id="findTraceList" parameterClass="rms.eval.disuseeval.domain.Disuse" resultMap="result-findTraceList">
+		SELECT B.ORG_CD
+		    , B.FOLDER_ID
+		    , B.PRESV_TERM_CD
+		    , A.REVIEW_REFIX_AFT_RSN
+		    , A.RECORD_CENTER_ID
+		    , (SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS FOLDER_KEY
+	   	FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B , TB_DFDISUSEDISCUDOC C
+	 	WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	   	AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+	   	AND A.DISCU_PROG_STATE_CD = '09'
+	   	AND A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+	   	AND A.REVIEW_DOC_NO IS NOT NULL
+	   	AND A.REVIEW_COFIRM_CD = '1'
+	   	<isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+		   	</isEqual>
+		   	<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+	   		   	B.PRESV_TERM_CD in ('01', '03', '05', '10')
+		   	</isNotEqual>
+	   	</isNotEmpty>
+	   	AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	   	AND B.FOLDER_ID        = A.FOLDER_ID
+	   	AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+	   	AND C.DISCU_YYYY       = A.DISCU_YYYY
+	   	AND C.DISCU_YYYY_SEQ   = A.DISCU_YYYY_SEQ
+	</select>
+	
+	
+	<!-- 
+		UPDATE - 평가폐기 결과반영 폐기심의서 확정
+	 -->
+	<update id="updateDisuseFinalRsltRegConfirm" parameterClass="rms.eval.disuseeval.domain.Disuse">
+		UPDATE TB_DFDISUSEDISCUDOC A
+		SET A.CONFIRM_FLAG = '1'
+			, A.REVIEW_DOC_NO = #reviewDocNo:VARCHAR#   
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+		AND A.CONFIRM_FLAG = '0'
+		AND 
+		<!-- CUBRID
+		   (
+			A.RECORD_CENTER_ID
+			, A.DISCU_YYYY
+			, A.DISCU_YYYY_SEQ
+		) IN (
+			SELECT B.RECORD_CENTER_ID
+				, B.DISCU_YYYY
+				, B.DISCU_YYYY_SEQ
+		-->
+		   EXISTS (SELECT 1
+		    FROM TB_DFDISUSEOPIN B, TB_RDFOLDER C
+		    WHERE B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		    AND B.DISCU_YYYY = #discuYyyy:VARCHAR#
+		    AND B.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+		    AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		    AND B.FOLDER_ID = C.FOLDER_ID
+		    AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		    AND A.DISCU_YYYY = B.DISCU_YYYY
+		    AND A.DISCU_YYYY_SEQ = B.DISCU_YYYY_SEQ
+		    <isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					C.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					C.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+		    AND B.DISCU_PROG_STATE_CD IN ('07','08','09')
+		    AND ((B.DISCU_REQ_FLAG = '0' AND B.DISCU_PROG_STATE_CD IN ('07','09'))
+		    	OR (B.DISCU_REQ_FLAG = '1' AND B.DISCU_PROG_STATE_CD IN ('08','09'))
+		    )
+		)
+	</update>
+	<!-- 
+		UPDATE - 평가폐기 결과반영 문서번호 저장
+	 -->
+	<update id="updateDisuseFinalRsltRegDocNo" parameterClass="rms.eval.disuseeval.domain.Disuse">
+		UPDATE TB_DFDISUSEOPIN A
+		SET A.REVIEW_COFIRM_CD = '1'
+		    , A.REVIEW_DOC_NO = #reviewDocNo:VARCHAR#
+		    , A.DISCU_PROG_STATE_CD = '09'
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+		AND A.DISCU_PROG_STATE_CD IN ('07','08','09')
+		AND ((A.DISCU_REQ_FLAG = '0' AND A.DISCU_PROG_STATE_CD IN ('07','09'))
+			OR (A.DISCU_REQ_FLAG = '1' AND A.DISCU_PROG_STATE_CD IN ('08','09'))
+		)   
+		AND A.REVIEW_COFIRM_CD = '0'
+		AND EXISTS (
+		    SELECT 1 
+		    FROM TB_RDFOLDER B 
+		    WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID 
+		    AND B.FOLDER_ID = A.FOLDER_ID 
+		    <isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+				</isEqual>
+				<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+					B.PRESV_TERM_CD in ('01', '03', '05', '10')
+				</isNotEqual>
+			</isNotEmpty>
+		)
+	</update>
+	<!-- 
+		INSERT - 평가폐기 결과반영 평가이력저장
+		**반드시 updateDisuseFinalRsltRegDocNo 실행 후 호출
+		**반드시 updateDisuseFinalRsltRegFolder1 실행 전 호축
+	 -->
+	<insert id="createDisuseFinalRsltRegHist" parameterClass="rms.eval.disuseeval.domain.Disuse">
+		INSERT INTO TB_DFDISUSEOPINHIST
+			SELECT A.RECORD_CENTER_ID
+		    	, A.FOLDER_ID
+		      	, ( SELECT NVL(MAX(CHNG_HIST_NO),0) + 1 FROM TB_DFDISUSEOPINHIST WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID AND FOLDER_ID = A.FOLDER_ID ) AS CHNG_HIST_NO
+		      	, A.DISCU_YYYY
+		      	, CASE WHEN A.DISCU_REQ_FLAG = '1' THEN A.NAT_CMT_DIV_CD ELSE A.REVIEW_DIV_CD END AS REVIEW_OPIN
+		      	, A.CUR_PRESV_TERM_CD
+		      	, A.REVIEW_REFIX_AFT_PRESV_TERM AS REVIEW_PRESV_TERM_CD
+		      	, CASE WHEN A.DISCU_REQ_FLAG = '1' THEN A.NAT_CMT_DEFER_CD ELSE A.REVIEW_DEFER_CD END AS REVIEW_DEFER_CD
+		      	, CASE WHEN A.DISCU_REQ_FLAG = '1' THEN A.NAT_CMT_REFIX_AFT_RSN ELSE A.REVIEW_REFIX_AFT_RSN END AS REVIEW_RSN
+		      	, CASE WHEN A.DISCU_REQ_FLAG = '1' THEN A.NAT_CMT_YMD ELSE A.REVIEW_YMD END AS REVIEW_YMD
+		      	, A.DISCU_YYYY_SEQ AS DISCU_SEQ 
+		      	, #recordChrgrId:VARCHAR# AS RECORD_CHRGR_ID
+		   	FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B , TB_DFDISUSEDISCUDOC C
+		 	WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   	AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		   	AND A.DISCU_PROG_STATE_CD = '09'
+		   	AND A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+		   	AND A.REVIEW_DOC_NO IS NOT NULL
+		   	AND A.REVIEW_COFIRM_CD = '1'
+		   	<isNotEmpty prepend="AND">
+				<isEqual property="disusePresv30yearDiv" compareValue="1">
+					B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			   	</isEqual>
+			   	<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+		   		   	B.PRESV_TERM_CD in ('01', '03', '05', '10')
+			   	</isNotEqual>
+		   	</isNotEmpty>
+		   	AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		   	AND B.FOLDER_ID        = A.FOLDER_ID
+		   	AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		   	AND C.DISCU_YYYY       = A.DISCU_YYYY
+		   	AND C.DISCU_YYYY_SEQ   = A.DISCU_YYYY_SEQ
+	</insert>
+	<!-- 
+		UPDATE - 평가폐기 결과반영 기록물철 수정1
+	 -->
+	<update id="updateDisuseFinalRsltRegFolder1" parameterClass="rms.eval.disuseeval.domain.Disuse">
+		UPDATE TB_RDFOLDER A
+		SET A.DISUSE_STATE_CD = '09'
+		    , A.LAST_EVAL_YYYY = #discuYyyy:VARCHAR#
+		    , A.DISU_DIV_CD = ( SELECT CASE WHEN B.DISCU_REQ_FLAG = '1' THEN B.NAT_CMT_DIV_CD ELSE B.REVIEW_DIV_CD END FROM TB_DFDISUSEOPIN B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND B.DISCU_YYYY = #discuYyyy:VARCHAR# )
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISUSE_EVAL_PROG_FLAG = '1'
+		AND EXISTS (
+			SELECT C.FOLDER_ID
+		    FROM TB_DFDISUSEOPIN C
+		    WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		    AND C.FOLDER_ID = A.FOLDER_ID
+		    AND C.DISCU_YYYY = #discuYyyy:VARCHAR#
+		    AND C.DISCU_PROG_STATE_CD = '09'
+		    AND C.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+		    AND C.REVIEW_DOC_NO IS NOT NULL
+		    AND C.REVIEW_COFIRM_CD = '1'
+		)
+	</update>
+	<!-- 
+		UPDATE - 평가폐기 결과반영 기록물철 수정2
+	 -->
+	<update id="updateDisuseFinalRsltRegFolder2" parameterClass="rms.eval.disuseeval.domain.Disuse">
+		<!--cubrid update
+		UPDATE (
+			SELECT A.disu_delay_cd
+			, A.presv_term_cd
+			, A.disuse_eval_prog_flag
+			, A.expt_disuse_yyyy
+			, A.expt_transf_yyyy
+			, A.disu_div_cd
+			, A.folder_close_dtime
+			, A.folder_type_div_cd
+			, (CASE WHEN A.creat_sys_cd IN ('01','04') THEN A.creat_yyyy ELSE NVL(SUBSTR(A.folder_close_dtime,0,4),A.creat_yyyy) END) AS aft_creat_yyyy
+			, (CASE WHEN A.disu_div_cd = '2' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN (SELECT B.nat_cmt_defer_cd FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#)
+			                                            ELSE (SELECT B.review_defer_cd FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+			        ELSE A.disu_delay_cd END) AS aft_disu_delay_cd
+			, (CASE WHEN A.disu_div_cd = '3' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN A.presv_term_cd
+														ELSE (SELECT B.review_refix_aft_presv_term FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+					ELSE A.presv_term_cd END) AS aft_presv_term_cd
+			FROM TB_RDFOLDER A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.disuse_eval_prog_flag = '1'
+			AND   A.disuse_state_cd = '09'
+			AND   A.last_eval_yyyy = #discuYyyy:VARCHAR#
+			AND EXISTS (
+			    SELECT C.folder_id
+			    FROM TB_DFDISUSEOPIN C
+			    WHERE C.record_center_id = A.record_center_id
+			    AND C.folder_id = A.folder_id
+			    AND C.discu_yyyy = #discuYyyy:VARCHAR#
+			    AND C.discu_prog_state_cd = '09'
+			    AND C.discu_yyyy_seq = #discuYyyySeq:NUMBER#
+			    AND C.review_doc_no IS NOT NULL
+			    AND C.review_cofirm_cd = '1'
+			)
+		) D
+		SET   D.disu_delay_cd = D.aft_disu_delay_cd
+		    , D.presv_term_cd = NVL(D.aft_presv_term_cd,D.presv_term_cd)
+		    , D.expt_disuse_yyyy = (CASE WHEN TO_NUMBER(D.aft_presv_term_cd) <![CDATA[>=]]> 20 THEN ''
+		                                 ELSE TO_CHAR(TO_NUMBER(D.aft_creat_yyyy)+TO_NUMBER(D.aft_presv_term_cd)) END)
+		    , D.expt_transf_yyyy = (CASE WHEN TO_NUMBER(D.aft_presv_term_cd) <![CDATA[<]]> 20 THEN ''
+		                                 ELSE (CASE WHEN D.folder_type_div_cd IN ('3','4') THEN TO_CHAR(TO_NUMBER(D.aft_creat_yyyy)+5) ELSE TO_CHAR(TO_NUMBER(D.aft_creat_yyyy)+10) END) END)
+		    , D.disuse_eval_prog_flag = '0'
+	-->
+	
+      
+      UPDATE TB_RDFOLDER A
+            SET  A.disu_delay_cd = (CASE WHEN A.disu_div_cd = '2' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN (SELECT B.nat_cmt_defer_cd FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#)
+      			                                            ELSE (SELECT B.review_defer_cd FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+      			        					ELSE A.disu_delay_cd END)
+      		    , A.presv_term_cd = NVL((CASE WHEN A.disu_div_cd = '3' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN A.presv_term_cd
+      														ELSE (SELECT B.review_refix_aft_presv_term FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+      					ELSE A.presv_term_cd END),A.presv_term_cd)
+      		    , A.expt_disuse_yyyy = (CASE WHEN TO_NUMBER((CASE WHEN A.disu_div_cd = '3' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN A.presv_term_cd
+      														ELSE (SELECT B.review_refix_aft_presv_term FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+      					ELSE A.presv_term_cd END)) <![CDATA[>=]]> 20 THEN ''
+      		                                 ELSE TO_CHAR(TO_NUMBER((CASE WHEN A.creat_sys_cd IN ('01','04') THEN A.creat_yyyy ELSE NVL(SUBSTR(A.folder_close_dtime,0,4),A.creat_yyyy) END) )+TO_NUMBER((CASE WHEN A.disu_div_cd = '3' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN A.presv_term_cd
+      														ELSE (SELECT B.review_refix_aft_presv_term FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+      					ELSE A.presv_term_cd END))) END)
+      		    , A.expt_transf_yyyy = (CASE WHEN TO_NUMBER((CASE WHEN A.disu_div_cd = '3' THEN (CASE WHEN (SELECT B.discu_req_flag FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) = '1' THEN A.presv_term_cd
+      														ELSE (SELECT B.review_refix_aft_presv_term FROM TB_DFDISUSEOPIN B WHERE B.record_center_id=A.record_center_id AND B.folder_id=A.folder_id AND B.discu_yyyy=#discuYyyy:VARCHAR#) END)
+      					ELSE A.presv_term_cd END)) <![CDATA[<]]> 20 THEN ''
+      		                                 ELSE (CASE WHEN A.folder_type_div_cd IN ('3','4') THEN TO_CHAR(TO_NUMBER( (CASE WHEN A.creat_sys_cd IN ('01','04') THEN A.creat_yyyy ELSE NVL(SUBSTR(A.folder_close_dtime,0,4),A.creat_yyyy) END))+5) ELSE TO_CHAR(TO_NUMBER( (CASE WHEN A.creat_sys_cd IN ('01','04') THEN A.creat_yyyy ELSE NVL(SUBSTR(A.folder_close_dtime,0,4),A.creat_yyyy) END))+10) END) END)
+      		    , A.disuse_eval_prog_flag = '0'
+      WHERE A.record_center_id = #recordCenterId:VARCHAR#
+         AND   A.disuse_eval_prog_flag = '1'
+         AND   A.disuse_state_cd = '09'
+         AND   A.last_eval_yyyy = #discuYyyy:VARCHAR#
+         AND EXISTS (
+      			    SELECT C.folder_id
+      			    FROM TB_DFDISUSEOPIN C
+      			    WHERE C.record_center_id = A.record_center_id
+      			    AND C.folder_id = A.folder_id
+      			    AND C.discu_yyyy = #discuYyyy:VARCHAR#
+      			    AND C.discu_prog_state_cd = '09'
+      			    AND C.discu_yyyy_seq = #discuYyyySeq:NUMBER#
+      			    AND C.review_doc_no IS NOT NULL
+      			    AND C.review_cofirm_cd = '1'
+      )
+    
+    
+
+	</update>
+	
+	<!-- 
+		평가폐기 결과반영 공개목록변경 감사추적 등록 내용을 조회한다.
+	 -->
+	<!-- <resultMap id="findPresvTermRevalTrace-result" class="rms.common.trace.domain.OpenListChng">
+	 	<result	property="orgCd" 				column="ORG_CD"/>
+	 	<result	property="folderId" 			column="FOLDER_ID"/>
+	 	<result	property="presvTermCd" 			column="PRESV_TERM_CD"/>
+	 	<result	property="chngRsn"	 			column="REVIEW_REFIX_AFT_RSN"/>
+	 	<result	property="folderKey" 			column="FOLDER_KEY"/>
+	</resultMap>
+	<select id="findPresvTermRevalTrace" parameterClass="rms.eval.disuseeval.domain.Disuse" resultMap="findPresvTermRevalTrace-result">
+	 	SELECT A.ORG_CD
+		      ,A.FOLDER_ID
+		      ,A.PRESV_TERM_CD
+		      ,B.REVIEW_REFIX_AFT_RSN
+		      ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.FOLDER_ID = A.FOLDER_ID) AS FOLDER_KEY
+		FROM TB_RDFOLDER A, TB_DFDISUSEOPIN B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.FOLDER_ID = #folderId:VARCHAR#
+		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND A.FOLDER_ID = B.FOLDER_ID
+		AND B.REVIEW_COFIRM_CD = '1'
+		AND ((DISCU_REQ_FLAG = '0' AND REVIEW_DIV_CD = '3') OR (DISCU_REQ_FLAG = '1' AND NAT_CMT_DIV_CD = '3'))
+	</select> -->
+	
+	
+</sqlMap>

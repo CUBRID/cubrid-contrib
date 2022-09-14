@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.sys">
+
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹 목록을 조회한다. 
+	 -->
+	<resultMap id="menu-grant-grp-result" class="rms.sys.sys.domain.MenuGrantGroup" >
+		<result property="menuGrantGrpCd" 	 	column="MENU_GRANT_GRP_CD"/>
+		<result property="menuGrantGrpNm" 	 	column="MENU_GRANT_GRP_NM"/>
+		<result property="menuGrantGrpDescr" 	column="MENU_GRANT_GRP_DESCR"/>
+		<result property="useFlag"				column="USE_FLAG"/>
+		<result property="defaultGrantDiv" 		column="DEFAULT_GRANT_DIV"/>
+		<result property="menuGrantGrpCdCnt" 	column="MENU_GRANT_GRP_CD_CNT"/>
+	</resultMap>
+	<select id="countMenuGrantGroupPagedList" parameterClass="rms.sys.sys.domain.MenuGrantGroup" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_STMENUGRANTGRP
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	<select id="findMenuGrantGroupPagedList" parameterClass="rms.sys.sys.domain.MenuGrantGroup" resultMap="menu-grant-grp-result">
+		SELECT E.MENU_GRANT_GRP_CD
+			, E.MENU_GRANT_GRP_NM
+			, E.MENU_GRANT_GRP_DESCR
+			, E.USE_FLAG
+			, E.DEFAULT_GRANT_DIV
+		    , (SELECT COUNT(1) FROM TB_STUSER B WHERE B.RECORD_CENTER_ID = E.RECORD_CENTER_ID AND B.MENU_GRANT_GRP_CD  = E.MENU_GRANT_GRP_CD) AS MENU_GRANT_GRP_CD_CNT
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.MENU_GRANT_GRP_CD
+						, A.MENU_GRANT_GRP_NM
+						, A.MENU_GRANT_GRP_DESCR
+						, A.USE_FLAG
+						, A.DEFAULT_GRANT_DIV
+					    , A.RECORD_CENTER_ID
+					FROM  TB_STMENUGRANTGRP A
+					<isNotEmpty prepend="WHERE" property="recordCenterId">
+						A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					</isNotEmpty>
+					ORDER BY A.RECORD_CENTER_ID, A.MENU_GRANT_GRP_CD
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹 등록시 기존 기본권한그룹이 존재하는지 체크
+	 -->
+	<select id="findDefaultGrantGrpCount" parameterClass="rms.sys.sys.domain.MenuGrantGroup" resultClass="java.lang.Integer">
+		SELECT NVL(COUNT(1),0) AS CNT FROM  TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND   DEFAULT_GRANT_DIV = #defaultGrantDiv:VARCHAR#
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 기본메뉴권한을 초기화한다.
+	 -->
+	<update id="updateMenuGrantGroupDefaultClear" parameterClass="rms.sys.sys.domain.MenuGrantGroup">
+		UPDATE TB_STMENUGRANTGRP SET DEFAULT_GRANT_DIV = '' WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND DEFAULT_GRANT_DIV = #defaultGrantDiv:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹을 등록한다.
+	 -->
+	<insert id="createMenuGrantGroup" parameterClass="rms.sys.sys.domain.MenuGrantGroup">
+		INSERT INTO TB_STMENUGRANTGRP (
+			RECORD_CENTER_ID, MENU_GRANT_GRP_CD, MENU_GRANT_GRP_NM, MENU_GRANT_GRP_DESCR, USE_FLAG, WORK_USER_ID, WORK_DTIME, DEFAULT_GRANT_DIV
+		) VALUES(
+			 #recordCenterId#
+			,(SELECT LPAD(NVL(MAX(MENU_GRANT_GRP_CD),0)+1, 3, '0') FROM TB_STMENUGRANTGRP WHERE record_center_id = #recordCenterId:VARCHAR#)
+			,#menuGrantGrpNm#
+			,#menuGrantGrpDescr#
+			,#useFlag#
+			,#workUserId#
+			<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			,#defaultGrantDiv#
+		)
+	</insert>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹을 수정한다.
+	 -->
+	<update id="updateMenuGrantGroup" parameterClass="rms.sys.sys.domain.MenuGrantGroup">
+		UPDATE TB_STMENUGRANTGRP
+		SET   MENU_GRANT_GRP_NM    = #menuGrantGrpNm:VARCHAR#,
+			  MENU_GRANT_GRP_DESCR = #menuGrantGrpDescr:VARCHAR#,
+	  	      USE_FLAG             = #useFlag:VARCHAR#,
+	  	      WORK_USER_ID         = #workUserId:VARCHAR#,
+	  	      DEFAULT_GRANT_DIV    = #defaultGrantDiv:VARCHAR#
+	  	WHERE RECORD_CENTER_ID  = #recordCenterId:VARCHAR#
+		AND   MENU_GRANT_GRP_CD = #menuGrantGrpCd:VARCHAR#
+	</update>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹내 사용자가 존재하는지 체크
+	 -->
+	<select id="findMenuGrantUserCount" parameterClass="rms.sys.sys.domain.MenuGrantGroup" resultClass="java.lang.Integer">
+		SELECT NVL(COUNT(1),0) AS CNT FROM  TB_STUSER WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND   MENU_GRANT_GRP_CD = #menuGrantGrpCd:VARCHAR#
+	</select>
+	
+	<!--
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹 삭제 처리시 메뉴권한링크 삭제처리 
+	-->
+	<delete id="deleteMenuGrantLink" parameterClass="rms.sys.sys.domain.MenuGrantGroup">
+		DELETE FROM TB_STMENUGRANTLINK WHERE RECORD_CENTER_ID  = #recordCenterId:VARCHAR# AND   MENU_GRANT_GRP_CD = #menuGrantGrpCd:VARCHAR#
+	</delete>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹을 삭제한다.
+	 -->
+	<delete id="deleteMenuGrantGroup" parameterClass="rms.sys.sys.domain.MenuGrantGroup">
+		DELETE FROM TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID  = #recordCenterId:VARCHAR# AND   MENU_GRANT_GRP_CD = #menuGrantGrpCd:VARCHAR#
+	</delete>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리 
+		: 메뉴권한그룹의 메뉴 목록을 조회한다.
+	 -->	
+	<resultMap id="menuGrantList-result" class="rms.sys.sys.domain.MenuGrantGroup" >
+		<result property="userId" 				column="USER_ID"/>
+		<result property="useFlag" 				column="USE_FLAG"/>
+		<result property="menuNm" 				column="MENU_NM"/>
+		<result property="menuId" 				column="MENU_ID"/>
+		<result property="menuDivCd" 			column="MENU_DIV_CD"/>
+		<result property="upperMenuId" 			column="UPPER_MENU_ID"/>
+		<result property="menuSortSno" 	   		column="MENU_SORT_SNO"/>
+		<result property="g" 					column="G"/>
+	</resultMap>
+	<select id="findGrantInfo" parameterClass="rms.sys.sys.domain.MenuGrantGroup" resultMap="menuGrantList-result">
+		SELECT C.menu_id user_id
+				, C.menu_id
+				, C.menu_nm
+				, C.use_flag
+				, C.menu_sort_sno
+				, C.upper_menu_id
+				, C.menu_div_cd
+				, (SELECT COUNT(B.menu_id) FROM TB_STMENUGRANTLINK B WHERE B.menu_id = C.menu_id AND B.record_center_id = C.record_center_id AND B.menu_grant_grp_cd= #menuGrantGrpCd:VARCHAR#) G
+		FROM (
+			SELECT A.menu_id user_id
+			, A.menu_id
+			, A.menu_nm
+				, A.use_flag
+				, A.menu_sort_sno
+				, A.upper_menu_id
+				, A.menu_div_cd
+				, A.record_center_id
+		FROM (
+			SELECT * 
+			FROM TB_STMENU
+				WHERE record_center_id = #recordCenterId:VARCHAR#
+		) A
+			CONNECT BY PRIOR A.menu_id = A.upper_menu_id START WITH A.upper_menu_id IS NULL
+		) C
+	</select>
+	
+	<!-- 
+		시스템관리_메뉴권한그룹관리
+		: 메뉴권한그룹에 사용할 메뉴를 등록한다.
+	 -->
+	<insert id="createMenuGrantLink" parameterClass="rms.sys.sys.domain.MenuGrantGroup">
+		INSERT INTO TB_STMENUGRANTLINK (
+			RECORD_CENTER_ID, MENU_ID, MENU_GRANT_GRP_CD, WORK_DTIME
+		) (SELECT A.RECORD_CENTER_ID
+			     ,B.MENU_ID
+			     ,A.MENU_GRANT_GRP_CD
+			     <!--cubrid ,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			     ,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		   FROM TB_STMENUGRANTGRP A, TB_STMENU B
+		   WHERE A.RECORD_CENTER_ID  = B.RECORD_CENTER_ID
+		   AND   A.RECORD_CENTER_ID  = #recordCenterId:VARCHAR#
+		   AND   A.MENU_GRANT_GRP_CD = #menuGrantGrpCd:VARCHAR#
+		   AND   B.MENU_ID			 = #menuId:VARCHAR#
+		)
+	</insert>
+</sqlMap>

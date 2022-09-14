@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.openresortopin">
+
+
+	<!-- 공개재분류 공개재분류현황 -->
+	<resultMap id="open-resort-rslt-stat-result" class="rms.eval.openresortopin.domain.OpenResortOpin">
+		<result property="resortYyyy" 				column="RESORT_YYYY" 				nullValue="" />
+		<result property="openTotal" 				column="OPEN_TOTAL" 				nullValue="0" />
+		<result property="openChoiceTotal"			column="OPEN_CHOICE_TOTAL"			nullValue="0" />
+		<result property="otOpenRsltCnt" 			column="OT_OPEN_RSLT_CNT" 			nullValue="0" />
+		<result property="otPartOpenRsltCnt" 		column="OT_PART_OPEN_RSLT_CNT" 		nullValue="0" />
+		<result property="otCloseRsltCnt" 			column="OT_CLOSE_RSLT_CNT" 			nullValue="0" />
+		<result property="partOpenTotal" 			column="PART_OPEN_TOTAL" 			nullValue="0" />
+		<result property="partOpenChoiceTotal"		column="PART_OPEN_CHOICE_TOTAL"		nullValue="0" />
+		<result property="ptOpenRsltCnt" 			column="PT_OPEN_RSLT_CNT" 			nullValue="0" />
+		<result property="ptPartOpenRsltCnt" 		column="PT_PART_OPEN_RSLT_CNT" 		nullValue="0" />
+		<result property="ptCloseRsltCnt" 			column="PT_CLOSE_RSLT_CNT" 			nullValue="0" />
+		<result property="closeTotal" 				column="CLOSE_TOTAL" 				nullValue="0" />
+		<result property="closeChoiceTotal"			column="CLOSE_CHOICE_TOTAL"			nullValue="0" />
+		<result property="ctOpenRsltCnt" 			column="CT_OPEN_RSLT_CNT" 			nullValue="0" />
+		<result property="ctPartOpenRsltCnt" 		column="CT_PART_OPEN_RSLT_CNT" 		nullValue="0" />
+		<result property="ctCloseRsltCnt" 			column="CT_CLOSE_RSLT_CNT" 			nullValue="0" />
+		<result property="otOpenTotal" 				column="ot_open_total" 				nullValue="0" />
+		<result property="ptOpenTotal" 				column="pt_open_total" 				nullValue="0" />
+		<result property="ctOpenTotal" 				column="ct_open_total" 				nullValue="0" />
+	</resultMap>
+	<!-- 공개재분류 공개재분류현황 -->
+	<select id="findOpenResortRsltStatList" resultMap="open-resort-rslt-stat-result" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		SELECT resort_yyyy
+			, open_total
+		    , open_choice_total
+		    , ot_open_rslt_cnt
+		    , ot_part_open_rslt_cnt
+		    , ot_close_rslt_cnt
+		    , (ot_open_rslt_cnt+ot_part_open_rslt_cnt+ot_close_rslt_cnt) as ot_open_total
+		    , part_open_total
+		    , part_open_choice_total
+		    , pt_open_rslt_cnt
+		    , pt_part_open_rslt_cnt
+		    , pt_close_rslt_cnt
+		    , pt_close_rslt_cnt
+		    , (pt_open_rslt_cnt+pt_part_open_rslt_cnt+pt_close_rslt_cnt) as pt_open_total
+		    , close_total
+		    , close_choice_total
+		    , ct_open_rslt_cnt
+		    , ct_part_open_rslt_cnt
+		    , ct_close_rslt_cnt
+		    , ct_close_rslt_cnt
+		    , (ct_open_rslt_cnt+ct_part_open_rslt_cnt+ct_close_rslt_cnt) as ct_open_total
+		FROM (
+			SELECT a.resort_yyyy
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>) as open_total
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd IN ('2','3','4','5','6','7') <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>) as open_choice_total
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '1' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '1' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as ot_open_rslt_cnt
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '2' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '2' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as ot_part_open_rslt_cnt
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '3' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '1' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '3' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as ot_close_rslt_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>) as part_open_total
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd IN ('2','3','4','5','6','7') <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>) as part_open_choice_total
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '1' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '1' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as pt_open_rslt_cnt
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '2' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '2' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as pt_part_open_rslt_cnt
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '3' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '2' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '3' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as pt_close_rslt_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>) as close_total
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd IN ('2','3','4','5','6','7') <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>) as close_choice_total
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '1' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '1' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as ct_open_rslt_cnt
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '2' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '2' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as ct_part_open_rslt_cnt
+				, ((SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd = '7' AND expert_org_open_div_cd = '3' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)+(SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = a.record_center_id AND resort_yyyy = a.resort_yyyy AND current_open_div_cd = '3' AND resort_prog_state_cd = '7' AND review_org_open_div_cd = '3' AND discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty>)) as ct_close_rslt_cnt
+			FROM (
+				SELECT resort_yyyy
+					, '$recordCenterId$' as record_center_id
+			    FROM tb_rdopenresortopin
+			    WHERE record_center_id = #recordCenterId:VARCHAR#
+			    AND resort_yyyy BETWEEN #startYyyy:VARCHAR# AND #endYyyy:VARCHAR#
+			    <isNotEmpty property="resortCase" prepend="AND">
+					<isNotEqual property="resortCase" compareValue="0">
+						resort_case = #resortCase:VARCHAR#
+					</isNotEqual>
+	            </isNotEmpty>
+			    GROUP BY resort_yyyy
+			) a
+		)
+	</select>
+	
+	
+	<!-- 공개재분류 공개재분류현황 상세내역 -->
+	<resultMap id="open-resort-rslt-case-stat-result" class="rms.eval.openresortopin.domain.OpenResortOpin">
+		<result property="openTotal" 				column="OPEN_TOTAL" 				nullValue="0" />
+		<result property="openChoiceTotal"			column="OPEN_CHOICE_TOTAL"			nullValue="0" />
+		<result property="otOpenRsltCnt" 			column="OT_OPEN_RSLT_CNT" 			nullValue="0" />
+		<result property="otPartOpenRsltCnt" 		column="OT_PART_OPEN_RSLT_CNT" 		nullValue="0" />
+		<result property="otCloseRsltCnt" 			column="OT_CLOSE_RSLT_CNT" 			nullValue="0" />
+		<result property="partOpenTotal" 			column="PART_OPEN_TOTAL" 			nullValue="0" />
+		<result property="partOpenChoiceTotal"		column="PART_OPEN_CHOICE_TOTAL"		nullValue="0" />
+		<result property="ptOpenRsltCnt" 			column="PT_OPEN_RSLT_CNT" 			nullValue="0" />
+		<result property="ptPartOpenRsltCnt" 		column="PT_PART_OPEN_RSLT_CNT" 		nullValue="0" />
+		<result property="ptCloseRsltCnt" 			column="PT_CLOSE_RSLT_CNT" 			nullValue="0" />
+		<result property="closeTotal" 				column="CLOSE_TOTAL" 				nullValue="0" />
+		<result property="closeChoiceTotal"			column="CLOSE_CHOICE_TOTAL"			nullValue="0" />
+		<result property="ctOpenRsltCnt" 			column="CT_OPEN_RSLT_CNT" 			nullValue="0" />
+		<result property="ctPartOpenRsltCnt" 		column="CT_PART_OPEN_RSLT_CNT" 		nullValue="0" />
+		<result property="ctCloseRsltCnt" 			column="CT_CLOSE_RSLT_CNT" 			nullValue="0" />
+		<result property="deptAbbrNm"	 			column="DEPT_ABBR_NM"	 			nullValue="" />
+		<result property="orgCd"		 			column="CUR_KEEP_ORG_CD"			nullValue="" />
+		<result property="closeFlag"	 			column="CLOSE_FLAG"		 			nullValue="0" />
+	</resultMap>
+	<!-- 공개재분류 공개재분류현황 상세내역 -->
+	<select id="findOpenResortRsltCaseStatList" resultMap="open-resort-rslt-case-stat-result" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		SELECT a.cur_keep_org_cd
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE record_center_id = a.record_center_id AND org_cd = a.cur_keep_org_cd) dept_abbr_nm
+		    , (SELECT close_flag FROM tb_stdept WHERE record_center_id = a.record_center_id AND org_cd = a.cur_keep_org_cd) close_flag
+		    , SUM(CASE WHEN a.current_open_div_cd = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) as open_total
+		    , SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd IN ('2','3','4','5','6','7') <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) as open_choice_total
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd = '7' AND a.expert_org_open_div_cd = '1' AND a.discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '1' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as ot_open_rslt_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd = '7' AND a.expert_org_open_div_cd = '2' AND a.discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '2' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as ot_part_open_rslt_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd = '7' AND a.expert_org_open_div_cd = '3' AND a.discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '1' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '3' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as ot_close_rslt_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '2' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) as part_open_total
+		    , SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd IN ('2','3','4','5','6','7') <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) as part_open_choice_total
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '7' AND a.expert_org_open_div_cd = '1' AND a.discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '1' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as pt_open_rslt_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '7' AND a.expert_org_open_div_cd = '2' AND a.discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '2' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as pt_part_open_rslt_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '7' AND a.expert_org_open_div_cd = '3' AND a.discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '3' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as pt_close_rslt_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '3' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) as close_total
+		    , SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd IN ('2','3','4','5','6','7') <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) as close_choice_total
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '7' AND expert_org_open_div_cd = '1' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '1' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as ct_open_rslt_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '7' AND expert_org_open_div_cd = '2' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '2' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as ct_part_open_rslt_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '7' AND expert_org_open_div_cd = '3' AND discu_trgt_flag = '0' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '7' AND a.review_org_open_div_cd = '3' AND a.discu_trgt_flag = '1' <isNotEmpty property="resortCase" prepend="AND"><isNotEqual property="resortCase" compareValue="0" open=" ">resort_case = $resortCase$</isNotEqual></isNotEmpty> THEN 1 ELSE 0 END)) as ct_close_rslt_cnt
+		FROM (
+		    SELECT f.cur_keep_org_cd
+		    	, d.current_open_div_cd
+		    	, d.resort_prog_state_cd
+		    	, d.expert_org_open_div_cd
+		    	, d.discu_trgt_flag
+		    	, d.review_org_open_div_cd
+		    	, '$resortYyyy$' as resort_yyyy
+		    	, '$recordCenterId$' as record_center_id
+		    	, resort_case
+		    FROM tb_rdopenresortopin d, tb_rdfolder f
+		    WHERE d.record_center_id = f.record_center_id
+		    AND d.folder_id = f.folder_id
+		    AND d.record_center_id = #recordCenterId:VARCHAR#
+		    AND d.resort_yyyy = #resortYyyy:VARCHAR#
+		    <isNotEmpty prepend="AND" property="resortCase">
+		    	<isNotEqual property="resortCase" compareValue="0">
+		    		resort_case = #resortCase:VARCHAR#
+		    	</isNotEqual>
+		    </isNotEmpty>
+		) a
+		GROUP BY a.record_center_id, a.cur_keep_org_cd
+		ORDER BY close_flag, a.cur_keep_org_cd ASC
+	</select>
+</sqlMap>

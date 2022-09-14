@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.openresortopin">
+
+
+	<!-- 공개재분류 대상현황 -->
+	<resultMap id="open-resort-opin-choice-result" class="rms.eval.openresortopin.domain.OpenResortOpin">
+		<result property="deptAbbrNm" 				 column="DEPT_ABBR_NM"                  nullValue=""  />
+		<result property="closeFlag"				 column="CLOSE_FLAG"                    nullValue="0" />
+		<result property="orgCd" 					 column="CUR_KEEP_ORG_CD"               nullValue=""  />
+		<result property="total" 					 column="TOTAL"                         nullValue="0" />
+		<result property="nonOpenCnt" 				 column="NON_OPEN_CNT"                  nullValue="0" />
+		<result property="nonOpenChoiceCnt" 		 column="NON_OPEN_CHOICE_CNT"           nullValue="0" />
+		<result property="nonOpenChoiceExcuteCnt" 	 column="NON_OPEN_CHOICE_EXCUTE_CNT"    nullValue="0" />
+		<result property="nonOpenChoiceUnexcuteCnt"  column="NON_OPEN_CHOICE_UNEXCUTE_CNT"  nullValue="0" />
+		<result property="partOpenCnt" 				 column="PART_OPEN_CNT"                 nullValue="0" />
+		<result property="partOpenChoiceCnt" 		 column="PART_OPEN_CHOICE_CNT"          nullValue="0" />
+		<result property="partOpenChoiceExcuteCnt" 	 column="PART_OPEN_CHOICE_EXCUTE_CNT"   nullValue="0" />
+		<result property="partOpenChoiceUnexcuteCnt" column="PART_OPEN_CHOICE_UNEXCUTE_CNT" nullValue="0" />
+		<result property="allOpenCnt" 				 column="ALL_OPEN_CNT"                  nullValue="0" />
+		<result property="allOpenChoiceCnt" 		 column="ALL_OPEN_CHOICE_CNT"           nullValue="0" />
+		<result property="allOpenChoiceExcuteCnt" 	 column="ALL_OPEN_CHOICE_EXCUTE_CNT"    nullValue="0" />
+		<result property="allOpenChoiceUnexcuteCnt"  column="ALL_OPEN_CHOICE_UNEXCUTE_CNT"  nullValue="0" />
+	</resultMap>
+	<!-- 공개재분류 대상현황 Total -->
+	<!--  20150709 김경수 현황에 전체공개 항목 추가  -->
+	<select id="findOpenResortOpinListTot" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="open-resort-opin-choice-result">
+		SELECT '' AS cur_keep_org_cd
+		    , '계' AS dept_abbr_nm
+		    , 0 AS close_flag
+		    , COUNT(1) as total
+		    , SUM(CASE WHEN a.current_open_div_cd = '3' THEN 1 ELSE 0 END) as non_open_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '3' AND resort_prog_state_cd IN ('2','3','4','5','6','7') THEN 1 ELSE 0 END) as non_open_choice_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND resort_prog_state_cd IN ('6','7') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '0' THEN 1 ELSE 0 END)) as non_open_choice_excute_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND resort_prog_state_cd IN ('2','3','4') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '1' THEN 1 ELSE 0 END)) as non_open_choice_unexcute_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '2' THEN 1 ELSE 0 END) as part_open_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '2' AND resort_prog_state_cd IN ('2','3','4','5','6','7') THEN 1 ELSE 0 END) as part_open_choice_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND resort_prog_state_cd IN ('6','7') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '0' THEN 1 ELSE 0 END)) as part_open_choice_excute_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND resort_prog_state_cd IN ('2','3','4') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '1' THEN 1 ELSE 0 END)) as part_open_choice_unexcute_cnt
+			, SUM(CASE WHEN a.current_open_div_cd = '1' THEN 1 ELSE 0 END) as all_open_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '1' AND resort_prog_state_cd IN ('2','3','4','5','6','7') THEN 1 ELSE 0 END) as all_open_choice_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND resort_prog_state_cd IN ('6','7') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '0' THEN 1 ELSE 0 END)) as all_open_choice_excute_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND resort_prog_state_cd IN ('2','3','4') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '1' THEN 1 ELSE 0 END)) as all_open_choice_unexcute_cnt
+		FROM (
+		    SELECT f.cur_keep_org_cd
+		    	, d.resort_prog_state_cd
+		    	, d.current_open_div_cd
+		    	, d.discu_trgt_flag
+		    	, '$recordCenterId$' as record_center_id
+		    	, '$resortYyyy$' as resort_yyyy
+		    	, '$resortCase$' as resort_case
+		    FROM tb_rdopenresortopin d, tb_rdfolder f
+		    WHERE d.record_center_id = f.record_center_id
+		    AND d.folder_id = f.folder_id
+		    AND d.record_center_id = #recordCenterId:VARCHAR#
+		    AND d.resort_yyyy = #resortYyyy:VARCHAR#
+		    AND d.resort_case = #resortCase:VARCHAR#
+		) a
+	</select>
+	<!-- 공개재분류 대상현황 -->
+	<!--  20150709 김경수 현황에 전체공개 항목 추가  -->
+	<select id="findOpenResortOpinList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="open-resort-opin-choice-result">
+		SELECT a.cur_keep_org_cd
+		    , (SELECT dept_abbr_nm FROM tb_stdept WHERE record_center_id = a.record_center_id AND org_cd = a.cur_keep_org_cd) dept_abbr_nm
+		    , (SELECT close_flag FROM tb_stdept WHERE record_center_id = a.record_center_id AND org_cd = a.cur_keep_org_cd) close_flag
+		    , COUNT(1) as total
+		    , SUM(CASE WHEN a.current_open_div_cd = '3' THEN 1 ELSE 0 END) as non_open_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '3' AND resort_prog_state_cd IN ('2','3','4','5','6','7') THEN 1 ELSE 0 END) as non_open_choice_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND resort_prog_state_cd IN ('6','7') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '0' THEN 1 ELSE 0 END)) as non_open_choice_excute_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '3' AND resort_prog_state_cd IN ('2','3','4') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '3' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '1' THEN 1 ELSE 0 END)) as non_open_choice_unexcute_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '2' THEN 1 ELSE 0 END) as part_open_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '2' AND resort_prog_state_cd IN ('2','3','4','5','6','7') THEN 1 ELSE 0 END) as part_open_choice_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND resort_prog_state_cd IN ('6','7') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '0' THEN 1 ELSE 0 END)) as part_open_choice_excute_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '2' AND resort_prog_state_cd IN ('2','3','4') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '1' THEN 1 ELSE 0 END)) as part_open_choice_unexcute_cnt
+			, SUM(CASE WHEN a.current_open_div_cd = '1' THEN 1 ELSE 0 END) as all_open_cnt
+		    , SUM(CASE WHEN a.current_open_div_cd = '1' AND resort_prog_state_cd IN ('2','3','4','5','6','7') THEN 1 ELSE 0 END) as all_open_choice_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND resort_prog_state_cd IN ('6','7') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '0' THEN 1 ELSE 0 END)) as all_open_choice_excute_cnt
+		    , (SUM(CASE WHEN a.current_open_div_cd = '1' AND resort_prog_state_cd IN ('2','3','4') THEN 1 ELSE 0 END) + SUM(CASE WHEN a.current_open_div_cd = '2' AND a.resort_prog_state_cd = '5' AND a.discu_trgt_flag = '1' THEN 1 ELSE 0 END)) as all_open_choice_unexcute_cnt
+		FROM (
+		    SELECT f.cur_keep_org_cd
+		    	, d.resort_prog_state_cd
+		    	, d.current_open_div_cd
+		    	, d.discu_trgt_flag
+		    	, '$recordCenterId$' as record_center_id
+		    	, '$resortYyyy$' as resort_yyyy
+		    	, '$resortCase$' as resort_case
+		    FROM tb_rdopenresortopin d, tb_rdfolder f
+		    WHERE d.record_center_id = f.record_center_id
+		    AND d.folder_id = f.folder_id
+		    AND d.record_center_id = #recordCenterId:VARCHAR#
+		    AND d.resort_yyyy = #resortYyyy:VARCHAR#
+		    AND d.resort_case = #resortCase:VARCHAR#
+		) a
+		GROUP BY a.cur_keep_org_cd, a.record_center_id
+	</select>
+	<!-- 공개재분류 대상현황 공개재분류 대상 가능 수 -->
+	<!--  20150703 김경수 이관대상확정목록 공개재분류 선택 완료 후 추가 대상 존재 확인 -->
+	<select id="countTransfTrgtOpenResortList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultClass="java.lang.String">
+		
+		SELECT  COUNT(*)
+		FROM    tb_dfrecvtransflist D, tb_rdfolder F, tb_rdrecord R
+        WHERE   D.record_center_id = #recordCenterId:VARCHAR#
+        AND     D.record_center_id = F.record_center_id
+        AND     F.record_center_id = R.record_center_id
+        AND     D.folder_id = F.folder_id
+        AND     F.folder_id = R.folder_id
+        AND     F.transf_state_cd = '3'
+        AND     D.transf_div_cd <![CDATA[<>]]> 5
+        AND     D.transf_yyyy = #resortYyyy:VARCHAR#
+        AND 	R.record_id NOT IN (
+        	SELECT O.record_id 
+            FROM tb_rdopenresortopin O
+            WHERE O.record_center_id = #recordCenterId:VARCHAR#
+            AND O.resort_yyyy = #resortYyyy:VARCHAR#
+            AND O.resort_case = '2' 
+        )
+	</select>
+	
+	
+	<!-- 공개재분류 대상현황 이관확정목록의 공개재분류 대상  -->
+	<resultMap id="open-resort-transf-trgt-result"	class="rms.eval.openresortopin.domain.OpenResortOpin" >
+		<result property="recordCenterId" 			column="RECORD_CENTER_ID" 			nullValue=""  />
+		<result property="folderId" 				column="FOLDER_ID" 					nullValue=""  />
+		<result property="recordId" 				column="RECORD_ID" 					nullValue=""  />
+		<result property="resortSeq" 				column="RESORT_SEQ" 				nullValue="0" />
+		<result property="resortYyyy" 				column="RESORT_YYYY" 				nullValue=""  />
+		<result property="resortCase" 				column="RESORT_CASE" 				nullValue=""  />
+		<result property="resortProgStateCd" 		column="RESORT_PROG_STATE_CD" 		nullValue=""  />
+		<result property="currentOpenDivCd" 		column="CURRENT_OPEN_DIV_CD" 		nullValue=""  />
+		<result property="orgCd"					column="ORG_CD" 					nullValue=""  />
+		<result property="clssId"					column="CLSS_ID" 					nullValue=""  />
+	</resultMap>
+	<!-- 
+		SELECT - 공개재분류 대상현황 이관확정목록의 공개재분류 대상 
+	 -->
+	<select id="findTransfTrgtOpenResortList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="open-resort-transf-trgt-result">
+		SELECT r.record_center_id
+			, r.folder_id
+			, r.record_id
+			, '$resortYyyy$' as resort_yyyy
+			, (SELECT NVL(MAX(RESORT_SEQ), 0) + 1 FROM tb_rdopenresortopin WHERE record_center_id = r.record_center_id AND record_id = r.record_id) as resort_seq
+			, '2' as resort_case
+			, '1' as resort_prog_state_cd
+			, r.org_cd
+			, r.open_div_cd as current_open_div_cd
+			, f.clss_id
+		FROM tb_rdfolder f, tb_rdrecord r
+		WHERE r.record_center_id = #recordCenterId:VARCHAR#
+		AND	f.folder_id = r.folder_id
+		AND f.expt_transf_yyyy = #resortYyyy:VARCHAR#
+		AND f.transf_state_cd = '3'
+		AND r.open_div_cd != '1'
+	</select>
+	
+	
+	<!-- 
+		INSERT - 공개재분류  대상형환 이관대상확정목록의 공개재분류 대상생성
+	 -->
+	<!-- 20150708 김경수 이관대상확정목록 공개재분류 선택 완료 후 추가 대상 추가 -->
+	<!-- 20151030 KKJ 이관대상확정목록 공개재분류 선택 완료 후 추가 대상 추가시 접수이관목록 데이터 중복 해결 서브쿼리 삽입  -->
+	<insert id="createTransfTrgtOpenResortList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		INSERT INTO tb_rdopenresortopin (record_center_id
+			, folder_id
+			, record_id
+			, resort_yyyy
+			, resort_seq
+			, resort_case
+			, resort_prog_state_cd
+			, org_cd
+			, current_open_div_cd
+			, clss_id
+			, discu_trgt_flag
+		) SELECT  r.record_center_id
+			, r.folder_id
+			, r.record_id
+			, '$resortYyyy$' as resort_yyyy
+			, (SELECT NVL(MAX(RESORT_SEQ), 0) + 1 FROM tb_rdopenresortopin WHERE record_center_id = r.record_center_id AND record_id = r.record_id) as resort_seq
+			, '2' as resort_case
+			, '1' as resort_prog_state_cd
+			, r.org_cd
+			, r.open_div_cd
+			, f.clss_id
+			, '0'
+        FROM tb_dfrecvtransflist D, tb_rdfolder F, tb_rdrecord R
+        WHERE D.record_center_id = #recordCenterId:VARCHAR#
+        AND D.record_center_id = F.record_center_id
+        AND F.record_center_id = R.record_center_id
+        AND D.folder_id = F.folder_id
+        AND F.folder_id = R.folder_id
+        AND F.transf_state_cd = '3'
+        AND D.transf_div_cd <![CDATA[<>]]> 5
+        AND D.transf_yyyy = #resortYyyy:VARCHAR#
+     	AND D.transf_grp_sno = ( SELECT MAX(TRANSF_GRP_SNO) FROM tb_dfrecvtransflist
+                                 WHERE record_center_id = #recordCenterId:VARCHAR#
+                                 AND   transf_yyyy = #resortYyyy:VARCHAR#
+                                 AND   folder_id =  D.folder_id
+                               )        
+        AND (R.last_open_resort_yyyy IS NULL OR TO_CHAR(SYSDATE, 'YYYY')-NVL(R.last_open_resort_yyyy, 0) > 5)
+        AND R.record_id NOT IN (
+        	SELECT O.record_id 
+            FROM tb_rdopenresortopin O
+            WHERE O.record_center_id = #recordCenterId:VARCHAR#
+            AND O.resort_yyyy = #resortYyyy:VARCHAR#
+            AND O.resort_case = '2' 
+        )
+	</insert>
+	
+	
+	<!-- 
+		DELETE - 공개재분류 대상생성 작업내역삭제
+	 -->
+	<delete id="deleteResortData" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		DELETE FROM TB_RDOPENRESORTOPIN
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND	RESORT_YYYY = #resortYyyy#
+		AND	RESORT_CASE = '1'
+		AND RESORT_PROG_STATE_CD = '1'
+		AND	SCHEDULE_SEQ = #scheduleSeq#
+	</delete>
+</sqlMap>

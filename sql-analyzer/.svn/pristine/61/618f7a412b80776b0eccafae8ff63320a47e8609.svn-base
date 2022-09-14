@@ -1,0 +1,34 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+
+createCntChkDetl
+The constraint of the foreign key 'tb_srcntchkdetl_fk02' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkDetl
+
+		INSERT INTO TB_SRCNTCHKDETL(			RECORD_CENTER_ID,CNTCHK_ID,FOLDER_ID,STAKRM_ID,BOOKSF_ID		) VALUES (			'1',REPLACE('1','-',''),'1','1','1'		)	;
+
+countBooksfCntChkCurStatePagedList
+Semantic: Class (TB_SRCNTCHKDETL) does not have attribute SAKRM_ID. select count(1) from  F[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countBooksfCntChkCurStatePagedList
+
+		SELECT COUNT(1)        FROM (            SELECT DISTINCT A.CNTCHK_ID, B.STAKRM_ID, B.BOOKSF_ID, D.USER_NM, A.CHECK_YMD                    , E.COM_CD_NM            FROM TB_SRCNTCHK A, TB_SRCNTCHKDETL B, TB_STUSER D, TB_ZZCOMCD E            WHERE A.RECORD_CENTER_ID = '1'            AND A.CNTCHK_ID = B.CNTCHK_ID            AND A.WORK_USER_ID = D.USER_ID            AND (A.CHECK_STATE_CD = E.COM_CD and E.COM_TYPE_CD = 'SR06')            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID             AND                      A.CNTCHK_ID = REPLACE('1', '-', '')                  AND                     A.CNTCHK_ID = REPLACE('1', '-', '')                  AND                     A.CHECK_YMD = '1'                  AND                     B.SAKRM_ID = '1'                  AND                     B.BOOKSF_ID = '1'                              ) F ;
+
+findBooksfCntChkCurStatePagedList
+Semantic: Class (TB_SRCNTCHKDETL) does not have attribute SAKRM_ID. select  substr(H.cntchk_id, 1, 4)||'-'|| substr(H.cntchk_id,...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findBooksfCntChkCurStatePagedList
+
+		SELECT SUBSTR(H.cntchk_id, 1, 4)||'-'||SUBSTR(H.cntchk_id, 5, 6) AS cntchk_id		        ,H.stakrm_id		        ,H.booksf_id		        ,(SELECT COUNT(C.folder_id) FROM TB_SRCNTCHKDETL C WHERE C.cntchk_id = H.cntchk_id) AS folder_cnt		        ,H.user_nm AS work_user_nm		        ,H.check_ymd		        ,com_cd_nm AS check_state_nm        		FROM (		    SELECT G.*		    FROM (		        SELECT ROWNUM AS rnum		                ,F.*		        FROM (		            SELECT DISTINCT A.CNTCHK_ID, B.STAKRM_ID, B.BOOKSF_ID, D.USER_NM, A.CHECK_YMD		                    , E.COM_CD_NM		            FROM TB_SRCNTCHK A, TB_SRCNTCHKDETL B, TB_STUSER D, TB_ZZCOMCD E		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.CNTCHK_ID = B.CNTCHK_ID		            AND A.WORK_USER_ID = D.USER_ID		            AND (A.CHECK_STATE_CD = E.COM_CD and E.COM_TYPE_CD = 'SR06')		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID AND  		                    A.CNTCHK_ID = REPLACE('1', '-', '')		                  AND 		                    A.CNTCHK_ID = REPLACE('1', '-', '')		                  AND 		                    A.CHECK_YMD = '1'		                  AND 		                    B.SAKRM_ID = '1'		                  AND 		                    B.BOOKSF_ID = '1'		                      		        ) F 		        WHERE ROWNUM <= '1'		    ) G		    WHERE G.rnum >= '1'		) H		ORDER BY H.rnum	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml

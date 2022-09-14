@@ -1,0 +1,32 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailMuseum.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailMuseum.xml
+-- Query    : select
+-- Query Id : findMuseumHead
+
+		SELECT A.record_center_id		    , A.admnatnl_id		    , A.admnatnl_relno		    , (SELECT z.com_cd_nm FROM TB_ZZCOMCD z WHERE z.com_type_cd='AD01' and z.com_cd=A.clss) AS clss		    , (SELECT z.com_cd_nm FROM TB_ZZCOMCD z WHERE z.com_type_cd='AD02' and z.com_cd=A.shape) AS shape		    , (SELECT z.com_cd_nm FROM TB_ZZCOMCD z WHERE z.com_type_cd='AD03' and z.com_cd=A.material) AS material		    , A.admnatnlhist_nm		    , A.sumry		    , A.creat_org_cd		    , A.creat_yyyy		    , TO_CHAR(TO_DATE(A.creat_reg_dtime, 'YYYYMMDD'), 'YYYY-MM-DD') AS creat_reg_dtime		    , TO_CHAR(TO_DATE(A.end_ymd, 'YYYYMMDD'), 'YYYY-MM-DD') AS end_ymd		    , TO_CHAR(TO_DATE(A.obtain_ymd, 'YYYYMMDD'), 'YYYY-MM-DD') AS obtain_ymd		    , A.size_nm		    , A.size_div		    , A.qty		    , A.obtain_circumstanc		    , A.remk		    , A.adm_prog_state		    , A.open_div_cd		    , A.open_grade		    , SUBSTR(A.open_grade,1,1) open_grade1		    , SUBSTR(A.open_grade,2,1) open_grade2		    , SUBSTR(A.open_grade,3,1) open_grade3		    , SUBSTR(A.open_grade,4,1) open_grade4		    , SUBSTR(A.open_grade,5,1) open_grade5		    , SUBSTR(A.open_grade,6,1) open_grade6		    , SUBSTR(A.open_grade,7,1) open_grade7		    , SUBSTR(A.open_grade,8,1) open_grade8		    , A.part_open_rsn		    , A.cr_report_ymd		    , A.transf_handl_state		    , A.transf_ymd		    , A.donor		    , A.preserv_place		    , A.fit_flag		    , A.funsh_rsn		    , TO_CHAR(TO_DATE(A.fit_end_ymd, 'YYYYMMDD'), 'YYYY-MM-DD') AS fit_end_ymd		    , A.frst_hand_cnt		    , A.crnt_hand_cnt		    , (SELECT Z.stakrm_nm FROM TB_SRSTAKRM Z WHERE Z.record_center_id=A.record_center_id and Z.stakrm_id=A.stakrm_id) AS stakrm_id		    , (SELECT Z.booksf_nm FROM TB_SRBOOKSF Z WHERE Z.stakrm_id=A.stakrm_id and Z.booksf_id=A.booksf_id) AS booksf_id		    , A.mgr_org_cd		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.mgr_org_cd) AS mgr_org_nm		    , A.creat_org_cd AS org_cd		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.creat_org_cd) AS org_nm		FROM TB_ADARCHIVALOBJ A		WHERE A.record_center_id = '1'		AND   A.admnatnl_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailMuseum.xml
+-- Query    : select
+-- Query Id : findMuseumDisuse
+
+		SELECT record_center_id			, admnatnl_id			, disuse_rsn			, creat_org_opin			, spc_opin			, eval_discu_opin		FROM  TB_ADARCHIVALOBJDISUSE		WHERE record_center_id = '1'		AND   admnatnl_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailMuseum.xml
+-- Query    : select
+-- Query Id : findMuseumReversList
+
+		SELECT record_center_id			, admnatnl_id			, adarchival_dst_req			, adarchival_dst_rsn			, TO_CHAR(TO_DATE(dst_ymd, 'YYYYMMDD'), 'YYYY-MM-DD') AS dst_ymd			, dst_cnt		FROM  TB_ADARCHIVAL_DST		WHERE record_center_id = '1'		AND   admnatnl_id = '1'		ORDER BY record_center_id, admnatnl_id, TO_NUMBER(adarchival_dst_req) DESC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailMuseum.xml
+-- Query    : select
+-- Query Id : findMuseumAttachFileList
+
+		SELECT record_center_id			, admnatnl_id			, img_seq			, imgfile_nm			, imgfile_path			, store_file_nm		FROM  TB_ADARCHIVALOBJIMG		WHERE record_center_id = '1'		AND   admnatnl_id = '1'		ORDER BY record_center_id, admnatnl_id, img_seq	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailMuseum.xml

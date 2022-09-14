@@ -1,0 +1,46 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+
+findTransfHandlPagedList
+Semantic: before ' , '1', '정상', '2', '오류', 0) AS ERROR_NM			        ,DECODE ...'
+Cannot coerce '미접수' to type double. select E.* from  E where E.rnum>='1'[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.TRANSF_LIST_ID					,A.TRANSF_GRP_SNO					,(SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = '1' AND C.ORG_CD = A.ORG_CD) ORG_NM					,DECODE(A.CLSS_DIV_CD,'1', (SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID), '2', (SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID 	AND C.UNIT_CD = A.CLSS_ID), '') CLSS_NM 					,A.TITLE, A.CREAT_YYYY					,A.RECORD_CNT 					,(SELECT C.COM_CD_NM FROM TB_ZZCOMCD C 	WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) PRESV_TERM_NM					,(SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD) AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM					,A.FOLDER_ID 					,A.CONFM_TRANSF_DIV_CD					,(A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key					,ERROR_FLAG					,RJCT_FLAG			        ,DECODE (NVL (ERROR_FLAG, '0'), '0', '미접수', '1', '정상', '2', '오류', 0) AS ERROR_NM			        ,DECODE (NVL (RJCT_FLAG, '0'), '0', '미접수', '1', '인수', '2', '반려', 0) AS RJCT_NM			        ,RJCT_CONT				FROM  TB_DFRECVTRANSFLIST A				WHERE A.RECORD_CENTER_ID = '1'				AND	  A.TRANSF_YYYY = '1'				AND	  A.TRANSF_GRP_SNO = '1'			    AND    A.confm_transf_div_cd IN ('1','2','3')				AND    A.exam_rslt_cd = '1' AND  						A.ERROR_FLAG = '2'					  				ORDER BY A.title, A.folder_id			) B			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+findTransfHandlFolderfList
+Semantic: before ' , '1', '정상', '2', '오류', 0) AS ERROR_NM	        , DECODE (...'
+Cannot coerce '미접수' to type double. select A.TRANSF_LIST_ID, A.TRANSF_GRP_SNO, (select C.ORG_NM ...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : select
+-- Query Id : findTransfHandlFolderfList
+
+		SELECT A.TRANSF_LIST_ID			, A.TRANSF_GRP_SNO			, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = '1' AND C.ORG_CD = A.ORG_CD) ORG_NM			, DECODE(A.CLSS_DIV_CD,'1', (SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID), '2', (SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID 	AND C.UNIT_CD = A.CLSS_ID), '') CLSS_NM 			, A.TITLE, A.CREAT_YYYY			, A.RECORD_CNT 			, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C 	WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM			, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM			, A.FOLDER_ID 			, A.CONFM_TRANSF_DIV_CD			, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key			, ERROR_FLAG			, RJCT_FLAG	        , DECODE (NVL (ERROR_FLAG, '0'), '0', '미접수', '1', '정상', '2', '오류', 0) AS ERROR_NM	        , DECODE (NVL (RJCT_FLAG, '0'), '0', '미접수', '1', '인수', '2', '반려', 0) AS RJCT_NM	        , RJCT_CONT		FROM TB_DFRECVTRANSFLIST A		WHERE A.RECORD_CENTER_ID = '1'		AND	A.TRANSF_YYYY = '1'		AND	A.TRANSF_GRP_SNO = '1'	    AND A.confm_transf_div_cd IN ('1','2','3')		AND A.exam_rslt_cd = '1' AND  				A.ERROR_FLAG = '2'			  		ORDER BY A.title, A.folder_id	;
+
+creatDfTransfHandlTakeResult
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_dftransfhandltakeresult_record_center_id_creat_sys_cd_org_cd_clss_id_creat_yyyy_folder_reg_seq_ho_no_accept_flag(B+tree: 4|552|2800) ON CLASS tb_dftransfhandltakeresult(CLASS_OID: 0|489|75). key: {'1', '1', '1', '1', '1', '1', '1', '1'}(OID: 3|1020|31).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : insert
+-- Query Id : creatDfTransfHandlTakeResult
+
+		INSERT INTO TB_DFTRANSFHANDLTAKERESULT (record_center_id			, creat_sys_cd			, org_cd			, clss_id			, creat_yyyy			, folder_reg_seq			, ho_no			, accept_flag			, title			, presv_term_cd			, folder_type_div_cd			, transf_rjct_flag			, transf_take_error_cont			, reg_dtime			, transf_yyyy			, transf_grp_sno		) VALUES ('1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			, '1'			                        , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'			, '1'					);
+
+createEfileDelWork
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_nkefilelist_folder_id_work_sno(B+tree: 4|504|2560) ON CLASS tb_nkefilelist(CLASS_OID: 0|489|50). key: {'1', 1}(OID: 2|940|67).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml
+-- Query    : insert
+-- Query Id : createEfileDelWork
+
+		INSERT INTO TB_NKEFILELIST 		VALUES ('1'			, '1'			, '03'			, '1'			, '01'			, TO_CHAR(sys_datetime, 'yyyymmddhhmiss')		);
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfHandl.xml

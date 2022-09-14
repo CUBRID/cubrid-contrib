@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.tree">
+
+	<!-- 
+		기록관 트리 검색
+	 -->
+	<select id="findRecordCenterTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		SELECT A.record_center_id AS recordCenterId
+			, '0' AS treeType
+			, 'RC_'||A.record_center_id AS id
+			, A.record_center_nm AS text
+			, 'closed' AS state
+			, 'icon-search' AS iconCls
+			, 0 AS levl
+		FROM TB_STRECORDCENTER A
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				A.record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.record_center_id
+	</select>
+
+</sqlMap>

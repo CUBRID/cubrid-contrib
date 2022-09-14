@@ -1,0 +1,1615 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="orign.fileSys">
+
+	<!-- =======================기록물건원문[TB_STRECORDORIGN]======================== -->
+
+	<!-- CREATE(기록물건원문) -->
+	<insert id="createRecordOrign" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO
+		TB_STRECORDORIGN (RECORD_CENTER_ID
+		,ORIGN_ID
+		,RECORD_ID
+		,ERECORD_FLAG
+		,PDF_A1_TRANS_STATE
+		,NEO_TRANS_STATE
+		,DEL_FLAG
+		,REG_DTIME)
+		VALUES (#recordCenterId#
+		,#orignId#
+		,#recordId#
+		,#erecordFlag#
+		,#pdfA1TransStateCd#
+		,#neoTransStateCd#
+		,#delFlag#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'))
+	</insert>
+
+
+	<!-- UPDATE(기록물건원문 삭제여부 설정) -->
+	<update id="updateDelFlagRecordOrign" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STRECORDORIGN
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE ORIGN_ID =
+		#orignId:VARCHAR#
+		AND RECORD_ID = #recordId:VARCHAR#
+	</update>
+
+
+	<!-- DELETE(기록물건원문 삭제) -->
+	<delete id="deleteRecordOrign" parameterClass="rms.orign.server.domain.FileSys">
+		DELETE FROM
+		TB_STRECORDORIGN
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		AND RECORD_ID =
+		#recordId:VARCHAR#
+	</delete>
+
+
+	<!-- UPDATE(기록물건원문) -->
+	<update id="updateRecordOrign" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STRECORDORIGN
+		SET RECORD_ID = #recordId:VARCHAR#
+		,ERECORD_FLAG = #erecordFlag:CHAR#
+		,PDF_A1_TRANS_STATE = #pdfA1TransStateCd:VARCHAR#
+		,NEO_TRANS_STATE = #neoTransStateCd:VARCHAR#
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		AND
+		RECORD_ID = #recordId:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#
+	</update>
+
+
+	<resultMap id="record-orign-info-list-result" class="rms.orign.server.domain.FileSys">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="pdfA1TransStateCd" column="PDF_A1_TRANS_STATE" />
+		<result property="pdfA1TransStateNm" column="PDF_A1_TRANS_STATE_NM" />
+		<result property="neoTransStateCd" column="NEO_TRANS_STATE" />
+		<result property="neoTransStateNm" column="NEO_TRANS_STATE_NM" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+	</resultMap>
+
+	<!-- SELECT(기록물건원문 정보조회 리스트) -->
+	<select id="findRecordOrignInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="record-orign-info-list-result">
+		SELECT RECORD_CENTER_ID
+		,ORIGN_ID
+		,RECORD_ID
+		,ERECORD_FLAG
+		,PDF_A1_TRANS_STATE
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST02' AND USE_FLAG='1' AND PDF_A1_TRANS_STATE =
+		COM_CD)
+		PDF_A1_TRANS_STATE_NM
+		,NEO_TRANS_STATE
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST03' AND USE_FLAG='1' AND NEO_TRANS_STATE = COM_CD)
+		NEO_TRANS_STATE_NM
+		,DEL_FLAG
+		,REG_DTIME
+		FROM TB_STRECORDORIGN
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(RECORD_ID = #params[].recordId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		AND DEL_FLAG = #delFlag:CHAR#
+		ORDER BY RECORD_ID
+	</select>
+
+
+	<!-- =======================원문파일[TB_STORIGNFILE]======================= -->
+	<!-- CREATE(원문파일) -->
+	<insert id="createOrignFile" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO
+		TB_STORIGNFILE (RECORD_CENTER_ID
+		,ORIGN_FILE_ID
+		,ORIGN_ID
+		,DOC_TYPE_CD
+		,DOC_TYPE_SNO
+		,FILE_NM
+		,STORE_FILE_NM
+		,DATA_FORMAT_CD
+		,FILE_SIZE
+		,STORE_FILE_ID
+		,MEDIUM_ID
+		,AGENT_NM
+		,VER
+		,PAGE_CNT
+		,PDF_A1_TRANS_STATE
+		,DEL_FLAG
+		,REG_DTIME
+		,ATTACH_FILE_MNG_INFO
+		,ATTACH_FILE_SEQ
+		,FILE_PATH_RULE
+		,VIRUS_FLAG)
+		VALUES (#recordCenterId:VARCHAR#
+		,#orignFileId:VARCHAR#
+		,#orignId:VARCHAR#
+		,#docTypeCd:VARCHAR#
+		,#docTypeSno:NUMBER#
+		,#fileNm:VARCHAR#
+		,#storeFileNm:VARCHAR#
+		,#dataFormatCd:VARCHAR#
+		,#fileSize:NUMBER#
+		,#storeFileId:VARCHAR#
+		,#mediumId:VARCHAR#
+		,#agentNm:VARCHAR#
+		,#ver:VARCHAR#
+		,#pageCnt:VARCHAR#
+		,#pdfA1TransStateCd:VARCHAR#
+		,#delFlag:VARCHAR#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		,#attachFileMngInfo:VARCHAR#
+		,#attachFileSeq:VARCHAR#
+		,'1'
+		,#virusFlag:VARCHAR#)
+	</insert>
+
+
+	<!-- UPDATE(원문파일 삭제여부 설정) -->
+	<update id="updateDelFlagOrignFile" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		UPDATE TB_STORIGNFILE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE ORIGN_ID =
+		#orignId:VARCHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(DOC_TYPE_SNO = #params[].docTypeSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</update>
+
+	<!-- DELETE(원문파일 삭제) -->
+	<delete id="deleteOrignFile" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		DELETE
+		FROM TB_STORIGNFILE
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(DOC_TYPE_SNO = #params[].docTypeSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</delete>
+
+
+	<!-- UPDATE(원문파일) -->
+	<update id="updateOrignFile" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STORIGNFILE
+		SET ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		,ORIGN_ID = #orignId:VARCHAR#
+		,DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		,DOC_TYPE_SNO = #docTypeSno:NUMBER#
+		,FILE_NM = #fileNm:VARCHAR#
+		,STORE_FILE_NM = #storeFileNm:VARCHAR#
+		,DATA_FORMAT_CD = #dataFormatCd:VARCHAR#
+		,FILE_SIZE = #fileSize:NUMBER#
+		,STORE_FILE_ID = #storeFileId:VARCHAR#
+		,MEDIUM_ID = #mediumId:VARCHAR#
+		,AGENT_NM = #agentNm:VARCHAR#
+		,VER = #ver:VARCHAR#
+		,PAGE_CNT = #pageCnt:VARCHAR#
+		,PDF_A1_TRANS_STATE = #pdfA1TransStateCd:VARCHAR#
+		WHERE ORIGN_FILE_ID =
+		#orignFileId:VARCHAR#
+		AND ORIGN_ID = #orignId:VARCHAR#
+	</update>
+
+	<!-- UPDATE(원문파일 교체정보) -->
+	<update id="updateChangeOrignFile" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STORIGNFILE
+		SET FILE_NM = #fileNm:VARCHAR#
+		, STORE_FILE_NM = #storeFileNm:VARCHAR#
+		, DATA_FORMAT_CD = #dataFormatCd:VARCHAR#
+		, FILE_SIZE = #fileSize:NUMBER#
+		, STORE_FILE_ID = #storeFileId:VARCHAR#
+		, MEDIUM_ID = #mediumId:VARCHAR#
+		WHERE ORIGN_FILE_ID =
+		#orignFileId:VARCHAR#
+	</update>
+
+	<!-- UPDATE(원문PDF파일 교체정보) -->
+	<update id="updateChangeOrignPdfFile" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STORIGNPDFA1FILE
+		SET FILE_NM = #fileNm:VARCHAR#
+		, DATA_FORMAT_CD = #dataFormatCd:VARCHAR#
+		, FILE_SIZE = #fileSize:NUMBER#
+		, STORE_FILE_ID = #storeFileId:VARCHAR#
+		, MEDIUM_ID = #mediumId:VARCHAR#
+		WHERE PDF_A1_FILE_ID =
+		#pdfA1FileId:VARCHAR#
+	</update>
+
+	<resultMap id="orign-file-info-list-result" class="rms.orign.server.domain.FileSys">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="dataFormatCd" column="DATA_FORMAT_CD" />
+		<result property="dataFormatNm" column="DATA_FORMAT_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="agentNm" column="AGENT_NM" />
+		<result property="ver" column="VER" />
+		<result property="pageCnt" column="PAGE_CNT" />
+		<result property="pdfA1TransStateCd" column="PDF_A1_TRANS_STATE" />
+		<result property="pdfA1TransStateNm" column="PDF_A1_TRANS_STATE_NM" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="attachFileSeq" column="ATTACH_FILE_SEQ" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(원문파일 정보조회 리스트) -->
+	<select id="findOrignFileInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign-file-info-list-result">
+		SELECT OFILE.RECORD_CENTER_ID
+		, OFILE.ORIGN_FILE_ID
+		, RORIGN.RECORD_ID
+		, OFILE.ORIGN_ID
+		, OFILE.DOC_TYPE_CD
+		, OFILE.DOC_TYPE_SNO
+		, OFILE.FILE_NM
+		, OFILE.STORE_FILE_NM
+		, OFILE.DATA_FORMAT_CD
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD08' AND
+		Z.USE_FLAG='1' AND Z.COM_CD=OFILE.DATA_FORMAT_CD) AS DATA_FORMAT_NM
+		, OFILE.FILE_SIZE
+		, OFILE.STORE_FILE_ID
+		, OFILE.MEDIUM_ID
+		, OFILE.AGENT_NM
+		, OFILE.VER
+		, OFILE.PAGE_CNT
+		, OFILE.PDF_A1_TRANS_STATE
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='ST02' AND
+		Z.USE_FLAG='1' AND Z.COM_CD=OFILE.PDF_A1_TRANS_STATE) AS
+		PDF_A1_TRANS_STATE_NM
+		, OFILE.DEL_FLAG
+		, OFILE.REG_DTIME
+		, OFILE.ATTACH_FILE_SEQ
+		, OFILE.FILE_PATH_RULE
+		, RORIGN.ERECORD_FLAG
+		, MEDIUM.MEDIUM_CD
+		, MEDIUM.MEDIUM_DETAIL_CD
+		, MEDIUM.MEDIUM_PATH
+		FROM TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.RECORD_ID = #recordId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND OFILE.DEL_FLAG = #delFlag:CHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			OFILE.DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(OFILE.DOC_TYPE_SNO = #params[].docTypeSno:NUMBER#)
+			</iterate>
+		</dynamic>
+		ORDER BY OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO
+	</select>
+
+	<!-- SELECT(원문파일 정보조회 리스트_1) -->
+	<select id="findOrignFileInfoList_1" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign-file-info-list-result">
+		SELECT OFILE.RECORD_CENTER_ID
+		,OFILE.ORIGN_FILE_ID
+		,RORIGN.RECORD_ID
+		,OFILE.ORIGN_ID
+		,OFILE.DOC_TYPE_CD
+		,OFILE.DOC_TYPE_SNO
+		,OFILE.FILE_NM
+		,OFILE.STORE_FILE_NM
+		,OFILE.DATA_FORMAT_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1' AND OFILE.DATA_FORMAT_CD =
+		COM_CD)
+		DATA_FORMAT_NM
+		,OFILE.FILE_SIZE
+		,OFILE.STORE_FILE_ID
+		,OFILE.MEDIUM_ID
+		,OFILE.AGENT_NM
+		,OFILE.VER
+		,OFILE.PAGE_CNT
+		,OFILE.PDF_A1_TRANS_STATE
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST02' AND USE_FLAG='1' AND OFILE.PDF_A1_TRANS_STATE =
+		COM_CD)
+		PDF_A1_TRANS_STATE_NM
+		,OFILE.DEL_FLAG
+		,OFILE.REG_DTIME
+		,OFILE.ATTACH_FILE_SEQ
+		,OFILE.FILE_PATH_RULE
+		,RORIGN.ERECORD_FLAG
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND OFILE.DEL_FLAG = #delFlag:CHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(OFILE.ORIGN_FILE_ID = #params[].orignFileId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		ORDER BY OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO
+	</select>
+
+
+	<!-- MAX(DOC_TYPE_SNO) [원문파일 문서유형별 순번] -->
+	<select id="maxOrignFile" parameterClass="rms.orign.server.domain.FileSys"
+		resultClass="int">
+		SELECT NVL(MAX(DOC_TYPE_SNO),0)
+		FROM TB_STORIGNFILE
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND ORIGN_ID = #orignId:VARCHAR#
+		AND DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#
+	</select>
+
+	<!-- COUNT(*) [원문ID 별 COUNT] -->
+	<select id="countOrignFile" parameterClass="rms.orign.server.domain.FileSys"
+		resultClass="int">
+		SELECT COUNT(*)
+		FROM TB_STORIGNFILE
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND ORIGN_ID = #orignId:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#
+	</select>
+
+	<!-- =======================원문페이지[TB_STORIGNPAGE]======================= -->
+	<!-- CREATE(원문페이지) -->
+	<insert id="createOrignPage" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO
+		TB_STORIGNPAGE (ORIGN_PAGE_ID
+		,ORIGN_FILE_ID
+		,SNO
+		,ORIGN_PAGE_FILE_NM
+		,STORE_PAGE_FILE_NM
+		,DATA_FORMAT_CD
+		,FILE_SIZE
+		,DEL_FLAG
+		,REG_DTIME
+		,STORE_FILE_ID
+		,FILE_PATH_RULE)
+		VALUES (#orignPageId#
+		,#orignFileId#
+		,#sno#
+		,#orignPageFileNm#
+		,#storePageFileNm#
+		,#dataFormatCd#
+		,#fileSize#
+		,#delFlag#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		,#storeFileId#
+		,'1')
+	</insert>
+
+
+	<!-- UPDATE(원문페이지 삭제여부 설정) -->
+	<update id="updateDelFlagOrignPage" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		UPDATE TB_STORIGNPAGE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE ORIGN_FILE_ID
+		= #orignFileId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(SNO = #params[].sno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</update>
+
+	<!-- DELETE(원문페이지 삭제) -->
+	<delete id="deleteOrignPage" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		DELETE
+		FROM TB_STORIGNPAGE
+		WHERE ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(SNO = #params[].sno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</delete>
+
+
+	<!-- UPDATE(원문페이지) -->
+	<update id="updateOrignPage" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STORIGNPAGE
+		SET ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		,SNO = #sno:NUMBER#
+		,ORIGN_PAGE_FILE_NM = #orignPageFileNm:VARCHAR#
+		,STORE_PAGE_FILE_NM = #storePageFileNm:VARCHAR#
+		,DATA_FORMAT_CD = #dataFormatCd:VARCHAR#
+		,FILE_SIZE = #fileSize:NUMBER#
+		WHERE ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		AND ORIGN_PAGE_ID = #orignPageId:VARCHAR#
+	</update>
+
+
+	<resultMap id="orign-page-info-list-result" class="rms.orign.server.domain.FileSys">
+		<result property="orignPageId" column="ORIGN_PAGE_ID" />
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="idx" column="IDX" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+		<result property="storePageFileNm" column="STORE_PAGE_FILE_NM" />
+		<result property="dataFormatCd" column="DATA_FORMAT_CD" />
+		<result property="dataFormatNm" column="DATA_FORMAT_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(원문페이지 정보조회 리스트) -->
+	<select id="findOrignPageInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign-page-info-list-result">
+		SELECT IDX
+		,ORIGN_PAGE_ID
+		,RECORD_CENTER_ID
+		,ORIGN_ID
+		,ORIGN_FILE_ID
+		,ORIGN_PAGE_FILE_NM
+		,STORE_PAGE_FILE_NM
+		,DATA_FORMAT_CD
+		,DATA_FORMAT_NM
+		,FILE_SIZE
+		,DEL_FLAG
+		,REG_DTIME
+		,STORE_FILE_ID
+		,FILE_PATH_RULE
+		,MEDIUM_CD
+		,MEDIUM_DETAIL_CD
+		,MEDIUM_PATH
+		FROM (
+		SELECT ROWNUM IDX
+		,ORIGN_PAGE_ID
+		,RECORD_CENTER_ID
+		,ORIGN_ID
+		,ORIGN_FILE_ID
+		,ORIGN_PAGE_FILE_NM
+		,STORE_PAGE_FILE_NM
+		,DATA_FORMAT_CD
+		,DATA_FORMAT_NM
+		,FILE_SIZE
+		,DEL_FLAG
+		,REG_DTIME
+		,STORE_FILE_ID
+		,FILE_PATH_RULE
+		,MEDIUM_CD
+		,MEDIUM_DETAIL_CD
+		,MEDIUM_PATH
+		FROM (
+		SELECT OPAGE.ORIGN_PAGE_ID
+		,OFILE.RECORD_CENTER_ID
+		,OFILE.ORIGN_ID
+		,OPAGE.ORIGN_FILE_ID
+		,OPAGE.SNO
+		,OPAGE.ORIGN_PAGE_FILE_NM
+		,OPAGE.STORE_PAGE_FILE_NM
+		,OPAGE.DATA_FORMAT_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1' AND OPAGE.DATA_FORMAT_CD =
+		COM_CD)
+		DATA_FORMAT_NM
+		,OPAGE.FILE_SIZE
+		,OPAGE.DEL_FLAG
+		,OPAGE.REG_DTIME
+		,OPAGE.STORE_FILE_ID
+		,OPAGE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_STRECORDORIGN RORIGN
+		,TB_STORIGNFILE OFILE
+		,TB_STORIGNPAGE OPAGE
+		,TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		<isNotEmpty prepend="AND" property="orignFileId">
+			OFILE.ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		</isNotEmpty>
+		AND OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID
+		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.RECORD_ID = #recordId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND OFILE.DEL_FLAG = #delFlag:CHAR#
+		AND OPAGE.DEL_FLAG = #delFlag:CHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			OFILE.DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		ORDER BY OFILE.DOC_TYPE_SNO ASC, OPAGE.SNO
+		)
+		)
+		<dynamic>
+			<iterate prepend="WHERE" property="params" open="(" close=")"
+				conjunction="OR">
+				(IDX = #params[].idx:NUMBER#)
+			</iterate>
+		</dynamic>
+	</select>
+
+
+	<!-- MAX(SNO) [원문페이지 문서유형별 순번] -->
+	<select id="maxOrignPage" parameterClass="rms.orign.server.domain.FileSys"
+		resultClass="int">
+		SELECT NVL(MAX(OPAGE.SNO),0)
+		FROM TB_STORIGNFILE OFILE
+		,TB_STORIGNPAGE OPAGE
+		WHERE OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID
+		AND OFILE.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND OFILE.ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		AND OPAGE.DEL_FLAG = #delFlag:CHAR#
+	</select>
+
+
+	<resultMap id="findFolderRecordList-result" class="rms.orign.server.domain.FileSys">
+		<result property="recordId" column="record_id" />
+	</resultMap>
+
+	<!-- 철에 포함된 건목록 -->
+	<select id="findFolderRecordList" parameterClass="rms.orign.server.domain.FileSys"
+		resultMap="findFolderRecordList-result">
+		SELECT record_id
+		FROM TB_RDRECORD
+		WHERE record_center_id =
+		#recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+		ORDER BY
+		record_center_id, creat_reg_dtime, creat_reg_no
+	</select>
+
+	<!-- =======================원문문서보존포맷파일[TB_STORIGNPDFA1FILE]======================= -->
+
+	<resultMap id="orign_pdfa1_file_list_result" class="rms.orign.server.domain.FileSys">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="docTypeCd" column="DOC_TYPE_CD" />
+		<result property="docTypeSno" column="DOC_TYPE_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="dataFormatCd" column="DATA_FORMAT_CD" />
+		<result property="dataFormatNm" column="DATA_FORMAT_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+
+	<!-- SELECT(원문문서보존포맷파일 목록조회 리스트) -->
+	<select id="findOrignPdfa1FileInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign_pdfa1_file_list_result">
+		SELECT OPFILE.RECORD_CENTER_ID
+		,OPFILE.PDF_A1_FILE_ID
+		,RORIGN.RECORD_ID
+		,OPFILE.ORIGN_ID
+		,OPFILE.DOC_TYPE_CD
+		,OPFILE.DOC_TYPE_SNO
+		,OPFILE.FILE_NM
+		,OPFILE.DATA_FORMAT_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1'
+		AND OPFILE.DATA_FORMAT_CD = COM_CD) DATA_FORMAT_NM
+		,OPFILE.FILE_SIZE
+		,OPFILE.STORE_FILE_ID
+		,OPFILE.MEDIUM_ID
+		,OPFILE.DEL_FLAG
+		,OPFILE.REG_DTIME
+		,OPFILE.FILE_PATH_RULE
+		,RORIGN.ERECORD_FLAG
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE OPFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID = OPFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OPFILE.ORIGN_ID
+		AND OPFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OPFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.RECORD_ID = #recordId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND OPFILE.DEL_FLAG = #delFlag:CHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			OPFILE.DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(OPFILE.DOC_TYPE_SNO = #params[].docTypeSno:NUMBER#)
+			</iterate>
+		</dynamic>
+		ORDER BY OPFILE.DOC_TYPE_CD, OPFILE.DOC_TYPE_SNO
+	</select>
+
+
+	<!-- SELECT(원문문서보존포맷파일 목록조회 리스트_1) -->
+	<select id="findOrignPdfa1FileInfoList_1" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign_pdfa1_file_list_result">
+		SELECT OPFILE.RECORD_CENTER_ID
+		,OPFILE.PDF_A1_FILE_ID
+		,RORIGN.RECORD_ID
+		,OPFILE.ORIGN_ID
+		,OPFILE.DOC_TYPE_CD
+		,OPFILE.DOC_TYPE_SNO
+		,OPFILE.FILE_NM
+		,OPFILE.DATA_FORMAT_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1' AND OPFILE.DATA_FORMAT_CD =
+		COM_CD)
+		DATA_FORMAT_NM
+		,OPFILE.FILE_SIZE
+		,OPFILE.STORE_FILE_ID
+		,OPFILE.MEDIUM_ID
+		,OPFILE.DEL_FLAG
+		,OPFILE.REG_DTIME
+		,RORIGN.ERECORD_FLAG
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		,OPFILE.FILE_PATH_RULE
+		FROM TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE OPFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID = OPFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OPFILE.ORIGN_ID
+		AND OPFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OPFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND OPFILE.DEL_FLAG = #delFlag:CHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(OPFILE.PDF_A1_FILE_ID = #params[].pdfA1FileId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		ORDER BY OPFILE.DOC_TYPE_CD, OPFILE.DOC_TYPE_SNO
+	</select>
+
+
+	<!-- UPDATE(원문문서보존포맷파일 삭제여부 설정) -->
+	<update id="updateDelFlagOrignPdfa1File" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		UPDATE TB_STORIGNPDFA1FILE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE ORIGN_ID
+		= #orignId:VARCHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(DOC_TYPE_SNO = #params[].docTypeSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</update>
+
+	<!-- DELETE(원문문서보존포맷파일 삭제) -->
+	<delete id="deleteOrignPdfa1File" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		DELETE
+		FROM TB_STORIGNPDFA1FILE
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(DOC_TYPE_SNO = #params[].docTypeSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</delete>
+
+
+	<!-- COUNT(*) [원문ID 별 COUNT] -->
+	<select id="countOrignPdfa1File" parameterClass="rms.orign.server.domain.FileSys"
+		resultClass="int">
+		SELECT COUNT(*)
+		FROM TB_STORIGNPDFA1FILE
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#
+	</select>
+
+
+	<!-- =======================원문문서보존포맷페이지[TB_STORIGNPDFA1PAGE]======================= -->
+
+	<resultMap id="orign_pdfa1_page_list_result" class="rms.orign.server.domain.FileSys">
+		<result property="pdfA1PageId" column="PDF_A1_PAGE_ID" />
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="pdfA1FileId" column="PDF_A1_FILE_ID" />
+		<result property="sno" column="SNO" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+		<result property="dataFormatCd" column="DATA_FORMAT_CD" />
+		<result property="dataFormatNm" column="DATA_FORMAT_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<!-- SELECT(원문문서보존포맷페이지 목록조회 리스트) -->
+	<select id="findOrignPdfa1PageInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign_pdfa1_page_list_result">
+		SELECT OPPAGE.PDF_A1_PAGE_ID
+		,OPFILE.RECORD_CENTER_ID
+		,OPFILE.ORIGN_ID
+		,OPPAGE.PDF_A1_FILE_ID
+		,OPPAGE.SNO
+		,OPPAGE.ORIGN_PAGE_FILE_NM
+		,OPPAGE.DATA_FORMAT_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1' AND OPPAGE.DATA_FORMAT_CD =
+		COM_CD)
+		DATA_FORMAT_NM
+		,OPPAGE.FILE_SIZE
+		,OPPAGE.DEL_FLAG
+		,OPPAGE.REG_DTIME
+		,OPPAGE.ORIGN_FILE_ID
+		,OPPAGE.STORE_FILE_ID
+		,OPPAGE.FILE_PATH_RULE
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_STRECORDORIGN RORIGN
+		,TB_STORIGNPDFA1FILE OPFILE
+		,TB_STORIGNPDFA1PAGE OPPAGE
+		,TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID = OPFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OPFILE.ORIGN_ID
+		AND OPFILE.PDF_A1_FILE_ID = OPPAGE.PDF_A1_FILE_ID
+		AND OPFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND OPFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.RECORD_ID = #recordId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND OPFILE.DEL_FLAG = #delFlag:CHAR#
+		AND OPPAGE.DEL_FLAG = #delFlag:CHAR#
+		<isNotEmpty prepend="AND" property="docTypeCd">
+			OPFILE.DOC_TYPE_CD = #docTypeCd:VARCHAR#
+		</isNotEmpty>
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(OPPAGE.SNO = #params[].sno:NUMBER#)
+			</iterate>
+		</dynamic>
+		ORDER BY OPPAGE.PDF_A1_FILE_ID, OPPAGE.SNO
+	</select>
+
+
+	<!-- UPDATE(원문문서보존포맷페이지 삭제여부 설정) -->
+	<update id="updateDelFlagOrignPdfa1Page" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		UPDATE TB_STORIGNPDFA1PAGE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE
+		PDF_A1_FILE_ID = #pdfA1FileId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(SNO = #params[].sno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</update>
+
+
+	<!-- DELETE(원문문서보존포맷페이지 삭제) -->
+	<delete id="deleteOrignPdfa1Page" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		DELETE
+		FROM TB_STORIGNPDFA1PAGE
+		WHERE PDF_A1_FILE_ID = #pdfA1FileId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(SNO = #params[].sno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</delete>
+
+
+	<!-- =======================원문영구보존포맷파일[TB_STORIGNNEOFILE]======================= -->
+
+	<resultMap id="orign_neo_file_list_result" class="rms.orign.server.domain.FileSys">
+		<result property="orignNeoFileId" column="ORIGN_NEO_FILE_ID" />
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="recordId" column="RECORD_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="chngSno" column="CHNG_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="neoFileTypeCd" column="NEO_FILE_TYPE_CD" />
+		<result property="neoFileTypeNm" column="NEO_FILE_TYPE_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="erecordFlag" column="ERECORD_FLAG" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+
+	<!-- SELECT(원문영구보존포맷파일 목록조회 리스트) -->
+	<select id="findOrignNeoFileInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign_neo_file_list_result">
+		SELECT ONFILE.ORIGN_NEO_FILE_ID
+		,ONFILE.RECORD_CENTER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RDFOLDER.FOLDER_ID
+		,RORIGN.RECORD_ID
+		,ONFILE.ORIGN_ID
+		,ONFILE.CHNG_SNO
+		,ONFILE.FILE_NM
+		,ONFILE.NEO_FILE_TYPE_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST06' AND USE_FLAG='1' AND ONFILE.NEO_FILE_TYPE_CD =
+		COM_CD)
+		NEO_FILE_TYPE_NM
+		,ONFILE.FILE_SIZE
+		,ONFILE.STORE_FILE_ID
+		,ONFILE.MEDIUM_ID
+		,ONFILE.DEL_FLAG
+		,ONFILE.REG_DTIME
+		,RORIGN.ERECORD_FLAG
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNNEOFILE ONFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND RORIGN.RECORD_CENTER_ID = ONFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = ONFILE.ORIGN_ID
+		AND ONFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND ONFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.RECORD_ID = #recordId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND ONFILE.DEL_FLAG = #delFlag:CHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(ONFILE.CHNG_SNO = #params[].chngSno:NUMBER#)
+			</iterate>
+		</dynamic>
+		ORDER BY ONFILE.ORIGN_NEO_FILE_ID, ONFILE.CHNG_SNO
+	</select>
+
+
+	<!-- SELECT(원문영구보존포맷파일 목록조회 리스트_1) -->
+	<select id="findOrignNeoFileInfoList_1" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="orign_neo_file_list_result">
+		SELECT ONFILE.ORIGN_NEO_FILE_ID
+		,ONFILE.RECORD_CENTER_ID
+		,RDFOLDER.CREAT_YYYY
+		,RDFOLDER.FOLDER_ID
+		,RORIGN.RECORD_ID
+		,ONFILE.ORIGN_ID
+		,ONFILE.CHNG_SNO
+		,ONFILE.FILE_NM
+		,ONFILE.NEO_FILE_TYPE_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST06' AND USE_FLAG='1' AND ONFILE.NEO_FILE_TYPE_CD =
+		COM_CD)
+		NEO_FILE_TYPE_NM
+		,ONFILE.FILE_SIZE
+		,ONFILE.STORE_FILE_ID
+		,ONFILE.MEDIUM_ID
+		,ONFILE.DEL_FLAG
+		,ONFILE.REG_DTIME
+		,RORIGN.ERECORD_FLAG
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_RDRECORD RDRECORD
+		,TB_STRECORDORIGN RORIGN
+		,TB_STORIGNNEOFILE ONFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID
+		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID
+		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID
+		AND RORIGN.RECORD_CENTER_ID = ONFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = ONFILE.ORIGN_ID
+		AND ONFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND ONFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.DEL_FLAG = #delFlag:CHAR#
+		AND ONFILE.DEL_FLAG = #delFlag:CHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(ONFILE.ORIGN_NEO_FILE_ID = #params[].orignNeoFileId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		ORDER BY ONFILE.ORIGN_NEO_FILE_ID, ONFILE.CHNG_SNO
+	</select>
+
+
+	<!-- UPDATE(원문영구보존포맷파일 삭제여부 설정) -->
+	<update id="updateDelFlagOrignNeoFile" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		UPDATE TB_STORIGNNEOFILE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE ORIGN_ID =
+		#orignId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(CHNG_SNO = #params[].chngSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</update>
+
+
+	<!-- DELETE(원문영구보존포맷파일 삭제) -->
+	<delete id="deleteOrignNeoFile" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		DELETE
+		FROM TB_STORIGNNEOFILE
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(CHNG_SNO = #params[].chngSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</delete>
+
+
+	<!-- COUNT(*) [원문ID 별 COUNT] -->
+	<select id="countOrignNeoFile" parameterClass="rms.orign.server.domain.FileSys"
+		resultClass="int">
+		SELECT COUNT(*)
+		FROM TB_STORIGNNEOFILE
+		WHERE ORIGN_ID = #orignId:VARCHAR#
+		AND DEL_FLAG = #delFlag:CHAR#
+	</select>
+
+
+	<!-- =======================기록물철영구보존포맷파일[TB_STFOLDERNEOFILE]======================= -->
+
+	<resultMap id="folder_neo_file_list_result" class="rms.orign.server.domain.FileSys">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="folderNeoFileId" column="FOLDER_NEO_FILE_ID" />
+		<result property="creatYyyy" column="CREAT_YYYY" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="chngSno" column="CHNG_SNO" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="neoFileTypeCd" column="NEO_FILE_TYPE_CD" />
+		<result property="neoFileTypeNm" column="NEO_FILE_TYPE_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="neoTransStateCd" column="NEO_TRANS_STATE" />
+		<result property="neoTransStateNm" column="NEO_TRANS_STATE_NM" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+
+	<!-- SELECT(기록물철영구보존포맷파일 목록조회) -->
+	<select id="getFolderNeoFileInfoList" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="folder_neo_file_list_result">
+		SELECT FOLDERNEOFILE.FOLDER_NEO_FILE_ID
+		,RDFOLDER.RECORD_CENTER_ID
+		,RDFOLDER.CREAT_YYYY
+		,FOLDERNEOFILE.FOLDER_ID
+		,FOLDERNEOFILE.CHNG_SNO
+		,FOLDERNEOFILE.FILE_NM
+		,FOLDERNEOFILE.NEO_FILE_TYPE_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST06' AND USE_FLAG='1' AND
+		FOLDERNEOFILE.NEO_FILE_TYPE_CD = COM_CD)
+		NEO_FILE_TYPE_NM
+		,FOLDERNEOFILE.FILE_SIZE
+		,FOLDERNEOFILE.STORE_FILE_ID
+		,FOLDERNEOFILE.NEO_TRANS_STATE
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'ST03' AND USE_FLAG='1' AND
+		FOLDERNEOFILE.NEO_TRANS_STATE = COM_CD)
+		NEO_TRANS_STATE_NM
+		,FOLDERNEOFILE.DEL_FLAG
+		,FOLDERNEOFILE.MEDIUM_ID
+		,FOLDERNEOFILE.REG_DTIME
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_RDFOLDER RDFOLDER
+		,TB_STFOLDERNEOFILE FOLDERNEOFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE RDFOLDER.RECORD_CENTER_ID = FOLDERNEOFILE.RECORD_CENTER_ID
+		AND RDFOLDER.FOLDER_ID = FOLDERNEOFILE.FOLDER_ID
+		AND FOLDERNEOFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND FOLDERNEOFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND FOLDERNEOFILE.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND FOLDERNEOFILE.DEL_FLAG = #delFlag:CHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(FOLDERNEOFILE.FOLDER_ID = #params[].folderId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		ORDER BY FOLDERNEOFILE.FOLDER_ID, FOLDERNEOFILE.CHNG_SNO
+	</select>
+
+
+	<!-- UPDATE(기록물철영구보존포맷파일 삭제여부 설정) -->
+	<update id="updateDelFlagFolderNeoFile" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		UPDATE TB_STFOLDERNEOFILE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE
+		RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(CHNG_SNO = #params[].chngSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</update>
+
+	<!-- DELETE(기록물철영구보존포맷파일 삭제) -->
+	<delete id="deleteFolderNeoFile" parameterClass="rms.orign.server.domain.ParamsWrapper">
+		DELETE
+		FROM TB_STFOLDERNEOFILE
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(CHNG_SNO = #params[].chngSno:NUMBER#)
+			</iterate>
+		</dynamic>
+	</delete>
+
+
+	<!-- =======================정보파일[TB_STINFOFILE]======================= -->
+	<!-- CREATE(정보파일) -->
+	<insert id="createInfoFile" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO
+		TB_STINFOFILE (RECORD_CENTER_ID
+		,INFO_FILE_ID
+		,MEDIUM_ID
+		,INFO_FILE_TITLE
+		,FILE_NM
+		,STORE_FILE_NM
+		,DATA_FORMAT_CD
+		,FILE_SIZE
+		,DEL_FLAG
+		,REG_DTIME
+		,STORE_FILE_ID)
+		VALUES (#recordCenterId#
+		,#infoFileId#
+		,#mediumId#
+		,#infoFileTitle#
+		,#fileNm#
+		,#storeFileNm#
+		,#dataFormatCd#
+		,#fileSize#
+		,#delFlag#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		,#storeFileId#)
+	</insert>
+
+
+	<!-- UPDATE(정보파일 삭제여부 설정) -->
+	<update id="updateDelFlagInfoFile" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE
+		TB_STINFOFILE
+		SET DEL_FLAG = #delFlag:CHAR#
+		WHERE INFO_FILE_ID =
+		#infoFileId:VARCHAR#
+	</update>
+
+
+	<!-- DELETE(정보파일 삭제) -->
+	<delete id="deleteInfoFile" parameterClass="rms.orign.server.domain.FileSys">
+		DELETE
+		FROM TB_STINFOFILE
+		WHERE INFO_FILE_ID = #infoFileId:VARCHAR#
+	</delete>
+
+
+	<!-- UPDATE(정보파일) -->
+	<update id="updateInfoFile" parameterClass="rms.orign.server.domain.FileSys">
+		UPDATE TB_STINFOFILE
+		SET INFO_FILE_ID = #infoFileId:VARCHAR#
+		,MEDIUM_ID = #mediumId:VARCHAR#
+		,INFO_FILE_TITLE = #infoFileTitle:VARCHAR#
+		,FILE_NM = #fileNm:VARCHAR#
+		,STORE_FILE_NM = #storeFileNm:VARCHAR#
+		,DATA_FORMAT_CD = #dataFormatCd:VARCHAR#
+		,FILE_SIZE = #fileSize:NUMBER#
+		,DEL_FLAG = #delFlag:CHAR#
+		WHERE INFO_FILE_ID = #infoFileId:VARCHAR#
+	</update>
+
+
+	<resultMap id="information-file-info-result" class="rms.orign.server.domain.FileSys">
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="infoFileId" column="INFO_FILE_ID" />
+		<result property="mediumId" column="MEDIUM_ID" />
+		<result property="infoFileTitle" column="INFO_FILE_TITLE" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="storeFileNm" column="STORE_FILE_NM" />
+		<result property="dataFormatCd" column="DATA_FORMAT_CD" />
+		<result property="dataFormatNm" column="DATA_FORMAT_NM" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="delFlag" column="DEL_FLAG" />
+		<result property="regDtime" column="REG_DTIME" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+	</resultMap>
+
+	<!-- SELECT(정보파일 정보조회) -->
+	<select id="getInformationFileInfo" parameterClass="rms.orign.server.domain.ParamsWrapper"
+		resultMap="information-file-info-result">
+		SELECT INFOFILE.RECORD_CENTER_ID
+		,INFOFILE.INFO_FILE_ID
+		,INFOFILE.MEDIUM_ID
+		,INFOFILE.INFO_FILE_TITLE
+		,INFOFILE.FILE_NM
+		,INFOFILE.STORE_FILE_NM
+		,INFOFILE.DATA_FORMAT_CD
+		,(SELECT COM_CD_NM FROM TB_ZZCOMCD
+		WHERE COM_TYPE_CD = 'RD08' AND USE_FLAG='1' AND INFOFILE.DATA_FORMAT_CD =
+		COM_CD)
+		DATA_FORMAT_NM
+		,INFOFILE.FILE_SIZE
+		,INFOFILE.DEL_FLAG
+		,INFOFILE.REG_DTIME
+		,INFOFILE.STORE_FILE_ID
+		,MEDIUM.MEDIUM_CD
+		,MEDIUM.MEDIUM_DETAIL_CD
+		,MEDIUM.MEDIUM_PATH
+		FROM TB_STINFOFILE INFOFILE
+		,TB_STMEDIUM MEDIUM
+		WHERE INFOFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND INFOFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID
+		AND INFOFILE.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND INFOFILE.DEL_FLAG = #delFlag:CHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")"
+				conjunction="OR">
+				(INFOFILE.INFO_FILE_ID = #params[].infoFileId:VARCHAR#)
+			</iterate>
+		</dynamic>
+		ORDER BY INFOFILE.INFO_FILE_ID
+	</select>
+
+
+	<!-- =======================건원문이력[TB_STRECORDORIGNHIST]======================= -->
+	<!-- CREATE(건원문이력) -->
+	<insert id="createRecordOrignHist" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO TB_STRECORDORIGNHIST
+		( RECORD_CENTER_ID
+		,ORIGN_ID
+		,CHNG_DTIME
+		,RECORD_ID )
+		VALUES
+		( #recordCenterId#
+		,#orignId#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		,#recordId#
+		)
+	</insert>
+
+
+	<!-- =======================원문파일이력[TB_STORIGNFILEHIST]======================= -->
+	<!-- CREATE(원문파일이력) -->
+
+	<insert id="createOrignFileHist" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO TB_STORIGNFILEHIST
+		( RECORD_CENTER_ID
+		,ORIGN_FILE_ID
+		,ORIGN_ID
+		,DOC_TYPE_CD
+		,FILE_NM
+		,FILE_SIZE
+		,MEDIUM_ID
+		,PAGE_CNT
+		,CHNG_DTIME )
+		VALUES
+		(
+		#recordCenterId#
+		,#orignFileId#
+		,#orignId#
+		,#docTypeCd#
+		,#fileNm#
+		,#fileSize#
+		,#mediumId#
+		,#pageCnt#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+
+	<!-- =======================원문페이지이력[TB_STORIGNPAGEHIST]======================= -->
+	<!-- CREATE(원문페이지이력) -->
+
+	<insert id="createOrignPageHist" parameterClass="rms.orign.server.domain.FileSys">
+		INSERT INTO TB_STORIGNPAGEHIST
+		( ORIGN_PAGE_ID
+		,ORIGN_PAGE_FILE_NM
+		,STORE_PAGE_FILE_NM
+		,STORE_FILE_ID
+		,DATA_FORMAT_CD
+		,FILE_SIZE
+		,CHNG_USER_ID
+		,CHNG_RSN
+		,ORIGN_FILE_ID
+		,CHNG_DTIME
+		,FILE_PATH_RULE )
+		VALUES
+		(
+		#orignPageId#
+		,#orignPageFileNm#
+		,#storePageFileNm#
+		,#storeFileId#
+		,#dataFormatCd#
+		,#fileSize#
+		,#chngUserId#
+		,#chngRsn#
+		,#orignFileId#
+		,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		,'1'
+		)
+
+	</insert>
+
+
+
+	<resultMap id="orign-pagehist-info-list-result" class="rms.orign.server.domain.FileSys">
+		<result property="orignPageId" column="ORIGN_PAGE_ID" />
+		<result property="recordCenterId" column="RECORD_CENTER_ID" />
+		<result property="orignId" column="ORIGN_ID" />
+		<result property="orignFileId" column="ORIGN_FILE_ID" />
+		<result property="orignPageFileNm" column="ORIGN_PAGE_FILE_NM" />
+		<result property="storePageFileNm" column="STORE_PAGE_FILE_NM" />
+		<result property="storeFileId" column="STORE_FILE_ID" />
+		<result property="dataFormatCd" column="DATA_FORMAT_CD" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="filePathRule" column="FILE_PATH_RULE" />
+		<result property="mediumCd" column="MEDIUM_CD" />
+		<result property="mediumDetailCd" column="MEDIUM_DETAIL_CD" />
+		<result property="mediumPath" column="MEDIUM_PATH" />
+	</resultMap>
+
+	<select id="findOrignPageHistInfoList" parameterClass="rms.orign.server.domain.FileSys"
+		resultMap="orign-pagehist-info-list-result">
+		SELECT OPAGE.ORIGN_PAGE_ID
+		, OFILE.RECORD_CENTER_ID
+		, OFILE.ORIGN_ID
+		, OPAGE.ORIGN_FILE_ID
+		, OPAGE.ORIGN_PAGE_FILE_NM
+		, OPAGE.STORE_PAGE_FILE_NM
+		, OPAGE.STORE_FILE_ID
+		, OPAGE.DATA_FORMAT_CD
+		, OPAGE.FILE_SIZE
+		, MEDIUM.MEDIUM_CD
+		, MEDIUM.MEDIUM_DETAIL_CD
+		, MEDIUM.MEDIUM_PATH
+		, OPAGE.FILE_PATH_RULE
+		FROM TB_STRECORDORIGNHIST RORIGN
+		, TB_STORIGNFILEHIST OFILE
+		, TB_STORIGNPAGEHIST OPAGE
+		, TB_STMEDIUM MEDIUM
+		WHERE RORIGN.RECORD_CENTER_ID =
+		OFILE.RECORD_CENTER_ID
+		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID
+		AND
+		OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID
+		AND OFILE.RECORD_CENTER_ID =
+		MEDIUM.RECORD_CENTER_ID
+		AND OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID
+		AND
+		RORIGN.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND RORIGN.RECORD_ID = #recordId:VARCHAR#
+		AND OFILE.ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		AND OPAGE.ORIGN_PAGE_ID = #orignPageId:VARCHAR#
+	</select>
+
+	<!-- SELECT(원문파일 정보조회) -->
+	<select id="findOrignFileInfo" parameterClass="string"
+		resultClass="rms.orign.server.domain.FileSys">
+		SELECT A.ORIGN_FILE_ID AS orignFileId
+		, A.RECORD_CENTER_ID AS recordCenterId
+		, (SELECT R.RECORD_ID FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		recordId
+		, A.ORIGN_ID AS orignId
+		, A.DOC_TYPE_CD AS docTypeCd
+		, A.DOC_TYPE_SNO AS docTypeSno
+		, A.FILE_NM AS fileNm
+		, A.STORE_FILE_NM AS storeFileNm
+		, A.DATA_FORMAT_CD AS dataFormatCd
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD08' AND
+		Z.COM_CD=A.DATA_FORMAT_CD) AS dataFormatNm
+		, A.FILE_SIZE AS fileSize
+		, A.STORE_FILE_ID AS storeFileId
+		, A.MEDIUM_ID AS mediumId
+		, A.AGENT_NM AS agentNm
+		, A.VER AS ver
+		, A.PAGE_CNT AS pageCnt
+		, A.PDF_A1_TRANS_STATE AS pdfA1TransState
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='ST02' AND
+		Z.COM_CD=A.PDF_A1_TRANS_STATE) AS pdfA1TransStateNm
+		, A.DEL_FLAG AS delFlag
+		, A.REG_DTIME AS regDtime
+		, A.ATTACH_FILE_SEQ AS attachFileSeq
+		, A.FILE_PATH_RULE AS filePathRule
+		, (SELECT B.ERECORD_FLAG FROM TB_STRECORDORIGN B WHERE
+		B.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND B.ORIGN_ID=A.ORIGN_ID) AS
+		erecordFlag
+		, (SELECT C.MEDIUM_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumCd
+		, (SELECT C.MEDIUM_DETAIL_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumDetailCd
+		, (SELECT C.MEDIUM_PATH FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumPath
+		, (SUBSTR(A.FILE_NM,0,INSTR(A.FILE_NM, '.', -1)-1)) AS destFileName
+		FROM TB_STORIGNFILE A
+		WHERE A.ORIGN_FILE_ID = #string#
+	</select>
+
+	<!-- SELECT(원문문서보존포맷파일 정보조회) 20150410 : 김경수 네오 2차변환 파일 호출 오류 수정 -->
+	<select id="findOrignPdfFileInfo" parameterClass="string"
+		resultClass="rms.orign.server.domain.FileSys">
+		SELECT A.PDF_A1_FILE_ID AS pdfA1FileId
+		, A.RECORD_CENTER_ID AS recordCenterId
+		, (SELECT R.RECORD_ID FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		recordId
+		, A.ORIGN_ID AS orignId
+		, A.DOC_TYPE_CD AS docTypeCd
+		, A.DOC_TYPE_SNO AS docTypeSno
+		, A.FILE_NM AS fileNm
+		, A.DATA_FORMAT_CD AS dataFormatCd
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD08' AND
+		Z.COM_CD=A.DATA_FORMAT_CD) AS dataFormatNm
+		, A.FILE_SIZE AS fileSize
+		, A.STORE_FILE_ID AS storeFileId
+		, A.MEDIUM_ID AS mediumId
+		, A.DEL_FLAG AS delFlag
+		, A.REG_DTIME AS regDtime
+		, A.FILE_PATH_RULE AS filePathRule
+		, (SELECT B.ERECORD_FLAG FROM TB_STRECORDORIGN B WHERE
+		B.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND B.ORIGN_ID=A.ORIGN_ID) AS
+		erecordFlag
+		, (SELECT C.MEDIUM_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumCd
+		, (SELECT C.MEDIUM_DETAIL_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumDetailCd
+		, (SELECT C.MEDIUM_PATH FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumPath
+		FROM TB_STORIGNPDFA1FILE A
+		WHERE A.PDF_A1_FILE_ID = #string#
+	</select>
+
+	<!-- SELECT(기록물건 장기보존포맷파일 정보조회) -->
+	<select id="findRecordNeoFileInfo" parameterClass="string"
+		resultClass="rms.orign.server.domain.FormatTransIntlk">
+		SELECT A.ORIGN_NEO_FILE_ID AS orignNeoFileId
+		, A.RECORD_CENTER_ID AS recordCenterId
+		, (SELECT F.CREAT_YYYY FROM TB_RDRECORD R, TB_RDFOLDER F WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID AND
+		F.RECORD_CENTER_ID=R.RECORD_CENTER_ID AND F.FOLDER_ID=R.FOLDER_ID) AS
+		folderCreatYyyy
+		, (SELECT R.FOLDER_ID FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		folderId
+		, (SELECT R.RECORD_ID FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		recordId
+		, (SELECT R.CREAT_SYS_CD FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		creatSysCd
+		, (SELECT R.ORG_CD FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		orgCd
+		, (SELECT R.CREAT_YYYY FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		creatYyyy
+		, (SELECT R.CREAT_REG_NO FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		creatRegNo
+		, (SELECT R.DTCH_REG_NO FROM TB_RDRECORD R WHERE
+		R.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND R.ORIGN_ID=A.ORIGN_ID) AS
+		dtchRegNo
+		, A.ORIGN_ID AS orignId
+		, A.CHNG_SNO AS chngSno
+		, A.FILE_NM AS fileNm
+		, A.NEO_FILE_TYPE_CD AS neoFileTypeCd
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='ST06' AND
+		Z.COM_CD=A.NEO_FILE_TYPE_CD) AS neoFileTypeNm
+		, A.FILE_SIZE AS fileSize
+		, A.STORE_FILE_ID AS storeFileId
+		, A.MEDIUM_ID AS mediumId
+		, A.DEL_FLAG AS delFlag
+		, A.REG_DTIME AS regDtime
+		, (SELECT B.ERECORD_FLAG FROM TB_STRECORDORIGN B WHERE
+		B.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND B.ORIGN_ID=A.ORIGN_ID) AS
+		erecordFlag
+		, (SELECT C.MEDIUM_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumCd
+		, (SELECT C.MEDIUM_DETAIL_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumDetailCd
+		, (SELECT C.MEDIUM_PATH FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumPath
+		FROM TB_STORIGNNEOFILE A
+		WHERE A.ORIGN_NEO_FILE_ID = #string#
+	</select>
+
+	<!-- SELECT(기록물철 장기보존포맷파일 정보조회) -->
+	<select id="findFolderNeoFileInfo" parameterClass="string"
+		resultClass="rms.orign.server.domain.FormatTransIntlk">
+		SELECT A.FOLDER_NEO_FILE_ID AS folderNeoFileId
+		, A.RECORD_CENTER_ID AS recordCenterId
+		, (SELECT F.CREAT_SYS_CD FROM TB_RDFOLDER F WHERE
+		F.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND F.FOLDER_ID=A.FOLDER_ID) AS
+		creatSysCd
+		, (SELECT F.ORG_CD FROM TB_RDFOLDER F WHERE
+		F.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND F.FOLDER_ID=A.FOLDER_ID) AS
+		orgCd
+		, (SELECT F.CLSS_ID FROM TB_RDFOLDER F WHERE
+		F.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND F.FOLDER_ID=A.FOLDER_ID) AS
+		clssId
+		, (SELECT F.CREAT_YYYY FROM TB_RDFOLDER F WHERE
+		F.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND F.FOLDER_ID=A.FOLDER_ID) AS
+		creatYyyy
+		, (SELECT F.FOLDER_REG_SEQ FROM TB_RDFOLDER F WHERE
+		F.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND F.FOLDER_ID=A.FOLDER_ID) AS
+		folderRegSeq
+		, (SELECT F.HO_NO FROM TB_RDFOLDER F WHERE
+		F.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND F.FOLDER_ID=A.FOLDER_ID) AS
+		hoNo
+		, A.FOLDER_ID AS folderId
+		, A.CHNG_SNO AS chngSno
+		, A.FILE_NM AS fileNm
+		, A.NEO_FILE_TYPE_CD AS neoFileTypeCd
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='ST06' AND
+		Z.COM_CD=A.NEO_FILE_TYPE_CD) AS neoFileTypeNm
+		, A.FILE_SIZE AS fileSize
+		, A.STORE_FILE_ID AS storeFileId
+		, A.NEO_TRANS_STATE AS neoTransState
+		, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='ST03' AND
+		Z.COM_CD=A.NEO_TRANS_STATE) AS neoTransStateNm
+		, A.DEL_FLAG AS delFlag
+		, A.MEDIUM_ID AS mediumId
+		, A.REG_DTIME AS regDtime
+		, (SELECT C.MEDIUM_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumCd
+		, (SELECT C.MEDIUM_DETAIL_CD FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumDetailCd
+		, (SELECT C.MEDIUM_PATH FROM TB_STMEDIUM C WHERE
+		C.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND C.MEDIUM_ID=A.MEDIUM_ID) AS
+		mediumPath
+		FROM TB_STFOLDERNEOFILE A
+		WHERE A.FOLDER_NEO_FILE_ID =
+		#string#
+	</select>
+
+	<!-- SELECT(기록물건 장기보존포맷 생성 건 정보 조회) 2014.08.08 추가.. -->
+	<select id="findNeoRecordInfo" parameterClass="string"
+		resultClass="rms.orign.server.domain.FormatTransIntlk">
+		SELECT B.RECORD_CENTER_ID AS recordCenterId,
+		A.CREAT_YYYY AS folderCreatYyyy,
+		A.FOLDER_ID AS folderId,
+		B.CREAT_SYS_CD AS creatSysCd,
+		B.ORG_CD AS orgCd,
+		B.CREAT_YYYY AS creatYyyy,
+		B.CREAT_REG_NO AS creatRegNo,
+		B.DTCH_REG_NO AS dtchRegNo
+		FROM TB_RDFOLDER A,
+		TB_RDRECORD B
+		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND A.FOLDER_ID = B.FOLDER_ID
+		AND B.RECORD_ID = #string#
+
+	</select>
+
+	<!-- SELECT(기록물철 장기보존포맷 생성 철 정보 조회) 2014.08.08 추가.. -->
+	<select id="findNeoFolderInfo" parameterClass="string"
+		resultClass="rms.orign.server.domain.FormatTransIntlk">
+		SELECT A.RECORD_CENTER_ID AS recordCenterId,
+		A.FOLDER_ID AS folderId,
+		A.CREAT_SYS_CD AS creatSysCd,
+		A.ORG_CD AS orgCd,
+		A.CLSS_ID AS clssId,
+		A.CREAT_YYYY AS creatYyyy,
+		A.FOLDER_REG_SEQ AS folderRegSeq,
+		A.HO_NO AS hoNo
+		FROM TB_RDFOLDER A
+		WHERE A.FOLDER_ID = #string#
+
+	</select>
+
+</sqlMap>

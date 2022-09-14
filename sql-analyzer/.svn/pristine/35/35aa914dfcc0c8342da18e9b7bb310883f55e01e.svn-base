@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : delete
+-- Query Id : deletePreFileList
+
+		DELETE FROM TB_ZZREQEXCELLIST		WHERE 	REQ_USER_ID = '1'		AND		REQ_MENU_ID	= '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : insert
+-- Query Id : insertExcelFileCreat
+
+		INSERT INTO TB_ZZREQEXCELLIST (REQ_USER_ID, REQ_MENU_ID, REQ_INDEX, FILE_KEY, FILE_NM, FIN_FLAG, REG_DTIME)				VALUES('1', '1', NVL('1', '1'), '1', '1', '1', to_char(sys_datetime, 'YYYYMMDDHH24MISS'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : update
+-- Query Id : updateExcelFileCreat
+
+		UPDATE TB_ZZREQEXCELLIST		SET   fin_flag = '1'			, file_key = '1'		WHERE req_user_id = '1'		AND   req_menu_id = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : select
+-- Query Id : findMenuNm
+
+		SELECT DISTINCT MENU_NM FROM TB_STMENU WHERE MENU_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : select
+-- Query Id : isComplete
+
+		SELECT MAX(fin_flag) FROM tb_zzreqexcellist 		WHERE req_user_id = '1' 		AND req_menu_id = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : select
+-- Query Id : findExcelListNew
+
+		SELECT A.req_user_id			, A.req_menu_id			, A.req_index			, (SELECT M.menu_nm FROM TB_STMENU M WHERE M.record_center_id=(SELECT U.record_center_id FROM TB_STUSER U WHERE U.user_id=A.req_user_id) AND M.menu_id = A.req_menu_id) AS req_menu_nm			, A.file_key			, A.file_nm			, A.fin_flag			, A.reg_dtime			, B.file_path		FROM  TB_ZZREQEXCELLIST A LEFT OUTER JOIN TB_STFILEMNG B ON A.file_key = B.file_key		WHERE A.req_user_id = '1'					ORDER BY A.reg_dtime DESC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : select
+-- Query Id : findExcelPagedListNew
+
+		SELECT C.req_user_id			, C.req_menu_id			, C.req_menu_nm			, C.req_index			, C.file_key			, C.file_nm			, C.fin_flag			, C.reg_dtime			, C.file_path		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.req_user_id					, A.req_menu_id					, (SELECT M.menu_nm FROM TB_STMENU M WHERE M.record_center_id=(SELECT U.record_center_id FROM TB_STUSER U WHERE U.user_id=A.req_user_id) AND M.menu_id = A.req_menu_id) AS req_menu_nm					, A.req_index					, A.file_key					, A.file_nm					, A.fin_flag					, A.reg_dtime					, B.file_path				FROM  TB_ZZREQEXCELLIST A LEFT OUTER JOIN TB_STFILEMNG B ON A.file_key = B.file_key				WHERE A.req_user_id = '1'					ORDER BY A.file_nm			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : select
+-- Query Id : countExcelFileCreat
+
+		SELECT COUNT(1) 		FROM TB_ZZREQEXCELLIST		WHERE 	REQ_USER_ID = '1'		AND		REQ_MENU_ID	= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : select
+-- Query Id : countExcelPagedListNew
+
+		SELECT COUNT(1)		FROM	TB_ZZREQEXCELLIST A		WHERE	REQ_USER_ID = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : delete
+-- Query Id : deleteExcelDownload
+
+		DELETE FROM TB_ZZREQEXCELLIST		WHERE REQ_USER_ID = '1'		AND   FILE_KEY = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml
+-- Query    : delete
+-- Query Id : deleteExcel
+
+		DELETE FROM TB_ZZREQEXCELLIST		WHERE REQ_USER_ID = '1'		AND   REQ_MENU_ID = '1'		;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\excel\ZzExcel.xml

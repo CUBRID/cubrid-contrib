@@ -1,0 +1,25 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\FtrSrch.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\FtrSrch.xml
+-- Query    : select
+-- Query Id : findFtrOrgInfo
+
+		SELECT A.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_abbr_nm		FROM  TB_RDRECORD A		WHERE A.record_center_id = '1'		AND   A.record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\FtrSrch.xml
+-- Query    : select
+-- Query Id : findFolderAccsFlag
+
+		SELECT (CASE WHEN '3' = '1' THEN '1'					 					WHEN ((SELECT Z.oper_read_range_cd FROM TB_RDFOLDER Z WHERE Z.record_center_id = '1' and Z.folder_id = '1')='02' AND '1'='1') THEN '1'					 		            WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id = '1' and Z.folder_id = '1' and Z.accs_type_cd='2' AND z.accs_dept_cd='1') > 0 THEN '1'		            WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id = '1' and Z.folder_id = '1' and Z.accs_type_cd='1' AND z.accs_user_id='1') > 0 THEN '1'		            ELSE '0'		       END) AS accs_flag		FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\FtrSrch.xml
+-- Query    : select
+-- Query Id : findRecordAccsFlag
+
+		SELECT (CASE WHEN '3' = '1' THEN '1'					 					WHEN ((SELECT Z.oper_read_range_cd FROM TB_RDRECORD Z WHERE Z.record_center_id = '1' and Z.record_id = '1')='02' AND '1'='1') THEN '1'					 		            WHEN (SELECT COUNT(1) FROM TB_RDRECORDACCS Z WHERE Z.record_center_id = '1' and Z.record_id = '1' and Z.accs_type_cd='2' AND z.accs_dept_cd='1') > 0 THEN '1'		            WHEN (SELECT COUNT(1) FROM TB_RDRECORDACCS Z WHERE Z.record_center_id = '1' and Z.record_id = '1' and Z.accs_type_cd='1' AND z.accs_user_id='1') > 0 THEN '1'		            ELSE '0'		       END) AS accs_flag		FROM DUAL	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\srch\srch\FtrSrch.xml

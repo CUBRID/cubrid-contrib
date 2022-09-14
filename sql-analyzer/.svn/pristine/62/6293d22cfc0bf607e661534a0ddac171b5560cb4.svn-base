@@ -1,0 +1,95 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : countCurStateReportPagedList
+
+	 	SELECT COUNT(1)        FROM TB_STREPORTHIST A         WHERE A.record_center_id = '1'         AND   					(A.report_fin_dtime BETWEEN '1'||'000000' AND '1'||'240000')				   AND  					(A.report_fin_dtime BETWEEN '1'||'000000' AND '1'||'240000')				   AND                 A.report_user_nm = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findCurStateReportPagedList
+
+	 	SELECT E.sno, E.report_fin_dtime, E.report_user_nm		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT A.*		            FROM TB_STREPORTHIST A 		            WHERE A.record_center_id = '1' AND   								(A.report_fin_dtime BETWEEN '1'||'000000' AND '1'||'240000')							   AND  								(A.report_fin_dtime BETWEEN '1'||'000000' AND '1'||'240000')							   AND 		                    A.report_user_nm = '1'		                  		            ORDER BY SNO DESC		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findRecordCenterCd
+
+		SELECT RECORD_CENTER_CD FROM  TB_STRECORDCENTER WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findRmsOperStateList
+
+		SELECT TO_CHAR(SYSDATE, 'YYYY') AS cur_state_report_yyyy			 , TO_CHAR(SYSDATE, 'YYYYMMDD') AS cur_state_report_ymd			 , rep_org_nm		     , rep_org_cd			 , org_addr			 , oper_org_nm			 , oper_chrgr_nm			 , user_arng_state			 , rule_apply_flag			 , oper_rule_estb_flag			 , brm_type_cd			 , LINK_SYS			 , stakrm_area			 , estb_org_nm			 , estb_chrgr_nm			 , estb_ymd			 , ars_goods_nm			 , ars_use_ymd_from			 , ars_use_ymd_to			 ,record_center_cd			 ,record_center_id			 ,(select a.full_org_nm from tb_storg a where a.org_cd=record_center_cd and a.record_center_id='1') org_nm		FROM TB_STRECORDCENTER		  		WHERE record_center_id =  '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findChgrArngList
+
+		SELECT TO_CHAR(SYSDATE, 'YYYY') AS cur_state_report_yyyy			 , a.sno			 , a.chrgr_nm			 , a.pos		     , a.duty		     , a.tel_no		     , a.email		     , a.remk		     , a.user_sort_sno		     , b.record_center_cd		     , b.record_center_id		  FROM TB_STRECORDCHRGR a, tb_strecordcenter b		 WHERE a.record_center_id = '1'		 and b.record_center_id = a.record_center_id		 order by a.user_sort_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findStakrmEquipList
+
+		SELECT    TO_CHAR(SYSDATE, 'YYYY') AS cur_state_report_yyyy				, A.sno 						, A.stakrm_nm 						, A.stakrm_loc 						, A.area 				, A.stakrm_type_cd						, (SELECT COM_CD_NM 							FROM TB_ZZCOMCD  							WHERE COM_TYPE_CD = 'ST12' AND C.equip_clss_cd = COM_CD) stakrm_type_nm 						, A.use_rate 		     				, A.info_file_id 						, (SELECT COM_CD_NM 							FROM TB_ZZCOMCD  WHERE COM_TYPE_CD = 'ST13' AND C.equip_clss_cd = COM_CD) EQUIP_CLSS_NM				, C.equip_clss_cd 						, C.equip_type 		     				, C.goods_nm 						, C.goods_cnt 		     				, C.intro_ymd 						, D.record_center_cd 						, D.record_center_id 				FROM TB_STSTAKRMINFO A, TB_STPRESVEQUIP C, TB_STRECORDCENTER D 				WHERE A.record_center_id = '1' 				AND C.record_center_id = A.record_center_id 				AND D.record_center_id = A.record_center_id ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findCreatSysReportList
+
+		SELECT TO_CHAR(SYSDATE, 'YYYY') AS cur_state_report_yyyy			 , creat_sys_cd			 , record_center_cd			 , TO_CHAR(SYSDATE, 'YYYYMMDD') AS cur_state_report_ymd		FROM (			select   distinct (a.creat_sys_cd) AS creat_sys_cd					,b.record_center_cd			from tb_stcreatsys a, tb_strecordcenter b			where a.record_center_id='1' and a.record_center_id=b.record_center_id		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findInfoSysGoodsReportList
+
+		SELECT   TO_CHAR(SYSDATE, 'YYYY') AS cur_state_report_yyyy				,A.sno				,A.equip_nm				,A.goods_nm		     	,A.goods_cnt		     	,A.intro_ymd		     	,A.remk		     	,B.RECORD_CENTER_CD		     	,b.record_center_id		FROM TB_STCOMPUEQUIP A, TB_STRECORDCENTER B		WHERE A.record_center_id = '1'		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findDownloadFileKey
+
+		SELECT file_key FROM TB_ZZREQEXCELLIST WHERE req_user_id = '1' AND req_menu_id = '1' AND file_nm LIKE '1' AND SUBSTR(reg_dtime, 1, 8) = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : insert
+-- Query Id : createCurStateReport
+
+	 	INSERT INTO TB_STREPORTHIST (	 		record_center_id, sno, report_Fin_DTime,report_User_Nm	 	) VALUES (	 		 '1'	 		,(SELECT NVL(MAX(sno),0) + 1 FROM TB_STREPORTHIST WHERE record_center_id = '1')	        ,'1'	        ,'1'	    );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : countCurStateRecvRsltPagedList
+
+	 	SELECT COUNT(1)        FROM  TB_STREPORTRSLT A, TB_STRECORDCENTER B                 WHERE A.REP_ORG_CD = (SELECT RECORD_CENTER_CD FROM TB_STRECORDCENTER WHERE RECORD_CENTER_ID='1')         AND A.REP_ORG_CD=B.RECORD_CENTER_CD;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : select
+-- Query Id : findCurStateRecvRsltPagedList
+
+	 	SELECT E.*		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT B.record_center_nm		                  ,A.CUR_STATE_REPORT_YYYY		                  ,A.SEND_FILE_DATA_DIV		                  ,A.REP_ORG_CD		                  ,A.LIST_LINE_NO		                  ,A.CUR_STATE_RECV_ERROR_CONT		                  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ST18' AND USE_FLAG='1' AND COM_CD = A.SEND_FILE_DATA_DIV) SEND_FILE_DATA_DIV_NM		                  ,A.RECV_FILE_DTIME		                  ,A.REG_DTIME       		            FROM  TB_STREPORTRSLT A, TB_STRECORDCENTER B         		            WHERE A.REP_ORG_CD = (SELECT RECORD_CENTER_CD FROM TB_STRECORDCENTER WHERE RECORD_CENTER_ID='1') 		            AND A.REP_ORG_CD=B.RECORD_CENTER_CD		            		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml
+-- Query    : insert
+-- Query Id : createReportRslt
+
+		INSERT INTO TB_STREPORTRSLT (			CUR_STATE_REPORT_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,CUR_STATE_RECV_ERROR_CONT,RECV_FILE_DTIME,REG_DTIME		) VALUES (			 '1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'		)	 ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsStateReport.xml

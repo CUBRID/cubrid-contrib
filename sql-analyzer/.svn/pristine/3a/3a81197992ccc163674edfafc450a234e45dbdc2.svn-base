@@ -1,0 +1,445 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTakeOrgCdGroupFolderList
+
+		SELECT RECORD_CENTER_ID		,TAKE_ORG_CD		,FOLDER_TAKE_SEQ		FROM		TB_TKFOLDER		WHERE RECORD_CENTER_ID = '1'		AND		TAKE_ORG_CD = '1'		AND TAKE_YYYY = '1'		AND CREAT_SYS_CD = '1'		AND TAKE_SNO = '1'		ORDER BY FOLDER_TAKE_SEQ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTakeFolderGroupFileList
+
+		SELECT TFOLDER.RECORD_CENTER_ID		,TFOLDER.CREAT_SYS_CD		,TFOLDER.ORG_CD		,TFOLDER.CREAT_YYYY		,TRECORD.RECORD_DETL_TYPE_CD		,TRECORD.CREAT_REG_NO		,TRECORD.CREAT_SYS_RECORD_ID		,TRECORD.DTCH_REG_NO		,TFILE.DOC_TYPE_CD		,TFILE.DOC_TYPE_SNO		,TFOLDER.TAKE_ORG_CD		,TFOLDER.FOLDER_TAKE_SEQ		,TRECORD.RECORD_TAKE_SEQ		,TFILE.REG_SEQ		,TFILE.ATTACH_FILE_PATH		,TFILE.ATTACH_FILE_TYPE		,TFILE.VIRUS_FLAG		,TFILE.VIRUS_DTIME		,TRECORD.DOC_NO,		CASE		WHEN TRECORD.CREAT_SYS_CD = '03'		THEN		(SELECT HUPPER_ORG_CD		FROM TB_STORG A		WHERE A.ORG_CD =		TRECORD.CREAT_USER_ORG_CD		AND		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID		)		ELSE		(SELECT HUPPER_ORG_CD		FROM TB_STORG A		WHERE A.ORG_CD = TRECORD.ORG_CD		AND		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID		)		END AS RECORD_ORG_CD,		CASE		WHEN TRECORD.CREAT_SYS_CD = '03'		THEN		(SELECT ORG_NM		FROM TB_STORG B		WHERE B.ORG_CD =		(SELECT HUPPER_ORG_CD		FROM TB_STORG A		WHERE A.ORG_CD =		TRECORD.CREAT_USER_ORG_CD		AND		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID		)		AND		B.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID		)		ELSE		(SELECT ORG_NM		FROM		TB_STORG B		WHERE B.ORG_CD =		(SELECT HUPPER_ORG_CD		FROM TB_STORG A		WHERE		A.ORG_CD = TRECORD.ORG_CD		AND		A.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID		)		AND		B.RECORD_CENTER_ID=TRECORD.RECORD_CENTER_ID		)		END AS RECORD_ORG_NM,		CASE		WHEN TRECORD.CREAT_SYS_CD = '03'		THEN TRECORD.CREAT_USER_ID		ELSE NULL		END AS CREAT_USER_ID,		CASE		WHEN TRECORD.CREAT_SYS_CD = '03'		THEN		(SELECT		USER_NM		FROM TB_STUSER C		WHERE C.USER_ID=TRECORD.CREAT_USER_ID		)		ELSE NULL		END AS CREAT_USER_NM,		CASE		WHEN TRECORD.CREAT_SYS_CD = '03'		THEN		TRECORD.CREAT_USER_ORG_CD		ELSE NULL		END AS CREAT_USER_ORG_CD,		CASE		WHEN		TRECORD.CREAT_SYS_CD = '03'		THEN TRECORD.CREAT_USER_ORG_NM		ELSE NULL		END		AS CREAT_USER_ORG_NM,		CASE		WHEN TRECORD.CREAT_SYS_CD = '03'		THEN		TRECORD.CREAT_USER_POS_RANK_NM		ELSE NULL		END AS CREAT_USER_POS_RANK_NM		FROM TB_TKFOLDER TFOLDER		,TB_TKRECORD TRECORD		,TB_TKATTACHFILE TFILE		WHERE TFOLDER.RECORD_CENTER_ID = TRECORD.RECORD_CENTER_ID		AND		TFOLDER.FOLDER_TAKE_SEQ = TRECORD.FOLDER_TAKE_SEQ		AND		TRECORD.RECORD_CENTER_ID = TFILE.RECORD_CENTER_ID		AND		TRECORD.RECORD_TAKE_SEQ = TFILE.RECORD_TAKE_SEQ		AND		TFOLDER.RECORD_CENTER_ID = '1'		AND		TFOLDER.FOLDER_TAKE_SEQ = '1'		ORDER BY		TRECORD.RECORD_TAKE_SEQ, TFILE.REG_SEQ	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTakeFolderVirusScanning
+
+		UPDATE TB_TKFOLDER		SET VIRUS_FLAG = '1'		,VIRUS_DTIME =		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_TAKE_SEQ = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTakeFolderVirusMonitorInfo
+
+		UPDATE TB_TKMONITORINFO A		SET A.a0_cnt = NVL(A.a0_cnt,0) + 1		, A.a1_cnt		= NVL(A.a1_cnt,0)		+ (SELECT COUNT(1) FROM TB_TKRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_take_seq =		'1'		AND B.record_detl_type_cd = '01')		, A.a2_cnt =		NVL(A.a2_cnt,0)		+ (SELECT COUNT(1) FROM TB_TKRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_take_seq =		'1'		AND B.record_detl_type_cd = '02')		, A.a3_cnt =		NVL(A.a3_cnt,0)		+ (SELECT COUNT(1) FROM TB_TKRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_take_seq =		'1'		AND B.record_detl_type_cd = '04')		, A.a4_cnt =		NVL(A.a4_cnt,0)		+ (SELECT COUNT(1) FROM TB_TKRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_take_seq =		'1'		AND B.record_detl_type_cd = '03')		, A.file_cnt =		NVL(A.file_cnt,0)		+ (SELECT COUNT(1) FROM TB_TKRECORD B,		TB_TKATTACHFILE C		WHERE B.record_center_id = '1'		AND B.folder_take_seq = '1'		AND C.record_center_id		= B.record_center_id		AND C.record_take_seq = B.record_take_seq)		,		A.error_file_cnt = NVL(A.error_file_cnt,0)		+ (SELECT COUNT(1) FROM		TB_TKRECORD B, TB_TKATTACHFILE C		WHERE B.record_center_id =		'1'		AND B.folder_take_seq =		'1'		AND C.record_center_id = B.record_center_id		AND		C.record_take_seq = B.record_take_seq		AND C.virus_flag = '1')		WHERE		A.record_center_id = '1'		AND A.monitor_id		= (		SELECT monitor_id		FROM TB_TKORGTAKEPLAN		WHERE ( record_center_id,		take_yyyy, take_org_cd, creat_sys_cd, take_sno )		= ( SELECT		record_center_id, take_yyyy, take_org_cd, creat_sys_cd,		take_sno		FROM		TB_TKFOLDER		WHERE record_center_id = '1'		AND		folder_take_seq = '1' )		)		AND A.monitor_div = '02';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTakeAttachFileVirusScanning
+
+		UPDATE TB_TKATTACHFILE		SET VIRUS_FLAG = '1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,VIRUS_CLEAN_APPLY_FLAG = '0'		,VIRUS_CLEAN_FILE_PATH =		'1'		,VIRUS_CLEAN_FILE_SIZE =		'1'		,VIRUS_CLEAN_FLAG =		'1'		,VIRUS_INFECTION_CONT =		'1'		WHERE RECORD_CENTER_ID =		'1'		AND RECORD_TAKE_SEQ = '1'		AND REG_SEQ = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateOrgTakePlanStateDivCd
+
+		UPDATE		TB_TKORGTAKEPLAN		SET VIRUS_CHECK_FLAG = '1'		WHERE RECORD_CENTER_ID =		'1'		AND TAKE_YYYY = '1'		AND		TAKE_ORG_CD = '1'		AND CREAT_SYS_CD = '1'		AND TAKE_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateOrgTakePlanVirusMonitorInfo
+
+		UPDATE TB_TKMONITORINFO		SET state = '15'		, end_dtime =		TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		WHERE record_center_id		=		'1'		AND monitor_id = (SELECT monitor_id		FROM		TB_TKORGTAKEPLAN		WHERE RECORD_CENTER_ID = '1'		AND		TAKE_YYYY = '1'		AND TAKE_ORG_CD = '1'		AND		CREAT_SYS_CD = '1'		AND TAKE_SNO = '1')		AND monitor_div = '02';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfOrgCdGroupFolderList
+
+		SELECT RECORD_CENTER_ID		,ORG_CD		,FOLDER_ID		,CREAT_YYYY		FROM		TB_RDFOLDER		WHERE RECORD_CENTER_ID = '1'		AND ORG_CD		= '1'		ORDER BY FOLDER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfFolderGroupOrignFileList
+
+		SELECT RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,RORIGN.ERECORD_FLAG		,OFILE.ORIGN_ID		,OFILE.ORIGN_FILE_ID		,OFILE.DOC_TYPE_CD		,OFILE.DOC_TYPE_SNO		,OFILE.FILE_NM		,OFILE.STORE_FILE_NM		,OFILE.STORE_FILE_ID		,OFILE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM		TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNFILE OFILE		,TB_STMEDIUM MEDIUM		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		OFILE.ORIGN_ID		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD,		OFILE.DOC_TYPE_SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfOrignFileVirusScanning
+
+		UPDATE TB_STORIGNFILE		SET VIRUS_FLAG = '1'		,VIRUS_DTIME		= TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND ORIGN_FILE_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfFolderGroupOrignPageList
+
+		SELECT RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,RORIGN.ERECORD_FLAG		,OFILE.ORIGN_ID		,OFILE.ORIGN_FILE_ID		,OFILE.DOC_TYPE_CD		,OFILE.DOC_TYPE_SNO		,OFILE.FILE_NM		,OFILE.STORE_FILE_NM		,OFILE.STORE_FILE_ID		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		,OPAGE.ORIGN_PAGE_ID		,OPAGE.SNO		,OPAGE.ORIGN_PAGE_FILE_NM		,OPAGE.STORE_PAGE_FILE_NM		,OPAGE.FILE_PATH_RULE		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNFILE OFILE		,TB_STMEDIUM MEDIUM		,TB_STORIGNPAGE OPAGE		WHERE RDFOLDER.RECORD_CENTER_ID =		RDRECORD.RECORD_CENTER_ID		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID		AND		RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND RORIGN.RECORD_CENTER_ID =		OFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID		AND		OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND OFILE.MEDIUM_ID =		MEDIUM.MEDIUM_ID		AND OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID		AND		RDFOLDER.RECORD_CENTER_ID = '1'		AND		RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO, OPAGE.SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfOrignPageVirusScanning
+
+		UPDATE TB_STORIGNPAGE		SET VIRUS_FLAG = '1'		,VIRUS_DTIME		= TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE ORIGN_PAGE_ID =		'1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfFolderGroupOrignPdfA1FileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,PFILE.ORIGN_ID		,PFILE.PDF_A1_FILE_ID		,PFILE.DOC_TYPE_CD		,PFILE.DOC_TYPE_SNO		,PFILE.FILE_NM		,PFILE.STORE_FILE_ID		,PFILE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM		TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE PFILE		,TB_STMEDIUM MEDIUM		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		PFILE.ORIGN_ID		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,		PFILE.DOC_TYPE_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfOrignPdfA1FileVirusScanning
+
+		UPDATE TB_STORIGNPDFA1FILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND PDF_A1_FILE_ID =		'1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfFolderGroupOrignPdfA1pageList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,PFILE.ORIGN_ID		,PFILE.PDF_A1_FILE_ID		,PFILE.DOC_TYPE_CD		,PFILE.DOC_TYPE_SNO		,PFILE.FILE_NM		,PFILE.STORE_FILE_ID		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		,PPAGE.PDF_A1_PAGE_ID		,PPAGE.SNO		,PPAGE.ORIGN_PAGE_FILE_NM		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE		PFILE		,TB_STMEDIUM MEDIUM		,TB_STORIGNPDFA1PAGE PPAGE		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		PFILE.ORIGN_ID		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND PFILE.PDF_A1_FILE_ID =		PPAGE.PDF_A1_FILE_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,		PFILE.DOC_TYPE_SNO, PPAGE.SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfOrignPdfA1PageVirusScanning
+
+		UPDATE TB_STORIGNPDFA1PAGE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE PDF_A1_PAGE_ID =		'1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfFolderGroupOrignNeoFileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,NFILE.ORIGN_ID		,NFILE.ORIGN_NEO_FILE_ID		,NFILE.CHNG_SNO		,NFILE.FILE_NM		,NFILE.STORE_FILE_ID		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNNEOFILE NFILE		,TB_STMEDIUM MEDIUM		WHERE RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = NFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		NFILE.ORIGN_ID		AND NFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		NFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, NFILE.CHNG_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfOrignNeoFileVirusScanning
+
+		UPDATE TB_STORIGNNEOFILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND ORIGN_NEO_FILE_ID		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findTransfFolderGroupFolderNeoFileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,FNFILE.FOLDER_NEO_FILE_ID		,FNFILE.CHNG_SNO		,FNFILE.FILE_NM		,FNFILE.STORE_FILE_ID		,FNFILE.NEO_TRANS_STATE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM		TB_RDFOLDER RDFOLDER		,TB_STFOLDERNEOFILE FNFILE		,TB_STMEDIUM MEDIUM		WHERE RDFOLDER.RECORD_CENTER_ID = FNFILE.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = FNFILE.FOLDER_ID		AND FNFILE.RECORD_CENTER_ID =		MEDIUM.RECORD_CENTER_ID		AND FNFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND		RDFOLDER.RECORD_CENTER_ID = '1'		AND		RDFOLDER.FOLDER_ID = '1'		ORDER BY FNFILE.CHNG_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfFolderNeoFileVirusScanning
+
+		UPDATE TB_STFOLDERNEOFILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_NEO_FILE_ID		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateTransfFolderVirusScanning
+
+		UPDATE TB_RDFOLDER		SET VIRUS_FLAG = '1'		,VIRUS_DTIME =		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfOrgTakoverListVirusScanning
+
+		UPDATE TB_DFORGTAKOVRLIST		SET QULTY_TEST_FLAG = '2'		,QULTY_TEST_ERROR_FLAG = '1'		,QULTY_TEST_YMD =		TO_CHAR(SYSDATE, 'YYYYMMDD')		WHERE RECORD_CENTER_ID =		'1'		AND TAKOVR_YYYY = TO_CHAR(SYSDATE, 'YYYY')		AND		FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRdTaketakovrlistVirusScanning
+
+		UPDATE TB_RDTAKETAKOVRLIST		SET QULTY_TEST_RSLT_FLAG =		'1'		,QULTY_TEST_REST_DTIME = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_ID = '1'		AND		TAKE_TAKOVR_MNG_NO =		'1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findDfTransfFolderGroupOrignFileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,RORIGN.ERECORD_FLAG		,OFILE.ORIGN_ID		,OFILE.ORIGN_FILE_ID		,OFILE.DOC_TYPE_CD		,OFILE.DOC_TYPE_SNO		,OFILE.FILE_NM		,OFILE.STORE_FILE_NM		,OFILE.STORE_FILE_ID		,OFILE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNFILE OFILE		,TB_STMEDIUM MEDIUM		WHERE RDFOLDER.RECORD_CENTER_ID =		RDRECORD.RECORD_CENTER_ID		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID		AND		RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND RORIGN.RECORD_CENTER_ID =		OFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID		AND		OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND OFILE.MEDIUM_ID =		MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD,		OFILE.DOC_TYPE_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfOrignFileVirusScanning
+
+		UPDATE TB_STORIGNFILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,VIRUS_INFECTION_CONT = '1'		,VIRUS_CLEAN_FLAG		= '1'		,VIRUS_CLEAN_DTIME =		DECODE('1', '', '', null, '', TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS'))		,VIRUS_CLEAN_FILE_PATH =		'1'		,VIRUS_CLEAN_FILE_SIZE =		'1'		,VIRUS_CLEAN_APPLY_FLAG = '0'		,VIRUS_CLEAN_APPLY_DTIME = ''		WHERE RECORD_CENTER_ID =		'1'		AND ORIGN_FILE_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findDfTransfFolderGroupOrignPageList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,RORIGN.ERECORD_FLAG		,OFILE.ORIGN_ID		,OFILE.ORIGN_FILE_ID		,OFILE.DOC_TYPE_CD		,OFILE.DOC_TYPE_SNO		,OFILE.FILE_NM		,OFILE.STORE_FILE_NM		,OFILE.STORE_FILE_ID		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		,OPAGE.ORIGN_PAGE_ID		,OPAGE.SNO		,OPAGE.ORIGN_PAGE_FILE_NM		,OPAGE.STORE_PAGE_FILE_NM		,OPAGE.FILE_PATH_RULE		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNFILE OFILE		,TB_STMEDIUM MEDIUM		,TB_STORIGNPAGE OPAGE		WHERE RDFOLDER.RECORD_CENTER_ID =		RDRECORD.RECORD_CENTER_ID		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID		AND		RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND RORIGN.RECORD_CENTER_ID =		OFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID = OFILE.ORIGN_ID		AND		OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND OFILE.MEDIUM_ID =		MEDIUM.MEDIUM_ID		AND OFILE.ORIGN_FILE_ID = OPAGE.ORIGN_FILE_ID		AND		RDFOLDER.RECORD_CENTER_ID = '1'		AND		RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO, OPAGE.SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfOrignPageVirusScanning
+
+		UPDATE TB_STORIGNPAGE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE ORIGN_PAGE_ID =		'1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findDfTransfFolderGroupOrignPdfA1FileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,PFILE.ORIGN_ID		,PFILE.PDF_A1_FILE_ID		,PFILE.DOC_TYPE_CD		,PFILE.DOC_TYPE_SNO		,PFILE.FILE_NM		,PFILE.STORE_FILE_ID		,PFILE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM		TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE PFILE		,TB_STMEDIUM MEDIUM		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		PFILE.ORIGN_ID		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,		PFILE.DOC_TYPE_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfOrignPdfA1FileVirusScanning
+
+		UPDATE TB_STORIGNPDFA1FILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,VIRUS_INFECTION_CONT = '1'		,VIRUS_CLEAN_FLAG		= '1'		,VIRUS_CLEAN_DTIME =		DECODE('1', '', '', null, '', TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS'))		,VIRUS_CLEAN_FILE_PATH =		'1'		,VIRUS_CLEAN_FILE_SIZE =		'1'		,VIRUS_CLEAN_APPLY_FLAG = '0'		,VIRUS_CLEAN_APPLY_DTIME = ''		WHERE RECORD_CENTER_ID =		'1'		AND PDF_A1_FILE_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findDfTransfFolderGroupOrignPdfA1pageList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,PFILE.ORIGN_ID		,PFILE.PDF_A1_FILE_ID		,PFILE.DOC_TYPE_CD		,PFILE.DOC_TYPE_SNO		,PFILE.FILE_NM		,PFILE.STORE_FILE_ID		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		,PPAGE.PDF_A1_PAGE_ID		,PPAGE.SNO		,PPAGE.ORIGN_PAGE_FILE_NM		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE		PFILE		,TB_STMEDIUM MEDIUM		,TB_STORIGNPDFA1PAGE PPAGE		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		PFILE.ORIGN_ID		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND PFILE.PDF_A1_FILE_ID =		PPAGE.PDF_A1_FILE_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD,		PFILE.DOC_TYPE_SNO, PPAGE.SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfOrignPdfA1PageVirusScanning
+
+		UPDATE TB_STORIGNPDFA1PAGE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE PDF_A1_PAGE_ID =		'1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findDfTransfFolderGroupOrignNeoFileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,RORIGN.RECORD_ID		,NFILE.ORIGN_ID		,NFILE.ORIGN_NEO_FILE_ID		,NFILE.CHNG_SNO		,NFILE.FILE_NM		,NFILE.STORE_FILE_ID		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNNEOFILE NFILE		,TB_STMEDIUM MEDIUM		WHERE RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = NFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		NFILE.ORIGN_ID		AND NFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		NFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, NFILE.CHNG_SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfOrignNeoFileVirusScanning
+
+		UPDATE TB_STORIGNNEOFILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND ORIGN_NEO_FILE_ID		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findDfTransfFolderGroupFolderNeoFileList
+
+		SELECT		RDFOLDER.RECORD_CENTER_ID		,RDFOLDER.ORG_CD		,RDFOLDER.FOLDER_ID		,RDFOLDER.CREAT_YYYY		,FNFILE.FOLDER_NEO_FILE_ID		,FNFILE.CHNG_SNO		,FNFILE.FILE_NM		,FNFILE.STORE_FILE_ID		,FNFILE.NEO_TRANS_STATE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM		TB_RDFOLDER RDFOLDER		,TB_STFOLDERNEOFILE FNFILE		,TB_STMEDIUM MEDIUM		WHERE RDFOLDER.RECORD_CENTER_ID = FNFILE.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = FNFILE.FOLDER_ID		AND FNFILE.RECORD_CENTER_ID =		MEDIUM.RECORD_CENTER_ID		AND FNFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND		RDFOLDER.RECORD_CENTER_ID = '1'		AND		RDFOLDER.FOLDER_ID = '1'		ORDER BY FNFILE.CHNG_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfFolderNeoFileVirusScanning
+
+		UPDATE TB_STFOLDERNEOFILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_NEO_FILE_ID		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfFolderVirusScanning
+
+		UPDATE TB_RDFOLDER		SET VIRUS_FLAG = '1'		,VIRUS_DTIME =		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateDfTransfHistVirusScanning
+
+		UPDATE TB_DFRECVTRANSFLIST		SET QULTY_TEST_RSLT_FLAG =		'1'		WHERE RECORD_CENTER_ID = '1'		AND FOLDER_ID = '1'		AND TRANSF_YYYY =		'1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeFolderList
+
+		SELECT take_rep_cd, take_yyyy, take_sno, record_center_id,		folder_id		FROM TB_RCTAKEFOLDERLIST		WHERE take_rep_cd =		'1'		AND take_yyyy = '1'		AND take_sno =		'1'		ORDER BY record_center_id, folder_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeFolderNeoFileList
+
+		SELECT record_center_id, folder_id, folder_neo_file_id,		file_path		FROM TB_RCFOLDERNEOFILE		WHERE record_center_id =		'1'		AND folder_id = '1'		ORDER BY		record_center_id, folder_id, chng_sno;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeRecordNeoFileList
+
+		SELECT A.record_center_id, A.record_id, A.chng_sno,		A.file_path		FROM TB_RCORIGNNEOFILE A		, TB_RCRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_id =		'1'		AND A.record_center_id = B.record_center_id		AND		A.record_id = B.record_id		ORDER BY A.record_center_id, A.record_id,		A.chng_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeRecordPdfFileList
+
+		SELECT A.record_center_id, A.record_id, A.doc_type_cd,		A.doc_type_sno,		A.file_path		FROM TB_RCORIGNPDFA1FILE A		, TB_RCRECORD B		WHERE B.record_center_id = '1'		AND B.folder_id =		'1'		AND A.record_center_id = B.record_center_id		AND		A.record_id = B.record_id		ORDER BY A.record_center_id, A.record_id,		A.doc_type_cd, A.doc_type_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeRecordOrignFileList
+
+		SELECT A.record_center_id, A.record_id, A.doc_type_cd,		A.doc_type_sno,		A.file_path		FROM TB_RCORIGNFILE A		, TB_RCRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_id =		'1'		AND A.record_center_id = B.record_center_id		AND		A.record_id = B.record_id		ORDER BY A.record_center_id, A.record_id,		A.doc_type_cd, A.doc_type_sno;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeRecordScanFileList
+
+		SELECT A.record_center_id, A.record_id, A.doc_type_cd,		A.doc_type_sno,		A.sno, A.file_path		FROM TB_RCORIGNPAGE A		, TB_RCRECORD B		WHERE B.record_center_id = '1'		AND B.folder_id =		'1'		AND A.record_center_id = B.record_center_id		AND		A.record_id = B.record_id		ORDER BY A.record_center_id, A.record_id,		A.doc_type_cd, A.doc_type_sno,		A.sno;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRcTakeRecordScanHistFileList
+
+		SELECT A.record_center_id, A.record_id, A.chng_dtime,		A.file_path		FROM TB_RCORIGNPAGEHIST A		, TB_RCRECORD B		WHERE		B.record_center_id = '1'		AND B.folder_id =		'1'		AND A.record_center_id = B.record_center_id		AND		A.record_id = B.record_id		ORDER BY A.record_center_id, A.record_id,		A.chng_dtime	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeFolderNeoFileVirusScanning
+
+		UPDATE TB_RCFOLDERNEOFILE		SET virus_flag =		'1'		, virus_dtime = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE		folder_neo_file_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeRecordNeoFileVirusScanning
+
+		UPDATE TB_RCORIGNNEOFILE		SET virus_flag =		'1'		, virus_dtime = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE		record_center_id = '1'		AND record_id =		'1'		AND chng_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeRecordPdfFileVirusScanning
+
+		UPDATE TB_RCORIGNPDFA1FILE		SET virus_flag =		'1'		, virus_dtime = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE		record_center_id = '1'		AND record_id =		'1'		AND doc_type_cd = '1'		AND		doc_type_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeRecordOrignFileVirusScanning
+
+		UPDATE TB_RCORIGNFILE		SET virus_flag =		'1'		, virus_dtime = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE		record_center_id = '1'		AND record_id =		'1'		AND doc_type_cd = '1'		AND		doc_type_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeRecordScanFileVirusScanning
+
+		UPDATE TB_RCORIGNPAGE		SET virus_flag =		'1'		, virus_dtime = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE		record_center_id = '1'		AND record_id =		'1'		AND doc_type_cd = '1'		AND		doc_type_sno = '1'		AND sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeRecordScanHistFileVirusScanning
+
+		UPDATE TB_RCORIGNPAGEHIST		SET virus_flag =		'1'		, virus_dtime = TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		WHERE		record_center_id = '1'		AND record_id =		'1'		AND chng_dtime = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakeFolderVirusScanning
+
+		UPDATE TB_RCFOLDER		SET virus_flag = '1'		, virus_dtime =		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE		record_center_id =		'1'		AND folder_id =		'1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRcTakePlanVirusScanning
+
+		UPDATE TB_DFTAKEPLAN		SET auto_check_flag = '1'		WHERE take_rep_cd =		'1'		AND take_yyyy = '1'		AND take_sno =		'1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : insert
+-- Query Id : cerateTkVirusCheckHist
+
+		INSERT		INTO		TB_TKVIRUSCHECK		(		RECORD_CENTER_ID,		RECORD_TAKE_SEQ,		REG_SEQ,		ATTACH_FILE_TYPE,		VIRUS_HIST_SEQ,		VIRUS_CHECK_FLAG,		VIRUS_CHECK_DTIME,		VIRUS_INFECTION_FLAG,		VIRUS_INFECTION_DTIME,		VIRUS_INFECTION_CONT,		VIRUS_CLEAN_FLAG,		VIRUS_CLEAN_DTIME,		VIRUS_CLEAN_APPLY_FLAG,		VIRUS_CLEAN_APPLY_DTIME,		REQUEST_CORP_CD,		REQUEST_CORP_NM,		REQUEST_ORG_CD,		REQUEST_ORG_NM,		REQUEST_USER_ID,		REQUEST_USER_NM,		REQUEST_USER_POS_RANK_NM,		CREAT_SYS_CD,		ORG_CD,		CREAT_YYYY,		CREAT_REG_NO,		DTCH_REG_NO,		DOC_TYPE_CD,		DOC_TYPE_SNO		)		(SELECT '1',		'1',		'1',		'1',		(SELECT NVL(MAX(VIRUS_HIST_SEQ)+1,1)		FROM TB_TKVIRUSCHECK		WHERE		RECORD_CENTER_ID='1'		AND		RECORD_TAKE_SEQ='1'		AND REG_SEQ='1'		AND		ATTACH_FILE_TYPE='1'		),		'1',		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),		'1',		DECODE('1', '1', TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS'), ''),		'1',		'1',		DECODE('1', '1',		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), ''),		0,		NULL,		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1',		'1'		FROM DUAL		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : countTkVirusCheckHist
+
+		SELECT COUNT(*)		FROM TB_TKVIRUSCHECK		WHERE		RECORD_CENTER_ID='1'		AND		RECORD_TAKE_SEQ='1'		AND REG_SEQ='1'		AND		ATTACH_FILE_TYPE='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : countRdFolderInfectOrignFile
+
+		SELECT (A.CNT + B.CNT) AS CNT		FROM (SELECT COUNT(*) AS CNT		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNFILE OFILE		,TB_STMEDIUM MEDIUM		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = OFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		OFILE.ORIGN_ID		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		OFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		AND OFILE.VIRUS_FLAG = '1') A		,(SELECT COUNT(*) AS CNT		FROM TB_RDFOLDER		RDFOLDER		,TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE PFILE		,TB_STMEDIUM MEDIUM		WHERE		RDFOLDER.RECORD_CENTER_ID = RDRECORD.RECORD_CENTER_ID		AND		RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID = PFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		PFILE.ORIGN_ID		AND PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		PFILE.MEDIUM_ID = MEDIUM.MEDIUM_ID		AND RDFOLDER.RECORD_CENTER_ID =		'1'		AND RDFOLDER.FOLDER_ID = '1'		AND PFILE.VIRUS_FLAG = '1') B;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRdFolderGroupRecordIdList
+
+		SELECT RDRECORD.RECORD_ID		FROM TB_RDFOLDER RDFOLDER		,TB_RDRECORD RDRECORD		WHERE RDFOLDER.RECORD_CENTER_ID =		RDRECORD.RECORD_CENTER_ID		AND RDFOLDER.FOLDER_ID = RDRECORD.FOLDER_ID		AND RDFOLDER.RECORD_CENTER_ID = '1'		AND		RDFOLDER.FOLDER_ID = '1'		ORDER BY		RDRECORD.RECORD_CENTER_ID		,RDRECORD.CREAT_REG_DTIME		,RDRECORD.CREAT_REG_NO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRdFolderOrignFileVirusScanning
+
+		UPDATE TB_STORIGNFILE		SET VIRUS_FLAG =		'1'		,VIRUS_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		,VIRUS_INFECTION_CONT = '1'		,VIRUS_CLEAN_FLAG		= '1'		,VIRUS_CLEAN_DTIME =		DECODE('1', '', '', null, '', TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS'))		,VIRUS_CLEAN_FILE_PATH =		'1'		,VIRUS_CLEAN_FILE_SIZE =		'1'		,VIRUS_CLEAN_APPLY_FLAG = '0'		,VIRUS_CLEAN_APPLY_DTIME = ''		WHERE RECORD_CENTER_ID =		'1'		AND ORIGN_FILE_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRdFolderVirusScanning
+
+		UPDATE		TB_RDFOLDER		SET VIRUS_FLAG = '1'		,VIRUS_DTIME =		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRdRecordGroupOrignFileList
+
+		SELECT RDRECORD.RECORD_CENTER_ID		,RDRECORD.ORG_CD		,RDRECORD.FOLDER_ID		,RDRECORD.CREAT_YYYY		,RORIGN.RECORD_ID		,RORIGN.ERECORD_FLAG		,OFILE.ORIGN_ID		,OFILE.ORIGN_FILE_ID		,OFILE.DOC_TYPE_CD		,OFILE.DOC_TYPE_SNO		,OFILE.FILE_NM		,OFILE.STORE_FILE_NM		,OFILE.STORE_FILE_ID		,OFILE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM		TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNFILE OFILE		,TB_STMEDIUM MEDIUM		WHERE RDRECORD.RECORD_CENTER_ID =		RORIGN.RECORD_CENTER_ID		AND		RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND		RORIGN.RECORD_CENTER_ID =		OFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID =		OFILE.ORIGN_ID		AND OFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND		OFILE.MEDIUM_ID =		MEDIUM.MEDIUM_ID		AND RDRECORD.RECORD_CENTER_ID =		'1'		AND RDRECORD.RECORD_ID = '1'		AND OFILE.VIRUS_FLAG = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, OFILE.DOC_TYPE_CD, OFILE.DOC_TYPE_SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : select
+-- Query Id : findRdRecordGroupOrignPdfA1FileList
+
+		SELECT RDRECORD.RECORD_CENTER_ID		,RDRECORD.ORG_CD		,RDRECORD.FOLDER_ID		,RDRECORD.CREAT_YYYY		,RORIGN.RECORD_ID		,RORIGN.ERECORD_FLAG		,PFILE.ORIGN_ID		,PFILE.PDF_A1_FILE_ID		,PFILE.DOC_TYPE_CD		,PFILE.DOC_TYPE_SNO		,PFILE.FILE_NM		,PFILE.STORE_FILE_ID		,PFILE.FILE_PATH_RULE		,MEDIUM.MEDIUM_CD		,MEDIUM.MEDIUM_DETAIL_CD		,MEDIUM.MEDIUM_PATH		FROM TB_RDRECORD RDRECORD		,TB_STRECORDORIGN RORIGN		,TB_STORIGNPDFA1FILE PFILE		,TB_STMEDIUM MEDIUM		WHERE RDRECORD.RECORD_CENTER_ID = RORIGN.RECORD_CENTER_ID		AND		RDRECORD.RECORD_ID = RORIGN.RECORD_ID		AND RORIGN.RECORD_CENTER_ID =		PFILE.RECORD_CENTER_ID		AND RORIGN.ORIGN_ID = PFILE.ORIGN_ID		AND		PFILE.RECORD_CENTER_ID = MEDIUM.RECORD_CENTER_ID		AND PFILE.MEDIUM_ID =		MEDIUM.MEDIUM_ID		AND RDRECORD.RECORD_CENTER_ID =		'1'		AND RDRECORD.RECORD_ID = '1'		AND PFILE.VIRUS_FLAG = '1'		ORDER BY RDRECORD.RECORD_ID,		RORIGN.ORIGN_ID, PFILE.DOC_TYPE_CD, PFILE.DOC_TYPE_SNO;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRdFolderVirusScanEnd
+
+		UPDATE		TB_RDFOLDER		SET QULTY_TEST_STATE_FLAG = '2'		WHERE RECORD_CENTER_ID =		'1'		AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : update
+-- Query Id : updateRdRecordVirusScanEnd
+
+		UPDATE		TB_RDRECORD		SET QULTY_TEST_STATE_FLAG = '2'		WHERE RECORD_CENTER_ID =		'1'		AND RECORD_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml
+-- Query    : insert
+-- Query Id : cerateStOrignVirusCheckHist
+
+		INSERT		INTO TB_STORIGNVIRUSCHK		(		FILE_ID,		FILE_TYPE,		VIRUS_HIST_SEQ,		VIRUS_CHECK_FLAG,		VIRUS_CHECK_DTIME,		VIRUS_INFECTION_FLAG,		VIRUS_INFECTION_DTIME,		VIRUS_INFECTION_CONT,		VIRUS_CLEAN_FLAG,		VIRUS_CLEAN_DTIME,		VIRUS_CLEAN_APPLY_FLAG,		VIRUS_CLEAN_APPLY_DTIME,		REQUEST_CORP_CD,		REQUEST_CORP_NM,		REQUEST_ORG_CD,		REQUEST_ORG_NM,		REQUEST_USER_ID,		REQUEST_USER_NM,		REQUEST_USER_POS_RANK_NM		)		(SELECT		'1',		'1',		(SELECT		NVL(MAX(VIRUS_HIST_SEQ)+1,1)		FROM TB_STORIGNVIRUSCHK		WHERE		FILE_ID='1'		AND FILE_TYPE='1'		),		'1',		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),		'1',		DECODE('1', '1',		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), ''),		'1',		'1',		DECODE('1', '1', TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS'), ''),		'',		'',		REQUEST_CORP_CD,		(SELECT MAX(ORG_NM)		FROM TB_STORG Z		WHERE Z.ORG_CD = REQUEST_CORP_CD		) AS REQUEST_CORP_NM,		REQUEST_ORG_CD,		(SELECT ORG_NM		FROM TB_STORG Z		WHERE Z.ORG_CD =		REQUEST_ORG_CD		) AS REQUEST_ORG_NM,		'' AS REQUEST_USER_ID,		'' AS		REQUEST_USER_NM,		'' AS REQUEST_USER_POS_RANK_NM		FROM		(SELECT		(SELECT		HUPPER_ORG_CD		FROM TB_STORG Z		WHERE Z.ORG_CD = A.ORG_CD		AND		Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID		) AS REQUEST_CORP_CD,		ORG_CD AS		REQUEST_ORG_CD		FROM TB_RDRECORD A,		TB_STRECORDORIGN B,		TB_STORIGNFILE C		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND		A.RECORD_ID=B.RECORD_ID		AND B.ORIGN_ID=C.ORIGN_ID		AND C.ORIGN_FILE_ID =		'1'		)		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\orign2014\target\classes\egovframework\sqlmap\orign\default\orign\HauriIntlkDao.xml

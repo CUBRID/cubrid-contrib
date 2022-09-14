@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.accsset">
+
+	<resultMap id="accs-accssetfolder-result" class="rms.accs.accsset.domain.AccsSet" >
+		<result property="folderId" 		column="FOLDER_ID"/>
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+		<result property="orgAbbrNm" 		column="ORG_ABBR_NM"/>
+		<result property="title" 			column="TITLE"/>
+		<result property="clssId" 			column="CLSS_ID"/>
+		<result property="clssNm" 			column="CLSS_NM"/>
+		<result property="presvTermCd" 		column="PRESV_TERM_CD"/>
+		<result property="presvTermNm" 		column="PRESV_TERM_NM"/>
+		<result property="openDivCd" 		column="OPER_READ_RANGE_CD"/>
+		<result property="openDivNm" 		column="OPER_READ_RANGE_NM"/>
+		<result property="creatSysCd" 		column="CREAT_SYS_CD"/>
+		<result property="creatSysNm" 		column="CREAT_SYS_NM"/>
+		<result property="accsSetRsn" 		column="ACCS_SET_RSN"/>
+	</resultMap>
+	<!-- 
+		기록물철 접근관리 목록을 조회한다.
+	 -->
+	 <select id="findAccsSetFolder" parameterClass="rms.accs.accsset.domain.AccsSet" resultMap="accs-accssetfolder-result">
+		SELECT AA.FOLDER_ID
+			, AA.ORG_CD
+			, AA.ORG_ABBR_NM 
+			, AA.ORG_NM
+			, AA.TITLE
+			, AA.CLSS_ID
+			, AA.CLSS_NM
+			, AA.PRESV_TERM_CD
+			, (SELECT COM_CD_NM FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = DECODE(AA.PRESV_TERM_CD, '20', '25', AA.PRESV_TERM_CD)) PRESV_TERM_NM
+			, AA.OPER_READ_RANGE_CD
+			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD53' AND USE_FLAG='1' AND COM_CD = AA.OPER_READ_RANGE_CD) OPER_READ_RANGE_NM
+			, AA.CREAT_SYS_CD
+			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD17' AND USE_FLAG='1' AND COM_CD = AA.CREAT_SYS_CD) CREAT_SYS_NM
+			, AA.ACCS_SET_RSN
+		FROM (
+			SELECT Z.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, Y.*
+				FROM (
+					SELECT A.FOLDER_ID
+						, A.ORG_CD
+						, B.ORG_ABBR_NM 
+						, B.ORG_NM
+						, A.TITLE
+						, A.CLSS_ID
+						, A.CLSS_NM
+						, A.PRESV_TERM_CD
+						, A.OPER_READ_RANGE_CD
+						, A.CREAT_SYS_CD
+						, A.ACCS_SET_RSN
+					FROM  TB_RDFOLDER A, TB_STORG B
+					WHERE A.OPER_READ_RANGE_CD IN ('02','03') AND A.ORG_CD = B.ORG_CD
+					AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+					AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					<dynamic>
+						<isNotEmpty prepend="AND" property="folderId">
+							A.FOLDER_ID = #folderId:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.ORG_CD = #orgCd:VARCHAR#
+						</isNotEmpty>
+						<isEmpty property="orgCd">
+							<isNotEmpty prepend="AND" property="orgNm">
+								B.ORG_NM LIKE #orgNm:VARCHAR#
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="title">
+							(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#) 
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="clssId">
+							A.CLSS_ID = #clssId:VARCHAR#				
+							<isNotEmpty prepend="AND" property="clssDivCd">
+								A.CLSS_DIV_CD = #clssDivCd:VARCHAR#
+							</isNotEmpty>		
+						</isNotEmpty>
+				        <isNotEmpty property="presvTermCd">
+					        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+					            A.PRESV_TERM_CD IN ('20','25')
+				            </isEqual>
+					        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				            </isNotEqual>		            
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="openDivCd">
+							A.OPER_READ_RANGE_CD = #openDivCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatSysCd">
+							A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY A.RECORD_CENTER_ID, A.TITLE
+				) Y
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) Z
+			WHERE z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) AA
+		ORDER BY AA.rnum
+	</select>
+	<!-- 
+		COUNT - 기록물철 접근관리 목록을 조회한다.
+	 -->
+	<select id="countAccsSetFolder" parameterClass="rms.accs.accsset.domain.AccsSet" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_RDFOLDER A, TB_STORG B
+		WHERE A.OPER_READ_RANGE_CD IN ('02','03') AND A.ORG_CD = B.ORG_CD 
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="folderId">
+				A.FOLDER_ID = #folderId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.ORG_CD = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="orgCd">
+				<isNotEmpty prepend="AND" property="orgNm">
+					B.ORG_NM LIKE #orgNm:VARCHAR#
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="title">
+				(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="clssId">
+				A.CLSS_ID = #clssId:VARCHAR#				
+				<isNotEmpty prepend="AND" property="clssDivCd">
+					A.CLSS_DIV_CD = #clssDivCd:VARCHAR#
+				</isNotEmpty>				
+			</isNotEmpty>
+	        <isNotEmpty property="presvTermCd">
+		        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+		            A.PRESV_TERM_CD IN ('20','25')
+	            </isEqual>
+		        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+				A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+	            </isNotEqual>		            
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="openDivCd">
+				A.OPER_READ_RANGE_CD = #openDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 접근관리 기록물철 접근권한 목록 조회 -->
+	<resultMap id="accs-accssetfolderuser-result" class="rms.accs.accsset.domain.AccsUser" >
+		<result property="id" 				column="FOLDER_ID"/>
+		<result property="accsTypeCd" 		column="ACCS_TYPE_CD"/>
+		<result property="accsUserId" 		column="ACCS_USER_ID"/>
+		<result property="accsUserNm" 		column="ACCS_USER_NM"/>
+		<result property="accsUserDeptNm" 	column="ACCS_USER_DEPT_NM"/>
+		<result property="accsDeptCd" 		column="ACCS_DEPT_CD"/>
+		<result property="accsDeptNm" 		column="ACCS_DEPT_NM"/>
+	</resultMap>
+	<!-- 
+		SELECT - 접근관리 기록물철 접근 사용자 목록을 조회한다.
+	 -->
+	 <select id="findAccsSetFolderUserList" parameterClass="rms.accs.accsset.domain.AccsUser" resultMap="accs-accssetfolderuser-result">
+		SELECT A.FOLDER_ID
+			, A.ACCS_TYPE_CD
+			, A.ACCS_USER_ID
+			, B.USER_NM ACCS_USER_NM
+			, C.DEPT_ABBR_NM ACCS_USER_DEPT_NM
+			, '' ACCS_DEPT_CD
+			, '' ACCS_DEPT_NM 
+		FROM  TB_RDFOLDERACCS A, TB_STUSER B, TB_STDEPT C
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.FOLDER_ID = #id:VARCHAR#
+		AND A.ACCS_TYPE_CD = '1'
+		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND A.ACCS_USER_ID = B.USER_ID
+		AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		AND B.DEPT_CD = C.DEPT_CD
+		ORDER BY B.USER_NM
+	</select>
+	<!-- 
+		 SELECT - 접근관리 기록물철 접근 부서 목록을 조회한다.
+	 -->
+	<select id="findAccsSetFolderDeptList" parameterClass="rms.accs.accsset.domain.AccsUser" resultMap="accs-accssetfolderuser-result">
+		SELECT A.FOLDER_ID
+			, A.ACCS_TYPE_CD
+			, '' ACCS_USER_ID
+			, '' ACCS_USER_NM
+			, '' ACCS_USER_DEPT_NM
+			, A.ACCS_DEPT_CD
+			, B.DEPT_NM ACCS_DEPT_NM
+		FROM  TB_RDFOLDERACCS A, TB_STDEPT B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.FOLDER_ID = #id:VARCHAR#
+		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND A.ACCS_DEPT_CD = B.DEPT_CD
+		ORDER BY B.DEPT_ABBR_NM
+	</select>
+	
+	
+	<!-- 접근관리 사용자 목록을 조회한다. -->
+	<resultMap id="accs-accssetusersch-result" class="rms.sys.sys.domain.User" >
+		<result property="userId" 		column="USER_ID"/>
+		<result property="userNm" 		column="USER_NM"/>
+		<result property="loginUserId" 		column="LOGIN_USER_ID"/>
+		<result property="deptNm" 		column="DEPT_ABBR_NM"/>
+	</resultMap>
+	<!--
+		COUNT
+	-->
+	<select id="countAccsSetUserSch" parameterClass="rms.accs.accsset.domain.User" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_STUSER A, TB_STDEPT B
+		WHERE A.DEPT_CD = B.DEPT_CD	
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="userId">
+			A.USER_ID = #userId:VARCHAR#
+		</isNotEmpty>		
+		<isNotEmpty prepend="AND" property="userNm">
+			A.USER_NM LIKE #userNm:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="deptCd">
+			B.DEPT_CD = #deptCd:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<!-- 
+		SELECT
+	 -->
+	<select id="findAccsSetUserSch" parameterClass="rms.accs.accsset.domain.User" resultMap="accs-accssetusersch-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.USER_ID
+					, A.USER_NM
+					, A.LOGIN_USER_ID
+					, B.DEPT_ABBR_NM 
+				FROM  TB_STUSER A, TB_STDEPT B
+				WHERE A.DEPT_CD = B.DEPT_CD	
+				AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#	
+				<isNotEmpty prepend="AND" property="userId">
+					A.USER_ID = #userId:VARCHAR#
+				</isNotEmpty>		
+				<isNotEmpty prepend="AND" property="userNm">
+					A.USER_NM LIKE #userNm:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="deptCd">
+					B.DEPT_CD = #deptCd:VARCHAR#
+				</isNotEmpty>
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	
+	<!-- 
+		DELETE - 접근관리 기록물철 접근권한 삭제
+	 -->
+	<delete id="deleteAccsSetFolder" parameterClass="rms.accs.accsset.domain.AccsSet">
+		DELETE
+		FROM TB_RDFOLDERACCS	  
+		WHERE FOLDER_ID = #id:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</delete>
+	<!-- 
+		CREATE - 접근관리 기록물철 접근권한 생성
+	 -->
+	<insert id="createAccsSetFolderUser" parameterClass="rms.accs.accsset.domain.AccsUser">
+		INSERT INTO TB_RDFOLDERACCS(FOLDER_ID
+			, ACCS_SNO
+			, ACCS_TYPE_CD
+			, ACCS_USER_ID
+			, ACCS_DEPT_CD
+			, REG_DTIME
+			, RECORD_CENTER_ID
+		) VALUES (#id#
+			, (SELECT NVL(MAX(ACCS_SNO),1) FROM TB_RDFOLDERACCS WHERE FOLDER_ID = #id# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) + 1 
+			, #accsTypeCd#
+			, #accsUserId#
+			, #accsDeptCd#
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, #recordCenterId#
+		)
+	</insert>
+	<!-- 
+		UPDATE - 접근관리 기록물철 선정사유 update
+	 -->	
+	<update id="updateAccsSetFolder" parameterClass="rms.accs.accsset.domain.AccsSet">
+		UPDATE TB_RDFOLDER
+		SET ACCS_SET_RSN = #accsSetRsn:VARCHAR#
+		WHERE FOLDER_ID = #id:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+</sqlMap>

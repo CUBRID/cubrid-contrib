@@ -1,0 +1,46 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : select
+-- Query Id : countOrgComStnd
+
+		SELECT COUNT(1)		FROM TB_ZZORGCOMSTND A 				WHERE A.RECORD_CENTER_ID = '1' 		 AND 				A.BRM_SML_NM = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : select
+-- Query Id : findOrgComStnd
+
+	SELECT B.*		FROM (			SELECT ROWNUM AS rnum				, C.*			FROM (		SELECT A.STND_MNG_TYPE_CD		, A.VER		, A.BRM_MID_NM		, A.BRM_SML_NM		, A.PRESV_TERM_CD		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM		, A.TASK_DESCR		, A.TASK_NM		FROM TB_ZZORGCOMSTND A 				WHERE A.RECORD_CENTER_ID = '1' 		 AND 				A.BRM_SML_NM = '1'		 					) C						WHERE ROWNUM <= '1'					) BWHERE B.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : insert
+-- Query Id : createOrgComStnd
+
+		INSERT INTO TB_ZZORGCOMSTND(STND_SEQ, STND_MNG_TYPE_CD, VER, BRM_MID_NM, BRM_SML_NM, PRESV_TERM_CD, TASK_NM, TASK_DESCR, RECORD_CENTER_ID) 		VALUES ((SELECT NVL(MAX(TO_NUMBER(STND_SEQ)),0) FROM TB_ZZORGCOMSTND) + 1, '1', '1', '1', '1', '1', '1', '1', '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : select
+-- Query Id : findMidNm
+
+		SELECT DISTINCT A.BRM_SML_NM		, '' STND_MNG_TYPE_CD		, '' VER		, '' BRM_MID_NM		, '' PRESV_TERM_CD		, '' PRESV_TERM_NM		, '' TASK_DESCR		, '' TASK_NM		FROM TB_ZZORGCOMSTND A 				WHERE A.RECORD_CENTER_ID = '1' 		ORDER BY A.BRM_SML_NM	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : delete
+-- Query Id : deleteOrgComStnd
+
+	  	DELETE 	  	FROM TB_ZZORGCOMSTND	  	  	WHERE RECORD_CENTER_ID = '1' 	  	  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml
+-- Query    : delete
+-- Query Id : deleteOrgComStndAll
+
+	  	DELETE 	  	FROM TB_ZZORGCOMSTND	  	WHERE RECORD_CENTER_ID = '1' 	  	  	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\OrgComStnd.xml

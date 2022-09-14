@@ -1,0 +1,60 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : countCurKeepOrgMngPagedList
+
+		SELECT COUNT(1)		FROM ( SELECT record_center_id, cur_keep_org_cd, cur_keep_org_nm, count(DISTINCT clss_id) as clss_cnt			 FROM (						SELECT A.record_center_id,						       A.cur_keep_org_cd,						       (SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm,						       A.clss_id						FROM TB_RDFOLDER A						WHERE A.record_center_id = '1'											)			 GROUP BY record_center_id, cur_keep_org_cd, cur_keep_org_nm		   )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : findCurKeepOrgMngPagedList
+
+		SELECT E.*		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM as rnum		            ,C.*		        FROM (		           SELECT record_center_id, cur_keep_org_cd, cur_keep_org_nm, count(DISTINCT clss_id) as clss_cnt		           FROM (		                    SELECT   A.record_center_id		                    		,A.cur_keep_org_cd		                    		,(SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm		                    		,A.clss_id		                    FROM TB_RDFOLDER A		                    WHERE A.record_center_id = '1'		                    		                    )		            GROUP BY record_center_id, cur_keep_org_cd, cur_keep_org_nm		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : findExcelCurKeepOrgMngPagedList
+
+		SELECT 	A.record_center_id,				A.cur_keep_org_cd,				(SELECT org_abbr_nm FROM tb_storg B WHERE A.record_center_id = B.record_center_id AND B.org_cd = A.cur_keep_org_cd) cur_keep_org_nm,				A.bef_keep_org_cd,				(SELECT org_abbr_nm FROM tb_storg B WHERE A.record_center_id = B.record_center_id AND B.org_cd = A.bef_keep_org_cd) bef_keep_org_nm,				A.org_cd,				(SELECT org_abbr_nm FROM tb_storg B WHERE A.record_center_id = B.record_center_id AND B.org_cd = A.org_cd) org_nm,				COUNT(1) folder_cnt		FROM	tb_rdfolder A		WHERE	record_center_id = '1'		GROUP BY record_center_id, cur_keep_org_cd, bef_Keep_org_cd, org_cd		ORDER BY cur_keep_org_cd;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : countCurKeepOrgMngClssPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT record_center_id	        FROM (	                SELECT A.record_center_id,	                       A.cur_keep_org_cd,	                       (SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm,	                       A.clss_id	                FROM TB_RDFOLDER A	                WHERE A.record_center_id = '1'	                GROUP BY record_center_id, cur_keep_org_cd, clss_id                )		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : findCurKeepOrgMngClssPagedList
+
+		SELECT E.*		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM as rnum		            ,C.*		        FROM (		           SELECT record_center_id, cur_keep_org_cd, cur_keep_org_nm, clss_id, clss_nm, count(1) as folder_cnt		            FROM (		                    SELECT A.record_center_id,		                           A.cur_keep_org_cd,		                           (SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm,		                           A.clss_id,		                           DECODE (		                                   A.clss_div_cd, '1',		                                   (SELECT bis_clss_nm FROM TB_ZZBISCLSS Z WHERE Z.bis_clss_id = A.clss_id), '2',		                                   (SELECT unit_nm FROM TB_ZZUNIT Y WHERE Y.record_center_id = A.record_center_id AND Y.unit_cd = A.clss_id) , '3', '±‚≈∏'		                           ) as clss_nm		                    FROM TB_RDFOLDER A		                    WHERE A.record_center_id = '1'		                    )		            GROUP BY record_center_id, cur_keep_org_cd, cur_keep_org_nm, clss_id, clss_nm		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : countCurKeepOrgMngClssFolderPagedList
+
+		 SELECT COUNT(1)         FROM TB_RDFOLDER A         WHERE A.record_center_id = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : select
+-- Query Id : findCurKeepOrgMngClssFolderPagedList
+
+		SELECT E.record_center_id		      ,E.folder_id		      ,E.creat_sys_cd		      ,(select com_cd_nm from tb_zzcomcd where com_type_cd = 'RD17' and com_cd = E.creat_sys_cd) AS creat_sys_nm		      ,E.title		      ,E.cur_keep_org_cd		      ,(SELECT org_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.cur_keep_org_cd) AS cur_keep_org_nm		      ,E.org_cd		      ,(SELECT org_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_nm		      ,(SELECT org_abbr_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_abbr_nm		      ,E.clss_nm		      ,E.clss_id		      ,E.creat_yyyy		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.record_center_id, A.folder_id, A.creat_sys_cd, A.title, A.cur_keep_org_cd		                  ,A.org_cd, A.clss_nm, A.clss_id, A.creat_yyyy		            FROM TB_RDFOLDER A		            WHERE A.record_center_id = '1'		            		            ORDER BY A.record_center_id, A.cur_keep_org_cd		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml
+-- Query    : update
+-- Query Id : updateCurKeepOrgCd
+
+		UPDATE TB_RDFOLDER 		SET  BEF_KEEP_ORG_CD = '1'			,CUR_KEEP_ORG_CD = '1'		WHERE RECORD_CENTER_ID = '1' AND 			FOLDER_ID = '1'		 		AND CUR_KEEP_ORG_CD = '1'		 AND 			CLSS_ID = '1'		 ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\CurKeepOrgMng.xml

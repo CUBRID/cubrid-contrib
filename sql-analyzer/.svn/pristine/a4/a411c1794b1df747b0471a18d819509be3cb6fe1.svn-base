@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.rcTake">
+
+	<!-- 기관간인수 기록물인수 인수계획수립 목록을 조회한다. -->
+	<resultMap id="findRcTakeSetPlanPagedList-result" class="rms.transf.rcTake.domain.RcTakePlan">
+		<result property="recordCenterId"		column="RECORD_CENTER_ID"/>
+		<result property="takeMngNo"			column="TAKE_MNG_NO"/>
+		<result property="takeRepCd"			column="TAKE_REP_CD"/>
+		<result property="takeYyyy"				column="TAKE_YYYY"/>
+		<result property="takeSno"				column="TAKE_SNO"/>
+		<result property="takeProgStateCd"		column="TAKE_PROG_STATE_CD"/>
+		<result property="takeProgStateNm"		column="TAKE_PROG_STATE_NM"/>
+		<result property="takeStateDivCd"		column="TAKE_STATE_DIV_CD"/>
+		<result property="takeStateDivNm"		column="TAKE_STATE_DIV_NM"/>
+		<result property="takeRepNm"			column="TAKE_REP_NM"/>		
+		<result property="takovrRepCd"			column="TAKOVR_REP_CD"/>
+		<result property="takovrRepNm"			column="TAKOVR_REP_NM"/>
+		<result property="takeRsn"				column="TAKE_RSN"/>
+		<result property="regDtime"				column="REG_DTIME"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기관간인수 기록물인수 인수계획수립 목록을 조회한다.
+	 -->
+	<select id="findRcTakeSetPlanPagedList" parameterClass="rms.transf.rcTake.domain.RcTakePlan" resultMap="findRcTakeSetPlanPagedList-result">
+		SELECT C.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT A.record_center_id
+				     , A.take_rep_cd||'-'||a.take_yyyy||'-'||lpad(to_char(a.take_sno), 6, '0') take_mng_no
+				     , A.take_rep_cd
+				     , A.take_yyyy
+				     , A.take_sno
+				     , A.take_prog_state_cd
+				     , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'DF05' and Z.com_cd = A.take_prog_state_cd) take_prog_state_nm
+				     , A.take_state_div_cd
+				     , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'DF10' and Z.com_cd = A.take_state_div_cd) take_state_div_nm
+				     , A.take_rep_nm
+				     , A.takovr_rep_cd
+				     , A.takovr_rep_nm
+				     , A.take_rsn
+				     , A.reg_dtime
+				FROM  TB_DFTAKEPLAN A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			    <isNotEmpty prepend="AND" property="takovrRepCd">
+			        A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty prepend="AND" property="takeYyyy">
+			        A.take_yyyy = #takeYyyy:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty prepend="AND" property="takeProgStateCd">
+			        A.take_prog_state_cd = #takeProgStateCd:VARCHAR#
+			    </isNotEmpty>
+			    <isNotEmpty prepend="AND" property="takovrRepNm">
+			        A.takovr_rep_nm like #takovrRepNm:VARCHAR#
+			    </isNotEmpty>
+			    ORDER BY A.take_rep_cd, A.take_yyyy, A.take_sno DESC
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<select id="countRcTakeSetPlanPagedList" parameterClass="rms.transf.rcTake.domain.RcTakePlan" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_DFTAKEPLAN A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	    <isNotEmpty prepend="AND" property="takovrRepCd">
+	        A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="takeYyyy">
+	        A.take_yyyy = #takeYyyy:VARCHAR#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="takeProgStateCd">
+	        A.take_prog_state_cd = #takeProgStateCd:VARCHAR#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="takovrRepNm">
+	        A.takovr_rep_nm like #takovrRepNm:VARCHAR#
+	    </isNotEmpty>
+	</select>
+	
+	
+	<!-- 
+		기록물인수_인수계획등록
+		: 인수계획을 등록한다. 
+	 -->	
+	<insert id="createRcTakeSetPlan" parameterClass="rms.transf.rcTake.domain.RcTakePlan">
+		INSERT INTO TB_DFTAKEPLAN 
+            (take_rep_cd, take_yyyy, take_sno, record_center_id, take_rep_nm
+            ,takovr_rep_cd, takovr_rep_nm, take_rsn, take_prog_state_cd, take_state_div_cd, reg_user_id, reg_dtime
+        )
+        VALUES(
+             #takeRepCd:VARCHAR#, #takeYyyy:VARCHAR#, (SELECT NVL(MAX(Z.take_sno),0)+1 takeSno
+                                                       FROM  TB_DFTAKEPLAN Z 
+                                                       WHERE Z.take_rep_cd = #takeRepCd:VARCHAR#
+                                                       AND   Z.take_yyyy = #takeYyyy:VARCHAR#), #recordCenterId:VARCHAR#, #takeRepNm:VARCHAR#
+            ,#takovrRepCd:VARCHAR#, #takovrRepNm:VARCHAR#, #takeRsn:VARCHAR#, '01', '01', #regUserId:VARCHAR#
+	<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+	, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+        )
+	</insert>
+	
+	<!-- 
+		기록물인수_인수계획등록
+		: 인수계획을 수정한다. 
+	 -->	
+	<update id="updateRcTakeSetPlan" parameterClass="rms.transf.rcTake.domain.RcTakePlan">
+		UPDATE TB_DFTAKEPLAN
+		   SET takovr_rep_cd = #takovrRepCd:VARCHAR#
+		     , takovr_rep_nm = #takovrRepNm:VARCHAR#
+		     , take_rsn      = #takeRsn:VARCHAR#
+		 WHERE take_rep_cd   = #takeRepCd:VARCHAR#
+		   AND take_yyyy     = #takeYyyy:VARCHAR#
+		   AND take_sno      = #takeSno:NUMBER#
+	</update>
+	
+	<!-- 
+		기록물인수_인수계획등록
+		: 인수계획을 삭제한다.
+	 -->
+	<delete id="deleteRcTakeSetPlan" parameterClass="rms.transf.rcTake.domain.RcTakePlan">
+		DELETE FROM TB_DFTAKEPLAN
+		 WHERE take_rep_cd = #takeRepCd:VARCHAR#
+		   AND take_yyyy   = #takeYyyy:VARCHAR#
+		   AND take_sno    = #takeSno:NUMBER#
+	</delete>
+	
+	
+</sqlMap>

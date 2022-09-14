@@ -1,0 +1,74 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : update
+-- Query Id : UpdateFolderNeo_StReqTrans_Standby
+
+		UPDATE TB_STREQTRANS		SET   REQUEST_STATUS = 'A'			, PARAMETER_XML = '1'		WHERE JOB_ID = '1'		AND   REQUEST_STATUS = '-'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : update
+-- Query Id : UpdateFolderNeo_StReqTrans_Fail
+
+		UPDATE TB_STREQTRANS		SET   REQUEST_STATUS = 'D'			, ERROR_CODE = 'R1001'			, ERROR_CONTENTS = '1'		WHERE JOB_ID = '1'		AND   REQUEST_STATUS = '-';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : select
+-- Query Id : SelectRecordNeo_BefFolderNeoFile
+
+		SELECT C.FILE_NM		FROM  TB_STFOLDERNEOFILE C		WHERE (C.RECORD_CENTER_ID||C.FOLDER_ID)		IN (		    SELECT A.RECORD_CENTER_ID||A.FOLDER_ID		    FROM  TB_STREQTRANS A		    WHERE A.JOB_ID = '1'		)		AND   C.CHNG_SNO = (SELECT MAX(CHNG_SNO) 		                    FROM   TB_STFOLDERNEOFILE 		                    WHERE  (RECORD_CENTER_ID, FOLDER_ID)		                    IN (		                            SELECT A.RECORD_CENTER_ID		                                 , A.FOLDER_ID		                            FROM   TB_STREQTRANS A		                            WHERE  A.JOB_ID = '1'		                    )		                    AND NVL(DEL_FLAG,'0')='0');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : insert
+-- Query Id : InsertFolderNeo_StReqFile_BefFolderNeoFile
+
+		INSERT INTO TB_STREQFILE		(		    RECORD_CENTER_ID, JOB_ID, SRC_FILE_ID, REQ_ORD, SRC_FILE_NM, SRC_STORE_FILE_ID, SRC_FILE_SIZE, SRC_STORAGE_TYPE, SRC_STORAGE_VENDOR		)		(		    SELECT D.RECORD_CENTER_ID, D.JOB_ID, D.FOLDER_NEO_FILE_ID		        , ROWNUM AS REQ_ORD, D.FILE_NM		        , (CASE WHEN D.SRC_STORAGE_TYPE='01' THEN D.FOLDER_NEO_FILE_ID ELSE D.STORE_FILE_ID END) AS SRC_STORE_FILE_ID		        , D.FILE_SIZE, D.SRC_STORAGE_TYPE, D.SRC_STORAGE_VENDOR		    FROM (		        SELECT C.RECORD_CENTER_ID, '1' AS JOB_ID, C.FOLDER_NEO_FILE_ID			        , 0 AS REQ_ORD, C.FILE_NM, C.STORE_FILE_ID, C.FILE_SIZE			        , (SELECT E.MEDIUM_CD FROM TB_STMEDIUM E WHERE E.RECORD_CENTER_ID=C.RECORD_CENTER_ID AND E.MEDIUM_ID=C.MEDIUM_ID) AS SRC_STORAGE_TYPE			        , (SELECT E.MEDIUM_DETAIL_CD FROM TB_STMEDIUM E WHERE E.RECORD_CENTER_ID=C.RECORD_CENTER_ID AND E.MEDIUM_ID=C.MEDIUM_ID) AS SRC_STORAGE_VENDOR		        FROM  TB_STFOLDERNEOFILE C		        WHERE (C.RECORD_CENTER_ID||C.FOLDER_ID)		        IN (		            SELECT A.RECORD_CENTER_ID||A.FOLDER_ID		            FROM   TB_STREQTRANS A		            WHERE  A.JOB_ID = '1'		        )		        AND   C.CHNG_SNO = (SELECT MAX(D.CHNG_SNO) 		                            FROM   TB_STFOLDERNEOFILE D 		                            WHERE  (D.RECORD_CENTER_ID, D.FOLDER_ID)		                            IN (		                                   SELECT A.RECORD_CENTER_ID		                                        , A.FOLDER_ID		                                   FROM   TB_STREQTRANS A		                                   WHERE  A.JOB_ID = '1'		                            ))		    ) D		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : select
+-- Query Id : SelectFolderNeo_RecordNeoNotCnt
+
+		SELECT COUNT(1) - SUM(CASE WHEN NEO_TRANS_STATE = '4' THEN 1 ELSE 0 END) AS CNT		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : select
+-- Query Id : SelectFolderNeo_RecordNeoNotCnt_2
+
+		SELECT COUNT(1) - SUM(CASE WHEN NEO_TRANS_STATE_2 = '4' THEN 1 ELSE 0 END) AS CNT		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : update
+-- Query Id : UpdateFolderNeo_WaitFolderNeoFile
+
+		UPDATE TB_STREQTRANS		   SET ERROR_CODE = 'W0001'		 WHERE RECORD_CENTER_ID = '1'		   AND JOB_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : select
+-- Query Id : SelectFolderNeo_RecordCnt
+
+		SELECT COUNT(*) AS CNT		  FROM TB_RDRECORD		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : update
+-- Query Id : UpdateFolderNeo_StReqTrans_Fail1
+
+		UPDATE TB_STREQTRANS		SET   REQUEST_STATUS = 'D'			, ERROR_CODE = '1'			, ERROR_CONTENTS = '1'		WHERE JOB_ID = '1'		AND   REQUEST_STATUS = '-';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml
+-- Query    : insert
+-- Query Id : InsertNeoFolder_Impossible_Result
+
+		INSERT INTO TB_STREQRESULT 		(			RECORD_CENTER_ID,			JOB_ID,			ERROR_CODE,			ERROR_CONTENTS,			REQUEST_START_TIME,			REQUEST_END_TIME,			DEST_FILE_ID		) VALUES (			'1',			'1',			'1',			'1',			sys_datetime,			sys_datetime,			' '		)		;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RequestFolderNeo.xml

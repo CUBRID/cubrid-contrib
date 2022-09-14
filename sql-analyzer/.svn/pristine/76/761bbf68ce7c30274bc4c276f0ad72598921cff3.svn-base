@@ -1,0 +1,26 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-RequestPdf.xml
+
+SelectPdf_StReqFile_Ext
+Semantic: before ' +1) ELSE '' END) AS EXT		        FROM TB_STREQFILE				WHERE J...'
+Function INSTR is undefined or given wrong number of parameter. select C.RECORD_CENTER_ID, C.JOB_ID, C.SRC_FILE_ID, C.FILE_E...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-RequestPdf.xml
+-- Query    : select
+-- Query Id : SelectPdf_StReqFile_Ext
+
+		SELECT C.RECORD_CENTER_ID, C.JOB_ID, C.SRC_FILE_ID, C.FILE_EXT, C.EXT_FLAG		FROM (		    SELECT A.RECORD_CENTER_ID, A.JOB_ID, A.SRC_FILE_ID, A.EXT AS FILE_EXT, 			(CASE WHEN A.EXT IS NOT NULL AND B.FILE_EXT IS NULL THEN 'X' ELSE 'O' END) AS EXT_FLAG		    FROM		    (		        SELECT RECORD_CENTER_ID, JOB_ID, SRC_FILE_ID, SRC_FILE_NM		        	, UPPER(CASE WHEN INSTR(SRC_FILE_NM,'.') > 0 THEN SUBSTR(SRC_FILE_NM, INSTR(SRC_FILE_NM,'.',1,LENGTH(REPLACE(SRC_FILE_NM,'.','..')) - LENGTH(SRC_FILE_NM))+1) ELSE '' END) AS EXT		        FROM TB_STREQFILE				WHERE JOB_ID = '1'				  AND RECORD_CENTER_ID = '1'		    ) A		    , (		        SELECT * FROM TB_STFILEEXTMNG		         WHERE FILE_TRANS_FLAG = '1'				   AND RECORD_CENTER_ID = '1'		    ) B		    WHERE A.EXT = B.FILE_EXT(+)		) C	;
+
+UpdatePdf_RdFolder
+Semantic: before ' 	;'
+Updating derived tables is not allowed. update (select Z.PDF_A1_TRANS_STATE, (select (case when B.CN...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-RequestPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_RdFolder
+
+		UPDATE (		    SELECT PDF_A1_TRANS_STATE			    , (			        SELECT (CASE WHEN B.CNT4 + B.CNT6 = B.F_CNT THEN '4' 			                     WHEN B.CNT1 + B.CNT2 + B.CNT3 > 0 THEN '3' 			                     WHEN B.CNT5 > 0 THEN '5' 			                     ELSE '0'			                END) AS PDF_A1_TRANS_STATE 			        FROM (				        SELECT COUNT(1) AS F_CNT				            , NVL(SUM(A.CNT0),0) AS CNT0  				            , NVL(SUM(A.CNT1),0) AS CNT1  				            , NVL(SUM(A.CNT2),0) AS CNT2  				            , NVL(SUM(A.CNT3),0) AS CNT3  				            , NVL(SUM(A.CNT4),0) AS CNT4  				            , NVL(SUM(A.CNT5),0) AS CNT5  				            , NVL(SUM(A.CNT6),0) AS CNT6 				        FROM ( 				            SELECT					              DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'0',1,0) CNT0 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'1',1,0) CNT1 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'2',1,0) CNT2 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'3',1,0) CNT3 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'4',1,0) CNT4 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'5',1,0) CNT5 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'6',1,0) CNT6 				            FROM  TB_RDRECORD A 				            WHERE RECORD_CENTER_ID = '1'				            AND FOLDER_ID = '1'				            AND   ERECORD_FLAG = '1' 				            AND   ATTACH_CNT > 0 				        ) A			        ) B			    ) AS NEW_STATE		    FROM  TB_RDFOLDER Z		    WHERE RECORD_CENTER_ID = '1'		    AND FOLDER_ID = '1'		) C		SET C.PDF_A1_TRANS_STATE = C.NEW_STATE	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-RequestPdf.xml

@@ -1,0 +1,235 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countBooksfCntChkPlanPagedList
+
+		SELECT COUNT(1)        FROM TB_SRCNTCHK A, TB_STUSER C, TB_ZZCOMCD D        WHERE A.RECORD_CENTER_ID = '1'        AND A.WORK_USER_ID = C.USER_ID        AND (A.CHECK_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')        AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID AND                  A.CHECK_STATE_CD = '1'              AND                 A.CHECK_STATE_CD = '1'              AND                 A.CNTCHK_ID = REPLACE('1','-','')              AND                 A.PLAN_YMD = '1'              AND                 A.WORK_USER_ID = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findBooksfCntChkPlanPagedList
+
+		SELECT G.record_center_id		      ,SUBSTR(G.cntchk_id, 1, 4)||'-'||SUBSTR(G.cntchk_id, 5, 6) AS cntchk_id		      ,G.plan_ymd		      ,G.check_ymd		      ,G.user_nm AS work_user_nm		      ,G.user_id AS work_user_id		      ,G.com_cd AS check_state_cd		      ,G.com_cd_nm AS check_state_nm		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		              ,E.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.CNTCHK_ID, A.PLAN_YMD, A.CHECK_YMD, C.USER_NM, C.USER_ID		                  ,D.COM_CD, D.COM_CD_NM		            FROM TB_SRCNTCHK A, TB_STUSER C, TB_ZZCOMCD D		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.WORK_USER_ID = C.USER_ID		            AND (A.CHECK_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')		            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		             AND  		                    A.CHECK_STATE_CD = '1'		                  AND 		                    A.CHECK_STATE_CD = '1'		                  AND 		                    A.CNTCHK_ID = REPLACE('1','-','')		                  AND 		                    A.PLAN_YMD = '1'		                  AND 		                    A.WORK_USER_ID = '1'		                  		            ORDER BY A.RECORD_CENTER_ID, CNTCHK_ID DESC		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkPlanTemp
+
+		DELETE FROM TB_ZZSTAKRMTEMP		WHERE USER_ID = '1'		AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : insert
+-- Query Id : createBooksfCntChkTemp
+
+		INSERT INTO TB_ZZSTAKRMTEMP (			RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK		) VALUES (			'1', '1', '1', '1' 		) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkTemp
+
+		DELETE FROM TB_ZZSTAKRMTEMP		WHERE RECORD_CENTER_ID = '1'		AND TRGT_ID = '1'		AND REMK = '1'		AND USER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : insert
+-- Query Id : createBooksfCntChkChngTemp
+
+		INSERT INTO TB_ZZSTAKRMTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK)		(			SELECT '1' RECORD_CENTER_ID			     , '1' USER_ID				 , B.STAKRM_ID			     , B.BOOKSF_ID			FROM TB_SRCNTCHK A, TB_SRCNTCHKDETL B			WHERE B.CNTCHK_ID = REPLACE('1', '-', '')			AND A.CNTCHK_ID = B.CNTCHK_ID			AND A.RECORD_CENTER_ID = '1'			AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID			GROUP BY B.CNTCHK_ID, B.STAKRM_ID, B.BOOKSF_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countCntChkPlanTempPagedList
+
+		SELECT COUNT(1)        FROM TB_SRBOOKSF A, TB_SRSTAKRM C,  TB_ZZSTAKRMTEMP D        WHERE A.RECORD_CENTER_ID = '1'        AND A.STAKRM_ID = C.STAKRM_ID        AND (A.STAKRM_ID = D.TRGT_ID AND A.BOOKSF_ID = D.REMK AND D.USER_ID = '1')        AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID         AND                  A.STAKRM_ID = '1'              AND                 A.STAKRM_ID = '1'              AND                 A.BOOKSF_ID = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkPlanTempPagedList
+
+		SELECT G.stakrm_id		      ,G.stakrm_nm		      ,G.booksf_id		      ,G.booksf_nm		      ,(SELECT COUNT(1) FROM TB_SRBOOKSFARNGDETL B 		        WHERE B.stakrm_id = G.stakrm_id		        AND B.booksf_id = G.booksf_id		        AND B.record_center_id = G.record_center_id) AS folder_cnt 		      ,G.last_check_yyyy		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		                ,E.*		        FROM (		            SELECT A.RECORD_CENTER_ID		                    , A.STAKRM_ID		                    , C.STAKRM_NM		                    , A.BOOKSF_ID		                    , A.BOOKSF_NM		                    , A.LAST_CHECK_YYYY		            FROM TB_SRBOOKSF A, TB_SRSTAKRM C,  TB_ZZSTAKRMTEMP D		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.STAKRM_ID = C.STAKRM_ID		            AND (A.STAKRM_ID = D.TRGT_ID AND A.BOOKSF_ID = D.REMK AND D.USER_ID = '1')		            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID AND  		                    A.STAKRM_ID = '1'		                  AND 		                    A.STAKRM_ID = '1'		                  AND 		                    A.BOOKSF_ID = '1'		                  		            ORDER BY A.RECORD_CENTER_ID, A.STAKRM_ID, A.BOOKSF_ID		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkSno
+
+		SELECT NVL(MAX(Sno),0) + 1 SNO		  FROM TB_SRCNTCHK		 WHERE CHECK_YYYY = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkPlan
+
+		INSERT INTO TB_SRCNTCHK (			RECORD_CENTER_ID, CNTCHK_ID,CHECK_YYYY,SNO,PLAN_YMD,WORK_USER_ID,CHECK_STATE_CD		) VALUES (			'1','1','1','1','1','1','1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkTempList
+
+		SELECT A.STAKRM_ID		     , C.STAKRM_NM		     , A.BOOKSF_ID			 , A.BOOKSF_NM			 , (SELECT COUNT(1) FROM TB_SRBOOKSFARNGDETL B 			    WHERE B.STAKRM_ID = A.STAKRM_ID				  AND B.BOOKSF_ID = A.BOOKSF_ID				  AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID) FOLDER_CNT  		     , A.LAST_CHECK_YYYY		  FROM TB_SRBOOKSF A, TB_SRSTAKRM C,  TB_ZZSTAKRMTEMP D		 WHERE A.STAKRM_ID = C.STAKRM_ID		   AND (A.STAKRM_ID = D.TRGT_ID AND A.BOOKSF_ID = D.REMK AND D.USER_ID = '1')		   AND A.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID 	      AND  				A.STAKRM_ID = '1'			  AND 				A.STAKRM_ID = '1'			  AND 				A.BOOKSF_ID = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkFolder
+
+		SELECT A.FOLDER_ID		  FROM TB_SRBOOKSFARNGDETL A, TB_RDFOLDER B		 WHERE A.STAKRM_ID = '1'		   AND A.BOOKSF_ID = '1'		   AND A.RECORD_CENTER_ID = '1'   		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.FOLDER_ID = B.FOLDER_ID		   AND B.FOLDER_KEEP_STATE_CD IN ('01', '04');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkDetl
+
+		INSERT INTO TB_SRCNTCHKDETL(			RECORD_CENTER_ID,CNTCHK_ID,FOLDER_ID,STAKRM_ID,BOOKSF_ID		) VALUES (			'1',REPLACE('1','-',''),'1','1','1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : update
+-- Query Id : updateCntChkPlan
+
+		UPDATE TB_SRCNTCHK		SET PLAN_YMD = '1'		WHERE RECORD_CENTER_ID = '1'		AND CNTCHK_ID = REPLACE('1', '-', '');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkDetl
+
+		DELETE FROM TB_SRCNTCHKDETL		WHERE RECORD_CENTER_ID = '1'		AND CNTCHK_ID = REPLACE('1', '-', '')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : delete
+-- Query Id : deleteCntChkPlan
+
+		DELETE FROM TB_SRCNTCHK		WHERE RECORD_CENTER_ID = '1'		AND CNTCHK_ID = REPLACE('1', '-', '')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findPrintDocCntChkPlanHead
+
+		SELECT SUBSTR(A.CNTCHK_ID, 1, 4)||'-'||SUBSTR(A.CNTCHK_ID, 5, 6) CNTCHK_ID		     , to_char(to_date(A.CHECK_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') CHECK_YMD		     , B.USER_NM WORK_USER_NM		  FROM TB_SRCNTCHK A, TB_STUSER B		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.CNTCHK_ID = REPLACE('1', '-', '')		   AND A.WORK_USER_ID = B.USER_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findPrintDocCntChkPlanData
+
+		SELECT A.FOLDER_ID		     , A.STAKRM_ID		     , A.BOOKSF_ID||'-'||C.BOOKSF_SHELF_CNO||'-'||C.BOOKSF_SHELF_RNO ARNG_INFO			 , B.STAKRM_MNG_NO			 , DECODE(B.PRESV_BOX_ID, '', '',  substr(B.PRESV_BOX_ID, 1, 3)||'-'||			   substr(B.PRESV_BOX_ID, 4, 3)||'-'||substr(B.PRESV_BOX_ID, 7, 3)||'-'||			   substr(B.PRESV_BOX_ID, 10, 3)||'-'||substr(B.PRESV_BOX_ID, 13, 3)) PRESV_BOX_ID			 , DECODE(A.DEFCT_FLAG,'1','이상','정상') DEFCT_FLAG_NM			 , A.HANDL_RSLT_CONT	 		  FROM TB_SRCNTCHKDETL A, TB_RDFOLDER B, TB_SRBOOKSFARNGDETL C   		 WHERE A.CNTCHK_ID = REPLACE('1', '-', '')		   AND A.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.FOLDER_ID = B.FOLDER_ID		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID   		   AND A.FOLDER_ID = C.FOLDER_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countBooksfCntChkStakrmBooksf
+
+		SELECT COUNT(1)        FROM TB_SRBOOKSF A        WHERE A.RECORD_CENTER_ID = '1'        AND (SELECT COUNT(1) FROM TB_SRBOOKSFARNGDETL B                 WHERE B.STAKRM_ID = A.STAKRM_ID                AND B.BOOKSF_ID = A.BOOKSF_ID                AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID)  >  0         AND NOT EXISTS (SELECT E.TRGT_ID                                     FROM TB_ZZSTAKRMTEMP E                                    WHERE E.RECORD_CENTER_ID = '1'                                    AND E.USER_ID = '1'                                    AND E.TRGT_ID = A.STAKRM_ID                                    AND E.REMK = A.BOOKSF_ID                                    AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AND                  A.STAKRM_ID = '1'              AND                 A.STAKRM_ID = '1'              AND                 A.BOOKSF_ID = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findBooksfCntChkStakrmBooksf
+
+		SELECT D.stakrm_id		      ,D.booksf_id		      ,(SELECT COUNT(1) 		        FROM TB_SRBOOKSFARNGDETL B, TB_RDFOLDER C		        WHERE B.FOLDER_ID=C.FOLDER_ID		        AND C.FOLDER_KEEP_STATE_CD IN ('01','04')		        AND B.STAKRM_ID = D.STAKRM_ID		        AND B.BOOKSF_ID = D.BOOKSF_ID		        AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID) AS FOLDER_CNT  		      ,D.last_check_yyyy		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		                ,B.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.STAKRM_ID, A.BOOKSF_ID, A.LAST_CHECK_YYYY		            FROM TB_SRBOOKSF A		            WHERE A.RECORD_CENTER_ID = '1'		            AND (SELECT COUNT(1) FROM TB_SRBOOKSFARNGDETL B 		                    WHERE B.STAKRM_ID = A.STAKRM_ID		                    AND B.BOOKSF_ID = A.BOOKSF_ID		                    AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID)  >  0 		            AND NOT EXISTS (SELECT E.TRGT_ID 		                                        FROM TB_ZZSTAKRMTEMP E		                                        WHERE E.RECORD_CENTER_ID = '1'		                                        AND E.USER_ID = '1'		                                        AND E.TRGT_ID = A.STAKRM_ID		                                        AND E.REMK = A.BOOKSF_ID		                                        AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID) AND  		                    A.STAKRM_ID = '1'		                  AND 		                    A.STAKRM_ID = '1'		                  AND 		                    A.BOOKSF_ID = '1'		                  		            ORDER BY A.RECORD_CENTER_ID, A.STAKRM_ID, A.BOOKSF_ID		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countBooksfCntChkRsltPagedList
+
+		SELECT COUNT(1)        FROM TB_SRCNTCHK A, TB_STUSER C, TB_ZZCOMCD D        WHERE A.RECORD_CENTER_ID = '1'        AND A.WORK_USER_ID = C.USER_ID        AND (A.CHECK_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')        AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID AND                  A.CHECK_STATE_CD = '1'              AND                 A.CHECK_STATE_CD = '1'              AND                 A.CNTCHK_ID = REPLACE('1','-','')              AND                 A.PLAN_YMD = '1'              AND                 A.WORK_USER_ID = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findBooksfCntChkRsltPagedList
+
+		SELECT G.record_center_id		      ,SUBSTR(G.cntchk_id, 1, 4)||'-'||SUBSTR(G.cntchk_id, 5, 6) AS cntchk_id		      ,G.plan_ymd		      ,G.check_ymd		      ,G.user_nm AS work_user_nm		      ,G.com_cd AS check_state_cd		      ,G.com_cd_nm AS check_state_nm		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		              ,E.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.CNTCHK_ID, A.PLAN_YMD, A.CHECK_YMD, C.USER_NM		                  ,D.COM_CD, D.COM_CD_NM		            FROM TB_SRCNTCHK A, TB_STUSER C, TB_ZZCOMCD D		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.WORK_USER_ID = C.USER_ID		            AND (A.CHECK_STATE_CD = D.COM_CD and D.COM_TYPE_CD = 'SR06')		            AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID AND  		                    A.CHECK_STATE_CD = '1'		                  AND 		                    A.CHECK_STATE_CD = '1'		                  AND 		                    A.CNTCHK_ID = REPLACE('1','-','')		                  AND 		                    A.PLAN_YMD = '1'		                  AND 		                    A.WORK_USER_ID = '1'		                  		            ORDER BY A.RECORD_CENTER_ID, CNTCHK_ID DESC		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countCntChkRsltFolderPagedList
+
+		SELECT COUNT(1)         FROM TB_RDFOLDER A, TB_SRCNTCHK B, TB_SRCNTCHKDETL C, TB_SRBOOKSFARNGDETL D, TB_ZZCOMCD E         WHERE B.CNTCHK_ID = REPLACE('1', '-', '')        AND B.CNTCHK_ID = C.CNTCHK_ID        AND C.FOLDER_ID = D.FOLDER_ID        AND C.FOLDER_ID = A.FOLDER_ID        AND A.FOLDER_KEEP_STATE_CD IN ('01','04')        AND (A.PRESV_TERM_CD = E.COM_CD and E.COM_TYPE_CD = 'RD07')        AND C.RECORD_CENTER_ID = '1'        AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID        AND C.RECORD_CENTER_ID = B.RECORD_CENTER_ID        AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkRsltFolderPagedList
+
+		SELECT H.folder_id		      ,H.stakrm_mng_no		      ,H.title		      ,H.creat_yyyy		      ,H.com_cd_nm AS presv_term_nm		      ,(H.stakrm_id||'-'||H.booksf_id||'-'||H.booksf_shelf_cno||'-'||H.booksf_shelf_rno) AS arng_info		      ,DECODE(H.defct_flag,'0','정상','1','이상','') AS defct_flag_nm		      ,H.handl_rslt_cont		FROM (		    SELECT G.*		    FROM (		        SELECT ROWNUM AS rnum		                ,F.*		        FROM (		            SELECT C.FOLDER_ID, A.STAKRM_MNG_NO, A.TITLE, A.CREAT_YYYY, E.COM_CD_NM		                  ,D.STAKRM_ID, D.BOOKSF_ID, D.BOOKSF_SHELF_CNO, D.BOOKSF_SHELF_RNO, C.DEFCT_FLAG		                  ,C.HANDL_RSLT_CONT     		            FROM TB_RDFOLDER A, TB_SRCNTCHK B, TB_SRCNTCHKDETL C, TB_SRBOOKSFARNGDETL D, TB_ZZCOMCD E 		            WHERE B.CNTCHK_ID = REPLACE('1', '-', '')		            AND B.CNTCHK_ID = C.CNTCHK_ID		            AND C.FOLDER_ID = D.FOLDER_ID		            AND C.FOLDER_ID = A.FOLDER_ID		            AND A.FOLDER_KEEP_STATE_CD IN ('01','04')		            AND (A.PRESV_TERM_CD = E.COM_CD and E.COM_TYPE_CD = 'RD07')		            AND C.RECORD_CENTER_ID = '1'		            AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND C.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		        ) F		        WHERE ROWNUM <= '1'		    ) G		    WHERE G.rnum >= '1'		) H		ORDER BY H.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : update
+-- Query Id : updateCntChkRslt
+
+		UPDATE TB_SRCNTCHKDETL		   SET DEFCT_FLAG = '1'		     , HANDL_RSLT_CONT = '1'		     , CHECK_YMD = '1'		 WHERE RECORD_CENTER_ID = '1'		   AND CNTCHK_ID = REPLACE('1', '-', '') 		   AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : update
+-- Query Id : updateCntChk
+
+			UPDATE TB_SRCNTCHK		   SET CHECK_STATE_CD = '1'		   	  ,CHECK_YMD = '1'			 WHERE CNTCHK_ID = REPLACE('1', '-', '')		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntBooksf
+
+		SELECT COUNT(*)		  FROM TB_SRBOOKSF		 WHERE RECORD_CENTER_ID = '1'		   AND STAKRM_ID='1'		   AND BOOKSF_ID='1'		   AND SHELF_C_CNT > '1'		   AND SHELF_R_CNT > '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntFolder
+
+		SELECT COUNT(*)          FROM TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B         WHERE A.RECORD_CENTER_ID = '1'           AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID           AND A.FOLDER_ID = B.FOLDER_ID           AND REPLACE(A.STAKRM_MNG_NO,'-','') = '1'           AND B.STAKRM_ID = '1'           AND B.BOOKSF_ID = '1'           AND B.BOOKSF_SHELF_CNO = '1'           AND B.BOOKSF_SHELF_RNO = '1'           AND A.FOLDER_KEEP_STATE_CD IN ('01','04')         	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findCntChkBarcdFolder
+
+		SELECT FOLDER_ID		  FROM TB_RDFOLDER   		 WHERE RECORD_CENTER_ID = '1'		   AND REPLACE(STAKRM_MNG_NO,'-','') = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : insert
+-- Query Id : createCntChkBarcdFolder
+
+ 		 INSERT INTO TB_SRCNTCHKDETL(record_center_id, cntchk_id, folder_id, stakrm_id, booksf_id)		 SELECT '1',REPLACE('1', '-', ''),A.folder_id,'1','1'  		   FROM TB_SRBOOKSFARNGDETL A,TB_RDFOLDER B		  WHERE A.RECORD_CENTER_ID=B.RECORD_CENTER_ID		    AND A.FOLDER_ID=B.FOLDER_ID		    AND B.FOLDER_KEEP_STATE_CD IN ('01','04')		    AND A.stakrm_id = '1'		    AND A.booksf_id = '1'		    AND A.record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : update
+-- Query Id : updateCntChkBarcode
+
+		UPDATE TB_SRCNTCHKDETL		   SET defct_flag = '1'				 WHERE record_center_id = '1'		   AND cntchk_id = '1'		   AND folder_id IN (SELECT folder_id		                       FROM TB_SRCNTCHKDETL		                      WHERE defct_flag IS NULL		                        AND record_center_id = '1'		                        AND cntchk_id = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : countBooksfCntChkCurStatePagedList
+
+		SELECT COUNT(1)        FROM (            SELECT DISTINCT A.CNTCHK_ID, B.STAKRM_ID, B.BOOKSF_ID, D.USER_NM, A.CHECK_YMD                    , E.COM_CD_NM            FROM TB_SRCNTCHK A, TB_SRCNTCHKDETL B, TB_STUSER D, TB_ZZCOMCD E            WHERE A.RECORD_CENTER_ID = '1'            AND A.CNTCHK_ID = B.CNTCHK_ID            AND A.WORK_USER_ID = D.USER_ID            AND (A.CHECK_STATE_CD = E.COM_CD and E.COM_TYPE_CD = 'SR06')            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID             AND                      A.CNTCHK_ID = REPLACE('1', '-', '')                  AND                     A.CNTCHK_ID = REPLACE('1', '-', '')                  AND                     A.CHECK_YMD = '1'                  AND                     B.SAKRM_ID = '1'                  AND                     B.BOOKSF_ID = '1'                              ) F ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml
+-- Query    : select
+-- Query Id : findBooksfCntChkCurStatePagedList
+
+		SELECT SUBSTR(H.cntchk_id, 1, 4)||'-'||SUBSTR(H.cntchk_id, 5, 6) AS cntchk_id		        ,H.stakrm_id		        ,H.booksf_id		        ,(SELECT COUNT(C.folder_id) FROM TB_SRCNTCHKDETL C WHERE C.cntchk_id = H.cntchk_id) AS folder_cnt		        ,H.user_nm AS work_user_nm		        ,H.check_ymd		        ,com_cd_nm AS check_state_nm        		FROM (		    SELECT G.*		    FROM (		        SELECT ROWNUM AS rnum		                ,F.*		        FROM (		            SELECT DISTINCT A.CNTCHK_ID, B.STAKRM_ID, B.BOOKSF_ID, D.USER_NM, A.CHECK_YMD		                    , E.COM_CD_NM		            FROM TB_SRCNTCHK A, TB_SRCNTCHKDETL B, TB_STUSER D, TB_ZZCOMCD E		            WHERE A.RECORD_CENTER_ID = '1'		            AND A.CNTCHK_ID = B.CNTCHK_ID		            AND A.WORK_USER_ID = D.USER_ID		            AND (A.CHECK_STATE_CD = E.COM_CD and E.COM_TYPE_CD = 'SR06')		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID AND  		                    A.CNTCHK_ID = REPLACE('1', '-', '')		                  AND 		                    A.CNTCHK_ID = REPLACE('1', '-', '')		                  AND 		                    A.CHECK_YMD = '1'		                  AND 		                    B.SAKRM_ID = '1'		                  AND 		                    B.BOOKSF_ID = '1'		                      		        ) F 		        WHERE ROWNUM <= '1'		    ) G		    WHERE G.rnum >= '1'		) H		ORDER BY H.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\BooksfCntChk.xml

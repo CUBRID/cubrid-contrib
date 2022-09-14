@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="WD01">
+	<select id="WC101" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT '0' AS GUBUN
+			, CREAT_YYYY AS ENTER_YEAR
+			, TO_CHAR(COUNT (CREAT_YYYY)) AS ENTER_CNT
+		FROM TB_RDFOLDER
+		WHERE     RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STUSER WHERE USER_ID = #USER_ID:VARCHAR#)
+			AND ORG_CD = #ORG_CD:VARCHAR#
+			AND FOLDER_KEEP_STATE_CD IN ('01', '04')
+		GROUP BY CREAT_YYYY
+	</select>
+	
+	<select id="WC102" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT TO_CHAR (NVL(MAX (FOLDER_REG_SEQ) + 1,'1')) AS SERIAL_NO
+		FROM TB_RDFOLDER
+		WHERE ORG_CD = #ORG_CD:VARCHAR#
+			AND CLSS_ID = #CLSS_ID:VARCHAR#
+			AND CREAT_YYYY = #CREAT_YYYY:VARCHAR#
+	</select>
+</sqlMap>

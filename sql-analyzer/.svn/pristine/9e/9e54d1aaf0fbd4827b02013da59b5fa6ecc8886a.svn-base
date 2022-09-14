@@ -1,0 +1,368 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectTakeOrgPlan
+
+ 		SELECT	count(1) 			FROM 	TB_TKORGTAKEPLAN		WHERE 	creat_sys_cd 	= '1'		AND		take_yyyy		= '1'		AND		take_org_cd 	= '1'			AND 	take_sno 		= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectTakeRecordCenterId
+
+		SELECT record_center_id		FROM   TB_STORG		WHERE  org_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectMaxTakeSno
+
+		SELECT  NVL(MAX(take_sno), 0)+1 take_sno		FROM    TB_TKORGTAKEPLAN		WHERE	record_center_id = '1'		AND		take_yyyy = '1'		AND		take_org_cd = '1'		AND		creat_sys_cd = '06';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectOrgPlan
+
+	    INSERT INTO TB_TKORGTAKEPLAN (record_center_id 		,take_yyyy	                                 ,take_org_cd 			,creat_sys_cd	                                 ,take_sno 				,recv_div_cd	                                 ,take_state_div_cd		,reg_dtime 	                                 ,take_req_user_id		,take_req_user_nm)				              VALUES('1' 	,'1'				                    ,'1' 		,'1'				                    ,'1' 			,'1'				                    ,'1' 	,'1' 				                    ,'1' 	,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateOldElectOrgPlan
+
+		UPDATE TB_TKORGTAKEPLAN 		   SET TAKE_STATE_DIV_CD = '1'		 WHERE RECORD_CENTER_ID  = '1'		   AND CREAT_SYS_CD 	 = '1'		   AND TAKE_ORG_CD 		 = '1'		   AND TAKE_YYYY 		 = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectRecvHist
+
+	    INSERT INTO TB_TKRECVHIST (  record_center_id ,recv_dtime 	    							,creat_sys_cd ,file_div_cd 	    							,total_cnt ,recv_imposs_error_cnt	                                ,auto_check_error_cnt ,exam_error_cnt 	                                ,reg_prog_state_cd ,state_flag)				          VALUES ('1' ,'1'				                 ,'1' ,'1'				                 ,'1' ,'1'				                 ,'1' ,'1'				                 ,'1' ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectRegError
+
+ 	   INSERT INTO TB_TKRECVERROR (record_center_id	                               ,recv_dtime	                               ,creat_sys_cd	                               ,file_div_cd	                               ,line_no	                               ,recv_error_rsn	                               ,reg_prog_state_cd)				            VALUES ('1'				                   ,'1'				                   ,'1'				                   ,'1'				                   ,'1'				                   ,'1'				                   ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findRecvTakeInfo
+
+		select recv_imposs_error_cnt, auto_check_error_cnt, exam_error_cnt, total_cnt		  from TB_TKRECVHIST 		 where record_center_id = '1'		   and recv_dtime = '1'		   and creat_sys_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateOldElectRegState
+
+	    UPDATE TB_TKRECVHIST	       SET reg_prog_state_cd     = '1'	          ,state_flag            = NVL('1',0)	            , 	                  recv_imposs_error_cnt = NVL('1',0)	                , 	                  auto_check_error_cnt  = NVL('1',0)	                , 	                  exam_error_cnt        = NVL('1',0)	                , 	                  total_cnt             = NVL('1',0)	                	    WHERE record_center_id='1'	      AND recv_dtime='1' 	      AND creat_sys_cd='1'	      ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateOldElectRegTakeState
+
+	    UPDATE TB_TKRECVHIST	       SET reg_prog_state_cd     = '1'	          ,state_flag            = NVL('1',0)	    WHERE record_center_id='1'	      AND recv_dtime='1' 	      AND creat_sys_cd='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateOldElectRegStateFlag
+
+		update TB_TKRECVHIST		   set state_flag = NVL('1', 0)		 where record_center_id='1'	       and recv_dtime='1' 	       and creat_sys_cd='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectOrgNm
+
+			SELECT ORG_NM			  FROM TB_STORG			 WHERE record_center_id='1'			   AND org_cd ='1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findFolderOldElectTakeSeq
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((TB_TKFOLDER_SQ01.nextval), 15, '0') FOLDER_TAKE_SEQ 		  FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectClssNm
+
+		SELECT UNIT_NM		FROM TB_ZZUNIT		WHERE RECORD_CENTER_ID='1' AND UNIT_CD='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectFolderReg
+
+	INSERT INTO TB_TKFOLDER (record_center_id,folder_take_seq	                         ,creat_sys_cd,org_cd	                         ,clss_div_cd,clss_id	                         ,creat_yyyy,folder_reg_seq	                         ,oper_read_range_cd,ho_no	                         ,take_org_cd,take_yyyy	                         ,take_sno,clss_nm	                         ,title,sub_title	                         ,folder_type_div_cd,folder_detl_type_cd	                         ,sumry,folder_size	                         ,record_tot_page_cnt,record_reg_cnt	                         ,efile_cnt,new_div_cd	                         ,chng_flag,old_folder_creat_org_nm	                         ,old_folder_clss_no,folder_start_dtime	                         ,folder_close_dtime,funsh_end_dtime	                         ,funsh_rsn,presv_term_cd,old_presv_term_cd	                         ,presv_method_cd,presv_area_cd	                         ,creat_user_id,creat_user_nm	                         ,creat_user_org_cd,creat_user_org_nm	                         ,creat_dtime,erecord_flag	                         ,creat_sys_folder_id,reg_dtime	                         ,sml_cd, line_no)	                 VALUES ('1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,(SELECT NVL(MAX(take_sno),0) 	                            FROM TB_TKORGTAKEPLAN			             	   WHERE record_center_id = '1'			             	     AND creat_sys_cd='06'			             	     AND take_yyyy='1'			             	     AND take_org_cd='1')			             	,(SELECT unit_nm 			             	    FROM TB_ZZUNIT 			             	   WHERE record_center_id = '1' 			             	     AND unit_cd = '1')			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1','1'			             	,'1',DECODE('1', '20', '25',LPAD('1',2,'0')),DECODE('1', '20', '20', '')			             	,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1','1'	                        ,'1', '1' )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectFolderCreatReg
+
+	    INSERT INTO TB_TKFOLDERCREAT (record_center_id,folder_take_seq	                                 ,agent_sno,agent_nm	                                 ,agent_type_cd,agent_org_nm	                                 ,agent_org_cd,reg_dtime	                                 ,duty_act_dtime)				             VALUES ('1','1'				                    ,(SELECT NVL(MAX(AGENT_SNO),0)+1 AGENT_SNO				                        FROM TB_TKFOLDERCREAT				                       WHERE RECORD_CENTER_ID = '1'				                         AND FOLDER_TAKE_SEQ = '1')				                    ,'1'				                    ,'1','1'				                    ,'1','1'				                    ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectFolderErrorReg
+
+	INSERT INTO TB_TKRECVERROR (record_center_id,recv_dtime,creat_sys_cd,file_div_cd,line_no,recv_error_rsn,reg_prog_state_cd)				VALUES('1','1','1','1','1','1','1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : countOldElectRegFileRegList
+
+		select count(1)		FROM (			select recv_dtime			from tb_tkrecvhist a  where record_center_id = '1'			and creat_sys_cd = '06'							group by recv_dtime		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectRegFileRegList
+
+		SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (		SELECT   (SELECT org_nm FROM TB_STORG WHERE org_cd = (select take_org_cd from tb_tkorgtakeplan where reg_dtime = recv_dtime)) org_nm       		   , (select take_yyyy from tb_tkorgtakeplan where reg_dtime = recv_dtime) creat_yyyy			   , recv_dtime, reg_prog_state_cd, state_flag		       , (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd ='TK11' and com_cd = a.reg_prog_state_cd) reg_prog_state_nm				      , tot_folder_cnt, err_folder_cnt				      , tot_record_cnt, err_record_cnt				      , tot_special_cnt, err_special_cnt				      , tot_attach_cnt, err_attach_cnt		FROM(	    			SELECT /*+ no_merge */ recv_dtime, max(reg_prog_state_cd) reg_prog_state_cd, state_flag				      , SUM(folder_tot) tot_folder_cnt, SUM(folder_err) err_folder_cnt				      , SUM(record_tot) tot_record_cnt, SUM(record_err) err_record_cnt				      , SUM(spcl_tot) tot_special_cnt, SUM(spcl_err) err_special_cnt				      , SUM(attach_tot) tot_attach_cnt, SUM(attach_err) err_attach_cnt			FROM(				SELECT recv_dtime, reg_prog_state_cd , state_flag				      ,sum(folder_err) folder_err, sum(record_err) record_err				      ,sum(spcl_err) spcl_err, sum(attach_err) attach_err				      ,sum(folder_tot) folder_tot, sum(record_tot) record_tot				      ,sum(spcl_tot) spcl_tot, sum(attach_tot) attach_tot				FROM(					select recv_dtime, reg_prog_state_cd , file_div_cd, state_flag,						   decode(file_div_cd, '1', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)                                                     else 0 end)												 ,0) folder_err,						   decode(file_div_cd, '2', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)                                                     else 0 end)												 ,0) record_err,						   decode(file_div_cd, '3', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)                                                     else 0 end)												 ,0) spcl_err,						   decode(file_div_cd, '4', (case reg_prog_state_cd when '3' then sum(recv_imposs_error_cnt)						                         		  					when '6' then sum(auto_check_error_cnt)																			when '7' then sum(exam_error_cnt)                                                   	 else 0 end) ,0) attach_err,						   decode(file_div_cd, '1', sum(total_cnt), 0) folder_tot,						   decode(file_div_cd, '2', sum(total_cnt), 0) record_tot,						   decode(file_div_cd, '3', sum(total_cnt), 0) spcl_tot,						   decode(file_div_cd, '4', sum(total_cnt), 0) attach_tot					from tb_tkrecvhist a					where record_center_id ='1'					  and creat_sys_cd = '06'						group by recv_dtime, reg_prog_state_cd, file_div_cd , state_flag  					)				group by recv_dtime, reg_prog_state_cd, state_flag				) 			group by recv_dtime, state_flag			order by recv_dtime			) a			) B        WHERE ROWNUM <= '1'    ) C    WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectRecordReg
+
+	    INSERT INTO TB_TKRECORD (record_center_id,record_take_seq	                            ,folder_take_seq,creat_sys_cd	                            ,org_cd,creat_yyyy	                            ,creat_reg_dtime,creat_reg_no	                            ,dtch_reg_no,title	                            ,sub_title,record_reg_div_cd	                            ,record_detl_type_cd,record_sumry	                            ,audvis_record_type,audvis_record_sumry	                            ,media_format,medium	                            ,record_size,attach_cnt	                            ,record_page_cnt,aprov_pos_rank_nm	                            ,duty_chrgr_nm,enforc_ymd	                            ,creat_org_reg_no,erecord_flag	                            ,old_record_creat_org_nm,old_record_docno	                            ,old_record_presv_term,open_div_cd	                            ,open_grade,part_open_rsn	                            ,open_limit_part,open_expt_dtime	                            ,recver,sender	                            ,doc_distr_no,folder_clss_no	                            ,spcl_record_type,new_div_cd	                            ,chng_flag,rjct_flag	                            ,doc_no,creat_user_id,creat_user_nm	                            ,creat_user_org_cd,creat_user_org_nm	                            ,creat_user_pos_rank_nm,creat_dtime	                            ,creat_sys_record_id,lang	                            ,reg_dtime,attach_type_cd	                            ,media_format_etc,medium_etc	                            ,record_sno,attach_etc, record_clss_cd, line_no)		                VALUES ('1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1'		                       ,'1','1', '1', '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectRecordCreatReg
+
+    INSERT INTO TB_TKRECORDCREAT (record_center_id,record_take_seq                                 ,agent_sno,agent_type_cd                                 ,agent_nm,agent_org_cd                                 ,agent_org_nm,duty_type_cd                                 ,duty_act_dtime,reg_dtime)			             VALUES ('1','1'			                    ,(SELECT NVL(MAX(AGENT_SNO),0)+1 AGENT_SNO			                        FROM TB_TKRECORDCREAT			                       WHERE RECORD_CENTER_ID = '1'			                         AND RECORD_TAKE_SEQ  = '1'),'1'			                    ,'1','1'			                    ,'1','1'				                ,'1','1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateTkFolderErecordFlag
+
+		update TB_TKFOLDER 		   set erecord_flag = (select sum(erecord_flag) 		   						 from ( select distinct erecord_flag 		   						 		  from TB_TKRECORD		   						 		 where record_center_id = '1'		   						 		   and creat_sys_cd = '1'		   						 		   and folder_take_seq = '1'		   						 		   and reg_dtime = '1'    							))		 where record_center_id = '1'		   and creat_sys_cd = '1'		   and folder_take_seq = '1'		   and reg_dtime = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : insert
+-- Query Id : creatOldElectAttachFileReg
+
+	    INSERT INTO TB_TKATTACHFILE (record_center_id	    							,record_take_seq	                                ,reg_seq,org_cd	                                ,creat_yyyy	                                ,creat_reg_no	                                ,attach_file_seq	                                ,attach_file_page_cnt	                                ,doc_type_cd	                                ,doc_type_sno	                                ,file_nm	                                ,file_size	                                ,attach_file_path	                                ,attach_file_type	                                ,reg_dtime)				             VALUES('1'				             		,'1'				                    , (SELECT NVL(MAX(REG_SEQ)+1, 1) 				                    	 FROM TB_TKATTACHFILE 				                    	WHERE RECORD_CENTER_ID = '1' 				                    	  AND RECORD_TAKE_SEQ = '1' 				                    	  AND ATTACH_FILE_TYPE = '1')				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1'				                    ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectTakeSeq
+
+		SELECT /*+INDEX(TB_TKFOLDER TB_TKFOLDER_UX01)*/FOLDER_TAKE_SEQ		FROM TB_TKFOLDER		WHERE CREAT_SYS_CD = '06'		  AND ORG_CD = '1'		  AND CREAT_YYYY = '1'		  AND CLSS_ID = '1'		  AND FOLDER_REG_SEQ = '1'		  AND HO_NO = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectOrgInfo
+
+		SELECT ORG_NM		  FROM TB_STORG		 WHERE record_center_id='1'		   AND org_cd ='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findRecordOldElectTakeSeq
+
+	    SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkrecord_sq01.nextval), 15, '0') record_take_seq 	      FROM DUAL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : isOldElectTkFolder
+
+		SELECT 'O'		  FROM TB_TKFOLDER		 WHERE RECORD_CENTER_ID='1'		   AND CREAT_SYS_CD='06'		   AND ORG_CD='1' 		   AND CREAT_YYYY='1'		   AND CLSS_ID='1'		   AND FOLDER_REG_SEQ='1'		   AND HO_NO='1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : isOldElectTkRecord
+
+		SELECT 'O'		  FROM TB_TKRECORD		 WHERE RECORD_CENTER_ID	= '1'		   AND CREAT_SYS_CD		= '1'		   AND ORG_CD			= '1' 		   AND CREAT_YYYY		= '1'		   AND CREAT_REG_NO		= '1'		   AND DTCH_REG_NO		= '1'		   AND FOLDER_CLSS_NO 	= '1'		   		   and rownum < 2	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectRecordTakeSeq
+
+		select record_take_seq		  from TB_TKRECORD		 where record_center_id 	= '1'		   and creat_sys_cd 		= '1'		   and org_cd 				= '1' 		   and creat_reg_dtime 		= '1'		   and creat_reg_no			= '1'		   and dtch_reg_no 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : getRecordTakeSeq
+
+		select nvl(max(record_sno), '1') 		  from TB_TKRECORD A		 where A.record_take_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectRegRecordTakeSeq
+
+			SELECT RECORD_TAKE_SEQ			  FROM TB_TKRECORD		     WHERE record_center_id  = '1'               AND creat_sys_cd      = '1'               AND org_cd            = '1'               AND creat_reg_dtime   = '1'               AND creat_reg_no      = '1'               AND dtch_reg_no       = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateOldElectStateFlag
+
+		UPDATE TB_TKRECVHIST		SET state_flag = '1'		WHERE record_center_id='1' and recv_dtime='1' and creat_sys_cd='1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectAttachFile
+
+		DELETE 		  FROM TB_TKATTACHFILE		 WHERE RECORD_CENTER_ID = '1' 		   AND RECORD_TAKE_SEQ IN (SELECT RECORD_TAKE_SEQ		                             FROM TB_TKRECORD		                            WHERE RECORD_CENTER_ID = '1' 		                              AND FOLDER_TAKE_SEQ IN (SELECT FOLDER_TAKE_SEQ		                                                        FROM TB_TKFOLDER		                                                       WHERE RECORD_CENTER_ID = '1'  		                                                         AND CREAT_SYS_CD = '1'		                                                         AND REG_DTIME = '1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectRecordCreat
+
+		DELETE 		  FROM TB_TKRECORDCREAT		 WHERE RECORD_CENTER_ID = '1' 		   AND RECORD_TAKE_SEQ IN (SELECT RECORD_TAKE_SEQ		                             FROM TB_TKRECORD		                            WHERE RECORD_CENTER_ID = '1' 		                              AND FOLDER_TAKE_SEQ IN (SELECT FOLDER_TAKE_SEQ		                                                        FROM TB_TKFOLDER		                                                       WHERE RECORD_CENTER_ID = '1'  		                                                         AND CREAT_SYS_CD = '1'		                                                         AND REG_DTIME = '1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectRecord
+
+		DELETE          FROM TB_TKRECORD         WHERE RECORD_CENTER_ID = '1'            AND FOLDER_TAKE_SEQ IN (SELECT FOLDER_TAKE_SEQ                                     FROM TB_TKFOLDER                                    WHERE RECORD_CENTER_ID = '1'                                        AND CREAT_SYS_CD = '1'                                      AND REG_DTIME = '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectFolderCreat
+
+		DELETE          FROM TB_TKFOLDERCREAT         WHERE RECORD_CENTER_ID = '1'            AND FOLDER_TAKE_SEQ IN (SELECT FOLDER_TAKE_SEQ                                     FROM TB_TKFOLDER                                    WHERE RECORD_CENTER_ID = '1'                                        AND CREAT_SYS_CD = '1'                                      AND REG_DTIME = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectFolderTakeTakovr
+
+		delete		from tb_tkfoldertaketakovr		where reg_dtime = '1' 		and record_center_id='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectFolder
+
+		DELETE          FROM TB_TKFOLDER         WHERE RECORD_CENTER_ID = '1'             AND CREAT_SYS_CD = '1'           AND REG_DTIME = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectOrgPlan
+
+		delete		  from tb_tkorgtakeplan		 where record_center_id='1' 		   and creat_sys_cd = '1'		   and reg_dtime = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectRecvHist
+
+		delete		  from tb_tkrecvhist		 where record_center_id='1' 	   	   and creat_sys_cd = '1'		   and recv_dtime = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : delete
+-- Query Id : deleteOldElectRecvError
+
+		delete		  from tb_tkrecverror		 where record_center_id='1' 		   and creat_sys_cd = '1'		   and recv_dtime = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectRegInfo
+
+		select   record_center_id			   , reg_dtime recv_dtime			   , take_req_user_id			   , take_req_user_nm			   , take_org_cd			   , (select org_nm from TB_STORG where org_cd = take_org_cd) take_org_nm		  from   TB_TKORGTAKEPLAN		 where 	 creat_sys_cd 	= '1'		   and 	 take_yyyy 		= '1'		   and 	 take_org_cd 	= '1'		   and 	 take_sno 		= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findOldElectRegErrorList
+
+	SELECT C.*    FROM (        SELECT ROWNUM AS rnum            , B.*        FROM (			select    a.line_no					, a.recv_error_rsn					, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'TK10' AND COM_CD = file_div_cd) file_div_nm			  from tb_tkrecverror a			 where record_center_id 	= '1' 			   and recv_dtime			= '1'			 			 order by file_div_cd asc, to_number(decode(line_no, 'Exception', 0, line_no))			 ) B        WHERE ROWNUM <= '1'    ) C    WHERE C.rnum >= '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : countOldElectRegErrorList
+
+			select count(1)			  from tb_tkrecverror a			 where record_center_id = '1' 			   and recv_dtime='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findErecordFlag
+
+		select erecord_flag 		  from TB_TKRECORD 		 where record_center_id 	= '1'		   and org_cd 				= '1' 		   and creat_sys_cd 		= '1'		   and creat_reg_dtime 		= '1'		   and creat_reg_no			= '1'		   and dtch_reg_no 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findErrorRecordRegCnt
+
+	    select 	  record_reg_cnt		        , lpad((select count(1) 		        		  from TB_TKRECORD b 		        		 where a.folder_take_seq = b.folder_take_seq), 6,'0') record_cnt		        , record_tot_page_cnt		        , lpad((select count(1) 		        		  from TB_TKRECORD b, TB_TKATTACHFILE c 		        		 where b.record_center_id = c.record_center_id 		        		 and b.record_take_seq = c.record_take_seq 		        		 and b.folder_take_seq = a.folder_take_seq ), 6, '0')record_page_cnt		        , line_no		  from TB_TKFOLDER a		 where record_center_id = '1'		   and creat_yyyy 		= '1' 		   and creat_sys_cd 	= '1'		   and reg_dtime 		= '1'		   and (record_reg_cnt != lpad((select count(1) 		   								  from TB_TKRECORD b 		   								 where a.folder_take_seq = b.folder_take_seq), 6,'0') 		        or record_tot_page_cnt != lpad((select count(1) 		        								  from TB_TKRECORD b, TB_TKATTACHFILE c 		        								 where b.record_center_id = c.record_center_id 		        								   and b.record_take_seq = c.record_take_seq 		        								   and b.folder_take_seq = a.folder_take_seq ), 6, '0'));
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findErrorErecordFlag
+
+	select    line_no			, erecord_flag			, creat_sys_cd			, record_center_id			, creat_yyyy			, reg_dtime	  from (			select    a.erecord_flag					, (select count(1) 						 from tb_tkattachfile b 						where b.record_center_id 	= a.record_center_id 						  and b.record_take_seq 	= a.record_take_seq 						  and doc_type_cd='01') cnt					, a.line_no					, a.creat_sys_cd					, a.record_center_id					, a.creat_yyyy					, reg_dtime					, org_cd			  from TB_TKRECORD a			 where a.record_center_id 	= '1'			   and a.creat_sys_cd 		= '1'			   and reg_dtime 			= '1'			)	 where (erecord_flag ='1' and cnt = 0) or (erecord_flag='2' and cnt > 0)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateRecordAttachCnt
+
+		update TB_TKRECORD A		   set A.attach_cnt = (select count(1) 		  						from TB_TKATTACHFILE B 		  					   where B.record_center_id = '1' 		  					     and B.reg_dtime = '1'		  					     and A.record_center_id = B.record_center_id		  					     and A.record_take_seq = B.record_take_seq)		 where A.record_center_id = '1'		   and A.creat_sys_cd = '1'		   and A.reg_dtime = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findRegSeq
+
+		select nvl(max(reg_seq) + 1, 1) regSeq 		  from tb_tkattachfile 		 where record_center_id = '1'		   and record_take_seq = '1'		   and attach_file_type = '1'  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateRecordSize
+
+		update tb_tkrecord a 		   set a.record_size = (select nvl(file_size, 0) 		                          from (select record_take_seq, nvl(sum(file_size), 0) file_size		                                  from tb_tkattachfile	                                     where record_center_id = '1'		                                   and reg_dtime = '1'		                                 group by record_take_seq		                               )		                         where record_take_seq = a.record_take_seq 		                       )                         		 where a.record_center_id = '1'		   and a.creat_sys_cd = '1'		   and a.reg_dtime = '1'		   and attach_cnt > 0	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : update
+-- Query Id : updateFolderSize
+
+		 update tb_tkfolder a		    set a.folder_size = (select nvl(folder_size, 0) 		                           from ( select folder_take_seq, nvl(sum(record_size),0) folder_size		                                    from tb_tkrecord 		                                   where record_center_id = '1'		                                     and creat_sys_cd = '1'		                                     and reg_dtime = '1'		                                   group by folder_take_seq		                                 )   		                           where folder_take_seq = a.folder_take_seq		                         )		  where record_center_id = '1'		    and creat_sys_cd = '1'		    and reg_dtime = '1'		    and exists (		    	select 1 from tb_tkrecord 		    	where 	record_center_id = '1'		    	and 	creat_sys_cd = '1'		    	and 	reg_dtime = '1'		    );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml
+-- Query    : select
+-- Query Id : findRegProgStateCd
+
+		select max(reg_prog_state_cd) 		from tb_tkrecvhist		where record_center_id = '1'		and recv_dtime = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\oldElectReg\OldElectReg.xml

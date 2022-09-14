@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.rcTake">
+
+	<!-- 기관간인수 기록물인수 인수현황 목록을 조회한다. -->
+	<resultMap id="findRcTakeCurState-result" class="rms.transf.rcTake.domain.RcTakeCurState">
+		<result property="takeMngNo" 			column="TAKE_MNG_NO"/>
+		<result property="takeRepCd" 			column="TAKE_REP_CD"/>
+		<result property="takeYyyy" 			column="TAKE_YYYY"/>
+		<result property="takeSno" 		 		column="TAKE_SNO"/>
+		<result property="recordCenterId"		column="RECORD_CENTER_ID"/>
+		<result property="takeRepNm" 			column="TAKE_REP_NM"/>
+		<result property="takovrRepCd" 			column="TAKOVR_REP_CD"/>
+		<result property="takovrRepNm" 			column="TAKOVR_REP_NM"/>
+		<result property="takeFolderCnt" 		column="TAKE_FOLDER_CNT"/>
+		<result property="takeRecordCnt"  		column="TAKE_RECORD_CNT"/>
+	</resultMap>
+	<!-- 
+		인수현황 총계조회
+	 -->
+	<select id="findRcTakeCurStateTotal" parameterClass="rms.transf.rcTake.domain.RcTakeCurState" resultMap="findRcTakeCurState-result">
+		SELECT '총계' take_mng_no
+		      ,A.take_rep_cd
+		      ,A.take_yyyy
+		      ,0 take_sno
+		      ,A.record_center_id
+		      ,'' take_rep_nm
+		      ,'' takovr_rep_cd
+		      ,'' takovr_rep_nm
+		      <!--cubrid ,SUM((SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE (Z.record_center_id, Z.folder_id) IN (SELECT Y.record_center_id, Y.rd_folder_id FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno))) take_folder_cnt-->
+,SUM((SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id))) AS take_folder_cnt
+		      <!--cubrid ,SUM((SELECT COUNT(1) FROM TB_RDRECORD Z WHERE (Z.record_center_id, Z.folder_id) IN (SELECT Y.record_center_id, Y.rd_folder_id FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno))) take_record_cnt-->
+,SUM((SELECT COUNT(1) FROM TB_RDRECORD Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id))) AS take_record_cnt
+		FROM TB_DFTAKEPLAN A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.take_yyyy = #takeYyyy:VARCHAR#
+		AND   A.take_prog_state_cd = '04'
+	    <isNotEmpty prepend="AND" property="takovrRepCd">
+	        A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="takovrRepNm">
+	        A.takovr_rep_nm like #takovrRepNm:VARCHAR#
+	    </isNotEmpty>
+		GROUP BY A.take_rep_cd, A.take_yyyy, A.record_center_id
+	</select>
+
+	<!-- 
+		인수현황 목록조회
+	 -->
+	<select id="findRcTakeCurStateList" parameterClass="rms.transf.rcTake.domain.RcTakeCurState" resultMap="findRcTakeCurState-result">
+		SELECT A.take_rep_cd||'-'||A.take_yyyy||'-'||LPAD(A.take_sno, 6, '0') take_mng_no
+		      ,A.take_rep_cd
+		      ,A.take_yyyy
+		      ,A.take_sno
+		      ,A.record_center_id
+		      ,A.take_rep_nm
+		      ,A.takovr_rep_cd
+		      ,A.takovr_rep_nm
+		      <!--cubrid ,(SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE (Z.record_center_id, Z.folder_id) IN (SELECT Y.record_center_id, Y.rd_folder_id FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno)) take_folder_cnt-->
+                      ,(SELECT COUNT(1) FROM TB_RDFOLDER Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id)) take_folder_cnt
+		      <!--cubrid ,(SELECT COUNT(1) FROM TB_RDRECORD Z WHERE (Z.record_center_id, Z.folder_id) IN (SELECT Y.record_center_id, Y.rd_folder_id FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno)) take_record_cnt-->
+                      ,(SELECT COUNT(1) FROM TB_RDRECORD Z WHERE EXISTS (SELECT 1 FROM TB_RCTAKEFOLDERLIST Y WHERE Y.take_rep_cd = A.take_rep_cd AND Y.take_yyyy = A.take_yyyy AND Y.take_sno = A.take_sno AND Y.record_center_id = Z.record_center_id AND Y.rd_folder_id = Z.folder_id)) take_record_cnt
+		FROM TB_DFTAKEPLAN A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.take_yyyy = #takeYyyy:VARCHAR#
+		AND   A.take_prog_state_cd = '04'
+	    <isNotEmpty prepend="AND" property="takovrRepCd">
+	        A.takovr_rep_cd = #takovrRepCd:VARCHAR#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="AND" property="takovrRepNm">
+	        A.takovr_rep_nm like #takovrRepNm:VARCHAR#
+	    </isNotEmpty>
+		ORDER BY A.take_rep_cd, A.take_yyyy, A.take_sno
+	</select>
+</sqlMap>

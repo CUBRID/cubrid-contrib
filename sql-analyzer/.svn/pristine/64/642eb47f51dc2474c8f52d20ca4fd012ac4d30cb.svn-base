@@ -1,0 +1,32 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\RecordTrace.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\RecordTrace.xml
+-- Query    : select
+-- Query Id : countRecordTrace
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.RECORD_ID AND A.TRGT_DIV_CD='2'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		AND C.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\RecordTrace.xml
+-- Query    : select
+-- Query Id : findRecordTrace
+
+		SELECT A.TRGT_ID AS RECORD_ID		, B.USER_NM		, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.WORK_DTIME		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		, C.TITLE		, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = C.ORG_CD AND RECORD_CENTER_ID = '1') ORG_NM		, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = C.ORG_CD AND RECORD_CENTER_ID = '1') ORG_ABBR_NM		, C.CREAT_YYYY		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.RECORD_ID AND A.TRGT_DIV_CD='2'			AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'		AND C.RECORD_CENTER_ID = '1' 					ORDER BY A.WORK_DTIME ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\RecordTrace.xml
+-- Query    : select
+-- Query Id : countRecordTraceDetl
+
+		SELECT COUNT(1)		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = '1' AND A.TRGT_DIV_CD='2'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\RecordTrace.xml
+-- Query    : select
+-- Query Id : findRecordTraceDetl
+
+		SELECT '' RECORD_ID		, B.USER_NM		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = '1') DEPT_NM		, A.WORK_DTIME		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 		, '' TITLE		, '' ORG_NM		, '' ORG_ABBR_NM		, '' CREAT_YYYY		FROM TB_ZZTRACE A, TB_STUSER B		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = '1' AND A.TRGT_DIV_CD='2'		AND A.RECORD_CENTER_ID = '1'		AND B.RECORD_CENTER_ID = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\trace\RecordTrace.xml

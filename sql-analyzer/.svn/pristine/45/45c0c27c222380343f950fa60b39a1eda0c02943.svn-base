@@ -1,0 +1,95 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : mainRefDocList
+
+		SELECT /*+ index_desc (TB_STREFDATA TB_STREFDATA_PK) */			  board_sno,record_center_id, board_title, board_cont			, user_nm,user_id, SUBSTR(reg_dtime, 0, 8) reg_dtime		FROM TB_STREFDATA			WHERE ROWNUM <='3'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : countRefDocPagedList
+
+		SELECT  COUNT(1)        FROM TB_STREFDATA WHERE                       BOARD_TITLE LIKE '1'                   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : findRefDocPagedList
+
+		SELECT C.board_sno		      ,C.record_center_id		      ,C.board_title		      ,C.board_cont		      ,C.user_nm		      ,C.user_id		      ,SUBSTR(C.reg_dtime, 0, 8) AS reg_dtime		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT  *		            FROM TB_STREFDATA		             WHERE   		                        BOARD_TITLE LIKE '1'		                       		            ORDER BY BOARD_SNO DESC		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : insert
+-- Query Id : createRefDoc
+
+		INSERT INTO TB_STREFDATA (BOARD_SNO,RECORD_CENTER_ID,BOARD_TITLE,BOARD_CONT,USER_ID,USER_NM,FIND_CNT,REG_DTIME) 		VALUES (			'1', '1', '1', '1', '1','1', 0,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : findBoardSno
+
+		SELECT tb_strefdata_sq01.nextval from DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : insert
+-- Query Id : createRefUploadDoc
+
+		INSERT INTO tb_stattachfile		(BOARD_SNO,ATTACH_FILE_SNO,BOARD_DIV,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,RECORD_CENTER_ID,REG_USER_ID,REG_DTIME) 		VALUES('1','1','1','1','1','1','1','1','1',TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : findRefDocDetail
+
+		SELECT BOARD_SNO,BOARD_TITLE,BOARD_CONT,RECORD_CENTER_ID,USER_NM,USER_ID,REG_DTIME		FROM TB_STREFDATA WHERE  				BOARD_SNO = '1'			  AND 				BOARD_SNO = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : findRefDocFile
+
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME		FROM TB_STATTACHFILE		WHERE BOARD_SNO = '1'				AND BOARD_DIV ='3'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : update
+-- Query Id : updateRefDoc
+
+		UPDATE TB_STREFDATA	  	SET  BOARD_TITLE = '1'	  		,BOARD_CONT  = '1'	  	WHERE BOARD_SNO  = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : findAttachFileMaxSno
+
+		SELECT NVL(MAX(attach_file_sno), 0) FROM TB_STATTACHFILE WHERE BOARD_SNO = '1' AND BOARD_DIV ='3'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : delete
+-- Query Id : deleteRefDocFile
+
+		DELETE FROM TB_STATTACHFILE 		WHERE BOARD_SNO = '1' 		AND BOARD_DIV = '3';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : delete
+-- Query Id : deleteRefDoc
+
+		DELETE FROM TB_STREFDATA WHERE BOARD_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml
+-- Query    : select
+-- Query Id : findRefDocDownloadFile
+
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME		FROM TB_STATTACHFILE		WHERE BOARD_SNO = '1'		AND BOARD_DIV = '1'		AND ATTACH_FILE_SNO = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\main\MainRef.xml

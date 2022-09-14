@@ -1,0 +1,46 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+
+SelectArrCreatorCon
+Semantic: before ' )) AS SORT		FROM  TB_RDRECORDCREAT A		WHERE A.RECORD_CENTER_I...'
+Nested or invalid use of aggregate function. select [A].[AGENT_TYPE_CD], (select [Z].[COM_CD_NM] from [TB_ZZCOMCD] [Z] where [Z].[COM_CD]=[A].[AGENT_TYPE_CD] and [Z].[COM_TYPE_CD]= ?:19 ), (select (select [Y].[FULL_ORG_NM] from [TB_STORG] [Y] where [Y].[RECORD_CENTER_ID]=[Z].[RECORD_CENTER_ID] and [Y].[ORG_CD]=[Z].[HUPPER_ORG_CD]) from [TB_STORG] [Z] where [Z].[RECORD_CENTER_ID]=[A].[RECORD_CENTER_ID] and [Z].[ORG_CD]=[A].[AGENT_ORG_CD]), (select [Z].[HUPPER_ORG_CD] from [TB_STORG] [Z] where [Z].[RECORD_CENTER_ID]=[A].[RECORD_CENTER_ID] and [Z].[ORG_CD]=[A].[AGENT_ORG_CD]), nvl(case when [A].[AGENT_ORG_CD] is null  then [A].[AGENT_ORG_NM] else (select [Z].[FULL_ORG_NM] from [TB_STORG] [Z] where [Z].[RECORD_CENTER_ID]=[A].[RECORD_CENTER_ID] and [Z].[ORG_CD]=[A].[AGENT_ORG_CD]) end, [A].[AGENT_ORG_NM]), [A].[AGENT_ORG_CD], [A].[AGENT_NM], [A].[AGENT_ID], [A].[AGENT_POS_RANK_NM],  trim(both  from  to_char(row_number() over (par[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectArrCreatorCon
+
+		SELECT A.AGENT_TYPE_CD		    , (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD12' AND Z.COM_CD=A.AGENT_TYPE_CD) AS AGENT_TYPE_NM		    , (SELECT (SELECT Y.FULL_ORG_NM FROM TB_STORG Y WHERE Y.RECORD_CENTER_ID=Z.RECORD_CENTER_ID AND Y.ORG_CD=Z.HUPPER_ORG_CD) FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.AGENT_ORG_CD) AS HUPPER_ORG_NM		    , (SELECT Z.HUPPER_ORG_CD FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID=A.RECORD_CENTER_ID AND Z.ORG_CD=A.AGENT_ORG_CD) AS HUPPER_ORG_CD		    , NVL(CASE WHEN A.AGENT_ORG_CD IS NULL THEN A.AGENT_ORG_NM 		               ELSE (SELECT Z.FULL_ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.AGENT_ORG_CD)		          END, A.AGENT_ORG_NM) AS AGENT_ORG_NM		    , A.AGENT_ORG_CD		    , A.AGENT_NM		    , A.AGENT_ID		    , A.AGENT_POS_RANK_NM		    , TRIM(TO_CHAR(ROW_NUMBER() OVER (PARTITION BY AGENT_TYPE_CD ORDER BY AGENT_TYPE_CD, AGENT_SNO DESC))) AS SORT		FROM  TB_RDRECORDCREAT A		WHERE A.RECORD_CENTER_ID = '1'		AND   A.RECORD_ID = '1'		AND   (A.AGENT_TYPE_CD IN ('01','02','03','05','06','08','09','22') OR (A.AGENT_TYPE_CD = '28' AND (AGENT_DUTY_TYPE_CD != '07' OR AGENT_DUTY_TYPE_CD IS NULL)))		ORDER BY A.AGENT_SNO	;
+
+SelectArrDescriptionCon
+No statement to execute.[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectArrDescriptionCon
+
+;
+
+SelectArrSubjectCon
+No statement to execute.[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectArrSubjectCon
+
+;
+
+SelectStorageCon_ExtentCon
+Syntax: In line 7, column 2229 before END OF STATEMENT
+Syntax error: unexpected ';', expecting ')' [CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml
+-- Query    : select
+-- Query Id : SelectStorageCon_ExtentCon
+
+        SELECT TO_CHAR(NVL(SUM(EFILE_SUB_CNT),0)) AS EFILE_SUB_CNT            , TO_CHAR(NVL(SUM(EFILE_SIZE),0)) AS EFILE_SIZE            , TO_CHAR(NVL(SUM(RECORD_PAGE_CNT),0)) AS RECORD_PAGE_CNT            , TO_CHAR(NVL(SUM(EFILE_CNT),0)) AS EFILE_CNT            , TO_CHAR(NVL(SUM(PDF_A1_FILE_CNT),0)) AS PDF_A1_FILE_CNT        FROM (            (                SELECT COUNT(1) AS EFILE_SUB_CNT, 0 AS EFILE_SIZE, 0 AS RECORD_PAGE_CNT, 0 AS EFILE_CNT, 0 AS PDF_A1_FILE_CNT                FROM  TB_STORIGNFILE Z                WHERE (                EXISTS (                    SELECT RECORD_CENTER_ID, ORIGN_ID                    FROM  TB_RDRECORD                    WHERE RECORD_ID = '1'                    AND   RECORD_CENTER_ID = Z.RECORD_CENTER_ID                    AND   ORIGN_ID = Z.ORIGN_ID                )                AND   DOC_TYPE_CD NOT IN ('01','10','S1')            )            UNION ALL            (                SELECT 0 AS RECORD_SUB_CNT, NVL(SUM(FILE_SIZE),0) AS EFILE_SIZE, 0 AS RECORD_PAGE_CNT, COUNT(1) AS EFILE_CNT, 0 AS PDF_A1_FILE_CNT                FROM  TB_STORIGNFILE Z                WHERE                 EXISTS (                    SELECT RECORD_CENTER_ID, ORIGN_ID                    FROM  TB_RDRECORD                    WHERE RECORD_ID = '1'                    AND   RECORD_CENTER_ID = Z.RECORD_CENTER_ID                    AND   ORIGN_ID = Z.ORIGN_ID                )                AND   DOC_TYPE_CD NOT IN ('10','S1')            )            UNION ALL            (                SELECT 0 AS RECORD_SUB_CNT, 0 AS EFILE_SIZE, SUM(NVL(RECORD_PAGE_CNT,0)) AS RECORD_PAGE_CNT, 0 AS EFILE_CNT, 0 AS PDF_A1_FILE_CNT                FROM  TB_RDRECORD                WHERE RECORD_ID = '1'            )            UNION ALL            (                SELECT 0 AS RECORD_SUB_CNT, 0 AS EFILE_SIZE, 0 AS RECORD_PAGE_CNT, 0 AS EFILE_CNT, COUNT(1) AS PDF_A1_FILE_CNT                FROM  TB_STORIGNPDFA1FILE Z                WHERE                 EXISTS (                    SELECT RECORD_CENTER_ID, ORIGN_ID                    FROM  TB_RDRECORD                    WHERE RECORD_ID = '1'                    AND RECORD_CENTER_ID = Z.RECORD_CENTER_ID                    AND ORIGN_ID = Z.ORIGN_ID                )            )        )	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsPresvFormat\conf\sqlMap\sql\sqlMap-RecordSchema.xml

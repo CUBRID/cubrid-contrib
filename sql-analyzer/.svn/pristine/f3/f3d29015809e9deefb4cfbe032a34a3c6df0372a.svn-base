@@ -1,0 +1,39 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml
+-- Query    : select
+-- Query Id : findRcTakeSetPlanPagedList
+
+		SELECT C.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.record_center_id				     , A.take_rep_cd||'-'||a.take_yyyy||'-'||lpad(to_char(a.take_sno), 6, '0') take_mng_no				     , A.take_rep_cd				     , A.take_yyyy				     , A.take_sno				     , A.take_prog_state_cd				     , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'DF05' and Z.com_cd = A.take_prog_state_cd) take_prog_state_nm				     , A.take_state_div_cd				     , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'DF10' and Z.com_cd = A.take_state_div_cd) take_state_div_nm				     , A.take_rep_nm				     , A.takovr_rep_cd				     , A.takovr_rep_nm				     , A.take_rsn				     , A.reg_dtime				FROM  TB_DFTAKEPLAN A				WHERE A.record_center_id = '1'			     AND 			        A.takovr_rep_cd = '1'			      AND 			        A.take_yyyy = '1'			      AND 			        A.take_prog_state_cd = '1'			      AND 			        A.takovr_rep_nm like '1'			     			    ORDER BY A.take_rep_cd, A.take_yyyy, A.take_sno DESC			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml
+-- Query    : select
+-- Query Id : countRcTakeSetPlanPagedList
+
+		SELECT COUNT(1)		FROM  TB_DFTAKEPLAN A		WHERE A.record_center_id = '1'	     AND 	        A.takovr_rep_cd = '1'	      AND 	        A.take_yyyy = '1'	      AND 	        A.take_prog_state_cd = '1'	      AND 	        A.takovr_rep_nm like '1'	     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml
+-- Query    : insert
+-- Query Id : createRcTakeSetPlan
+
+		INSERT INTO TB_DFTAKEPLAN             (take_rep_cd, take_yyyy, take_sno, record_center_id, take_rep_nm            ,takovr_rep_cd, takovr_rep_nm, take_rsn, take_prog_state_cd, take_state_div_cd, reg_user_id, reg_dtime        )        VALUES(             '1', '1', (SELECT NVL(MAX(Z.take_sno),0)+1 takeSno                                                       FROM  TB_DFTAKEPLAN Z                                                        WHERE Z.take_rep_cd = '1'                                                       AND   Z.take_yyyy = '1'), '1', '1'            ,'1', '1', '1', '01', '01', '1'	, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')        );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetPlan
+
+		UPDATE TB_DFTAKEPLAN		   SET takovr_rep_cd = '1'		     , takovr_rep_nm = '1'		     , take_rsn      = '1'		 WHERE take_rep_cd   = '1'		   AND take_yyyy     = '1'		   AND take_sno      = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml
+-- Query    : delete
+-- Query Id : deleteRcTakeSetPlan
+
+		DELETE FROM TB_DFTAKEPLAN		 WHERE take_rep_cd = '1'		   AND take_yyyy   = '1'		   AND take_sno    = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetPlan.xml

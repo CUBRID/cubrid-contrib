@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.rangeresortopin">
+
+
+	<!-- 접근범위재분류 접근범위재분류현황 -->
+	<resultMap id="findRangeResortOpinCurStateNew-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinCurState">
+		<result property="resortYyyy" 			column="resort_yyyy" 			nullValue="" 	/>
+		<result property="openChoiceCnt"		column="open_choice_cnt"		nullValue="0"	/>
+	 	<result property="partChoiceCnt"		column="part_choice_cnt"		nullValue="0"	/>
+	 	<result property="closeChoiceCnt"		column="close_choice_cnt"		nullValue="0"	/>
+	 	<result property="openContiCnt"			column="open_conti_cnt"			nullValue="0"	/>
+	 	<result property="partContiCnt"			column="part_conti_cnt"			nullValue="0"	/>
+	 	<result property="closeContiCnt"		column="close_conti_cnt"		nullValue="0"	/>
+	 	<result property="openHandlOpenCnt"		column="open_handl_open_cnt"	nullValue="0"	/>
+	 	<result property="partHandlOpenCnt"		column="part_handl_open_cnt"	nullValue="0"	/>
+	 	<result property="closeHandlOpenCnt"	column="close_handl_open_cnt"	nullValue="0"	/>
+	 	<result property="openHandlPartCnt"		column="open_handl_part_cnt"	nullValue="0"	/>
+	 	<result property="partHandlPartCnt"		column="part_handl_part_cnt"	nullValue="0"	/>
+	 	<result property="closeHandlPartCnt"	column="close_handl_part_cnt"	nullValue="0"	/>
+	 	<result property="openHandlCloseCnt"	column="open_handl_close_cnt"	nullValue="0"	/>
+	 	<result property="partHandlCloseCnt"	column="part_handl_close_cnt"	nullValue="0"	/>
+	 	<result property="closeHandlCloseCnt"	column="close_handl_close_cnt"	nullValue="0"	/>
+	 	<result property="openExpertOpenCnt"	column="open_expert_open_cnt"	nullValue="0"	/>
+	 	<result property="partExpertOpenCnt"	column="part_expert_open_cnt"	nullValue="0"	/>
+	 	<result property="closeExpertOpenCnt"	column="close_expert_open_cnt"	nullValue="0"	/>
+	 	<result property="openExpertPartCnt"	column="open_expert_part_cnt"	nullValue="0"	/>
+	 	<result property="partExpertPartCnt"	column="part_expert_part_cnt"	nullValue="0"	/>
+	 	<result property="closeExpertPartCnt"	column="close_expert_part_cnt"	nullValue="0"	/>
+	 	<result property="openExpertCloseCnt"	column="open_expert_close_cnt"	nullValue="0"	/>
+	 	<result property="partExpertCloseCnt"	column="part_expert_close_cnt"	nullValue="0"	/>
+	 	<result property="closeExpertCloseCnt"	column="close_expert_close_cnt"	nullValue="0"	/>
+	 	<result property="openCenterOpenCnt"	column="open_center_open_cnt"	nullValue="0"	/>
+	 	<result property="partCenterOpenCnt"	column="part_center_open_cnt"	nullValue="0"	/>
+	 	<result property="closeCenterOpenCnt"	column="close_center_open_cnt"	nullValue="0"	/>
+	 	<result property="openCenterPartCnt"	column="open_center_part_cnt"	nullValue="0"	/>
+	 	<result property="partCenterPartCnt"	column="part_center_part_cnt"	nullValue="0"	/>
+	 	<result property="closeCenterPartCnt"	column="close_center_part_cnt"	nullValue="0"	/>
+	 	<result property="openCenterCloseCnt"	column="open_center_close_cnt"	nullValue="0"	/>
+	 	<result property="partCenterCloseCnt"	column="part_center_close_cnt"	nullValue="0"	/>
+	 	<result property="closeCenterCloseCnt"	column="close_center_close_cnt"	nullValue="0"	/>
+	</resultMap>
+	<!-- 접근범위재분류 접근범위재분류현황 -->
+	<select id="findRangeResortOpinCurStateNew" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinCurState" resultMap="findRangeResortOpinCurStateNew-result">
+	 	SELECT t.resort_yyyy
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2', '3')  and o.org_oper_range_bef = '01' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06')) as open_choice_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2', '3')  and o.org_oper_range_bef = '02' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06')) as part_choice_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2', '3')  and o.org_oper_range_bef = '03' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06')) as close_choice_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2', '3')  and o.org_oper_range_bef = '01' and o.resort_prog_state_cd in ('02', '03', '04', '05')) as open_conti_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2', '3')  and o.org_oper_range_bef = '02' and o.resort_prog_state_cd in ('02', '03', '04', '05')) as part_conti_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2', '3')  and o.org_oper_range_bef = '03' and o.resort_prog_state_cd in ('02', '03', '04', '05')) as close_conti_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '01' and o.org_oper_range_aft = '01'  and o.resort_prog_state_cd = '06') as open_handl_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '01' and o.org_oper_range_aft = '02'  and o.resort_prog_state_cd = '06') as open_handl_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '01' and o.org_oper_range_aft = '03'  and o.resort_prog_state_cd = '06') as open_handl_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '02' and o.org_oper_range_aft = '01'  and o.resort_prog_state_cd = '06') as part_handl_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '02' and o.org_oper_range_aft = '02'  and o.resort_prog_state_cd = '06') as part_handl_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '02' and o.org_oper_range_aft = '03'  and o.resort_prog_state_cd = '06') as part_handl_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '03' and o.org_oper_range_aft = '01'  and o.resort_prog_state_cd = '06') as close_handl_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '03' and o.org_oper_range_aft = '02'  and o.resort_prog_state_cd = '06') as close_handl_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1'  and o.org_oper_range_bef = '03' and o.org_oper_range_aft = '03'  and o.resort_prog_state_cd = '06') as close_handl_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as open_expert_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as open_expert_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as open_expert_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as part_expert_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as part_expert_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as part_expert_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as close_expert_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as close_expert_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag = '0') as close_expert_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as open_center_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as open_center_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as open_center_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as part_center_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as part_center_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as part_center_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as close_center_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as close_center_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2'  and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as close_center_close_cnt 		
+		FROM ( 		           
+		    SELECT resort_yyyy
+		    	, '$recordCenterId$' as record_center_id 		           
+		    FROM tb_rdrangeresortopin 		            
+		    WHERE record_center_id = #recordCenterId:VARCHAR# 		            
+		    AND resort_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR# 		            
+		    GROUP by resort_yyyy 		        
+		) t 
+	</select>
+	<!-- 접근범위재분류 접근범위재분류현황(상세) -->
+	<resultMap id="findRangeResortCurStateDetailListNew-result" class="rms.eval.rangeresortopin.domain.RangeResortOpinCurState">
+	 	<result property="deptAbbrNm"			column="dept_abbr_nm"			nullValue="" 	/>
+	 	<result property="handlOrgCd"			column="handl_org_cd"			nullValue="" 	/>
+	 	<result property="resortYyyy"			column="resort_yyyy"			nullValue="0" 	/>
+	 	<result property="closeFlag"			column="close_flag"				nullValue="0" 	/>
+	 	<result property="openChoiceCnt"		column="open_choice_cnt"		nullValue="0"	/>
+	 	<result property="partChoiceCnt"		column="part_choice_cnt"		nullValue="0"	/>
+	 	<result property="closeChoiceCnt"		column="close_choice_cnt"		nullValue="0"	/>
+	 	<result property="openContiCnt"			column="open_conti_cnt"			nullValue="0"	/>
+	 	<result property="partContiCnt"			column="part_conti_cnt"			nullValue="0"	/>
+	 	<result property="closeContiCnt"		column="close_conti_cnt"		nullValue="0"	/>
+	 	<result property="openHandlOpenCnt"		column="open_handl_open_cnt"	nullValue="0"	/>
+	 	<result property="partHandlOpenCnt"		column="part_handl_open_cnt"	nullValue="0"	/>
+	 	<result property="closeHandlOpenCnt"	column="close_handl_open_cnt"	nullValue="0"	/>
+	 	<result property="openHandlPartCnt"		column="open_handl_part_cnt"	nullValue="0"	/>
+	 	<result property="partHandlPartCnt"		column="part_handl_part_cnt"	nullValue="0"	/>
+	 	<result property="closeHandlPartCnt"	column="close_handl_part_cnt"	nullValue="0"	/>
+	 	<result property="openHandlCloseCnt"	column="open_handl_close_cnt"	nullValue="0"	/>
+	 	<result property="partHandlCloseCnt"	column="part_handl_close_cnt"	nullValue="0"	/>
+	 	<result property="closeHandlCloseCnt"	column="close_handl_close_cnt"	nullValue="0"	/>
+	 	<result property="openExpertOpenCnt"	column="open_expert_open_cnt"	nullValue="0"	/>
+	 	<result property="partExpertOpenCnt"	column="part_expert_open_cnt"	nullValue="0"	/>
+	 	<result property="closeExpertOpenCnt"	column="close_expert_open_cnt"	nullValue="0"	/>
+	 	<result property="openExpertPartCnt"	column="open_expert_part_cnt"	nullValue="0"	/>
+	 	<result property="partExpertPartCnt"	column="part_expert_part_cnt"	nullValue="0"	/>
+	 	<result property="closeExpertPartCnt"	column="close_expert_part_cnt"	nullValue="0"	/>
+	 	<result property="openExpertCloseCnt"	column="open_expert_close_cnt"	nullValue="0"	/>
+	 	<result property="partExpertCloseCnt"	column="part_expert_close_cnt"	nullValue="0"	/>
+	 	<result property="closeExpertCloseCnt"	column="close_expert_close_cnt"	nullValue="0"	/>
+	</resultMap>
+	<!-- 접근범위재분류 접근범위재분류현황 처리과선정(상세) -->
+	<select id="findRangeResortCurStateDetailListNew" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinCurState" resultMap="findRangeResortCurStateDetailListNew-result">
+		SELECT t.dept_abbr_nm
+			, t.handl_org_cd
+			, t.resort_yyyy
+			, t.close_flag
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2') and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06')) as open_choice_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2') and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06')) as part_choice_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2') and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06')) as close_choice_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2') and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.resort_prog_state_cd in ('02', '03', '04', '05')) as open_conti_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2') and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.resort_prog_state_cd in ('02', '03', '04', '05')) as part_conti_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case in ('1', '2') and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.resort_prog_state_cd in ('02', '03', '04', '05')) as close_conti_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.org_oper_range_aft = '01'  and o.resort_prog_state_cd = '06') as open_handl_open_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.org_oper_range_aft = '02'  and o.resort_prog_state_cd = '06') as open_handl_part_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.org_oper_range_aft = '03'  and o.resort_prog_state_cd = '06') as open_handl_close_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.org_oper_range_aft = '01'  and o.resort_prog_state_cd = '06') as part_handl_open_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.org_oper_range_aft = '02'  and o.resort_prog_state_cd = '06') as part_handl_part_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.org_oper_range_aft = '03'  and o.resort_prog_state_cd = '06') as part_handl_close_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.org_oper_range_aft = '01'  and o.resort_prog_state_cd = '06') as close_handl_open_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.org_oper_range_aft = '02'  and o.resort_prog_state_cd = '06') as close_handl_part_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '1' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.org_oper_range_aft = '03'  and o.resort_prog_state_cd = '06') as close_handl_close_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06') as open_expert_open_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06') as open_expert_part_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06') as open_expert_close_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06') as part_expert_open_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06') as part_expert_part_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06') as part_expert_close_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06') as close_expert_open_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06') as close_expert_part_cnt
+			, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd = t.handl_org_cd and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06') as close_expert_close_cnt
+		FROM (
+			SELECT s.dept_abbr_nm
+				, o.org_cd as handl_org_cd
+				, s.close_flag
+				, '$recordCenterId$' as record_center_id
+				, '$resortYyyy$' as resort_yyyy 
+		    FROM (
+			    SELECT org_cd
+			    FROM tb_rdrangeresortopin
+			    WHERE record_center_id = #recordCenterId:VARCHAR#
+			    AND resort_yyyy = #resortYyyy:VARCHAR#
+			    AND	org_cd != '0'
+                GROUP BY org_cd
+		    ) o, tb_stdept s
+			WHERE 	s.org_cd = o.org_cd
+        ) t
+		ORDER BY t.handl_org_cd, t.close_flag ASC
+	</select>
+	<!-- 접근범위재분류 접근범위재분류현황 기록관선정(상세) -->
+	<select id="findRangeResortCurStateCenterDetail" parameterClass="rms.eval.rangeresortopin.domain.RangeResortOpinCurState" resultMap="findRangeResortCurStateDetailListNew-result">
+	 	SELECT t.dept_abbr_nm
+	 		, t.resort_yyyy
+	 		, t.handl_org_cd
+	 		, t.close_flag
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '01' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06') and center_sel_flag IN ('1','2')) as open_choice_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '02' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06') and center_sel_flag IN ('1','2')) as part_choice_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '03' and o.resort_prog_state_cd in ('02', '03', '04', '05', '06') and center_sel_flag IN ('1','2')) as close_choice_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '01' and o.resort_prog_state_cd in ('02', '03', '04', '05') and center_sel_flag IN ('1','2')) as open_conti_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '02' and o.resort_prog_state_cd in ('02', '03', '04', '05') and center_sel_flag IN ('1','2')) as part_conti_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '03' and o.resort_prog_state_cd in ('02', '03', '04', '05') and center_sel_flag IN ('1','2')) as close_conti_cnt
+	 		, 0 as open_handl_open_cnt
+	 		, 0 as open_handl_part_cnt
+	 		, 0 as open_handl_close_cnt
+	 		, 0 as part_handl_open_cnt
+	 		, 0 as part_handl_part_cnt
+	 		, 0 as part_handl_close_cnt
+	 		, 0 as close_handl_open_cnt
+	 		, 0 as close_handl_part_cnt
+	 		, 0 as close_handl_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as open_expert_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as open_expert_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '01' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as open_expert_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as part_expert_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as part_expert_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '02' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as part_expert_close_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '01'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as close_expert_open_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '02'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as close_expert_part_cnt
+	 		, (select count(*) from tb_rdrangeresortopin o where o.record_center_id = t.record_center_id and o.resort_yyyy = t.resort_yyyy and o.resort_case = '2' and o.org_cd IS null and o.org_oper_range_bef = '03' and o.expert_oper_read_range_aft = '03'  and o.resort_prog_state_cd = '06' and center_sel_flag IN ('1','2')) as close_expert_close_cnt
+		FROM (
+		    SELECT '기록관확정' as dept_abbr_nm
+		    	, '0' as handl_org_cd
+		    	, '1' as close_flag
+		    	, '$recordCenterId$' as record_center_id
+		    	, '$resortYyyy$' as resort_yyyy
+		    FROM dual
+		) t
+	 </select>
+</sqlMap>

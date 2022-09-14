@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ResultFolderNeo">
+	
+	<!-- 철NEO 포맷변환 결과정보 : 1.저장매체 조회 -->
+	<select id="SelectFolderNeo_StMedium" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT MEDIUM_ID
+		FROM (
+		    SELECT MEDIUM_ID
+		    FROM  TB_STMEDIUM A
+		    WHERE EXISTS (
+		    	SELECT RECORD_CENTER_ID, DEST_STORAGE_TYPE, DEST_STORAGE_VENDOR FROM TB_STREQTRANS WHERE JOB_ID = #JOB_ID:VARCHAR#
+                        AND RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                        AND MEDIUM_CD = A.MEDIUM_CD
+                        AND MEDIUM_DETAIL_CD = A.MEDIUM_DETAIL_CD
+		    )
+		    AND   A.VOLM_ID IN (SELECT VOLM_ID FROM TB_STVOLM WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# AND DEL_FLAG = '0' AND VOLM_DIV_CD = '3')
+		    AND   A.DEL_FLAG = '0'
+		    AND   (A.TOT_SIZE - A.USE_SIZE) > NVL((SELECT NVL(DEST_FILE_SIZE,0) FROM TB_STREQRESULT WHERE JOB_ID = #JOB_ID:VARCHAR# AND REQUEST_STATUS = 'C'),0)
+		    ORDER BY A.RECORD_CENTER_ID, A.MEDIUM_ID
+		)
+		WHERE ROWNUM = 1
+	</select>
+	
+	<!-- 철NEO 포맷변환 결과정보 : 변환파일정보 생성
+		20150402 김경수 : 일반스토리지 neo 파일명 변경 처리  -->
+	<insert id="InsertFolderNeo_StFolderNeoFile" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STFOLDERNEOFILE
+		(
+		    FOLDER_NEO_FILE_ID, FOLDER_ID, CHNG_SNO, FILE_NM, NEO_FILE_TYPE_CD
+		    , FILE_SIZE, STORE_FILE_ID, NEO_TRANS_STATE, DEL_FLAG, RECORD_CENTER_ID
+		    , MEDIUM_ID, VIRUS_FLAG, TRANS_REQ_DTIME, TRANS_FIN_DTIME, REG_DTIME
+		)
+		(
+		    SELECT #FOLDER_NEO_FILE_ID:VARCHAR#, A.FOLDER_ID, A.NEOCHASU
+		        , CASE WHEN ((SELECT MEDIUM_CD FROM TB_STMEDIUM WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# AND MEDIUM_ID=#MEDIUM_ID:VARCHAR# AND ROWNUM=1) = '01') THEN
+                    (SELECT 'DOC'||Z.CREAT_SYS_CD||Z.ORG_CD||Z.CLSS_ID||Z.CREAT_YYYY||Z.FOLDER_REG_SEQ||Z.HO_NO||'.neo'
+		            FROM  TB_RDFOLDER Z
+		            WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND   Z.FOLDER_ID = A.FOLDER_ID)
+				ELSE
+		        	(SELECT 'DOC-'||Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CLSS_ID||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ
+		                    ||(CASE WHEN Z.HO_NO != '001' THEN ' ('||Z.HO_NO||')'
+		                            WHEN (SELECT COUNT(1) FROM TB_RDFOLDER Y WHERE Y.RECORD_CENTER_ID=Z.RECORD_CENTER_ID AND Y.CREAT_SYS_CD=Z.CREAT_SYS_CD AND Y.ORG_CD=Z.ORG_CD AND Y.CLSS_ID=Z.CLSS_ID AND Y.CREAT_YYYY=Z.CREAT_YYYY AND Y.FOLDER_REG_SEQ=Z.FOLDER_REG_SEQ) > 1 THEN ' ('||Z.HO_NO||')'
+		                            ELSE '' END)||'.neo'
+		            FROM  TB_RDFOLDER Z
+		            WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND   Z.FOLDER_ID = A.FOLDER_ID) 
+		        END AS FILE_NM
+		        , (CASE WHEN A.ERECORD_FLAG='1' THEN '3' ELSE '2' END) AS NEO_FILE_TYPE_CD
+		        , B.DEST_FILE_SIZE, B.DEST_FILE_ID, '4', 0 AS DEL_FLAG, A.RECORD_CENTER_ID
+		        , #MEDIUM_ID:VARCHAR# AS MEDIUM_ID, '0' AS VIRUS_FLAG, TO_CHAR(A.REQUEST_START_TIME,'YYYYMMDDHH24MISS') AS TRANS_REQ_DTIME, TO_CHAR(A.REQUEST_END_TIME,'YYYYMMDDHH24MISS') AS TRANS_FIN_DTIME, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS') AS REG_DTIME
+		    FROM  TB_STREQTRANS A
+		        , TB_STREQRESULT B
+		    WHERE A.JOB_ID = #JOB_ID:VARCHAR#
+		    AND   B.JOB_ID = A.JOB_ID
+		)
+	</insert>
+	
+	<!-- 철NEO 포맷변환 결과정보 : 변환실패 이력생성 -->
+	<insert id="InsertFolderNeo_StWorkHist" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STWORKHIST
+		(
+		    RECORD_CENTER_ID, WORK_HIST_ID, WORK_DIV, WORK_START_DTIME, WORK_CLOSE_DTIME
+		    , SVC_CD, SVC_NM, FOLDER_ID, RECORD_ID, STORE_FILE_NM
+		    , ERROR_FLAG, ERROR_CD, ERROR_CONT, WORK_CONT, ERROR_SOL_CONT
+		    , ORIGN_FILE_ID, FOLLOWUP_DIV_CD, FORMAT_DIV_CD
+		)
+		(
+<!-- 		    SELECT A.RECORD_CENTER_ID, #WORK_HIST_ID:VARCHAR#, '4', A.REQUEST_START_TIME, A.REQUEST_END_TIME -->
+		    SELECT A.RECORD_CENTER_ID, #WORK_HIST_ID:VARCHAR#, '4', TO_CHAR(A.REQUEST_START_TIME,'YYYYMMDDHH24MISS'), TO_CHAR(A.REQUEST_END_TIME,'YYYYMMDDHH24MISS')
+		        , '306', 'PresvFormat ResultService', A.FOLDER_ID, A.RECORD_ID, B.DEST_FILE_NM
+		        , '1', NVL(B.ERROR_CODE, A.ERROR_CODE), NVL(B.ERROR_CONTENTS, A.ERROR_CONTENTS), '', ''
+		        , SUBSTR(B.SRC_FILE_ID,1,19), '0', '2'
+		    FROM  TB_STREQTRANS A
+		        , TB_STREQRESULT B
+		    WHERE A.JOB_ID = #JOB_ID:VARCHAR#
+			AND   A.REQUEST_STATUS = 'D'
+		    AND   A.JOB_ID = B.JOB_ID(+)
+		)
+	</insert>
+	
+	<!-- 철NEO 포맷변환 결과정보 : 1.기록물철 1차 변환상태 갱신 -->
+	<update id="UpdateFolderNeo_RdFolder_1" parameterClass="java.util.HashMap">
+		<!--cubrid update-->
+		UPDATE UpdateFolderNeo_RdFolder_1_view C
+		SET C.NEO_TRANS_STATE = #NEO_TRANS_STATE:VARCHAR#
+		  , C.FOLDER_NEO_FILE_ID = C.NEW_FOLDER_NEO_FILE_ID
+	  WHERE C.FOLDER_ID = #FOLDER_ID:VARCHAR# 
+	</update>
+	
+	<!-- 철NEO 포맷변환 결과정보 : 2.기록물철 2차 변환상태 갱신 -->
+	<update id="UpdateFolderNeo_RdFolder_2" parameterClass="java.util.HashMap">
+		<!--cubrid update-->
+		UPDATE UpdateFolderNeo_RdFolder_2_view C
+		SET C.NEO_TRANS_STATE_2 = #NEO_TRANS_STATE:VARCHAR#
+		  , C.FOLDER_NEO_FILE_ID = C.NEW_FOLDER_NEO_FILE_ID
+		WHERE C.FOLDER_ID = #FOLDER_ID:VARCHAR#
+	</update>
+	
+	<!-- 철NEO 포맷변환 결과정보 : 3.접수이관목록 기록물철 2차 변환상태 갱신 (확정상태의 철에 대하여 갱신) -->
+	<update id="UpdateFolderNeo_DfRecvTransfList_2" parameterClass="java.util.HashMap">
+		UPDATE TB_DFRECVTRANSFLIST A
+		SET   A.NEO_TRANS_STATE = #NEO_TRANS_STATE:VARCHAR#
+		WHERE A.RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		AND   A.FOLDER_ID = #FOLDER_ID:VARCHAR#
+		AND   A.CONFM_TRANSF_DIV_CD IN ('1','2','3')
+	</update>
+	
+	<!-- 철NEO 포맷변환 결과정보 : 4.저장매체용량정보 갱신 -->
+	<update id="UpdateFolderNeo_StMedium" parameterClass="java.util.HashMap">
+		UPDATE TB_STMEDIUM
+		SET   USE_SIZE = USE_SIZE + NVL((SELECT NVL(SUM(DEST_FILE_SIZE),0) FROM TB_STREQRESULT WHERE JOB_ID = #JOB_ID:VARCHAR# AND REQUEST_STATUS = 'C'),0)
+		WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		AND   MEDIUM_ID = #MEDIUM_ID:VARCHAR#
+	</update>
+	
+</sqlMap>

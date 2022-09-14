@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.transf">
+
+
+	<!-- 이관 이관현황 목록을 조회한다. -->
+	<resultMap id="transfCurState-result" class="rms.transf.transf.domain.TransfHandl" >
+		<result property="transfListId" 			column="TRANSF_LIST_ID"/>
+		<result property="orgNm" 					column="ORG_NM"/>
+		<result property="orgAbbrNm" 				column="ORG_ABBR_NM"/>		
+		<result property="clssNm" 					column="CLSS_NM"/>		
+		<result property="folderTitle" 				column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="recordRegCnt" 			column="RECORD_REG_CNT"/>
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>
+		<result property="bisTermNm" 				column="BIS_TERM_NM"/>
+		<result property="confmTransfDivNm"			column="CONFM_TRANSF_DIV_NM"/>
+		<result property="transfHopeYyyy" 			column="TRANSF_HOPE_YYYY"/>
+		<result property="transfRsn"	 			column="TRANSF_RSN"/>
+		<result property="folderId" 				column="FOLDER_ID"/>
+		<result property="transfYmd" 				column="TRANSF_YMD"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관현황 목록을 조회한다.
+	 -->
+	<select id="findTransfCurStatePagedList" parameterClass="rms.transf.transf.domain.TransfHandl" resultMap="transfCurState-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, F.*
+			FROM(
+				SELECT U.TRANSF_LIST_ID
+					, U.ORG_NM
+					, U.ORG_ABBR_NM
+					, U.CLSS_NM
+					, U.TITLE
+					, U.CREAT_YYYY
+					, U.RECORD_REG_CNT
+					, U.PRESV_TERM_NM
+					, U.BIS_TERM_NM
+					, U.CONFM_TRANSF_DIV_NM
+					, U.TRANSF_HOPE_YYYY
+					, U.TRANSF_RSN
+					, U.FOLDER_ID
+					, U.TRANSF_YMD
+				FROM (
+					(SELECT A.TRANSF_LIST_ID
+						, C.ORG_NM
+						, C.ORG_ABBR_NM
+						, DECODE(A.CLSS_DIV_CD,'1',(SELECT D.BIS_CLSS_NM FROM TB_ZZBISCLSS D WHERE D.BIS_CLSS_ID = A.CLSS_ID),'2',
+								   				   (SELECT D.UNIT_NM FROM TB_ZZUNIT D WHERE D.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND D.UNIT_CD = A.CLSS_ID),'') CLSS_NM
+						, B.TITLE
+						, B.CREAT_YYYY
+						, B.RECORD_REG_CNT
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(B.PRESV_TERM_CD, '20', '25', B.PRESV_TERM_CD)) PRESV_TERM_NM
+						, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD) AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.CONFM_TRANSF_DIV_CD) CONFM_TRANSF_DIV_NM
+						, A.TRANSF_HOPE_YYYY
+						, A.TRANSF_RSN
+						, A.FOLDER_ID
+						, B.TRANSF_YMD			
+					FROM  TB_DFRECVTRANSFLIST A, TB_RDFOLDER B, TB_STORG C
+					WHERE A.FOLDER_ID = B.FOLDER_ID(+)
+					AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+					AND   B.ORG_CD = C.ORG_CD
+					AND   B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+					AND	  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND	  A.TRANSF_GRP_SNO IN ((SELECT TRANSF_GRP_SNO 
+												FROM TB_DFTRANSFWORK 
+												WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+				                            	AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            	AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  												
+												AND TRANSF_HANDL_STATE = '5')
+												UNION ALL 
+											   (SELECT TRANSF_GRP_SNO 
+											    FROM TB_NKTRANSFWORK 
+											    WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                            	AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            	AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  											     
+											    AND TRANSF_HANDL_STATE = '5'))
+					AND    A.exam_rslt_cd = '1'
+				    AND    TO_NUMBER(CONFM_TRANSF_DIV_CD) <![CDATA[<=]]> 3	
+					<isNotEmpty prepend="AND" property="orgCd">
+						B.ORG_CD = #orgCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="clssId">
+						(B.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND B.CLSS_ID = #clssId:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="folderTitle">
+						(B.TITLE LIKE #folderTitle:VARCHAR# OR B.SUB_TITLE LIKE #folderTitle:VARCHAR# OR B.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="transfYyyy">
+						A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="confmTransfDivCd">
+						A.CONFM_TRANSF_DIV_CD = #confmTransfDivCd:VARCHAR#
+					</isNotEmpty>
+					) UNION ALL (
+					SELECT A.TRANSF_LIST_ID
+						, C.ORG_NM
+						, C.ORG_ABBR_NM
+						, DECODE(A.CLSS_DIV_CD,'1',(SELECT D.BIS_CLSS_NM FROM TB_ZZBISCLSS D WHERE D.BIS_CLSS_ID = A.CLSS_ID),'2',
+												   (SELECT D.UNIT_NM FROM TB_ZZUNIT D WHERE D.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND D.UNIT_CD = A.CLSS_ID),'') CLSS_NM
+						, B.TITLE
+						, B.CREAT_YYYY
+						, B.RECORD_REG_CNT
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(B.PRESV_TERM_CD, '20', '25', B.PRESV_TERM_CD)) PRESV_TERM_NM
+						, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD) AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.CONFM_TRANSF_DIV_CD) CONFM_TRANSF_DIV_NM
+						, A.TRANSF_HOPE_YYYY
+						, A.TRANSF_RSN
+						, A.FOLDER_ID
+						, B.TRANSF_YMD			
+					FROM  TB_DFRECVTRANSFLIST A, TB_NKFOLDER B, TB_STORG C
+					WHERE A.FOLDER_ID = B.FOLDER_ID(+)
+					AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+					AND   B.ORG_CD = C.ORG_CD
+					AND   B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+					AND	  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND	  A.TRANSF_GRP_SNO IN ((SELECT TRANSF_GRP_SNO 
+												FROM TB_DFTRANSFWORK 
+												WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+				                           		AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            	AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  												
+												AND TRANSF_HANDL_STATE = '5')
+												UNION ALL 
+											   (SELECT TRANSF_GRP_SNO 
+											    FROM TB_NKTRANSFWORK 
+											    WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                            	AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            	AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  											     
+											    AND TRANSF_HANDL_STATE = '5'))
+					AND    A.exam_rslt_cd = '1'
+				    AND    TO_NUMBER(CONFM_TRANSF_DIV_CD) <![CDATA[<=]]> 3	
+					<isNotEmpty prepend="AND" property="orgCd">
+						B.ORG_CD = #orgCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="clssId">
+						(B.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND B.CLSS_ID = #clssId:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="folderTitle">
+						(B.TITLE LIKE #folderTitle:VARCHAR# OR B.SUB_TITLE LIKE #folderTitle:VARCHAR# OR B.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="transfYyyy">
+						A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="confmTransfDivCd">
+						A.CONFM_TRANSF_DIV_CD = #confmTransfDivCd:VARCHAR#
+					</isNotEmpty>
+					)
+				) U
+				ORDER BY U.title, U.folder_id
+			) F
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 이관현황 목록을 조회한다.
+	 -->
+	<select id="countTransfCurStatePagedList" parameterClass="rms.transf.transf.domain.TransfHandl" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT U.folder_id
+			FROM (
+				(SELECT A.folder_id
+				FROM  TB_DFRECVTRANSFLIST A, TB_RDFOLDER B, TB_STORG C
+				WHERE A.FOLDER_ID = B.FOLDER_ID(+)
+				AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+				AND   B.ORG_CD = C.ORG_CD
+				AND   B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+				AND	  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND	  A.TRANSF_GRP_SNO IN ((SELECT TRANSF_GRP_SNO 
+				                            FROM TB_DFTRANSFWORK 
+				                            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                            AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  
+				                            AND TRANSF_HANDL_STATE = '5')
+										    UNION ALL 
+										   (SELECT TRANSF_GRP_SNO 
+										    FROM TB_NKTRANSFWORK 
+										    WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+				                            AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  										    
+										    AND TRANSF_HANDL_STATE = '5'))
+				AND    A.exam_rslt_cd = '1'
+			    AND    TO_NUMBER(CONFM_TRANSF_DIV_CD) <![CDATA[<=]]> 3	
+				<isNotEmpty prepend="AND" property="orgCd">
+					B.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(B.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND B.CLSS_ID = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					(B.TITLE LIKE #folderTitle:VARCHAR# OR B.SUB_TITLE LIKE #folderTitle:VARCHAR# OR B.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="transfYyyy">
+					A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="confmTransfDivCd">
+					A.CONFM_TRANSF_DIV_CD = #confmTransfDivCd:VARCHAR#
+				</isNotEmpty>
+				) UNION ALL (
+				SELECT A.folder_id
+				FROM  TB_DFRECVTRANSFLIST A, TB_NKFOLDER B, TB_STORG C
+				WHERE A.FOLDER_ID = B.FOLDER_ID(+)
+				AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+				AND   B.ORG_CD = C.ORG_CD
+				AND   B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+				AND	  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND	  A.TRANSF_GRP_SNO IN ((SELECT TRANSF_GRP_SNO 
+				                            FROM TB_DFTRANSFWORK 
+				                            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                            AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  				                             
+				                            AND TRANSF_HANDL_STATE = '5')
+											UNION ALL 
+										   (SELECT TRANSF_GRP_SNO 
+										    FROM TB_NKTRANSFWORK 
+										    WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                            AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                            AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#  										     
+										    AND TRANSF_HANDL_STATE = '5'))
+				AND    A.exam_rslt_cd = '1'
+			    AND    TO_NUMBER(CONFM_TRANSF_DIV_CD) <![CDATA[<=]]> 3	
+				<isNotEmpty prepend="AND" property="orgCd">
+					B.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(B.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND B.CLSS_ID = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					(B.TITLE LIKE #folderTitle:VARCHAR# OR B.SUB_TITLE LIKE #folderTitle:VARCHAR# OR B.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="transfYyyy">
+					A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="confmTransfDivCd">
+					A.CONFM_TRANSF_DIV_CD = #confmTransfDivCd:VARCHAR#
+				</isNotEmpty>
+				)
+			) U
+		)
+	</select>
+	
+	
+	<!-- 이관현황 기록유형에 따른 엑셀저장 -->
+	<resultMap id="transfCurState-result-excel" class="rms.transf.transf.domain.TransfHandl" >
+		<result property="transfListId" 			column="TRANSF_LIST_ID"/>
+		<result property="orgNm" 					column="ORG_NM"/>
+		<result property="orgAbbrNm" 				column="ORG_ABBR_NM"/>		
+		<result property="clssNm" 					column="CLSS_NM"/>		
+		<result property="folderTitle" 				column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="recordRegCnt" 			column="RECORD_REG_CNT"/>
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>
+		<result property="bisTermNm" 				column="BIS_TERM_NM"/>
+		<result property="confmTransfDivNm"			column="CONFM_TRANSF_DIV_NM"/>
+		<result property="transfHopeYyyy" 			column="TRANSF_HOPE_YYYY"/>
+		<result property="transfRsn"	 			column="TRANSF_RSN"/>
+		<result property="folderId" 				column="FOLDER_ID"/>
+		<result property="transfYmd" 				column="TRANSF_YMD"/>
+		<result property="recordTitle" 				column="RECORD_TITLE"/>
+		<result property="recordClssCd" 			column="RECORD_CLSS_CD"/>
+		<result property="stakrmMngNo" 				column="STAKRM_MNG_NO"/>
+		<result property="arngInfo" 				column="ARNG_INFO"/>
+		<result property="scanProgStateCd" 			column="SCAN_PROG_STATE_CD"/>
+		<result property="mf" 						column="MF"/>
+		<result property="opti" 					column="OPTI"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관현황 기록유형에 따른 엑셀저장
+	 -->
+	<select id="findTransfCurStateExcelDownloadList" parameterClass="rms.transf.transf.domain.TransfHandl" resultMap="transfCurState-result-excel">
+		SELECT AA.TRANSF_LIST_ID
+		    ,AA.ORG_NM
+		    ,AA.ORG_ABBR_NM
+		    ,AA.CLSS_NM
+		    ,AA.TITLE,AA.CREAT_YYYY,AA.RECORD_REG_CNT
+		    ,AA.PRESV_TERM_NM
+		    ,AA.BIS_TERM_NM
+		    ,AA.CONFM_TRANSF_DIV_NM
+		    ,AA.TRANSF_HOPE_YYYY
+		    ,AA.TRANSF_RSN
+		    ,AA.FOLDER_ID
+		    ,AA.TRANSF_YMD
+		    ,AA.RECORD_TITLE
+		    ,AA.RECORD_CLSS_CD
+		    ,AA.STAKRM_MNG_NO
+		    ,DECODE(BB.STAKRM_ID,null,'', ((SELECT STAKRM_NM FROM TB_SRSTAKRM WHERE STAKRM_ID = BB.STAKRM_ID)||'-'||
+		    RTRIM(REPLACE( (SELECT BOOKSF_NM FROM TB_SRBOOKSF WHERE STAKRM_ID = BB.STAKRM_ID AND  BOOKSF_ID = BB.BOOKSF_ID),' ',''))||'-'||
+		    BB.BOOKSF_SHELF_CNO||'층'||'-'||BB.BOOKSF_SHELF_RNO||'열' ) ) ARNG_INFO
+		    , DECODE(AA.SCAN_PROG_STATE_CD,'1','미스캔','2','스캔중(선정)','3','스캔중(검사중)','4','스캔중(반려)','5','스캔완료','미스캔') SCAN_PROG_STATE_CD
+		    , '' AS MF
+		    , '' AS OPTI
+		FROM (
+		    SELECT U.TRANSF_LIST_ID
+		    	, U.ORG_NM
+		    	, U.ORG_ABBR_NM
+		    	, U.CLSS_NM
+		    	, U.TITLE
+		    	, U.CREAT_YYYY
+		    	, U.RECORD_REG_CNT
+		    	, U.PRESV_TERM_NM
+		    	, U.BIS_TERM_NM
+		    	, U.CONFM_TRANSF_DIV_NM
+		    	, U.TRANSF_HOPE_YYYY
+		    	, U.TRANSF_RSN
+		    	, U.FOLDER_ID
+		    	, U.TRANSF_YMD
+		    	, U.RECORD_TITLE
+		    	, U.RECORD_CLSS_CD
+		    	, U.STAKRM_MNG_NO
+		    	, U.SCAN_PROG_STATE_CD
+			FROM (
+				(
+					SELECT A.TRANSF_LIST_ID
+						, C.ORG_NM
+						, C.ORG_ABBR_NM
+						, DECODE(A.CLSS_DIV_CD,'1',(SELECT D.BIS_CLSS_NM FROM TB_ZZBISCLSS D WHERE D.BIS_CLSS_ID = A.CLSS_ID)
+											  ,'2',(SELECT D.UNIT_NM FROM TB_ZZUNIT D WHERE D.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND D.UNIT_CD = A.CLSS_ID)
+											  ,''
+						  ) CLSS_NM
+						, B.TITLE
+						, B.CREAT_YYYY
+						, B.RECORD_REG_CNT
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM
+						, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.CONFM_TRANSF_DIV_CD) CONFM_TRANSF_DIV_NM
+						, A.TRANSF_HOPE_YYYY
+						, A.TRANSF_RSN
+						, A.FOLDER_ID
+						, B.TRANSF_YMD
+						, D.TITLE AS RECORD_TITLE
+						, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD='RD99' AND COM_CD = D.RECORD_CLSS_CD) RECORD_CLSS_CD
+						, B.STAKRM_MNG_NO
+						, B.SCAN_PROG_STATE_CD	
+					FROM TB_DFRECVTRANSFLIST A, TB_RDFOLDER B, TB_STORG C, TB_RDRECORD D
+					WHERE A.FOLDER_ID = B.FOLDER_ID(+)
+					AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+					AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID(+)
+					AND B.ORG_CD = C.ORG_CD
+					AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+					AND	A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND A.FOLDER_ID = D.FOLDER_ID
+					AND TO_NUMBER(CONFM_TRANSF_DIV_CD) <![CDATA[<=]]> 3
+					<dynamic prepend="AND">
+						<isNotEmpty prepend="AND" property="orgCd">
+							B.ORG_CD = #orgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="clssId">
+							(B.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND B.CLSS_ID = #clssId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="folderTitle">
+							(B.TITLE LIKE #folderTitle:VARCHAR# OR B.SUB_TITLE LIKE #folderTitle:VARCHAR# OR B.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="transfYyyy">
+							A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="confmTransfDivCd">
+							A.CONFM_TRANSF_DIV_CD = #confmTransfDivCd:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+				) UNION ALL (
+					SELECT A.TRANSF_LIST_ID
+						, C.ORG_NM
+						, C.ORG_ABBR_NM
+						, DECODE(A.CLSS_DIV_CD,'1',(SELECT D.BIS_CLSS_NM FROM TB_ZZBISCLSS D WHERE D.BIS_CLSS_ID = A.CLSS_ID)
+											  ,'2',(SELECT D.UNIT_NM FROM TB_ZZUNIT D WHERE D.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND D.UNIT_CD = A.CLSS_ID)
+											  ,''
+						  ) CLSS_NM
+						, B.TITLE
+						, B.CREAT_YYYY
+						, B.RECORD_REG_CNT
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = B.PRESV_TERM_CD) PRESV_TERM_NM
+						, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = B.CLSS_ID) BIS_TERM_NM
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.CONFM_TRANSF_DIV_CD) CONFM_TRANSF_DIV_NM
+						, A.TRANSF_HOPE_YYYY
+						, A.TRANSF_RSN
+						, A.FOLDER_ID
+						, B.TRANSF_YMD
+						, D.TITLE AS RECORD_TITLE
+						, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD='RD99' AND COM_CD = D.RECORD_CLSS_CD) RECORD_CLSS_CD
+						, E.STAKRM_MNG_NO
+						, E.SCAN_PROG_STATE_CD						
+					FROM TB_DFRECVTRANSFLIST A, TB_NKFOLDER B, TB_STORG C, TB_RDRECORD D,TB_RDFOLDER E
+					WHERE A.FOLDER_ID = B.FOLDER_ID(+)
+					AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+					AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID(+)
+					AND B.ORG_CD = C.ORG_CD
+					AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+					AND	A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND A.FOLDER_ID = D.FOLDER_ID
+				    AND TO_NUMBER(CONFM_TRANSF_DIV_CD) <![CDATA[<=]]> 3
+					<dynamic prepend="AND">
+						<isNotEmpty prepend="AND" property="orgCd">
+							B.ORG_CD = #orgCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="clssId">
+							(B.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND B.CLSS_ID = #clssId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="folderTitle">
+							(B.TITLE LIKE #folderTitle:VARCHAR# OR B.SUB_TITLE LIKE #folderTitle:VARCHAR# OR B.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="transfYyyy">
+							A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="confmTransfDivCd">
+							A.CONFM_TRANSF_DIV_CD = #confmTransfDivCd:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+				)
+			) U
+			ORDER BY U.title, U.folder_id
+		) AA
+		LEFT OUTER JOIN TB_SRBOOKSFARNGDETL BB
+		ON AA.FOLDER_ID = BB.FOLDER_ID
+	</select>
+</sqlMap>

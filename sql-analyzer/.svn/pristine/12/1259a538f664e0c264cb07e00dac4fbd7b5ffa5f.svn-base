@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace.Folder">
+	
+	<resultMap id="accs-folder-result" class="rms.accs.trace.domain.Folder" >
+		<result property="folderId" 	column="FOLDER_ID"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="presvTermNm" 	column="PRESV_TERM_NM"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm" 		column="ORG_ABBR_NM"/>
+		<result property="creatYyyy" 	column="CREAT_YYYY"/>
+		<result property="creatSysNm" 	column="CREAT_SYS_NM"/>
+		<result property="folderTypeDivNm"	column="FOLDER_TYPE_DIV_NM"/>
+	</resultMap>
+			
+	<!-- 
+		SELECT
+	 -->
+	<select id="findFolder" parameterClass="rms.accs.trace.domain.Folder" resultMap="accs-folder-result">
+		SELECT A.FOLDER_ID
+		, A.TITLE
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_CD  ) PRESV_TERM_NM
+		, (SELECT B.ORG_NM FROM TB_STORG B WHERE B.ORG_CD=A.ORG_CD AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_NM
+		, (SELECT B.ORG_ABBR_NM FROM TB_STORG B WHERE B.ORG_CD=A.ORG_CD AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_ABBR_NM
+		, A.CREAT_YYYY
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD17' AND USE_FLAG='1' AND COM_CD = A.CREAT_SYS_CD  ) CREAT_SYS_NM
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD01' AND USE_FLAG='1' AND COM_CD = A.FOLDER_TYPE_DIV_CD  ) FOLDER_TYPE_DIV_NM		
+		FROM TB_RDFOLDER A
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="folderId">
+				A.FOLDER_ID = #folderId:VARCHAR#
+			</isNotEmpty>			
+		</dynamic>		
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,11 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\help\help.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\help\help.xml
+-- Query    : select
+-- Query Id : findMenuTree
+
+		SELECT B.*		FROM (			SELECT (CASE WHEN A.MENU_DIV_CD = '4' THEN '2' ELSE '1' END) AS treeType				, A.MENU_ID AS id				, A.MENU_NM AS text				, A.MENU_DIV_CD AS levl                , (CASE WHEN EXISTS (SELECT 1 FROM TB_STMENU B WHERE B.UPPER_MENU_ID = A.MENU_ID) THEN 'closed'                        ELSE 'open'                    END) AS state 				, (CASE WHEN A.MENU_DIV_CD = '4' THEN (CASE WHEN A.USE_FLAG = '0' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)						ELSE (CASE WHEN A.USE_FLAG = '0' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)					END) AS iconCls			FROM  TB_STMENU A			 WHERE   						A.MENU_DIV_CD = 1					   AND  						A.MENU_DIV_CD = 1					   			AND A.record_center_id = '1'			AND A.use_flag = '1'			ORDER BY A.MENU_DIV_CD, A.MENU_SORT_SNO		) B;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\help\help.xml

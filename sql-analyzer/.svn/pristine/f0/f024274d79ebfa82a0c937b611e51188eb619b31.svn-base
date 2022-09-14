@@ -1,0 +1,87 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+
+findCrFolderRecordPagedList
+Semantic: Class of E does not have attribute prod_type_cd. select E.record_center_id, E.record_recv_seq, E.title, E.rec...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderRecordPagedList
+
+		SELECT E.record_center_id			, E.record_recv_seq			, E.title			, E.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=E.record_detl_type_cd) record_detl_type_nm			, RPAD(E.creat_reg_dtime,14,'0') creat_reg_dtime			, E.duty_chrgr_nm			, E.erecord_flag			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm			, E.oper_read_range_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm			, E.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=E.record_reg_div_cd) record_reg_div_nm			, E.open_div_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm			, (CASE WHEN E.prod_type_cd is not null THEN E.prod_type_cd ELSE (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END) prod_type_cd						, '1' AS accs_flag		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT /*+ index(A, TB_CRRECORD_IX10) */ A.*			        FROM   TB_CRRECORD A			        WHERE  A.record_center_id = '1'			        AND    A.folder_recv_seq = '1' AND 						A.title LIKE '1'					 					ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+findExcelCrFolderRecordPagedList
+Semantic: Class of E does not have attribute prod_type_cd. select E.record_center_id, E.record_recv_seq, E.title, E.rec...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findExcelCrFolderRecordPagedList
+
+		SELECT E.record_center_id			, E.record_recv_seq			, E.title			, E.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=E.record_detl_type_cd) record_detl_type_nm			, RPAD(E.creat_reg_dtime,14,'0') creat_reg_dtime			, E.duty_chrgr_nm			, E.erecord_flag			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm			, E.oper_read_range_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm			, E.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=E.record_reg_div_cd) record_reg_div_nm			, E.open_div_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm			, DECODE((CASE WHEN E.prod_type_cd is not null THEN E.prod_type_cd ELSE (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END),'0','생산','접수') prod_type_cd			, 'O' AS accs_flag		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT /*+ index(A, TB_CRRECORD_IX10) */ A.*			        FROM   TB_CRRECORD A			        WHERE  A.record_center_id = '1'			        AND    A.folder_recv_seq = '1' AND 						A.title LIKE '1'					 					ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum;
+
+countCrFolderTaskPagedList
+Semantic: Class (TB_CRRECORD) does not have attribute prod_type_cd. select count(1) from  B where B.title like '1' and B.title l...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : countCrFolderTaskPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT /*+ index(A, TB_CRRECORD_IX10) */			       A.record_center_id			     , A.record_recv_seq			     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime			     , A.creat_reg_no				 , A.record_detl_type_cd				 , DECODE(A.record_detl_type_cd,'01','문서','02','메모','03','회의','') record_detl_type_nm				 , A.duty_chrgr_nm 				 , A.org_cd                 , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_nm                 , (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_abbr_nm				 , A.title				 , TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt				 , A.oper_read_range_cd			FROM  TB_CRRECORD A			WHERE A.record_center_id = '1'			AND   A.folder_recv_seq = '1'			 AND 				A.prod_type_cd = '1'			 		) B		 WHERE  			B.title LIKE '1'			  AND 			B.title LIKE '1'			  AND 			B.creat_reg_dtime >= '1'||'000000'			  AND 			B.creat_reg_dtime <= '1'||'240000'			  AND 			B.duty_chrgr_nm LIKE '1'			  AND 			B.org_abbr_nm LIKE '1'			  ;
+
+findCrFolderTaskPagedList
+Semantic: Class (TB_CRRECORD) does not have attribute prod_type_cd. select E.record_center_id, E.record_recv_seq, E.creat_reg_dt...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderTaskPagedList
+
+		SELECT E.record_center_id		     , E.record_recv_seq		     , E.creat_reg_dtime		     , E.record_detl_type_cd		     , E.record_detl_type_nm		     , E.duty_chrgr_nm		     , E.org_cd		     , E.org_nm		     , E.org_abbr_nm		     , E.title		     , E.attach_cnt		     , E.oper_read_range_cd		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT B.*					FROM (						SELECT /*+ index(A, TB_CRRECORD_IX10) */						       A.record_center_id						     , A.record_recv_seq						     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime						     , A.creat_reg_no							 , A.record_detl_type_cd							 , DECODE(A.record_detl_type_cd,'01','문서','02','메모','03','회의','') record_detl_type_nm							 , A.duty_chrgr_nm 							 , A.org_cd			                 , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_nm			                 , (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_abbr_nm							 , A.title							 , TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt							 , A.oper_read_range_cd						FROM  TB_CRRECORD A						WHERE A.record_center_id = '1'						AND   A.folder_recv_seq = '1'						 AND 							A.prod_type_cd = '1'						 					) B					 WHERE  						B.title LIKE '1'						  AND 						B.title LIKE '1'						  AND 						B.creat_reg_dtime >= '1'||'000000'						  AND 						B.creat_reg_dtime <= '1'||'240000'						  AND 						B.duty_chrgr_nm LIKE '1'						  AND 						B.org_abbr_nm LIKE '1'						  					ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+findCrFolderTaskOrderList
+Semantic: Class (TB_CRRECORD) does not have attribute prod_type_cd. select A.record_recv_seq,  rpad(A.creat_reg_dtime, 14, '0'),...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderTaskOrderList
+
+		SELECT A.record_recv_seq		     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime			 , A.duty_chrgr_nm 			 , A.title			 , A.oper_read_range_cd		FROM  TB_CRRECORD A		WHERE A.record_center_id = '1'		AND   A.folder_recv_seq = '1'		AND   A.record_detl_type_cd = '04'		 AND 			A.prod_type_cd = '1'		 ;
+
+findCrFolderClssPjtList
+Syntax: before '  ;'
+Unknown class "tb_crfolderpjtclss". select bis_clss_id, bis_clss_nm, levl from TB_ZZBISCLSS star...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderClssPjtList
+
+		SELECT bis_clss_id, bis_clss_nm, levl		FROM TB_ZZBISCLSS		START WITH bis_clss_id IN ( SELECT C.bis_clss_id		                            FROM TB_CRFOLDER A, TB_CRFOLDERPJTCLSS B, TB_ZZPJTMAPPNG C		                            WHERE A.record_center_id = '1'									AND   A.folder_recv_seq = '1'									AND   B.record_center_id = A.record_center_id									AND   B.folder_recv_seq = A.folder_recv_seq									AND   C.pjt_clss_id = B.pjt_clss_id )		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id ;
+
+findCrFolderClssRelList
+Syntax: before '  ;'
+Unknown class "tb_crfolderrel". select bis_clss_id, bis_clss_nm, levl from TB_ZZBISCLSS star...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderClssRelList
+
+		SELECT bis_clss_id, bis_clss_nm, levl		FROM  TB_ZZBISCLSS		START WITH bis_clss_id IN ( SELECT B.rel_trgt_id		                            FROM  TB_CRFOLDER A, TB_CRFOLDERREL B		                            WHERE A.record_center_id = '1'									AND   A.folder_recv_seq = '1'									AND   B.record_center_id = A.record_center_id									AND   B.folder_recv_seq = A.folder_recv_seq									AND   B.rel_type_cd = '03' )		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id ;
+
+findCrFolderRjctHistList
+Syntax: before ' 		ORDER BY hist_sno;'
+Unknown class "tb_crfoldertakehist". select (select Z.com_cd_nm from tb_zzcomcd Z where Z.com_typ...[CAS INFO-127.0.0.1:54330,1,10751],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderRjctHistList
+
+		SELECT (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'TK22' AND Z.com_cd = A.take_state_cd) take_state_cd_nm			   ,A.rjct_dtime		       ,(CASE WHEN A.folder_err_flag = '1' THEN 'Y' 		              ELSE 'N'		         END) folder_err_yn		       ,A.record_err_cnt||'/'||A.record_tot_cnt record_cnt		       ,A.file_err_cnt||'/'||A.file_tot_cnt file_cnt		       ,A.exam_cont		       ,A.rjct_cont 		  FROM TB_CRFOLDERTAKEHIST A		 WHERE 		    EXISTS (		        SELECT 1		          FROM TB_CRFOLDER B 		         WHERE B.RECORD_CENTER_ID = '1'		           AND B.FOLDER_TAKE_SEQ = '1'			   AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			   AND B.CREAT_SYS_CD = A.CREAT_SYS_CD			   AND B.ORG_CD = A.ORG_CD			   AND B.CLSS_ID = A.CLSS_ID			   AND B.CREAT_YYYY = A.CREAT_YYYY			   AND B.FOLDER_REG_SEQ = A.FOLDER_REG_SEQ			   AND B.HO_NO = A.HO_NO		       )		   AND TAKE_STATE_CD IN ('02','03')		ORDER BY hist_sno;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml

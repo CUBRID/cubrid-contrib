@@ -1,0 +1,74 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : findRcTakovrEfileDeletePagedList
+
+	 	SELECT C.record_center_id		     , C.org_cd		     , (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_nm		     , (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_abbr_nm		     , C.folder_cnt		     , C.record_cnt		     , (SELECT COUNT(1) FROM TB_DFTAKOVRFOLDERLIST X, TB_NKFOLDER Y 		        WHERE X.record_center_id = Y.record_center_id 		        AND X.folder_id = Y.folder_id 		        		        AND X.takovr_rep_cd = '1' 		        AND X.takovr_yyyy = '1' 		        AND X.takovr_sno = '1'		        AND Y.folder_keep_state_cd = '05'		        AND Y.org_cd = C.org_cd 		        AND NVL(Y.efile_del_cd, '0') = '03') efile_delete_folder_cnt		     , (SELECT NVL(SUM(Y.record_reg_cnt), 0) FROM TB_DFTAKOVRFOLDERLIST X, TB_NKFOLDER Y 		        WHERE X.record_center_id = Y.record_center_id 		        AND X.folder_id = Y.folder_id 		        		        AND X.takovr_rep_cd = '1'		        AND X.takovr_yyyy = '1'		        AND X.takovr_sno = '1'		        AND Y.folder_keep_state_cd = '05'		        AND Y.org_cd = C.org_cd 		        AND NVL(Y.efile_del_cd, '0') = '03') efile_delete_record_cnt		FROM (	    	SELECT ROWNUM AS rnum		        , B.*		    FROM (		    	SELECT U.record_center_id			         , U.org_cd			         , U.folder_cnt			         , U.record_cnt				FROM ((SELECT A.record_center_id				         , A.org_cd				         , COUNT(1) folder_cnt				         , SUM(A.record_reg_cnt) record_cnt				    FROM  TB_RDFOLDER A				    WHERE A.record_center_id = '1'				    AND   A.folder_keep_state_cd IN ('05')				    AND   EXISTS (SELECT Z.folder_id				                  FROM  TB_DFTAKOVRFOLDERLIST Z				                  WHERE Z.record_center_id = A.record_center_id				                  AND   Z.folder_id        = A.folder_id				                  AND   Z.takovr_rep_cd    = '1' 				                  AND   Z.takovr_yyyy      = '1' 				                  AND   Z.takovr_sno       = '1'				    )				    GROUP BY A.record_center_id, A.org_cd) UNION ALL (				    SELECT A.record_center_id				         , A.org_cd				         , COUNT(1) folder_cnt				         , SUM(A.record_reg_cnt) record_cnt				    FROM  TB_NKFOLDER A				    WHERE A.record_center_id = '1'				    AND   A.folder_keep_state_cd IN ('05')				    AND   EXISTS (SELECT Z.folder_id				                  FROM  TB_DFTAKOVRFOLDERLIST Z				                  WHERE Z.record_center_id = A.record_center_id				                  AND   Z.folder_id        = A.folder_id				                  AND   Z.takovr_rep_cd    = '1' 				                  AND   Z.takovr_yyyy      = '1' 				                  AND   Z.takovr_sno       = '1'				    )				    GROUP BY A.record_center_id, A.org_cd)			    ) U			    ORDER BY U.record_center_id, U.org_cd		    ) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'		ORDER BY C.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : countRcTakovrEfileDeletePagedList
+
+		SELECT COUNT(1)		FROM (		    (SELECT A.record_center_id		         , A.org_cd		    FROM  TB_RDFOLDER A		    WHERE A.record_center_id = '1'		    AND   A.folder_keep_state_cd IN ('05')		    AND   EXISTS (SELECT Z.folder_id		                  FROM  TB_DFTAKOVRFOLDERLIST Z		                  WHERE Z.record_center_id = A.record_center_id		                  AND   Z.folder_id        = A.folder_id		                  AND   Z.takovr_rep_cd    = '1' 		                  AND   Z.takovr_yyyy      = '1' 		                  AND   Z.takovr_sno       = '1'		    )		    GROUP BY A.record_center_id, A.org_cd) UNION ALL (		    SELECT A.record_center_id		         , A.org_cd		    FROM  TB_NKFOLDER A		    WHERE A.record_center_id = '1'		    		    AND   A.folder_keep_state_cd IN ('05')		    AND   EXISTS (SELECT Z.folder_id		                  FROM  TB_DFTAKOVRFOLDERLIST Z		                  WHERE Z.record_center_id = A.record_center_id		                  AND   Z.folder_id        = A.folder_id		                  AND   Z.takovr_rep_cd    = '1' 		                  AND   Z.takovr_yyyy      = '1' 		                  AND   Z.takovr_sno       = '1'		    )		    GROUP BY A.record_center_id, A.org_cd)		) B	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : countRcTakovrEfileDeleteTrgtFolder
+
+ 		SELECT  COUNT(1)		FROM   TB_RDFOLDER B		WHERE  B.record_center_id = '1'				AND    B.folder_keep_state_cd IN ('05')		AND	   NVL(B.efile_del_cd, '0') NOT IN ('01','02','03')		AND EXISTS (SELECT Z.folder_id		            FROM   TB_DFTAKOVRFOLDERLIST Z		            WHERE  Z.record_center_id   = B.record_center_id		            AND    Z.folder_id          = B.folder_id		            AND    Z.takovr_rep_cd      = '1' 		            AND    Z.takovr_yyyy        = '1' 		            AND    Z.takovr_sno         = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : findEfileListWorkSno
+
+		SELECT MAX(work_sno) work_sno FROM TB_NKEFILELIST	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : findRcTakovrEfileDeleteTrgtRecordCenterId
+
+	 	SELECT record_center_id FROM TB_DFTAKOVRPLAN WHERE takovr_rep_cd = '1' AND takovr_yyyy = '1' AND takovr_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : findRcTakovrEfileDeleteTrgtFolder
+
+	 	SELECT  B.folder_id		FROM   TB_RDFOLDER B		WHERE  B.record_center_id = '1'				AND    B.folder_keep_state_cd IN ('05')		AND	   NVL(B.efile_del_cd, '0') NOT IN ('01','02','03')			AND EXISTS (SELECT Z.folder_id		            FROM   TB_DFTAKOVRFOLDERLIST Z		            WHERE  Z.record_center_id   = B.record_center_id		            AND    Z.folder_id          = B.folder_id		            AND    Z.takovr_rep_cd      = '1' 		            AND    Z.takovr_yyyy        = '1' 		            AND    Z.takovr_sno         = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : insert
+-- Query Id : createWork
+
+		INSERT INTO TB_NKEFILELIST 		VALUES (			'1',			'1',			'1',			'1',			'1',						TO_CHAR(sys_datetime, 'yyyymmddhhmiss')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : update
+-- Query Id : updateEfileDelFolder
+
+		UPDATE TB_RDFOLDER		SET    efile_del_cd = '02'		WHERE record_center_id = '1'		AND   folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : findRcTakovrEfileDeleteFolderPagedList
+
+	 	SELECT C.record_center_id	 		 , C.folder_id	 		 , C.creat_yyyy		     , C.org_cd		     , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_nm		     , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_abbr_nm		     , C.title		     , C.efile_del_flag		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE com_type_cd = 'ZZ08' AND Z.com_cd = C.efile_del_flag) efile_del_flag_nm		     , C.efile_del_cd			 , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD90' AND Z.com_cd=C.efile_del_cd ) efile_del_nm			 , C.folder_keep_state_cd		FROM (	    	SELECT ROWNUM AS rnum		        , B.*		    FROM (		    			    SELECT U.record_center_id, U.folder_id, U.creat_yyyy, U.org_cd, U.title,U.efile_del_flag, U.efile_del_cd, U.folder_keep_state_cd			    FROM (			    	(SELECT A.record_center_id, A.folder_id, A.creat_yyyy, A.org_cd, A.title, A.efile_del_flag, A.efile_del_cd, A.folder_keep_state_cd					FROM  TB_RDFOLDER A					WHERE A.record_center_id = '1'										AND   A.folder_keep_state_cd IN ('05')					AND EXISTS (SELECT Z.folder_id					            FROM  TB_DFTAKOVRFOLDERLIST Z					            WHERE Z.record_center_id = A.record_center_id					            AND   Z.folder_id        = A.folder_id					            AND   Z.takovr_rep_cd    = '1'					            AND   Z.takovr_yyyy      = '1'					            AND   Z.takovr_sno       = '1')) 		            UNION ALL 		            (SELECT A.record_center_id, A.folder_id, A.creat_yyyy, A.org_cd, A.title, '' AS efile_del_flag, A.efile_del_cd, A.folder_keep_state_cd					FROM  TB_NKFOLDER A					WHERE A.record_center_id = '1'					AND   A.folder_keep_state_cd IN ('05')					AND EXISTS (SELECT Z.folder_id					            FROM  TB_DFTAKOVRFOLDERLIST Z					            WHERE Z.record_center_id = A.record_center_id					            AND   Z.folder_id        = A.folder_id					            AND   Z.takovr_rep_cd    = '1'					            AND   Z.takovr_yyyy      = '1'					            AND   Z.takovr_sno       = '1')            					)				) U				ORDER BY U.record_center_id, U.title		    ) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'		ORDER BY C.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml
+-- Query    : select
+-- Query Id : countRcTakovrEfileDeleteFolderPagedList
+
+	 	SELECT COUNT(1)		FROM  			(SELECT folder_id 			FROM (				(SELECT folder_id FROM TB_RDFOLDER A				WHERE A.record_center_id = '1'				AND   A.folder_keep_state_cd IN ('05')				AND   EXISTS (SELECT Z.folder_id				              FROM  TB_DFTAKOVRFOLDERLIST Z				              WHERE Z.record_center_id = A.record_center_id				              AND   Z.folder_id        = A.folder_id				              AND   Z.takovr_rep_cd    = '1'				              AND   Z.takovr_yyyy      = '1'				              AND   Z.takovr_sno       = '1')				) UNION ALL (				SELECT folder_id FROM TB_NKFOLDER A				WHERE A.record_center_id = '1'								AND   A.folder_keep_state_cd IN ('05')				AND   EXISTS (SELECT Z.folder_id				              FROM  TB_DFTAKOVRFOLDERLIST Z				              WHERE Z.record_center_id = A.record_center_id				              AND   Z.folder_id        = A.folder_id				              AND   Z.takovr_rep_cd    = '1'				              AND   Z.takovr_yyyy      = '1'				              AND   Z.takovr_sno       = '1')				)			) U		)	 ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrEfileDelete.xml

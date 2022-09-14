@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="rmsstate.curstate">
+
+	<!-- 
+		기록관현황_일반현황
+		: 근거법령을 조회한다.
+	 -->
+	 <resultMap id="findBasisLawList-result" class="rms.rmsstate.curstate.domain.CurStateNoml">
+	 	<result property="recvFileNm" 			column="RECV_FILE_NM"/>
+		<result property="infoFileId" 			column="INFO_FILE_ID"/>
+	 </resultMap>
+	 <select id="findBasisLawList" parameterClass="rms.rmsstate.curstate.domain.CurStateNoml" resultMap="findBasisLawList-result">
+	 	SELECT SUBSTR(RECV_FILE_NM, 1, LENGTH(RECV_FILE_NM)-4) RECV_FILE_NM, INFO_FILE_ID
+		FROM TB_ZZSTNDMNG A, TB_ZZSTNDMNGTYPE B 
+		WHERE A.STND_MNG_TYPE_CD = B.STND_MNG_TYPE_CD
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.CD_DIV = '4'
+		ORDER BY A.RECV_DTIME
+	 </select>
+
+	<!-- 
+		기록관현황_일반현황
+		: 업무계획을 조회한다.
+	 -->
+	 <resultMap id="findDutyPlanList-result" class="rms.rmsstate.curstate.domain.CurStateNoml">
+	 	<result property="recvFileNm" 			column="RECV_FILE_NM"/>
+		<result property="infoFileId" 			column="INFO_FILE_ID"/>
+	 </resultMap>
+	 <select id="findDutyPlanList" parameterClass="rms.rmsstate.curstate.domain.CurStateNoml" resultMap="findDutyPlanList-result">
+	 	SELECT SUBSTR(RECV_FILE_NM, 1, LENGTH(RECV_FILE_NM)-4) RECV_FILE_NM, INFO_FILE_ID
+		FROM TB_ZZSTNDMNG A, TB_ZZSTNDMNGTYPE B 
+		WHERE A.STND_MNG_TYPE_CD = B.STND_MNG_TYPE_CD
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.CD_DIV = '5'
+		ORDER BY A.RECV_DTIME
+	 </select>
+
+	<!-- 
+		기록관현황_일반현황
+		: 기록관운영현황의 소속 및 인원을 조회한다.
+	 -->
+	<resultMap id="findCountOperCurState-result" class="rms.rmsstate.curstate.domain.CurStateNoml">
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+		<result property="orgAbbrNm" 		column="ORG_ABBR_NM"/>
+		<result property="chrgrCnt" 		column="CHRGR_CNT"/>
+	</resultMap>
+	<select id="findCountOperCurState" parameterClass="rms.rmsstate.curstate.domain.CurStateNoml" resultMap="findCountOperCurState-result">
+		SELECT RECORD_CENTER_NM AS ORG_NM, RECORD_CENTER_CD AS ORG_CD
+			, (SELECT Z.ORG_ABBR_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.RECORD_CENTER_CD) AS ORG_ABBR_NM
+			, (SELECT COUNT(1) FROM TB_STRECORDCHRGR B WHERE B.RECORD_CENTER_ID=A.RECORD_CENTER_ID) CHRGR_CNT
+		FROM TB_STRECORDCENTER A
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록관현황_일반현황
+		: 기록관운영현황의 소속 및 인원을 조회한다.
+	 -->
+	<resultMap id="findOperCurStateList-result" class="rms.rmsstate.curstate.domain.CurStateNoml">
+		<result property="chrgrNm" 			column="CHRGR_NM"/>
+		<result property="pos" 				column="POS"/>
+		<result property="duty" 			column="DUTY"/>
+		<result property="telNo" 			column="TEL_NO"/>
+		<result property="email" 			column="EMAIL"/>
+	</resultMap>
+	<select id="findOperCurStateList" parameterClass="rms.rmsstate.curstate.domain.CurStateNoml" resultMap="findOperCurStateList-result">
+		SELECT CHRGR_NM, POS, DUTY, TEL_NO, EMAIL
+		FROM  TB_STRECORDCHRGR
+ 		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+ 		ORDER BY RECORD_CENTER_ID, SNO
+	</select>
+	
+
+</sqlMap>

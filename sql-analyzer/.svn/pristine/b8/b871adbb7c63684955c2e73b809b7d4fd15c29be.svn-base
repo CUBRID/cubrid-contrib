@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="common.tree">
+
+	<!-- 
+		단위과제검색
+	 -->
+	<resultMap id="findClssNm-resultMap" class="rms.common.tree.domain.TreeClss">
+		<result property="bisClssId"	column="bis_clss_id" />
+		<result property="bisClssNm"	column="bis_clss_nm" />
+		<result property="delFlag"	column="del_flag" />
+	</resultMap>
+	<select id="countClssNm" parameterClass="rms.common.tree.domain.TreeClss" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_ZZBISCLSS A
+		WHERE levl ='6'
+		    <isNotEmpty prepend="AND" property="orgCd">
+		    	A.bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = #orgCd:VARCHAR#)
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="bisClssId">
+				A.bis_clss_id LIKE #bisClssId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="bisClssNm">
+				A.bis_clss_nm LIKE #bisClssNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="delFlag">
+				A.del_flag = #delFlag:VARCHAR#
+		    </isNotEmpty>
+	</select>
+	<select id="findClssNm" parameterClass="rms.common.tree.domain.TreeClss" resultMap="findClssNm-resultMap">
+		SELECT C.bis_clss_id
+			, C.bis_clss_nm
+			, C.del_flag
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+			    SELECT A.bis_clss_id 
+					, A.bis_clss_nm
+					, (CASE WHEN A.del_flag='1' THEN '폐기' ELSE '사용' END) AS del_flag
+				FROM  TB_ZZBISCLSS A
+				WHERE levl ='6'
+				    <isNotEmpty prepend="AND" property="orgCd">
+				    	A.bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = #orgCd:VARCHAR#)
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="bisClssId">
+						A.bis_clss_id LIKE #bisClssId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="bisClssNm">
+						A.bis_clss_nm LIKE #bisClssNm:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="delFlag">
+						A.del_flag = #delFlag:VARCHAR#
+				    </isNotEmpty>
+				ORDER BY A.bis_clss_nm
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!-- 
+		단위과제 트리 검색 
+	-->
+	<select id="findClssTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType
+				, A.bis_clss_id AS id
+				, A.bis_clss_nm AS text
+				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'
+						ELSE 'open'
+					END) AS state 
+				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)
+						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)
+					END) AS iconCls
+			FROM  TB_ZZBISCLSS A
+			<dynamic prepend="WHERE">
+				<isEmpty prepend="AND" property="id">
+					A.levl = 1
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="id">
+					<isEqual property="id" compareValue="ROOT">
+						A.levl = 1
+					</isEqual>
+					<isNotEqual property="id" compareValue="ROOT">
+						A.upper_bis_clss_id = #id:VARCHAR#
+					</isNotEqual>
+				</isNotEmpty>
+			</dynamic>
+			ORDER BY A.levl, A.sort_sno
+		) B
+	</select>
+	
+	<!-- 
+		단위과제 트리 검색 
+	-->
+	<select id="findOrgClssTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType
+				, A.bis_clss_id AS id
+				, A.bis_clss_nm AS text
+				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'
+						ELSE 'open'
+					END) AS state 
+				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)
+						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)
+					END) AS iconCls
+			FROM  TB_ZZBISCLSS A
+			WHERE A.bis_clss_id IN (
+				SELECT bis_clss_id FROM TB_ZZBISCLSS
+				START WITH bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = #orgCd:VARCHAR#)
+				CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id
+			)
+			<isEmpty prepend="AND" property="id">
+				A.levl = 1
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="id">
+				<isEqual property="id" compareValue="ROOT">
+					A.levl = 1
+				</isEqual>
+				<isNotEqual property="id" compareValue="ROOT">
+					A.upper_bis_clss_id = #id:VARCHAR#
+				</isNotEqual>
+			</isNotEmpty>
+			ORDER BY A.levl, A.sort_sno
+		) B
+	</select>
+</sqlMap>

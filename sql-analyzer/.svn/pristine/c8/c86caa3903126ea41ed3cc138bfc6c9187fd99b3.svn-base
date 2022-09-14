@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Properties>
+		<Property name="log-path">C:/logs/orign/</Property>
+	</Properties>
+
+	<Appenders>
+		<Console name="debug_console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d %5p [%c : %L] %m  %n " />
+		</Console>
+
+		<Console name="sql_console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d %5p %n %n %m %n %n" />
+		</Console>
+
+		<RollingFile name="DbwrapRollingFile" fileName="${log-path}/dbwrap.log"
+			filePattern="${log-path}/dbwrap_%d{yyyyMMdd}_%i.log">
+			<PatternLayout pattern="[%c : %L] %d %5p %n %n %m %n %n" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="50 MB" />
+			</Policies>
+		</RollingFile>
+
+		<RollingFile name="DebugRollingFile" fileName="${log-path}/debug.log"
+			filePattern="${log-path}/debug_%d{yyyyMMdd}_%i.log">
+			<PatternLayout pattern="%d %5p [%c : %L] %m  %n " />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="50 MB" />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+
+		<!-- SQL LOG -->
+
+		<logger name="jdbc.sqlonly" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="jdbc.audit" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="jdbc.resultset" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="jdbc.resultsettable" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="jdbc.connection" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="log4jdbc.debug" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="java.sql" level="OFF" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<logger name="jdbc.sqltiming" level="INFO" additivity="false">
+			<appender-ref ref="DbwrapRollingFile" />
+		</logger>
+
+		<!-- ETC LOG -->
+		<Logger name="egovframework" level="DEBUG" additivity="false">
+			<AppenderRef ref="DebugRollingFile" />
+		</Logger>
+
+		<logger name="org.apache" level="ERROR" additivity="false">
+			<appender-ref ref="DebugRollingFile" />
+		</logger>
+
+		<logger name="org.springframework" level="ERROR" additivity="false">
+			<appender-ref ref="DebugRollingFile" />
+		</logger>
+
+		<logger name="org.apache.axis" level="ERROR" additivity="false">
+			<appender-ref ref="DebugRollingFile" />
+		</logger>
+
+		<logger name="egovframework.rte.fdl.property" level="ERROR"
+			additivity="false">
+			<appender-ref ref="DebugRollingFile" />
+		</logger>
+
+		<logger name="org.springmodules.validation.commons" level="OFF"
+			additivity="false">
+			<appender-ref ref="DebugRollingFile" />
+		</logger>
+
+		<!-- ROOT LOG -->
+
+		<Root level="DEBUG">
+			<AppenderRef ref="DebugRollingFile" />
+		</Root>
+
+	</Loggers>
+</Configuration>

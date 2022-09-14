@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : select
+-- Query Id : findRcTakePlanList
+
+		SELECT take_rep_cd||'-'||take_yyyy||'-'||LPAD(take_sno, 6, '0') take_mng_no			, take_prog_state_cd		FROM  TB_DFTAKEPLAN		WHERE record_center_id = '1'		ORDER BY take_rep_cd, take_yyyy, take_sno DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : select
+-- Query Id : countRcTakeSetCurKeepOrgPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT B.record_center_id		    	,B.org_cd		        ,COUNT (1) folder_cnt		        ,SUM (B.record_reg_cnt) record_cnt		    FROM tb_rdfolder B		    WHERE B.record_center_id = '1' AND 		    	B.org_cd = '1'		      AND  		            (B.clss_id = '1' OR B.new_clss_id = '1')		          		    AND B.folder_keep_state_cd IN ('02','03','04')		    AND EXISTS (			    	SELECT Z.rd_folder_id			        FROM TB_RCTAKEFOLDERLIST Z			        WHERE Z.record_center_id = B.record_center_id			        AND Z.rd_folder_id = B.folder_id			        AND Z.rd_folder_id = B.folder_id			        AND Z.take_rep_cd = '1'			        AND Z.take_yyyy = '1'			        AND Z.take_sno = '1'		        )		 	GROUP BY B.record_center_id, B.org_cd		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : select
+-- Query Id : findRcTakeSetCurKeepOrgPagedList
+
+		SELECT E.*		FROM (			SELECT ROWNUM AS rnum				, D.*			FROM (				SELECT C.record_center_id				    , C.org_cd				    , (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_nm				    , (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_abbr_nm				    , C.folder_cnt folder_cnt01				    , C.record_cnt record_cnt01				    , (SELECT COUNT(1) 					   FROM TB_RCTAKEFOLDERLIST X, TB_RDFOLDER Y					   WHERE X.record_center_id = Y.record_center_id					   AND X.rd_folder_id = Y.folder_id					    AND 					       Y.org_cd = '1'					     AND  					           (Y.clss_id = '1' OR Y.new_clss_id = '1')					             					   AND X.take_rep_cd = '1'					   AND X.take_yyyy = '1'					   AND X.take_sno = '1'					   AND X.cur_keep_org_flag = '0'					   AND Y.org_cd = C.org_cd) folder_cnt02				    , (SELECT NVL(SUM(TO_NUMBER(record_reg_cnt)), 0)				       FROM TB_RCTAKEFOLDERLIST X, TB_RDFOLDER Y				       WHERE X.record_center_id = Y.record_center_id				       AND X.rd_folder_id = Y.folder_id AND 				           Y.org_cd = '1'				         AND  				               (Y.clss_id = '1' OR Y.new_clss_id = '1')				             				        AND X.take_rep_cd = '1'				        AND X.take_yyyy = '1'				        AND X.take_sno = '1'				        AND X.cur_keep_org_flag = '0'				        AND Y.org_cd = C.org_cd) record_cnt02				     , (SELECT NVL(MIN(X.cur_keep_org_flag), '0')				        FROM TB_RCTAKEFOLDERLIST X, TB_RDFOLDER Y				        WHERE X.record_center_id = Y.record_center_id				        AND X.rd_folder_id = Y.folder_id				         AND 				            Y.org_cd = '1'				          AND  				                (Y.clss_id = '1' OR Y.new_clss_id = '1')				                  				        AND X.take_rep_cd = '1'				        AND X.take_yyyy = '1'				        AND X.take_sno = '1'				        AND Y.org_cd = C.org_cd) fixed_flag     				FROM (					SELECT B.record_center_id				    	,B.org_cd				        ,COUNT (1) folder_cnt				        ,SUM (B.record_reg_cnt) record_cnt				    FROM tb_rdfolder B				    WHERE B.record_center_id = '1' AND 				    	B.org_cd         = '1'				      AND  				        	(B.clss_id = '1' OR B.new_clss_id = '1')				          				    AND B.folder_keep_state_cd IN ('02','03','04')				    AND EXISTS (					    	SELECT Z.rd_folder_id					        FROM TB_RCTAKEFOLDERLIST Z					        WHERE Z.record_center_id = B.record_center_id					        AND Z.rd_folder_id = B.folder_id					        AND Z.rd_folder_id = B.folder_id					        AND Z.take_rep_cd = '1'					        AND Z.take_yyyy = '1'					        AND Z.take_sno = '1'				        )				 	GROUP BY B.record_center_id, B.org_cd				) C				ORDER BY C.record_center_id, C.org_cd			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetCurKeepOrgFixed
+
+	 	UPDATE TB_RDFOLDER A 		SET    A.cur_keep_org_cd = '1'		WHERE		EXISTS (    SELECT 1		        FROM TB_RCTAKEFOLDERLIST B, TB_RDFOLDER C		        WHERE B.record_center_id   = '1'		        AND   B.take_rep_cd        = '1'		        AND   B.take_yyyy          = '1'		        AND   B.take_sno           = '1'		        AND   C.org_cd 			   = '1'		        AND   B.record_center_id   = C.record_center_id		        AND   B.rd_folder_id       = C.folder_id			AND   B.record_center_id = A.record_center_id			AND   C.folder_id = A.folder_id       )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetCurKeepOrgFixedFlag
+
+		UPDATE TB_RCTAKEFOLDERLIST A		SET    A.cur_keep_org_flag = '1'		WHERE 		EXISTS (    SELECT 1		        FROM TB_RCTAKEFOLDERLIST B, TB_RDFOLDER C		        WHERE B.record_center_id   = '1'		        AND   B.take_rep_cd        = '1'		        AND   B.take_yyyy          = '1'		        AND   B.take_sno           = '1'		        AND   C.org_cd 			   = '1'		        AND   B.record_center_id   = C.record_center_id		        AND   B.rd_folder_id       = C.folder_id			AND   B.record_center_id = A.record_center_id			AND   C.folder_id = A.rd_folder_id       ) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetCurKeepOrgFixedCancel
+
+		UPDATE TB_RDFOLDER B		SET    B.cur_keep_org_cd = ''		WHERE 		EXISTS (	SELECT 1		        FROM TB_RCTAKEFOLDERLIST B, TB_RDFOLDER C		        WHERE B.record_center_id   = '1'		        AND   B.take_rep_cd        = '1'		        AND   B.take_yyyy          = '1'		        AND   B.take_sno           = '1'		        AND   C.org_cd 			   = '1'		        AND   B.record_center_id   = C.record_center_id		        AND   B.rd_folder_id       = C.folder_id                        AND   B.record_center_id = B.record_center_id                        AND   C.folder_id = B.rd_folder_id		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : select
+-- Query Id : countRcTakeSetCurKeepOrgFolderPagedList
+
+	 	SELECT COUNT(1)		FROM (			SELECT B.*			    ,(SELECT Z.cur_keep_org_flag FROM TB_RCTAKEFOLDERLIST Z WHERE Z.record_center_id = B.record_center_id AND Z.rd_folder_id = B.folder_id) cur_keep_org_flag			FROM tb_rdfolder B			WHERE B.record_center_id = '1'			AND B.folder_keep_state_cd IN ('02','03','04')			AND EXISTS (					SELECT Z.rd_folder_id				    FROM TB_RCTAKEFOLDERLIST Z				    WHERE Z.record_center_id = B.record_center_id				    AND   Z.rd_folder_id 	 = B.folder_id		            AND   Z.take_rep_cd 	 = '1'		            AND   Z.take_yyyy   	 = '1'		            AND   Z.take_sno 		 = '1'	            )		) C		 WHERE  		        C.org_cd = '1'		      AND 		        C.org_cd = '1'		      AND  		            (C.clss_id = '1' OR C.new_clss_id = '1')		           AND 		        C.title like '1'		      AND 		     	C.cur_keep_org_flag = '1'		      ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : select
+-- Query Id : findRcTakeSetCurKeepOrgFolderPagedList
+
+	 	SELECT F.record_center_id		      ,F.folder_id		      ,F.org_cd		      ,F.org_nm		      ,F.org_abbr_nm		      ,F.title		      ,F.creat_yyyy		      ,F.cur_keep_org_flag		      ,(CASE WHEN F.cur_keep_org_flag = '1' THEN '지정' ELSE '미지정' END) AS cur_keep_org_flag_nm		FROM (		    SELECT E.*		    FROM (		        SELECT ROWNUM AS rnum		                ,D.*		        FROM (		            SELECT C.*		            FROM (		                SELECT B.record_center_id		                    , B.folder_id		                    , B.org_cd		                    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_nm		                    , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_abbr_nm      		                    , B.title		                    , B.creat_yyyy		                    , B.clss_id		                    , B.new_clss_id		                    , (SELECT Z.cur_keep_org_flag FROM TB_RCTAKEFOLDERLIST Z WHERE Z.record_center_id = B.record_center_id AND Z.rd_folder_id = B.folder_id) cur_keep_org_flag		                FROM tb_rdfolder B		                WHERE B.record_center_id = '1'		                AND B.folder_keep_state_cd IN ('02','03','04')		                AND EXISTS (		                        SELECT Z.rd_folder_id		                        FROM TB_RCTAKEFOLDERLIST Z		                        WHERE Z.record_center_id = B.record_center_id		                        AND   Z.rd_folder_id     = B.folder_id		                        AND   Z.take_rep_cd      = '1'		                        AND   Z.take_yyyy        = '1'		                        AND   Z.take_sno         = '1'		                    )		            ) C WHERE  		                    C.org_cd = '1'		                  AND 		                    C.org_cd = '1'		                  AND  		                        (C.clss_id = '1' OR C.new_clss_id = '1')		                       AND 		                    C.title like '1'		                  AND 		                     C.cur_keep_org_flag = '1'		                  		            ORDER BY C.record_center_id, C.title		        ) D		        WHERE ROWNUM <= '1'		    ) E		    WHERE E.rnum >= '1'		) F		ORDER BY F.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetCurKeepOrgFolderFixed
+
+	 	UPDATE TB_RDFOLDER A 		SET    A.cur_keep_org_cd 	= '1'		WHERE  A.record_center_id 	= '1'		AND    A.folder_id 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetCurKeepOrgFolderFixedFlag
+
+		UPDATE TB_RCTAKEFOLDERLIST B		SET    B.cur_keep_org_flag = '1'		WHERE  B.take_rep_cd   	   = '1'		AND    B.take_yyyy         = '1'		AND    B.take_sno          = '1'		AND    B.record_center_id  = '1'		AND    B.rd_folder_id 	   = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml
+-- Query    : update
+-- Query Id : updateRcTakeSetCurKeepOrgFolderFixedCancel
+
+		UPDATE TB_RDFOLDER B		SET    B.cur_keep_org_cd = ''		WHERE  B.record_center_id = '1'		AND    B.folder_id = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTake\RcTakeSetCurKeepOrg.xml

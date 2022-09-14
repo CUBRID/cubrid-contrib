@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.transf">
+
+
+	<!-- 이관 기록물이관모니터링 이관목록통보모니러링 목록을 조회한다. -->
+	<resultMap id="findTransfWriteMonitorPagedList-result" class="rms.transf.offer.domain.StateApprMonitor" >
+		<result property="rnum" 							column="RNUM"/>
+		<result property="fileNm" 							column="FILE_NM"/>
+		<result property="erecordFileCnt" 					column="ERECORD_FILE_CNT"/>
+		<result property="svcReqTme" 						column="SVC_REQ_TME"/>
+		<result property="svcHandlFinTme" 					column="SVC_HANDL_FIN_TME"/>
+		<result property="succFailFlag" 					column="SUCC_FAIL_FLAG"/>
+		<result property="errorCd" 							column="ERROR_CD"/>
+		<result property="errorMsg" 						column="ERROR_MSG"/>
+		<result property="errorDetlCont" 					column="ERROR_DETL_CONT"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 기록물이관모니터링 이관목록통보모니러링 목록을 조회한다.
+	 -->
+	<select id="findTransfWriteMonitorPagedList" parameterClass="rms.transf.transf.domain.TransfFolder"  resultMap="findTransfWriteMonitorPagedList-result">
+		SELECT D.*
+		FROM (
+			SELECT C.*
+			FROM (
+				SELECT X.RNUM
+				      ,X.FILE_NM
+				      ,X.ERECORD_FILE_CNT
+				      ,X.SVC_REQ_TME
+				      ,X.SVC_HANDL_FIN_TME
+				      ,X.SUCC_FAIL_FLAG
+				      ,Y.ERROR_CD
+				      ,Y.ERROR_MSG
+				      ,Y.ERROR_DETL_CONT
+				FROM   (SELECT ROW_NUMBER() OVER (ORDER BY B.SEND_LIST_LOG_SNO DESC, A.LOG_SNO) AS RNUM
+				              ,A.LOG_SNO
+				              ,A.FILE_NM
+				              ,A.ERECORD_FILE_CNT
+				              ,SUBSTR(A.SVC_REQ_TME, 1, 19) AS SVC_REQ_TME
+				              ,SUBSTR(A.SVC_HANDL_FIN_TME, 1, 19) AS SVC_HANDL_FIN_TME
+				              ,A.SUCC_FAIL_FLAG
+				        FROM   TB_STLOGMONITOR A
+				              ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM
+				                      ,MIN(BA.LOG_SNO) AS SEND_LIST_LOG_SNO
+				                FROM   TB_STLOGMONITOR BA
+				                WHERE  BA.FILE_NM LIKE '________TRANS_PLAN_REQ_' || #transfYyyy:VARCHAR# || '%'
+				               <!--  AND    BA.LOG_JOB_DIV = '2' -->
+				                GROUP BY BA.SEND_LIST_FILE_NM) B
+				        WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM
+				        AND    A.SVC_DIV = 'T'
+				        <!-- AND    A.LOG_JOB_DIV = '2' --> ) X
+				      ,(SELECT YA.LOG_SNO
+				              ,YB.ERROR_CD
+				              ,YB.ERROR_MSG
+				              ,YB.ERROR_DETL_CONT
+				        FROM   (SELECT B.LOG_SNO
+				                      ,MIN(A.ERROR_LOG_SNO) AS ERROR_LOG_SNO
+				                FROM   TB_STERRORLOG A
+				                      ,(SELECT BA.LOG_SNO
+				                              ,BA.FILE_NM
+				                              ,BA.LOG_CREAT_TME
+				                        FROM   TB_STLOGMONITOR BA
+				                              ,(SELECT DISTINCT BBA.SEND_LIST_FILE_NM
+				                                FROM   TB_STLOGMONITOR BBA
+				                                WHERE  BBA.FILE_NM LIKE '________TRANS_PLAN_REQ_' || #transfYyyy:VARCHAR# || '%'
+				                                <!-- AND    BBA.LOG_JOB_DIV = '2' --> ) BB
+				                        WHERE  BA.SEND_LIST_FILE_NM = BB.SEND_LIST_FILE_NM
+				                        AND    BA.SUCC_FAIL_FLAG = 'F'
+				                        AND    BA.SVC_DIV = 'T'
+				                        <!-- AND    BA.LOG_JOB_DIV = '2' --> ) B
+				                WHERE   SUBSTR(A.FILE_NM, DECODE(INSTR(A.FILE_NM, '/', -1), 0, 0, INSTR(A.FILE_NM, '/', -1)+1)) = B.FILE_NM
+				                 AND     A.LOG_CREAT_TME <![CDATA[<=]]> B.LOG_CREAT_TME
+				                GROUP BY LOG_SNO) YA
+				               ,TB_STERRORLOG YB
+				        WHERE  YA.ERROR_LOG_SNO = YB.ERROR_LOG_SNO) Y
+				WHERE  X.LOG_SNO = Y.LOG_SNO(+)
+				ORDER BY RNUM
+			) C
+			WHERE C.rnum <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 기록물이관모니터링 이관목록통보모니러링 목록을 조회한다.
+	 -->
+	<select id="countTransfWriteMonitorPagedList" parameterClass="rms.transf.transf.domain.TransfFolder"  resultClass="java.lang.Long">
+		SELECT COUNT(*) AS CNT
+		FROM   TB_STLOGMONITOR A
+		      ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM
+		        FROM   TB_STLOGMONITOR BA
+		        WHERE  BA.FILE_NM LIKE '________TRANS_PLAN_REQ_' || #transfYyyy:VARCHAR# || '%'
+		        <!-- AND    BA.LOG_JOB_DIV = '2' --> ) B
+		WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM
+		AND    A.SVC_DIV = 'T'
+		<!-- AND    A.LOG_JOB_DIV = '2' -->
+	</select>
+	
+
+	<!-- 이관 기록물이관모니터링 이관처리모니터링 목록을 조회한다. -->
+	<resultMap id="transfMonitor-result" class="rms.transf.transf.domain.TransfMonitor">
+		<result property="transfYyyy"			column="TRANSF_YYYY"/>
+		<result property="transfGrpSno"			column="TRANSF_GRP_SNO"/>
+		<result property="splitSeq"				column="SPLIT_SEQ"/>
+		<result property="svcReqTme"			column="SVC_REQ_TME"/>
+		<result property="svcHandlFinTme"		column="SVC_HANDL_FIN_TME"/>
+		<result property="sendTotCnt"			column="SEND_TOT_CNT"/>
+		<result property="sendWaitCnt"			column="SEND_WAIT_CNT"/>
+		<result property="sendSuccCnt"			column="SEND_SUCC_CNT"/>
+		<result property="sendFailCnt"			column="SEND_FAIL_CNT"/>
+		<result property="sendFileSize"			column="SEND_FILE_SIZE"/>
+		<result property="sendSpeed"			column="SEND_SPEED"/>
+	</resultMap>
+	<!-- 이관 기록물이관모니터링 이관처리모니터링 분할매체번호 목록을 조회한다. -->
+	<select id="findTransfMonitorSplitSeqList" parameterClass="rms.transf.transf.domain.TransfMonitor" resultClass="java.lang.String">
+		SELECT DISTINCT A.SPLIT_SEQ
+		FROM   TB_DFTRANSFSTOREFLD A
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    A.TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND    A.TRANSF_GRP_SNO IN (SELECT MAX(TRANSF_GRP_SNO)
+									FROM   TB_DFTRANSFWORK
+									WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+									AND    TRANSF_YYYY = #transfYyyy:VARCHAR#
+									AND    TO_NUMBER(TRANSF_HANDL_STATE) > 1)
+		ORDER  BY A.SPLIT_SEQ
+	</select>
+	<!-- 
+		SELECT - 이관 기록물이관모니터링 이관처리모니터링 목록을 조회한다.
+	 -->
+	<select id="findTransfMonitorPagedList" parameterClass="rms.transf.transf.domain.TransfMonitor" resultMap="transfMonitor-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+				SELECT Z.TRANSF_YYYY
+					  ,Z.TRANSF_GRP_SNO
+				      ,Z.SPLIT_SEQ
+				      ,SUBSTR(MIN(Y.SVC_REQ_TME), 1, 19)       AS SVC_REQ_TME
+				      ,SUBSTR(MAX(Y.SVC_HANDL_FIN_TME), 1, 19) AS SVC_HANDL_FIN_TME
+				      ,COUNT(*) AS SEND_TOT_CNT
+				      ,SUM(DECODE(Y.JOB_RSLT, 'W', 1, NULL, 1, 0)) AS SEND_WAIT_CNT
+				      ,SUM(DECODE(Y.JOB_RSLT, 'S', 1, 0)) AS SEND_SUCC_CNT
+				      ,SUM(DECODE(Y.JOB_RSLT, 'F', 1, 0)) AS SEND_FAIL_CNT
+				      ,ROUND(SUM(DECODE(Y.JOB_RSLT, 'S', Z.FILE_SIZE, 'W', Y.FILE_SIZE, 0)) / (1024 * 1024), 0) AS SEND_FILE_SIZE
+				      ,NVL(ROUND(SUM(DECODE(Y.JOB_RSLT, 'S', Z.FILE_SIZE, 'W', Y.FILE_SIZE, 0)) / (1024 * 1024) / ((TO_DATE(SUBSTR(MAX(Y.SVC_HANDL_FIN_TME), 1, 19), 'YYYY-MM-DD HH24:MI:SS') - TO_DATE(SUBSTR(MIN(Y.SVC_REQ_TME), 1, 19), 'YYYY-MM-DD HH24:MI:SS')) * 24 * 60 * 60), 2), 0) AS SEND_SPEED
+				FROM   (SELECT ZA.TRANSF_YYYY
+							  ,ZA.TRANSF_GRP_SNO
+				              ,ZA.SPLIT_SEQ
+				              ,ZA.FOLDER_CLSS_ID
+				              ,(MAX(NVL(ZA.FOLDER_META_SIZE, 0)) + MAX(NVL(ZA.FOLDER_SIZE, 0)) + SUM(NVL(ZB.RECORD_SIZE, 0))) AS FILE_SIZE
+				        FROM   TB_DFTRANSFSTOREFLD ZA
+				              ,TB_DFTRANSFSTORERCD ZB
+				        WHERE  ZA.RECORD_CENTER_ID = ZB.RECORD_CENTER_ID
+				        AND    ZA.TRANSF_YYYY = ZB.TRANSF_YYYY
+				        AND    ZA.TRANSF_GRP_SNO = ZB.TRANSF_GRP_SNO
+				        AND    ZA.FOLDER_ID = ZB.FOLDER_ID
+				        AND    ZA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				        AND    ZA.TRANSF_YYYY      = #transfYyyy:VARCHAR#
+				        AND    ZA.TRANSF_GRP_SNO IN (SELECT MAX(TRANSF_GRP_SNO)
+				                                    FROM   TB_DFTRANSFWORK
+				                                    WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                                    AND    TRANSF_YYYY      = #transfYyyy:VARCHAR#
+				                                    AND    TRANSF_GRP_SNO   = #transfGrpSno:NUMBER#
+				                                    AND    TO_NUMBER(TRANSF_HANDL_STATE) > 1)
+				        <isNotEmpty prepend="AND" property="splitSeq">
+				            ZA.SPLIT_SEQ = #splitSeq:VARCHAR#
+				        </isNotEmpty>
+				        GROUP BY ZA.TRANSF_YYYY
+				                ,ZA.TRANSF_GRP_SNO
+				                ,ZA.SPLIT_SEQ
+				                ,ZA.FOLDER_CLSS_ID
+				       ) Z
+				      ,(SELECT YA.FOLDER_CLSS_ID
+				              ,CASE WHEN YA.JOB_STA_RSLT = '-' THEN 'W'
+				                    WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = 'S' THEN 'S'
+				                    WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = '-'  AND YA.JOB_MID_RSLT = 'S' THEN 'W'
+				                    WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = '-'  AND YA.JOB_MID_RSLT = 'F' THEN 'F'
+				                    ELSE 'F'
+				               END JOB_RSLT
+				              ,YA.SVC_REQ_TME
+				              ,YA.SVC_HANDL_FIN_TME
+				              ,YA.FILE_SIZE
+				        FROM   (SELECT YAA.FOLDER_CLSS_ID
+				                      ,NVL(MAX(YAA.JOB_STA_RSLT), '-') AS JOB_STA_RSLT
+				                      ,NVL(MIN(YAA.JOB_MID_RSLT), '-') AS JOB_MID_RSLT
+				                      ,NVL(MAX(YAA.JOB_END_RSLT), '-') AS JOB_END_RSLT
+				                      ,MIN(YAA.SVC_REQ_TME)       AS SVC_REQ_TME
+				                      ,MAX(YAA.SVC_HANDL_FIN_TME) AS SVC_HANDL_FIN_TME
+				                      ,SUM(YAA.FILE_SIZE) AS FILE_SIZE
+				                FROM   (SELECT YAAA.FOLDER_CLSS_ID
+				                              ,YAAA.FILE_NM
+				                              ,DECODE(MAX(YAAA.ERECORD_FILE_CNT), NULL, '', MAX(YAAA.SUCC_FAIL_FLAG)) AS JOB_STA_RSLT
+				                              ,MAX(YAAA.SUCC_FAIL_FLAG) AS JOB_MID_RSLT
+				                              ,DECODE(INSTR(MAX(YAAA.FILE_NM), '.end')+INSTR(MAX(YAAA.FILE_NM), '.complete'), 0, '', MAX(YAAA.SUCC_FAIL_FLAG)) AS JOB_END_RSLT
+				                              ,MIN(YAAA.SVC_REQ_TME)       AS SVC_REQ_TME
+				                              ,MAX(YAAA.SVC_HANDL_FIN_TME) AS SVC_HANDL_FIN_TME
+				                              ,DECODE(MAX(YAAA.SUCC_FAIL_FLAG), 'S', MAX(YAAC.RECORD_SIZE), 0) AS FILE_SIZE
+				                        FROM   TB_STLOGMONITOR     YAAA
+				                              ,TB_DFTRANSFSTORERCD YAAC
+				                        WHERE  YAAA.FILE_NM = YAAC.RECORD_NEO_SND_FILE_NM(+)
+				                       <!--  WHERE  YAAA.FILE_NM = YAAC.RECORD_NEO_SND_FILE_NM	 -->	                        
+				                        AND    YAAA.SVC_DIV = 'T'
+				                        AND    YAAA.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                        <isNotEmpty prepend="AND" property="splitSeq">
+				                               YAAA.SPLIT_SEQ = #splitSeq:VARCHAR#
+				                        </isNotEmpty>
+				                        GROUP BY YAAA.FOLDER_CLSS_ID
+				                                ,YAAA.FILE_NM
+				                       ) YAA
+				                GROUP BY YAA.FOLDER_CLSS_ID
+				               ) YA
+				        ORDER BY YA.FOLDER_CLSS_ID
+				       ) Y
+				WHERE  Z.FOLDER_CLSS_ID = Y.FOLDER_CLSS_ID (+)
+				GROUP BY Z.TRANSF_YYYY, Z.TRANSF_GRP_SNO, Z.SPLIT_SEQ
+				ORDER BY Z.TRANSF_YYYY, Z.TRANSF_GRP_SNO, Z.SPLIT_SEQ
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 기록물이관모니터링 이관처리모니터링 목록을 조회한다.
+	 -->
+	<select id="countTransfMonitorPagedList" parameterClass="rms.transf.transf.domain.TransfMonitor" resultClass="java.lang.Long">
+		SELECT COUNT(*) AS CNT
+		FROM   (
+			SELECT DISTINCT ZA.SPLIT_SEQ
+		    FROM   TB_DFTRANSFSTOREFLD ZA
+		    WHERE  ZA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		    AND    ZA.TRANSF_YYYY      = #transfYyyy:VARCHAR#
+		    AND    ZA.TRANSF_GRP_SNO IN (SELECT MAX(TRANSF_GRP_SNO)
+		                                 FROM   TB_DFTRANSFWORK
+		                                 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                                 AND    TRANSF_YYYY      = #transfYyyy:VARCHAR#
+		                                 AND    TRANSF_GRP_SNO   = #transfGrpSno:NUMBER#
+		                                 AND    TO_NUMBER(TRANSF_HANDL_STATE) > 1)
+		    <isNotEmpty prepend="AND" property="splitSeq">
+		        ZA.SPLIT_SEQ = #splitSeq:VARCHAR#
+		    </isNotEmpty>
+		)
+	</select>
+	
+	
+	<!-- 기록물이관모니터링 이관처리모니터링 상세팝업 상세현황 목록 -->
+	<resultMap id="transfMonitorDet-result" class="rms.transf.transf.domain.TransfMonitor">
+		<result property="transfYyyy"			column="TRANSF_YYYY"		/>
+		<result property="splitSeq"				column="SPLIT_SEQ"			/>
+		<result property="title"				column="TITLE"				/>
+		<result property="clssNm"				column="CLSS_NM"			/>
+		<result property="creatYyyy"			column="CREAT_YYYY"			/>
+		<result property="sendFileSize"			column="SEND_FILE_SIZE"		/>
+		<result property="sendSecond"			column="SEND_SECOND"		/>
+		<result property="jobRslt"				column="JOB_RSLT"			/>
+		<result property="errorCd"				column="ERROR_CD"			/>
+		<result property="errorMsg"				column="ERROR_MSG"			/>
+		<result property="errorDetlCont"		column="ERROR_DETL_CONT"	/>
+	</resultMap>
+	<!-- 
+		SELECT - 기록물이관모니터링 이관처리모니터링 상세팝업 상세현황 목록
+	 -->
+	<select id="findTransfMonitorDetPagedList" parameterClass="rms.transf.transf.domain.TransfMonitor" resultMap="transfMonitorDet-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+				SELECT Z.TRANSF_YYYY
+				    , Z.SPLIT_SEQ
+				    , X.TITLE
+				    , X.CLSS_NM
+				    , X.CREAT_YYYY
+				    , ROUND(DECODE(Y.JOB_RSLT, 'S', NVL(Z.FILE_SIZE, 0), 'W', NVL(Y.FILE_SIZE, 0), 0) / (1024 * 1024), 0) AS SEND_FILE_SIZE
+				    , NVL(((TO_DATE(SUBSTR(Y.SVC_HANDL_FIN_TME, 1, 19), 'YYYY-MM-DD HH24:MI:SS') - TO_DATE(SUBSTR(Y.SVC_REQ_TME, 1, 19), 'YYYY-MM-DD HH24:MI:SS')) * 24 * 60 * 60), 0) AS SEND_SECOND
+				    , NVL(Y.JOB_RSLT, 'W') AS JOB_RSLT
+				    , Y.ERROR_CD
+				    , Y.ERROR_MSG
+				    , Y.ERROR_DETL_CONT
+				FROM (
+					SELECT ZA.TRANSF_YYYY
+				        , ZA.SPLIT_SEQ
+				        , ZA.FOLDER_ID
+				        , ZA.FOLDER_CLSS_ID
+				        , (MAX(NVL(ZA.FOLDER_META_SIZE, 0)) + MAX(NVL(ZA.FOLDER_SIZE, 0)) + SUM(NVL(ZB.RECORD_SIZE, 0))) AS FILE_SIZE
+				    FROM TB_DFTRANSFSTOREFLD ZA
+				        , TB_DFTRANSFSTORERCD ZB
+				    WHERE ZA.RECORD_CENTER_ID = ZB.RECORD_CENTER_ID
+				    AND ZA.TRANSF_YYYY = ZB.TRANSF_YYYY
+				    AND ZA.TRANSF_GRP_SNO = ZB.TRANSF_GRP_SNO
+				    AND ZA.FOLDER_ID = ZB.FOLDER_ID
+				    AND ZA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				    AND ZA.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				    AND ZA.TRANSF_GRP_SNO IN (
+				    	SELECT MAX(TRANSF_GRP_SNO)
+				        FROM   TB_DFTRANSFWORK
+				        WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				        AND    TRANSF_YYYY      = #transfYyyy:VARCHAR#
+				        AND    TRANSF_GRP_SNO   = #transfGrpSno:NUMBER#
+				        AND    TO_NUMBER(TRANSF_HANDL_STATE) > 1
+				    )
+				    AND ZA.SPLIT_SEQ = #splitSeq:VARCHAR#
+				    GROUP BY ZA.TRANSF_YYYY
+				        , ZA.SPLIT_SEQ
+				        , ZA.FOLDER_ID
+				        , ZA.FOLDER_CLSS_ID
+				) Z, (
+				    SELECT YA.FOLDER_CLSS_ID
+				        , CASE WHEN YA.JOB_STA_RSLT = '-' THEN 'W'
+				               WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = 'S' THEN 'S'
+				               WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = '-'  AND YA.JOB_MID_RSLT = 'S' THEN 'W'
+				               WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = '-'  AND YA.JOB_MID_RSLT = '-' THEN 'W'
+				               WHEN YA.JOB_STA_RSLT = 'S' AND YA.JOB_END_RSLT = '-'  AND YA.JOB_MID_RSLT = 'F' THEN 'F'
+				               ELSE 'F'
+				          END JOB_RSLT
+				        , YA.SVC_REQ_TME
+				        , YA.SVC_HANDL_FIN_TME
+				        , YA.FILE_SIZE
+				        , YB.ERROR_CD
+				        , YB.ERROR_MSG
+				        , YB.ERROR_DETL_CONT
+				    FROM (
+				    	SELECT YAA.FOLDER_CLSS_ID
+				            , NVL(MAX(YAA.JOB_STA_RSLT), '-') AS JOB_STA_RSLT
+				            , NVL(MIN(YAA.JOB_MID_RSLT), '-') AS JOB_MID_RSLT
+				            , NVL(MAX(YAA.JOB_END_RSLT), '-') AS JOB_END_RSLT
+				            , MIN(YAA.SVC_REQ_TME)       AS SVC_REQ_TME
+				            , MAX(YAA.SVC_HANDL_FIN_TME) AS SVC_HANDL_FIN_TME
+				            , SUM(YAA.FILE_SIZE) AS FILE_SIZE
+				        FROM (
+				        	SELECT YAAA.FOLDER_CLSS_ID
+				                , YAAA.FILE_NM
+				                , DECODE(MAX(YAAA.ERECORD_FILE_CNT), NULL, '', MAX(YAAA.SUCC_FAIL_FLAG)) AS JOB_STA_RSLT
+				                , MAX(YAAA.SUCC_FAIL_FLAG) AS JOB_MID_RSLT
+				                , DECODE(INSTR(MAX(YAAA.FILE_NM), '.end')+INSTR(MAX(YAAA.FILE_NM), '.complete'), 0, '', MAX(YAAA.SUCC_FAIL_FLAG)) AS JOB_END_RSLT
+				                , MIN(YAAA.SVC_REQ_TME) AS SVC_REQ_TME
+				                , MAX(YAAA.SVC_HANDL_FIN_TME) AS SVC_HANDL_FIN_TME
+				                , DECODE(MAX(YAAA.SUCC_FAIL_FLAG), 'S', MAX(YAAC.RECORD_SIZE), 0) AS FILE_SIZE
+				            FROM TB_STLOGMONITOR YAAA, TB_DFTRANSFSTORERCD YAAC
+				            WHERE YAAA.FILE_NM = YAAC.RECORD_NEO_SND_FILE_NM(+)
+				            AND YAAA.SVC_DIV = 'T'
+				            AND YAAA.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				            AND YAAA.SPLIT_SEQ   = #splitSeq:VARCHAR#
+				            GROUP BY YAAA.FOLDER_CLSS_ID, YAAA.FILE_NM
+				        ) YAA
+				        GROUP BY YAA.FOLDER_CLSS_ID
+				    ) YA, (
+				    	SELECT YBA.FOLDER_CLSS_ID
+				            , YBB.ERROR_CD
+				            , YBB.ERROR_MSG
+				            , YBB.ERROR_DETL_CONT
+				        FROM (
+				        	SELECT YBAB.FOLDER_CLSS_ID
+				                , MAX(YBAC.ERROR_LOG_SNO) AS ERROR_LOG_SNO
+				            FROM TB_STLOGMONITOR YBAA
+				                , TB_DFTRANSFSTOREFLD YBAB
+				                , TB_STERRORLOG       YBAC
+				            WHERE YBAA.FOLDER_CLSS_ID = YBAB.FOLDER_CLSS_ID (+)
+				            AND YBAA.SEND_LIST_FILE_NM = YBAC.SEND_LIST_FILE_NM
+				            AND YBAA.SVC_DIV = 'T'
+				            AND YBAA.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				            AND YBAA.SPLIT_SEQ = #splitSeq:VARCHAR#
+				            AND YBAB.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				            AND YBAB.TRANSF_YYYY = #transfYyyy:VARCHAR#
+				            AND YBAB.TRANSF_GRP_SNO IN (
+				            	SELECT MAX(TRANSF_GRP_SNO)
+				                FROM TB_DFTRANSFWORK
+				                WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				                AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				                AND TO_NUMBER(TRANSF_HANDL_STATE) > 1
+				            )
+				            AND YBAB.SPLIT_SEQ = #splitSeq:VARCHAR#
+				            AND YBAC.SVC_DIV = 'T'
+				            GROUP BY YBAB.FOLDER_CLSS_ID
+				        ) YBA, TB_STERRORLOG YBB
+				        WHERE YBA.ERROR_LOG_SNO = YBB.ERROR_LOG_SNO
+				    ) YB
+				    WHERE YA.FOLDER_CLSS_ID = YB.FOLDER_CLSS_ID(+)
+				    ORDER BY YA.FOLDER_CLSS_ID
+				) Y, TB_RDFOLDER X
+				WHERE Z.FOLDER_CLSS_ID = Y.FOLDER_CLSS_ID (+)
+				AND Z.FOLDER_ID = X.FOLDER_ID
+				ORDER BY Z.FOLDER_CLSS_ID
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 기록물이관모니터링 이관처리모니터링 상세팝업 상세현황 목록
+	 -->
+	<select id="countTransfMonitorDetPagedList" parameterClass="rms.transf.transf.domain.TransfMonitor" resultClass="java.lang.Long">
+		SELECT COUNT(*) AS CNT
+		FROM TB_DFTRANSFSTOREFLD ZA
+		WHERE ZA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND ZA.TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND ZA.TRANSF_GRP_SNO IN (
+			SELECT MAX(TRANSF_GRP_SNO)
+		    FROM TB_DFTRANSFWORK
+		    WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		    AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+		    AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+		    AND TO_NUMBER(TRANSF_HANDL_STATE) > 1
+		)
+		AND ZA.SPLIT_SEQ = #splitSeq:VARCHAR#
+	</select>
+</sqlMap>

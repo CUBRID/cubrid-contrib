@@ -1,0 +1,59 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml
+
+SelectPdf_StMedium
+Semantic: before '  = A.MEDIUM_CD                    AND   DEST_STORAGE_VENDOR =...'
+Attribute "DEST_STORAGE_TYPE" was not found. select MEDIUM_ID from  [__t1] where rownum=1[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml
+-- Query    : select
+-- Query Id : SelectPdf_StMedium
+
+		SELECT MEDIUM_ID		FROM (		    SELECT MEDIUM_ID		    FROM  TB_STMEDIUM A		    WHERE EXISTS (		    	SELECT RECORD_CENTER_ID, DEST_STORAGE_TYPE, DEST_STORAGE_VENDOR FROM TB_STREQTRANS WHERE JOB_ID = '1'                        AND RECORD_CENTER_ID = A.RECORD_CENTER_ID                        AND DEST_STORAGE_TYPE = A.MEDIUM_CD                        AND DEST_STORAGE_VENDOR = A.MEDIUM_DETAIL_CD		    )		    AND   A.VOLM_ID IN (SELECT VOLM_ID FROM TB_STVOLM WHERE RECORD_CENTER_ID = '1' AND DEL_FLAG = '0' AND VOLM_DIV_CD = '2')		    AND   A.DEL_FLAG = '0'		    AND   (A.TOT_SIZE - A.USE_SIZE) > NVL((SELECT NVL(SUM(DEST_FILE_SIZE),0) FROM TB_STREQRESULT WHERE JOB_ID = '1' AND REQUEST_STATUS = 'C'),0)                    AND   RECORD_CENTER_ID = A.RECORD_CENTER_ID                    AND   DEST_STORAGE_TYPE = A.MEDIUM_CD                    AND   DEST_STORAGE_VENDOR = A.MEDIUM_DETAIL_CD		    ORDER BY A.RECORD_CENTER_ID, A.MEDIUM_ID		)		WHERE ROWNUM = 1	;
+
+SelectPdfA1_StOrignPdfA1File
+Semantic: before '                             AND   B.ORIGN_ID = ORIGN_ID      ...'
+Reference to RECORD_CENTER_ID is ambiguous. select TB_STORIGNPDFA1FILE.RECORD_CENTER_ID, TB_STORIGNPDFA1...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml
+-- Query    : select
+-- Query Id : SelectPdfA1_StOrignPdfA1File
+
+		SELECT RECORD_CENTER_ID, ORIGN_ID, DOC_TYPE_CD, DOC_TYPE_SNO		FROM TB_STORIGNPDFA1FILE		WHERE  		      EXISTS		      ( SELECT B.RECORD_CENTER_ID, B.ORIGN_ID, B.DOC_TYPE_CD, B.DOC_TYPE_SNO			    FROM  TB_STREQRESULT A			        , TB_STORIGNFILE B			    WHERE A.RECORD_CENTER_ID = '1' 			    AND   A.JOB_ID = '1'			    AND   A.DEST_FILE_ID = '1'			    AND   A.SRC_FILE_ID = B.ORIGN_FILE_ID                            AND   B.RECORD_CENTER_ID = RECORD_CENTER_ID                            AND   B.ORIGN_ID = ORIGN_ID                            AND   B.DOC_TYPE_CD = DOC_TYPE_CD                            AND   B.DOC_TYPE_SNO = DOC_TYPE_SNO		      );
+
+UpdatePdf_StOrignFile
+Semantic: before ' 	;'
+Updating derived tables is not allowed. update (select A.ORIGN_FILE_ID, A.PDF_A1_TRANS_STATE, (selec...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_StOrignFile
+
+		UPDATE (		    SELECT /*+ INDEX (A, TB_STORIGNFILE_PK) */		          A.ORIGN_FILE_ID		        , A.PDF_A1_TRANS_STATE		        , (SELECT B.REQUEST_STATUS FROM TB_STREQRESULT B WHERE B.JOB_ID = '1' AND B.SRC_FILE_ID = A.ORIGN_FILE_ID) AS REQUEST_STATUS		    FROM  TB_STORIGNFILE A		    WHERE A.ORIGN_FILE_ID		    IN (		        SELECT SRC_FILE_ID		        FROM  TB_STREQRESULT		        WHERE RECORD_CENTER_ID = '1'		          AND JOB_ID = '1'		    )		) C		SET C.PDF_A1_TRANS_STATE = (CASE WHEN C.REQUEST_STATUS = 'C' THEN '4' WHEN C.REQUEST_STATUS = 'D' THEN '5' ELSE C.PDF_A1_TRANS_STATE END)	;
+
+UpdatePdf_RdRecord
+Semantic: before ' ;'
+Updating derived tables is not allowed. update (select TB_RDRECORD.PDF_A1_TRANS_STATE, (select (case...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_RdRecord
+
+		UPDATE (			SELECT PDF_A1_TRANS_STATE			    , (			        SELECT (CASE WHEN E.CNT5 > 0 THEN '5' 			                     WHEN E.CNT4 + E.CNT6 = E.R_CNT THEN '4' 			                     WHEN E.CNT0 = E.R_CNT THEN '0' 			                     ELSE '1'			                END) AS PDF_A1_TRANS_STATE 			        FROM (						SELECT COUNT(1) AS R_CNT						    , NVL(SUM(CNT0),0) AS CNT0						    , NVL(SUM(D.CNT1),0) AS CNT1						    , NVL(SUM(D.CNT2),0) AS CNT2						    , NVL(SUM(D.CNT3),0) AS CNT3						    , NVL(SUM(D.CNT4),0) AS CNT4						    , NVL(SUM(D.CNT5),0) AS CNT5						    , NVL(SUM(D.CNT6),0) AS CNT6						FROM (						    SELECT						          (CASE WHEN C.PDF_A1_TRANS_STATE='0' THEN 1 ELSE 0 END) AS CNT0						        , (CASE WHEN C.PDF_A1_TRANS_STATE='1' THEN 1 ELSE 0 END) AS CNT1						        , (CASE WHEN C.PDF_A1_TRANS_STATE='2' THEN 1 ELSE 0 END) AS CNT2						        , (CASE WHEN C.PDF_A1_TRANS_STATE='3' THEN 1 ELSE 0 END) AS CNT3						        , (CASE WHEN C.PDF_A1_TRANS_STATE='4' THEN 1 ELSE 0 END) AS CNT4						        , (CASE WHEN C.PDF_A1_TRANS_STATE='5' THEN 1 ELSE 0 END) AS CNT5						        , (CASE WHEN C.PDF_A1_TRANS_STATE='6' THEN 1 ELSE 0 END) AS CNT6						    FROM  TB_STORIGNFILE C						    WHERE 						    EXISTS (						        SELECT A.RECORD_CENTER_ID, (SELECT B.ORIGN_ID FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.RECORD_ID=A.RECORD_ID) AS ORIGN_ID						        FROM  TB_STREQTRANS A						        WHERE A.RECORD_CENTER_ID = '1'						        AND A.JOB_ID = '1'                                                        AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID						        AND ORIGN_ID = C.ORIGN_ID 						    )						) D					) E			    ) AS NEW_STATE		    FROM  TB_RDRECORD		    WHERE RECORD_CENTER_ID = '1'		      AND RECORD_ID = '1'		) F		SET F.PDF_A1_TRANS_STATE = F.NEW_STATE;
+
+UpdatePdf_RdFolder
+Semantic: before ' 	;'
+Updating derived tables is not allowed. update (select Z.PDF_A1_TRANS_STATE, (select (case when B.CN...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml
+-- Query    : update
+-- Query Id : UpdatePdf_RdFolder
+
+		UPDATE (		    SELECT PDF_A1_TRANS_STATE			    , (			        SELECT (CASE WHEN B.CNT4 + B.CNT6 = B.F_CNT THEN '4' 			                     WHEN B.CNT1 + B.CNT2 + B.CNT3 > 0 THEN '3' 			                     WHEN B.CNT5 > 0 THEN '5' 			                     ELSE '0'			                END) AS PDF_A1_TRANS_STATE 			        FROM (				        SELECT COUNT(1) AS F_CNT				            , NVL(SUM(A.CNT0),0) AS CNT0  				            , NVL(SUM(A.CNT1),0) AS CNT1  				            , NVL(SUM(A.CNT2),0) AS CNT2  				            , NVL(SUM(A.CNT3),0) AS CNT3  				            , NVL(SUM(A.CNT4),0) AS CNT4  				            , NVL(SUM(A.CNT5),0) AS CNT5  				            , NVL(SUM(A.CNT6),0) AS CNT6 				        FROM ( 				            SELECT					              DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'0',1,0) CNT0 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'1',1,0) CNT1 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'2',1,0) CNT2 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'3',1,0) CNT3 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'4',1,0) CNT4 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'5',1,0) CNT5 					            , DECODE(NVL(PDF_A1_TRANS_STATE,'0'),'6',1,0) CNT6 				            FROM  TB_RDRECORD A 				            WHERE RECORD_CENTER_ID = '1'				            AND FOLDER_ID = '1'				            AND   ERECORD_FLAG = '1' 				            AND   ATTACH_CNT > 0 				        ) A			        ) B			    ) AS NEW_STATE		    FROM  TB_RDFOLDER Z		    WHERE RECORD_CENTER_ID = '1'		    AND FOLDER_ID = '1'		) C		SET C.PDF_A1_TRANS_STATE = C.NEW_STATE	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\sqlMap-ResultPdf.xml

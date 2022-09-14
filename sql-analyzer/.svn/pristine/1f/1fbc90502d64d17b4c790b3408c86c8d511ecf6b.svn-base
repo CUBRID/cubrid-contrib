@@ -1,0 +1,640 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="rmsstate.curstate">
+
+	<!-- 
+		기록물보유현황_보유현황
+		: 보유현황통계목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStatePresvTermCntList-result" class="rms.rmsstate.curstate.domain.CurStateKeep">
+	 	<result property="presvTermTot" 		column="PRESV_TERM_TOT"/>
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>
+		<result property="presvTermCnt1" 		column="PRESV_TERM_CNT1"/>
+		<result property="presvTermCnt2" 		column="PRESV_TERM_CNT2"/>
+		<result property="presvTermCnt3" 		column="PRESV_TERM_CNT3"/>
+		<result property="presvTermCnt4" 		column="PRESV_TERM_CNT4"/>
+		<result property="presvTermCnt5" 		column="PRESV_TERM_CNT5"/>
+		<result property="presvTermCnt6" 		column="PRESV_TERM_CNT6"/>
+		<result property="presvTermCnt7" 		column="PRESV_TERM_CNT7"/>
+	 </resultMap>
+	 <select id="findCurStatePresvTermCntTotal" parameterClass="rms.rmsstate.curstate.domain.CurStateKeep" resultMap="findCurStatePresvTermCntList-result">
+	 	SELECT  (CASE WHEN B.flag IN ('99','05') THEN '05' ELSE B.flag END) AS flag
+		         ,B.presv_term_nm
+		         <!--cubrid tot CAST AS INT-->
+		         ,CAST(NVL(SUM(B.presv_term_tot),0) AS INT)  AS presv_term_tot
+		         ,NVL(SUM(B.presv_term_cnt1),0) AS presv_term_cnt1
+		         ,NVL(SUM(B.presv_term_cnt2),0) AS presv_term_cnt2 
+		         ,NVL(SUM(B.presv_term_cnt3),0) AS presv_term_cnt3
+		         ,NVL(SUM(B.presv_term_cnt4),0) AS presv_term_cnt4
+		         ,NVL(SUM(B.presv_term_cnt5),0) AS presv_term_cnt5
+		         ,NVL(SUM(B.presv_term_cnt6),0) AS presv_term_cnt6
+		         ,NVL(SUM(B.presv_term_cnt7),0) AS presv_term_cnt7
+		FROM (
+		    SELECT '00' AS flag, '총계' AS presv_term_nm
+		               ,'1' AS presv_term_tot
+		               ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		               ,DECODE(A.presv_term_cd, '30', 1, 0) presv_term_cnt2
+		               ,DECODE(A.presv_term_cd, '25', 1, 0) presv_term_cnt3
+		               ,DECODE(A.presv_term_cd, '10', 1, 0) presv_term_cnt4
+		               ,DECODE(A.presv_term_cd, '05', 1, 0) presv_term_cnt5
+		               ,DECODE(A.presv_term_cd, '03', 1, 0) presv_term_cnt6
+		               ,DECODE(A.presv_term_cd, '01', 1, 0) presv_term_cnt7  
+		    FROM TB_RDFOLDER A 
+		    <dynamic prepend="WHERE">
+	        	<isNotEmpty prepend="recordCenterId">
+	        		A.record_center_id = #recordCenterId:VARCHAR#
+	        	</isNotEmpty>
+	        			
+				<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+					 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+		    AND A.folder_keep_state_cd IN ('01', '04' )
+		) B
+			<!--cubrid ADD-->
+			GROUP BY flag,  presv_term_nm, presv_term_tot
+	 </select>
+	 <select id="findCurStatePresvTermCntList" parameterClass="rms.rmsstate.curstate.domain.CurStateKeep" resultMap="findCurStatePresvTermCntList-result">
+	 	SELECT (CASE WHEN C.flag IN ('99','05') THEN '05' ELSE flag END) AS flag
+		      ,(CASE WHEN C.presv_term_nm IN ('서고정보관리체계','기타') THEN '기타' ELSE C.presv_term_nm END) AS presv_term_nm
+		      <!--cubrid tot CAST AS INT-->
+		      ,CAST(SUM(C.presv_term_tot) AS INT)  AS presv_term_tot
+		      ,SUM(C.presv_term_cnt1) AS presv_term_cnt1
+		      ,SUM(C.presv_term_cnt2) AS presv_term_cnt2
+		      ,SUM(C.presv_term_cnt3) AS presv_term_cnt3
+		      ,SUM(C.presv_term_cnt4) AS presv_term_cnt4
+		      ,SUM(C.presv_term_cnt5) AS presv_term_cnt5
+		      ,SUM(C.presv_term_cnt6) AS presv_term_cnt6
+		      ,SUM(C.presv_term_cnt7) AS presv_term_cnt7
+		FROM (
+		    SELECT B.com_cd AS FLAG, B.com_cd_nm AS presv_term_nm, NVL(A.presv_term_tot, 0) AS presv_term_tot
+		    	  ,NVL(A.presv_term_cnt1,0) AS presv_term_cnt1
+		    	  ,NVL(A.presv_term_cnt2,0) AS presv_term_cnt2
+		    	  ,NVL(A.presv_term_cnt3,0) AS presv_term_cnt3
+		    	  ,NVL(A.presv_term_cnt4,0) AS presv_term_cnt4
+		    	  ,NVL(A.presv_term_cnt5,0) AS presv_term_cnt5
+		    	  ,NVL(A.presv_term_cnt6,0) AS presv_term_cnt6
+		    	  ,NVL(A.presv_term_cnt7,0) AS presv_term_cnt7 
+		    FROM (
+		        SELECT A.creat_sys_cd, '1' AS presv_term_tot
+		        	  ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		        	  ,DECODE(A.presv_term_cd, '30', 1, 0) AS presv_term_cnt2
+		        	  ,DECODE(A.presv_term_cd, '25', 1, 0) AS presv_term_cnt3
+		        	  ,DECODE(A.presv_term_cd, '10', 1, 0) AS presv_term_cnt4
+		        	  ,DECODE(A.presv_term_cd, '05', 1, 0) AS presv_term_cnt5
+		        	  ,DECODE(A.presv_term_cd, '03', 1, 0) AS presv_term_cnt6
+		        	  ,DECODE(A.presv_term_cd, '01', 1, 0) AS presv_term_cnt7  
+		        FROM TB_RDFOLDER A 
+		        <dynamic prepend="WHERE">
+		        	<isNotEmpty prepend="recordCenterId">
+		        		A.record_center_id = #recordCenterId:VARCHAR#
+		        	</isNotEmpty>
+		        			
+					<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+						 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="orgCd">
+						A.org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+				</dynamic>
+		        AND A.folder_keep_state_cd IN ('01', '04' )
+		        ) A, ( SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD17' AND com_cd NOT IN ('98')
+		   ) B
+		    WHERE B.com_cd = A.creat_sys_cd(+)
+		) C
+		GROUP BY C.flag, C.presv_term_nm
+		ORDER BY C.flag
+	 </select>
+	 
+	 
+	 <!-- 
+		기록물보유현황_보유현황
+		: 기록물종류별통계목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStateErecordTypeList-result" class="rms.rmsstate.curstate.domain.CurStateKeep">
+	 	<result property="flag" 				column="FLAG"/>
+		<result property="presvTermTot" 		column="PRESV_TERM_TOT"/>
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>
+		<result property="presvTermCnt1" 		column="PRESV_TERM_CNT1"/>
+		<result property="presvTermCnt2" 		column="PRESV_TERM_CNT2"/>
+		<result property="presvTermCnt3" 		column="PRESV_TERM_CNT3"/>
+		<result property="presvTermCnt4" 		column="PRESV_TERM_CNT4"/>
+		<result property="presvTermCnt5" 		column="PRESV_TERM_CNT5"/>
+		<result property="presvTermCnt6" 		column="PRESV_TERM_CNT6"/>
+		<result property="presvTermCnt7" 		column="PRESV_TERM_CNT7"/>
+	 </resultMap>
+	 <select id="findCurStateErecordTypeTotal" parameterClass="rms.rmsstate.curstate.domain.CurStateKeep" resultMap="findCurStateErecordTypeList-result">
+	 	SELECT  (CASE WHEN B.flag IN ('99','05') THEN '05' ELSE B.flag END) AS flag
+		         ,B.presv_term_nm
+		         <!--cubrid tot CAST AS INT-->
+		         ,CAST(NVL(SUM(B.presv_term_tot),0) AS INT)  AS presv_term_tot
+		         ,NVL(SUM(B.presv_term_cnt1),0) AS presv_term_cnt1
+		         ,NVL(SUM(B.presv_term_cnt2),0) AS presv_term_cnt2 
+		         ,NVL(SUM(B.presv_term_cnt3),0) AS presv_term_cnt3
+		         ,NVL(SUM(B.presv_term_cnt4),0) AS presv_term_cnt4
+		         ,NVL(SUM(B.presv_term_cnt5),0) AS presv_term_cnt5
+		         ,NVL(SUM(B.presv_term_cnt6),0) AS presv_term_cnt6
+		         ,NVL(SUM(B.presv_term_cnt7),0) AS presv_term_cnt7
+		FROM (
+		    SELECT '1' AS flag, '합계' AS presv_term_nm
+		               ,'1' AS presv_term_tot
+		               ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		               ,DECODE(A.presv_term_cd, '30', 1, 0) presv_term_cnt2
+		               ,DECODE(A.presv_term_cd, '25', 1, 0) presv_term_cnt3
+		               ,DECODE(A.presv_term_cd, '10', 1, 0) presv_term_cnt4
+		               ,DECODE(A.presv_term_cd, '05', 1, 0) presv_term_cnt5
+		               ,DECODE(A.presv_term_cd, '03', 1, 0) presv_term_cnt6
+		               ,DECODE(A.presv_term_cd, '01', 1, 0) presv_term_cnt7  
+		    FROM TB_RDFOLDER A 
+		    <dynamic prepend="WHERE">
+	        	<isNotEmpty prepend="recordCenterId">
+	        		A.record_center_id = #recordCenterId:VARCHAR#
+	        	</isNotEmpty>
+	        			
+				<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+					 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+		    AND A.folder_keep_state_cd IN ('01', '04' )
+		) B
+			<!--cubrid ADD-->
+			GROUP BY flag,  presv_term_nm, presv_term_tot
+	 </select>
+	 <select id="findCurStateErecordTypeList" parameterClass="rms.rmsstate.curstate.domain.CurStateKeep" resultMap="findCurStateErecordTypeList-result">
+	 	SELECT <!--cubrid tot CAST AS INT-->
+	 	       CAST(C.flag AS INT) flag
+		      ,C.presv_term_nm
+		      <!--cubrid tot CAST AS INT-->
+		      ,CAST(SUM(C.presv_term_tot) AS INT)  AS presv_term_tot
+		      ,SUM(C.presv_term_cnt1) AS presv_term_cnt1
+		      ,SUM(C.presv_term_cnt2) AS presv_term_cnt2
+		      ,SUM(C.presv_term_cnt3) AS presv_term_cnt3
+		      ,SUM(C.presv_term_cnt4) AS presv_term_cnt4
+		      ,SUM(C.presv_term_cnt5) AS presv_term_cnt5
+		      ,SUM(C.presv_term_cnt6) AS presv_term_cnt6
+		      ,SUM(C.presv_term_cnt7) AS presv_term_cnt7
+		FROM (
+		           SELECT 2 AS FLAG, '전자기록' AS PRESV_TERM_NM, '1' AS PRESV_TERM_TOT
+		                 ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		                 ,DECODE(A.presv_term_cd, '30', 1, 0) AS presv_term_cnt2
+		                 ,DECODE(A.presv_term_cd, '25', 1, 0) AS presv_term_cnt3
+		                 ,DECODE(A.presv_term_cd, '10', 1, 0) AS presv_term_cnt4
+		                 ,DECODE(A.presv_term_cd, '05', 1, 0) AS presv_term_cnt5
+		                 ,DECODE(A.presv_term_cd, '03', 1, 0) AS presv_term_cnt6
+		                 ,DECODE(A.presv_term_cd, '01', 1, 0) AS presv_term_cnt7  
+		           FROM TB_RDFOLDER A 
+		            <dynamic prepend="WHERE">
+			        	<isNotEmpty prepend="recordCenterId">
+			        		A.record_center_id = #recordCenterId:VARCHAR#
+			        	</isNotEmpty>
+			        			
+						<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+							 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+		           AND A.erecord_flag = '1'
+		           AND A.folder_keep_state_cd IN ('01', '04' )
+		           UNION ALL
+		           SELECT 2, '전자기록', '0',0,0,0,0,0,0,0
+                   FROM DUAL
+		           UNION ALL
+		           SELECT B.com_cd+2, B.com_cd_nm, NVL(presv_term_tot, 0) AS presv_term_tot
+		                 ,NVL(A.presv_term_cnt1,0) AS presv_term_cnt1
+		                 ,NVL(A.presv_term_cnt2,0) AS presv_term_cnt2
+		                 ,NVL(A.presv_term_cnt3,0) AS presv_term_cnt3
+		                 ,NVL(A.presv_term_cnt4,0) AS presv_term_cnt4
+		                 ,NVL(A.presv_term_cnt5,0) AS presv_term_cnt5
+		                 ,NVL(A.presv_term_cnt6,0) AS presv_term_cnt6
+		                 ,NVL(A.presv_term_cnt7,0) AS presv_term_cnt7 
+		              FROM (
+		                    SELECT A.folder_type_div_cd, '1' presv_term_tot
+		                          ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		                          ,DECODE(A.presv_term_cd, '30', 1, 0) AS presv_term_cnt2
+		                          ,DECODE(A.presv_term_cd, '25', 1, 0) AS presv_term_cnt3
+		                          ,DECODE(A.presv_term_cd, '10', 1, 0) AS presv_term_cnt4
+		                          ,DECODE(A.presv_term_cd, '05', 1, 0) AS presv_term_cnt5
+		                          ,DECODE(A.presv_term_cd, '03', 1, 0) AS presv_term_cnt6
+		                          ,DECODE(A.presv_term_cd, '01', 1, 0) AS presv_term_cnt7  
+		                    FROM TB_RDFOLDER A 
+		                    <dynamic prepend="WHERE">
+					        	<isNotEmpty prepend="recordCenterId">
+					        		A.record_center_id = #recordCenterId:VARCHAR#
+					        	</isNotEmpty>
+					        			
+								<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+									 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="orgCd">
+									A.org_cd = #orgCd:VARCHAR#
+								</isNotEmpty>
+							</dynamic>
+		                    AND A.erecord_flag = '2'
+		                    AND A.folder_keep_state_cd IN ('01', '04' )
+		              ) A, ( SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD01') B
+		              WHERE B.com_cd = A.folder_type_div_cd(+)
+		              UNION ALL
+		              SELECT B.com_cd+7, B.com_cd_nm
+		                    ,NVL(A.presv_term_tot, 0) AS presv_term_tot
+		                    ,NVL(A.presv_term_cnt1,0) AS presv_term_cnt1
+		                    ,NVL(A.presv_term_cnt2,0) AS presv_term_cnt2
+		                    ,NVL(A.presv_term_cnt3,0) AS presv_term_cnt3
+		                    ,NVL(A.presv_term_cnt4,0) AS presv_term_cnt4
+		                    ,NVL(A.presv_term_cnt5,0) AS presv_term_cnt5
+		                    ,NVL(A.presv_term_cnt6,0) AS presv_term_cnt6
+		                    ,NVL(A.presv_term_cnt7,0) AS presv_term_cnt7 
+		              FROM (
+		                    SELECT A.folder_type_div_cd, '1' AS PRESV_TERM_TOT
+		                          ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		                          ,DECODE(A.presv_term_cd, '30', 1, 0) AS presv_term_cnt2
+		                          ,DECODE(A.presv_term_cd, '25', 1, 0) AS presv_term_cnt3
+		                          ,DECODE(A.presv_term_cd, '10', 1, 0) AS presv_term_cnt4
+		                          ,DECODE(A.presv_term_cd, '05', 1, 0) AS presv_term_cnt5
+		                          ,DECODE(A.presv_term_cd, '03', 1, 0) AS presv_term_cnt6
+		                          ,DECODE(A.presv_term_cd, '01', 1, 0) AS presv_term_cnt7  
+		                    FROM TB_RDFOLDER A 
+		                    <dynamic prepend="WHERE">
+					        	<isNotEmpty prepend="recordCenterId">
+					        		A.record_center_id = #recordCenterId:VARCHAR#
+					        	</isNotEmpty>
+					        			
+								<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+									 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="orgCd">
+									A.org_cd = #orgCd:VARCHAR#
+								</isNotEmpty>
+							</dynamic>
+		                    AND A.erecord_flag = '3'
+		                    AND A.folder_keep_state_cd IN ('01', '04' )
+		              ) A, ( SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD01') B
+		              WHERE b.com_cd = A.folder_type_div_cd(+)
+		    ) C
+		GROUP BY C.flag, C.presv_term_nm
+		ORDER BY C.flag
+	 </select>
+
+
+ 	<!-- 
+		기록물보유현황_보유현황
+		: 기록물종류별통계목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStateNoElctDigtList-result" class="rms.rmsstate.curstate.domain.CurStateKeep">
+	 	<result property="presvTermTot" 		column="PRESV_TERM_TOT"/>
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>
+		<result property="presvTermCnt1" 		column="PRESV_TERM_CNT1"/>
+		<result property="presvTermCnt2" 		column="PRESV_TERM_CNT2"/>
+		<result property="presvTermCnt3" 		column="PRESV_TERM_CNT3"/>
+		<result property="presvTermCnt4" 		column="PRESV_TERM_CNT4"/>
+		<result property="presvTermCnt5" 		column="PRESV_TERM_CNT5"/>
+		<result property="presvTermCnt6" 		column="PRESV_TERM_CNT6"/>
+		<result property="presvTermCnt7" 		column="PRESV_TERM_CNT7"/>
+	 </resultMap>
+	 <select id="findCurStateNoElctDigtTotal" parameterClass="rms.rmsstate.curstate.domain.CurStateKeep" resultMap="findCurStateNoElctDigtList-result">
+	 	SELECT '1' AS flag
+		          ,'총계' AS presv_term_nm
+		          <!--cubrid tot CAST AS INT-->
+		          ,CAST(NVL(SUM(C.presv_term_tot), 0) AS INT) AS presv_term_tot
+		          ,NVL(SUM(C.presv_term_cnt1), 0) AS presv_term_cnt1
+		          ,NVL(SUM(C.presv_term_cnt2), 0) AS presv_term_cnt2
+		          ,NVL(SUM(C.presv_term_cnt3), 0) AS presv_term_cnt3
+		          ,NVL(SUM(C.presv_term_cnt4), 0) AS presv_term_cnt4
+		          ,NVL(SUM(C.presv_term_cnt5), 0) AS presv_term_cnt5
+		          ,NVL(SUM(C.presv_term_cnt6), 0) AS presv_term_cnt6
+		          ,NVL(SUM(C.presv_term_cnt7), 0) AS presv_term_cnt7
+		FROM(
+		    SELECT 1 presv_term_tot
+		                ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		                ,DECODE(A.presv_term_cd, '30', 1, 0) AS presv_term_cnt2
+		                ,DECODE(A.presv_term_cd, '25', 1, 0) AS presv_term_cnt3
+		                ,DECODE(A.presv_term_cd, '10', 1, 0) AS presv_term_cnt4
+		                ,DECODE(A.presv_term_cd, '05', 1, 0) AS presv_term_cnt5
+		                ,DECODE(A.presv_term_cd, '03', 1, 0) AS presv_term_cnt6
+		                ,DECODE(A.presv_term_cd, '01', 1, 0) AS presv_term_cnt7
+		                ,NVL(B.scan_fin_flag, 0) scan_fin_flag
+		    FROM tb_rdfolder A, (SELECT record_center_id
+		                                                    ,folder_id
+		                                                    ,NVL(MAX(scan_fin_flag), 0) scan_fin_flag
+		                                  FROM tb_rdrecord
+		                                  WHERE record_center_id = #recordCenterId:VARCHAR#
+		                                  GROUP BY record_center_id, folder_id 
+		                                 ) B
+		    <dynamic prepend="WHERE">
+	        	<isNotEmpty prepend="recordCenterId">
+	        		A.record_center_id = #recordCenterId:VARCHAR#
+	        	</isNotEmpty>
+	        			
+				<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+					 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+		    AND A.record_center_id = B.record_center_id(+)
+		    AND A.folder_id = B.folder_id(+)
+		    AND A.folder_keep_state_cd in ('01', '04' ) 
+		) C
+	 </select>
+	 <select id="findCurStateNoElctDigtList" parameterClass="rms.rmsstate.curstate.domain.CurStateKeep" resultMap="findCurStateNoElctDigtList-result">
+	 	SELECT 
+	 	<!--cubrid tot CAST AS INT-->
+	 	     CAST(C.flag AS INT) flag
+	 		  ,C.presv_term_nm
+	 		  <!--cubrid tot CAST AS INT-->
+	 		  ,CAST(NVL(SUM(C.presv_term_tot), 0) AS INT) AS presv_term_tot
+	 		  ,NVL(SUM(C.presv_term_cnt1), 0) AS presv_term_cnt1
+	 		  ,NVL(SUM(C.presv_term_cnt2), 0) AS presv_term_cnt2
+	 		  ,NVL(SUM(C.presv_term_cnt3), 0) AS presv_term_cnt3
+	 		  ,NVL(SUM(C.presv_term_cnt4), 0) AS presv_term_cnt4
+	 		  ,NVL(SUM(C.presv_term_cnt5), 0) AS presv_term_cnt5
+	 		  ,NVL(SUM(C.presv_term_cnt6), 0) AS presv_term_cnt6
+	 		  ,NVL(SUM(C.presv_term_cnt7), 0) AS presv_term_cnt7
+		FROM (
+		    SELECT B.flag,
+		          B.presv_term_nm
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_tot, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_tot, 0)) AS presv_term_tot
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt1, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt1, 0)) AS presv_term_cnt1
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt2, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt2, 0)) AS presv_term_cnt2
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt3, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt3, 0)) AS presv_term_cnt3
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt4, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt4, 0)) AS presv_term_cnt4
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt5, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt5, 0)) AS presv_term_cnt5
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt6, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt6, 0)) AS presv_term_cnt6
+		         ,DECODE(B.flag, '2', DECODE(A.scan_fin_flag, 0, A.presv_term_cnt7, 0), '3', DECODE(A.scan_fin_flag, 1, A.presv_term_cnt7, 0)) AS presv_term_cnt7
+		    FROM (SELECT 1 presv_term_tot
+		                ,DECODE(A.presv_term_cd, '40', 1, 0) AS presv_term_cnt1
+		                ,DECODE(A.presv_term_cd, '30', 1, 0) AS presv_term_cnt2
+		                ,DECODE(A.presv_term_cd, '25', 1, 0) AS presv_term_cnt3
+		                ,DECODE(A.presv_term_cd, '10', 1, 0) AS presv_term_cnt4
+		                ,DECODE(A.presv_term_cd, '05', 1, 0) AS presv_term_cnt5
+		                ,DECODE(A.presv_term_cd, '03', 1, 0) AS presv_term_cnt6
+		                ,DECODE(A.presv_term_cd, '01', 1, 0) AS presv_term_cnt7
+		                ,NVL(B.scan_fin_flag, 0) AS scan_fin_flag
+		        FROM TB_RDFOLDER A, (SELECT record_center_id
+		                                   ,folder_id
+		                                   ,NVL(MAX(scan_fin_flag), 0) scan_fin_flag
+		                             FROM TB_RDRECORD
+		                             WHERE record_center_id = #recordCenterId:VARCHAR#
+		                             GROUP BY record_center_id, folder_id 
+		                            ) B
+		        <dynamic prepend="WHERE">
+		        	<isNotEmpty prepend="recordCenterId">
+		        		A.record_center_id = #recordCenterId:VARCHAR#
+		        	</isNotEmpty>
+		        			
+					<isNotEmpty prepend="AND" property="creatRegDtimeStart">
+						 A.creat_dtime BETWEEN #creatRegDtimeStart:VARCHAR# AND #creatRegDtimeEnd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="orgCd">
+						A.org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+				</dynamic>
+		        AND A.record_center_id = B.record_center_id(+)
+		        AND A.folder_id = B.folder_id(+)
+		        AND A.folder_keep_state_cd in ('01', '04' ) 
+		        ) A,(SELECT '2' flag, '디지털미변환' presv_term_nm FROM DUAL
+		             UNION ALL
+		             SELECT '3' flag, '디지털변환완료' presv_term_nm FROM DUAL) B
+		) C
+		GROUP BY C.flag, C.presv_term_nm 
+		ORDER BY C.flag
+	 </select>
+	 
+	 <!-- 
+	 	기록물보유현황_공개/이관/폐기현황
+		: 공개현황목록을 조회한다.
+	  -->
+	 <resultMap id="findCurStateOpenList-result" class="rms.rmsstate.curstate.domain.CurStateTransfDisuse">
+	 	<result property="title"        		column="TITLE"/>
+		<result property="totalCnt"    			column="TOTAL_CNT"/>
+		<result property="openCnt"       		column="OPEN_CNT"/>
+		<result property="closeCnt"      		column="CLOSE_CNT"/>
+		<result property="cnt1"         		column="CNT1"/>
+		<result property="cnt2" 				column="CNT2"/>
+		<result property="cnt3" 				column="CNT3"/>
+		<result property="cnt4" 				column="CNT4"/>
+		<result property="cnt5" 				column="CNT5"/>
+		<result property="cnt6" 				column="CNT6"/>
+		<result property="cnt7" 				column="CNT7"/>
+		<result property="cnt8" 				column="CNT8"/>
+	 </resultMap>
+	 <select id="findCurStateOpenList" parameterClass="rms.rmsstate.curstate.domain.CurStateTransfDisuse" resultMap="findCurStateOpenList-result">
+	 	SELECT COM_CD_NM TITLE,  NVL(TOTAL_CNT, 0) TOTAL_CNT,  NVL(OPEN_CNT, 0) OPEN_CNT,
+			   NVL(CLOSE_CNT, 0) CLOSE_CNT,  NVL(CNT1, 0) CNT1,  NVL(CNT2, 0) CNT2,  NVL(CNT3, 0) CNT3,  NVL(CNT4, 0) CNT4,
+			   NVL(CNT5, 0) CNT5,  NVL(CNT6, 0) CNT6,  NVL(CNT7, 0) CNT7,  NVL(CNT8, 0) CNT8
+		FROM (
+			SELECT com_cd, 
+				   COM_CD_NM, 
+				   SUM(DECODE(OPEN_DIV_CD, 1, 1, 0)+DECODE(OPEN_DIV_CD, 3, 1, 0)+DECODE(OPEN_DIV_CD, 2, 1, 0)) TOTAL_CNT,
+				   SUM(DECODE(OPEN_DIV_CD, 1, 1, 0)) OPEN_CNT,
+				   SUM(DECODE(OPEN_DIV_CD, 3, 1, 0)) CLOSE_CNT,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 1, 1), 'Y', 1, 0)) CNT1,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 2, 1), 'Y', 1, 0)) CNT2,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 3, 1), 'Y', 1, 0)) CNT3,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 4, 1), 'Y', 1, 0)) CNT4,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 5, 1), 'Y', 1, 0)) CNT5,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 6, 1), 'Y', 1, 0)) CNT6,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 7, 1), 'Y', 1, 0)) CNT7,
+				   SUM(DECODE(SUBSTR(OPEN_GRADE, 8, 1), 'Y', 1, 0)) CNT8
+			FROM TB_RDRECORD a, TB_ZZCOMCD b
+			WHERE COM_TYPE_CD = 'RD17'
+			  AND COM_CD IN ( '01', '02', '03' )
+			  and RECORD_CENTER_ID(+) = #recordCenterId:VARCHAR#
+			  and b.com_cd = a.CREAT_SYS_CD(+)
+			GROUP BY com_cd, COM_CD_NM )
+		ORDER BY COM_CD
+	 </select>
+	 
+	 
+	 <!-- 
+		기록물보유현황_공개/이관/폐기현황
+		: 폐기현황(최근5년)목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStateDisuseList-result" class="rms.rmsstate.curstate.domain.CurStateTransfDisuse">
+	 	<result property="title"        		column="TITLE"/>
+		<result property="totalCnt"    			column="TOTAL_CNT"/>
+		<result property="cnt1"         		column="CNT1"/>
+		<result property="cnt2" 				column="CNT2"/>
+		<result property="cnt3" 				column="CNT3"/>
+		<result property="cnt4" 				column="CNT4"/>
+		<result property="cnt5" 				column="CNT5"/>
+	 </resultMap>
+	 <select id="findCurStateDisuseTotal" parameterClass="rms.rmsstate.curstate.domain.CurStateTransfDisuse" resultMap="findCurStateDisuseList-result">
+	 	SELECT B.TITLE
+	 	<!--cubrid tot CAST AS INT-->
+		      ,CAST(NVL(SUM(TOTAL_CNT),0) AS INT) TOTAL_CNT
+		      ,NVL(SUM(CNT1),0) CNT1
+		      ,NVL(SUM(CNT2),0) CNT2
+		      ,NVL(SUM(CNT3),0) CNT3
+		      ,NVL(SUM(CNT4),0) CNT4
+		      ,NVL(SUM(CNT5),0) CNT5
+		FROM (SELECT '1' FLAG, '1' TOTAL_CNT
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '01', 1, 0) , 0) CNT1
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '03', 1, 0) , 0) CNT2
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '05', 1, 0) , 0) CNT3
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '10', 1, 0) , 0) CNT4
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '2', 1, 0) CNT5
+		      FROM TB_RDFOLDER A, TB_DFDISUSEHIST B
+		      WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.DISUSE_PROG_STATE_CD = '7'
+		      AND ( DISUSE_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+		      UNION ALL
+		      SELECT DISUSE_YYYY, '1' TOTAL_CNT
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '01', 1, 0) , 0) CNT1
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '03', 1, 0) , 0) CNT2
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '05', 1, 0) , 0) CNT3
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '10', 1, 0) , 0) CNT4
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '2', 1, 0) CNT5
+		      FROM TB_RDFOLDER A, TB_DFDISUSEHIST B
+		      WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.DISUSE_PROG_STATE_CD = '7'
+		      AND ( DISUSE_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+		) A, (SELECT '1' FLAG, '합계' TITLE FROM DUAL) B
+		WHERE B.FLAG = A.FLAG(+)
+		GROUP BY B.TITLE
+		ORDER BY B.TITLE DESC
+	 </select>
+	 <select id="findCurStateDisuseList" parameterClass="rms.rmsstate.curstate.domain.CurStateTransfDisuse" resultMap="findCurStateDisuseList-result">
+	 	SELECT B.TITLE
+	 	<!--cubrid tot CAST AS INT-->
+		      ,CAST(NVL(SUM(TOTAL_CNT),0) AS INT) TOTAL_CNT
+		      ,NVL(SUM(CNT1),0) CNT1
+		      ,NVL(SUM(CNT2),0) CNT2
+		      ,NVL(SUM(CNT3),0) CNT3
+		      ,NVL(SUM(CNT4),0) CNT4
+		      ,NVL(SUM(CNT5),0) CNT5
+		FROM (SELECT '1' FLAG, '1' TOTAL_CNT
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '01', 1, 0) , 0) CNT1
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '03', 1, 0) , 0) CNT2
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '05', 1, 0) , 0) CNT3
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '10', 1, 0) , 0) CNT4
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '2', 1, 0) CNT5
+		      FROM TB_RDFOLDER A, TB_DFDISUSEHIST B
+		      WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.DISUSE_PROG_STATE_CD = '7'
+		      AND ( DISUSE_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+		      UNION ALL
+		      SELECT DISUSE_YYYY, '1' TOTAL_CNT
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '01', 1, 0) , 0) CNT1
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '03', 1, 0) , 0) CNT2
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '05', 1, 0) , 0) CNT3
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '1', DECODE(A.PRESV_TERM_CD, '10', 1, 0) , 0) CNT4
+		            ,DECODE(B.HANDL_ORG_EVAL_DIV_CD, '2', 1, 0) CNT5
+		      FROM TB_RDFOLDER A, TB_DFDISUSEHIST B
+		      WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.DISUSE_PROG_STATE_CD = '7'
+		      AND ( DISUSE_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+		) A, (SELECT TO_CHAR(SYSDATE,'YYYY') as flag, TO_CHAR(SYSDATE,'YYYY')||'년' AS title FROM DUAL
+		       UNION ALL 
+		       SELECT TO_CHAR(SYSDATE,'YYYY')-1||'', TO_CHAR(SYSDATE,'YYYY')-1||'년' FROM DUAL
+		       UNION ALL 
+		       SELECT TO_CHAR(SYSDATE,'YYYY')-2||'', TO_CHAR(SYSDATE,'YYYY')-2||'년' FROM DUAL
+		       UNION ALL 
+		       SELECT TO_CHAR(SYSDATE,'YYYY')-3||'', TO_CHAR(SYSDATE,'YYYY')-3||'년' FROM DUAL
+		       UNION ALL 
+		       SELECT TO_CHAR(SYSDATE,'YYYY')-4||'', TO_CHAR(SYSDATE,'YYYY')-4||'년' FROM DUAL
+		) B
+		WHERE B.FLAG = A.FLAG(+)
+		GROUP BY B.TITLE
+		ORDER BY B.TITLE DESC
+	 </select>
+	 
+	 
+	 <!-- 
+		기록물보유현황_공개/이관/폐기현황
+		: 이관현황(최근5년)목록을 조회한다.
+	 -->
+	 <resultMap id="findCurStateTransfList-result" class="rms.rmsstate.curstate.domain.CurStateTransfDisuse">
+	 	<result property="title"        		column="TITLE"/>
+		<result property="totalCnt"    			column="TOTAL_CNT"/>
+		<result property="transfCnt"       		column="TRANSF_CNT"/>
+		<result property="transfHolCnt"      	column="TRANSF_HOL_CNT"/>
+	 </resultMap>
+	 <select id="findCurStateTransfTotal" parameterClass="rms.rmsstate.curstate.domain.CurStateTransfDisuse" resultMap="findCurStateTransfList-result">
+	 	SELECT B.TITLE, NVL(SUM(TOTAL_CNT),0) TOTAL_CNT
+	 			,NVL(SUM(CNT1),0) TRANSF_CNT
+	 			,NVL(SUM(CNT2),0) TRANSF_HOL_CNT
+		FROM (SELECT '1' FLAG, '1' TOTAL_CNT
+              	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '1', 1, '2', 1, '3', 1, 0)  CNT1
+             	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '4', 1, 0) CNT2
+              FROM TB_DFTRANSFWORK A, TB_DFRECVTRANSFLIST B
+              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+              AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+              AND A.TRANSF_YYYY = B.TRANSF_YYYY
+              AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO
+              AND ( A.TRANSF_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+              AND A.TRANSF_HANDL_STATE ='5'
+              UNION ALL
+              SELECT A.TRANSF_YYYY, '1' TOTAL_CNT
+              	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '1', 1, '2', 1, '3', 1, 0)  CNT1
+              	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '4', 1, 0) CNT2
+              FROM TB_DFTRANSFWORK A, TB_DFRECVTRANSFLIST B
+              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+              AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+              AND A.TRANSF_YYYY = B.TRANSF_YYYY
+              AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO
+              AND A.TRANSF_HANDL_STATE ='5'
+              AND ( A.TRANSF_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+			 ) A, (SELECT '1' FLAG, '합계' TITLE FROM DUAL) B
+	    WHERE B.FLAG = A.FLAG(+)
+	    GROUP BY B.TITLE
+        ORDER BY B.TITLE DESC
+	 </select>
+	 <select id="findCurStateTransfList" parameterClass="rms.rmsstate.curstate.domain.CurStateTransfDisuse" resultMap="findCurStateTransfList-result">
+	 	<!--cubrid tot CAST AS INT-->
+	 	SELECT B.TITLE, CAST(NVL(SUM(TOTAL_CNT),0) AS INT) TOTAL_CNT
+	 			,NVL(SUM(CNT1),0) TRANSF_CNT
+	 			,NVL(SUM(CNT2),0) TRANSF_HOL_CNT
+		FROM (SELECT '1' FLAG, '1' TOTAL_CNT
+              	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '1', 1, '2', 1, '3', 1, 0)  CNT1
+             	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '4', 1, 0) CNT2
+              FROM TB_DFTRANSFWORK A, TB_DFRECVTRANSFLIST B
+              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+              AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+              AND A.TRANSF_YYYY = B.TRANSF_YYYY
+              AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO
+              AND ( A.TRANSF_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+              AND A.TRANSF_HANDL_STATE ='5'
+              UNION ALL
+              SELECT A.TRANSF_YYYY, '1' TOTAL_CNT
+              	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '1', 1, '2', 1, '3', 1, 0)  CNT1
+              	    ,DECODE(B.CONFM_TRANSF_DIV_CD, '4', 1, 0) CNT2
+              FROM TB_DFTRANSFWORK A, TB_DFRECVTRANSFLIST B
+              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+              AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+              AND A.TRANSF_YYYY = B.TRANSF_YYYY
+              AND A.TRANSF_GRP_SNO = B.TRANSF_GRP_SNO
+              AND A.TRANSF_HANDL_STATE ='5'
+              AND ( A.TRANSF_YYYY BETWEEN TO_CHAR(SYSDATE,'YYYY')-4 AND TO_CHAR(SYSDATE,'YYYY'))
+			 ) A, (SELECT TO_CHAR(SYSDATE,'YYYY') AS FLAG, TO_CHAR(SYSDATE,'YYYY')||'년' AS TITLE FROM DUAL
+		           UNION ALL 
+		           SELECT TO_CHAR(SYSDATE,'YYYY')-1||'', TO_CHAR(SYSDATE,'YYYY')-1||'년' FROM DUAL
+		           UNION ALL 
+		           SELECT TO_CHAR(SYSDATE,'YYYY')-2||'', TO_CHAR(SYSDATE,'YYYY')-2||'년' FROM DUAL
+		           UNION ALL 
+		           SELECT TO_CHAR(SYSDATE,'YYYY')-3||'', TO_CHAR(SYSDATE,'YYYY')-3||'년' FROM DUAL
+		           UNION ALL 
+		           SELECT TO_CHAR(SYSDATE,'YYYY')-4||'', TO_CHAR(SYSDATE,'YYYY')-4||'년' FROM DUAL
+            ) B
+	    WHERE B.FLAG = A.FLAG(+)
+	    GROUP BY B.TITLE
+        ORDER BY B.TITLE DESC
+	 </select>
+
+</sqlMap>

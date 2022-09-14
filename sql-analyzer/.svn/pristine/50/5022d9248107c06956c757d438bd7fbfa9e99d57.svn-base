@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ResultRecordNeo">
+	
+	<!-- 건NEO 포맷변환 결과정보 : 1.저장매체 조회 -->
+	<select id="SelectRecordNeo_StMedium" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT MEDIUM_ID
+		FROM (
+		    SELECT A.MEDIUM_ID
+		    FROM  TB_STMEDIUM A
+		    WHERE EXISTS (
+		    	SELECT RECORD_CENTER_ID, DEST_STORAGE_TYPE, DEST_STORAGE_VENDOR FROM TB_STREQTRANS WHERE JOB_ID = #JOB_ID:VARCHAR#
+		    )
+		    AND   A.VOLM_ID IN (SELECT VOLM_ID FROM TB_STVOLM WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# AND DEL_FLAG = '0' AND VOLM_DIV_CD = '3')
+		    AND   A.DEL_FLAG = '0'
+		    AND   (A.TOT_SIZE - A.USE_SIZE) > NVL((SELECT NVL(DEST_FILE_SIZE,0) FROM TB_STREQRESULT WHERE JOB_ID = #JOB_ID:VARCHAR# AND REQUEST_STATUS = 'C'),0)
+                    AND   A.MEDIUM_CD = MEDIUM_CD
+                    AND   A.MEDIUM_DETAIL_CD = MEDIUM_DETAIL_CD
+		    ORDER BY A.RECORD_CENTER_ID, A.MEDIUM_ID
+		)
+		WHERE ROWNUM = 1
+	</select>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 원문ID 조회 -->
+	<select id="SelectRecordNeo_RdRecord_OrignId" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		SELECT A.ORIGN_ID
+		FROM  TB_RDRECORD A
+		WHERE A.RECORD_ID = #RECORD_ID:VARCHAR#
+	</select>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 원문ID 갱신 -->
+	<update id="UpdateRecordNeo_RdRecord_OrignId" parameterClass="java.util.HashMap">
+		UPDATE TB_RDRECORD A
+		SET   A.ORIGN_ID = #ORIGN_ID:VARCHAR#
+		WHERE A.RECORD_ID = #RECORD_ID:VARCHAR#
+	</update>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 건원문 생성 -->
+	<insert id="InsertRecordNeo_RdRecordOrign" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STRECORDORIGN
+		(
+		    RECORD_CENTER_ID, ORIGN_ID, RECORD_ID, ERECORD_FLAG, PDF_A1_TRANS_STATE, NEO_TRANS_STATE, DEL_FLAG, REG_DTIME
+		)
+		(
+		    SELECT A.RECORD_CENTER_ID, A.ORIGN_ID, A.RECORD_ID, A.ERECORD_FLAG, A.PDF_A1_TRANS_STATE, '4' AS NEO_TRANS_STATE, '0', TO_CHAR (sys_datetime, 'YYYYMMDDHH24MISS')
+		    FROM  TB_RDRECORD A
+		    WHERE A.RECORD_ID = #RECORD_ID:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		건NEO 포맷변환 결과정보 : 변환파일정보 생성 
+		20150402 김경수 : 일반스토리지 neo 파일명 변경 처리 
+	-->
+	<insert id="InsertRecordNeo_StOrignNeoFile" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STORIGNNEOFILE
+		(
+		    ORIGN_NEO_FILE_ID, RECORD_CENTER_ID, ORIGN_ID, CHNG_SNO, FILE_NM
+		    , NEO_FILE_TYPE_CD, FILE_SIZE, STORE_FILE_ID, MEDIUM_ID, DEL_FLAG
+		    , VIRUS_FLAG, REG_DTIME
+		)
+		(
+		    SELECT #ORIGN_NEO_FILE_ID:VARCHAR#, C.RECORD_CENTER_ID, C.ORIGN_ID, A.NEOCHASU
+		        , CASE WHEN ((SELECT MEDIUM_CD FROM TB_STMEDIUM WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# AND MEDIUM_ID=#MEDIUM_ID:VARCHAR# AND ROWNUM=1) = '01') THEN
+		        	'DET'||C.CREAT_SYS_CD||C.ORG_CD||C.CREAT_YYYY||C.CREAT_REG_NO||C.DTCH_REG_NO||'.neo'
+		        ELSE
+		        	C.CREAT_SYS_CD||'-'||C.ORG_CD||'-'||C.CREAT_YYYY||'-'||C.CREAT_REG_NO||
+		        	(CASE WHEN C.DTCH_REG_NO != '00' THEN ' ('||C.DTCH_REG_NO||')'
+		             WHEN (SELECT COUNT(1) FROM TB_RDRECORD D WHERE D.RECORD_CENTER_ID=C.RECORD_CENTER_ID AND D.CREAT_SYS_CD=C.CREAT_SYS_CD AND D.ORG_CD=C.ORG_CD AND D.CREAT_YYYY=C.CREAT_YYYY AND D.CREAT_REG_NO=C.CREAT_REG_NO) > 1 THEN ' ('||C.DTCH_REG_NO||')'
+		             ELSE '' END)
+		        END AS FILE_NM		        
+		        , (CASE WHEN A.ERECORD_FLAG='1' THEN '3' ELSE '2' END) AS NEO_FILE_TYPE_CD, B.DEST_FILE_SIZE, B.DEST_FILE_ID, #MEDIUM_ID:VARCHAR# AS MEDIUM_ID, 0 AS DEL_FLAG
+		        , '0' AS VIRUS_FLAG, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		    FROM  TB_STREQTRANS A
+		        , TB_STREQRESULT B
+		        , TB_RDRECORD C
+		    WHERE A.RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR# 
+		    AND   A.JOB_ID = #JOB_ID:VARCHAR#
+		    AND   B.JOB_ID = A.JOB_ID
+		    AND   C.RECORD_ID = A.RECORD_ID
+		    AND   C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		)
+	</insert>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 변환실패 이력생성 -->
+	<insert id="InsertRecordNeo_StWorkHist" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STWORKHIST
+		(
+		    RECORD_CENTER_ID, WORK_HIST_ID, WORK_DIV, WORK_START_DTIME, WORK_CLOSE_DTIME
+		    , SVC_CD, SVC_NM, FOLDER_ID, RECORD_ID, STORE_FILE_NM
+		    , ERROR_FLAG, ERROR_CD, ERROR_CONT, WORK_CONT, ERROR_SOL_CONT
+		    , ORIGN_FILE_ID, FOLLOWUP_DIV_CD, FORMAT_DIV_CD
+		)
+		(
+<!-- 			SELECT A.RECORD_CENTER_ID, #WORK_HIST_ID:VARCHAR#, '4', A.REQUEST_START_TIME, A.REQUEST_END_TIME -->
+			SELECT A.RECORD_CENTER_ID, #WORK_HIST_ID:VARCHAR#, '4', TO_CHAR(A.REQUEST_START_TIME,'YYYYMMDDHH24MISS'), TO_CHAR(A.REQUEST_END_TIME,'YYYYMMDDHH24MISS')
+				, '306', 'PresvFormat ResultService', A.FOLDER_ID, A.RECORD_ID, B.DEST_FILE_NM
+				, '1', NVL(B.ERROR_CODE, A.ERROR_CODE), NVL(B.ERROR_CONTENTS, A.ERROR_CONTENTS), '', ''
+				, SUBSTR(B.SRC_FILE_ID,1,19), '0', '1'
+			FROM  TB_STREQTRANS A
+			    , TB_STREQRESULT B
+			WHERE A.JOB_ID = #JOB_ID:VARCHAR#
+			AND   A.REQUEST_STATUS = 'D'
+			AND   A.JOB_ID = B.JOB_ID(+)
+		)
+	</insert>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 1.기록물건 1차 변환상태 갱신 -->
+	<update id="UpdateRecordNeo_RdRecord_1" parameterClass="java.util.HashMap">
+		UPDATE TB_RDRECORD A
+		SET   A.NEO_TRANS_STATE = #NEO_TRANS_STATE:VARCHAR#
+		WHERE A.RECORD_ID = #RECORD_ID:VARCHAR#
+	</update>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 2.기록물철의 기록물건 1차 변환상태 갱신 -->
+	<update id="UpdateRecordNeo_RdFolder_1" parameterClass="java.util.HashMap">
+		UPDATE (
+		    SELECT A.RECORD_NEO_TRANS_STATE
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID) AS RECORD_CNT_TOT
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE = '0') AS RECORD_CNT_0
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE IN ('1','2','3')) AS RECORD_CNT_1
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE IN ('4','6')) AS RECORD_CNT_4
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE = '5') AS RECORD_CNT_5
+		    FROM  TB_RDFOLDER A
+		    WHERE A.FOLDER_ID = #FOLDER_ID:VARCHAR#
+		) C
+		SET C.RECORD_NEO_TRANS_STATE = (CASE WHEN C.RECORD_CNT_0=C.RECORD_CNT_TOT THEN '0' WHEN C.RECORD_CNT_4=C.RECORD_CNT_TOT THEN '4' WHEN C.RECORD_CNT_5=C.RECORD_CNT_TOT THEN '5' ELSE '1' END)
+	</update>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 3.기록물건 2차 변환상태 갱신 -->
+	<update id="UpdateRecordNeo_RdRecord_2" parameterClass="java.util.HashMap">
+		UPDATE TB_RDRECORD A
+		SET   A.NEO_TRANS_STATE_2 = #NEO_TRANS_STATE:VARCHAR#
+		WHERE A.RECORD_ID = #RECORD_ID:VARCHAR#
+	</update>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 4.기록물철의 기록물건 2차 변환상태 갱신 -->
+	<update id="UpdateRecordNeo_RdFolder_2" parameterClass="java.util.HashMap">
+		UPDATE (
+		    SELECT A.RECORD_NEO_TRANS_STATE_2
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID) AS RECORD_CNT_TOT
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 = '0') AS RECORD_CNT_0
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 IN ('1','2','3')) AS RECORD_CNT_1
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 IN ('4','6')) AS RECORD_CNT_4
+		        , (SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND B.FOLDER_ID = A.FOLDER_ID AND NEO_TRANS_STATE_2 = '5') AS RECORD_CNT_5
+		    FROM  TB_RDFOLDER A
+		    WHERE A.FOLDER_ID = #FOLDER_ID:VARCHAR#
+		) C
+		SET C.RECORD_NEO_TRANS_STATE_2 = (CASE WHEN C.RECORD_CNT_0=C.RECORD_CNT_TOT THEN '0' WHEN C.RECORD_CNT_4=C.RECORD_CNT_TOT THEN '4' WHEN C.RECORD_CNT_5=C.RECORD_CNT_TOT THEN '5' ELSE '1' END)
+	</update>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 5.접수이관목록 기록물건 2차 변환상태 갱신 (확정상태/파일생성상태의 건에 대하여 갱신) -->
+	<update id="UpdateRecordNeo_DfRecvTransfList_2" parameterClass="java.util.HashMap">
+		UPDATE TB_DFRECVTRANSFLIST A
+		SET   A.RECORD_NEO_TRANS_STATE = (SELECT C.RECORD_NEO_TRANS_STATE_2 FROM TB_RDFOLDER C WHERE C.FOLDER_ID = A.FOLDER_ID)
+		WHERE A.RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		AND   A.FOLDER_ID = #FOLDER_ID:VARCHAR#
+		AND   A.CONFM_TRANSF_DIV_CD IN ('1','2','3')
+	</update>
+	
+	<!-- 건NEO 포맷변환 결과정보 : 6.저장매체용량정보 갱신 -->
+	<update id="UpdateRecordNeo_StMedium" parameterClass="java.util.HashMap">
+		UPDATE TB_STMEDIUM
+		SET   USE_SIZE = USE_SIZE + NVL((SELECT NVL(SUM(DEST_FILE_SIZE),0) FROM TB_STREQRESULT WHERE JOB_ID = #JOB_ID:VARCHAR# AND REQUEST_STATUS = 'C'),0)
+		WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		AND   MEDIUM_ID = #MEDIUM_ID:VARCHAR#
+	</update>
+	
+	<!-- 건NEO 포맷변환 실행 시 해당 건이 속한 철의 모든 건NEO 완료여부 조회 (1차변환) -->
+	<select id="SelectRecordNeo_RecordNeoNotCnt" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT COUNT(1) - SUM(CASE WHEN NEO_TRANS_STATE = '4' THEN 1 ELSE 0 END) AS CNT
+		  FROM TB_RDRECORD
+		 WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		   AND FOLDER_ID = #FOLDER_ID:VARCHAR#
+	</select>
+	
+	<!-- 건NEO 포맷변환 실행 시 해당 건이 속한 철의 모든 건NEO 완료여부 조회 (2차변환) -->
+	<select id="SelectRecordNeo_RecordNeoNotCnt_2" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT COUNT(1) - SUM(CASE WHEN NEO_TRANS_STATE_2 = '4' THEN 1 ELSE 0 END) AS CNT
+		  FROM TB_RDRECORD
+		 WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		   AND FOLDER_ID = #FOLDER_ID:VARCHAR#
+	</select>
+	
+	<!-- 철NEO 건NEO 전체 변환 후 변환 할 수 있도록 ERROR_CODE에 대기 코드 갱신 (null) -->
+	<update id="UpdateRecordNeo_DoFolderNeoFile" parameterClass="java.util.HashMap">
+		UPDATE TB_STREQTRANS
+		   SET ERROR_CODE = ''
+		 WHERE RECORD_CENTER_ID = #RECORD_CENTER_ID:VARCHAR#
+		   AND FOLDER_ID = #FOLDER_ID:VARCHAR#
+		   AND REQUEST_STATUS = '-'
+		   AND ERROR_CODE = 'W0001'
+	</update>
+</sqlMap>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.rmsstate">
+	
+	<!-- 
+		일반현황_기록관운영현황
+		: 기록관운영현황을 조회한다.
+	 -->
+	<resultMap id="findRmsOperState-result" class="rms.sys.rmsstate.domain.RmsState">
+		<result property="repOrgNm" 			column="REP_ORG_NM" />
+		<result property="repOrgCd" 			column="REP_ORG_CD" />
+		<result property="orgAddr" 				column="ORG_ADDR" />
+		<result property="operOrgNm" 			column="OPER_ORG_NM" />
+		<result property="operChrgrNm" 			column="OPER_CHRGR_NM" />
+		<result property="userArngState" 		column="USER_ARNG_STATE" />
+		<result property="ruleApplyFlag" 		column="RULE_APPLY_FLAG" />
+		<result property="operRuleEstbFlag" 	column="OPER_RULE_ESTB_FLAG" />
+		<result property="brmTypeCd" 			column="BRM_TYPE_CD" />
+		<result property="linkSys" 				column="LINK_SYS" />
+		<result property="stakrmArea" 			column="STAKRM_AREA" />
+		<result property="estbOrgNm" 			column="ESTB_ORG_NM" />
+		<result property="estbChrgrNm" 			column="ESTB_CHRGR_NM" />
+		<result property="estbYmd" 				column="ESTB_YMD" />
+		<result property="arsGoodsNm" 			column="ARS_GOODS_NM" />
+		<result property="arsUseYmdFrom" 		column="ARS_USE_YMD_FROM" />
+		<result property="arsUseYmdTo" 			column="ARS_USE_YMD_TO" />
+		<result property="recordCenterCd" 		column="RECORD_CENTER_CD" />
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID" />
+		<result property="orgNm" 				column="ORG_NM" />
+		<result property="deptCnt" 				column="DEPT_CNT" />
+		<result property="userCnt" 				column="USER_CNT" />
+	</resultMap>
+	<select id="findRmsOperState" parameterClass="rms.sys.rmsstate.domain.RmsState" resultMap="findRmsOperState-result">
+		SELECT A.rep_org_nm
+		      ,A.rep_org_cd
+		      ,A.org_addr
+		      ,A.oper_org_nm
+		      ,A.oper_chrgr_nm
+		      ,A.user_arng_state
+		      ,A.rule_apply_flag
+		      ,A.oper_rule_estb_flag
+		      ,A.brm_type_cd
+		      ,A.LINK_SYS
+		      ,A.stakrm_area
+		      ,A.estb_org_nm
+		      ,A.estb_chrgr_nm
+		      ,A.estb_ymd
+		      ,A.ars_goods_nm
+		      ,A.ars_use_ymd_from
+		      ,A.ars_use_ymd_to
+		      ,A.record_center_cd
+		      ,A.record_center_id
+		      ,(SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.org_cd = record_center_cd AND Z.record_center_id=A.record_center_id) AS org_nm
+		      ,(SELECT COUNT(1) FROM TB_STDEPT Z WHERE Z.record_center_id = A.record_center_id AND Z.close_flag = '0') AS dept_cnt
+		      ,(SELECT COUNT(1) FROM TB_STUSER Z WHERE Z.record_center_id = A.record_center_id) AS user_cnt
+		FROM TB_STRECORDCENTER A
+		WHERE A.record_center_id =  #recordCenterId:VARCHAR#
+	</select>
+
+	<!-- 
+		일반현황_기록관운영현호아
+		: 기록관운영현황을 등록한다.
+	 -->
+	<update id="updateRmsOperState" parameterClass="rms.sys.rmsstate.domain.RmsState">
+		UPDATE TB_STRECORDCENTER
+		SET org_addr = #orgAddr:VARCHAR#
+		   ,oper_org_nm = #operOrgNm:VARCHAR#
+		   ,oper_chrgr_nm = #operChrgrNm:VARCHAR#
+		   ,user_arng_state = #userArngState:VARCHAR#
+		   ,rule_apply_flag = #ruleApplyFlag:VARCHAR#
+		   ,oper_rule_estb_flag = #operRuleEstbFlag:VARCHAR#
+		   ,brm_type_cd = #brmTypeCd:VARCHAR#
+		   ,link_sys = #linkSys:VARCHAR#
+		   ,stakrm_area = #stakrmArea:VARCHAR#
+		   ,estb_org_nm = #estbOrgNm:VARCHAR#
+		   ,estb_chrgr_nm = #estbChrgrNm:VARCHAR#
+		   ,estb_ymd = #estbYmd:VARCHAR#
+		   ,ars_goods_nm = #arsGoodsNm:VARCHAR#
+		   ,ars_use_ymd_From = #arsUseYmdFrom:VARCHAR#
+		   ,ars_use_ymd_To = #arsUseYmdTo:VARCHAR#
+		WHERE record_center_id =  #recordCenterId:VARCHAR#    
+	</update>
+	
+	<!-- 
+		일반현황_업무분장
+		: 업무분장 목록을 조회한다.
+	 -->
+	<resultMap id="findDutyDivPagedList-result" class="rms.sys.rmsstate.domain.RmsState">
+		<result property="sno" 				column="SNO"/>
+		<result property="chrgrNm" 			column="CHRGR_NM"/>
+		<result property="pos" 				column="POS"/>
+		<result property="duty" 			column="DUTY"/>
+		<result property="telNo" 			column="TEL_NO"/>
+		<result property="email" 			column="EMAIL"/>
+		<result property="remk" 			column="REMK"/>
+		<result property="userSortSno"		column="USER_SORT_SNO"/>
+		<result property="recordCenterCd" 	column="RECORD_CENTER_CD"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+	</resultMap>
+	<select id="countDutyDivPagedList" parameterClass="rms.sys.rmsstate.domain.RmsState" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_STRECORDCHRGR a, tb_strecordcenter b
+        WHERE a.record_center_id = #recordCenterId:VARCHAR#
+        and b.record_center_id = a.record_center_id
+        order by a.user_sort_sno
+	</select>
+	<select id="findDutyDivPagedList" parameterClass="rms.sys.rmsstate.domain.RmsState" resultMap="findDutyDivPagedList-result">
+		SELECT E.sno
+		      ,E.chrgr_nm
+		      ,E.pos
+		      ,E.duty
+		      ,E.tel_no
+		      ,E.email
+		      ,E.remk
+		      ,E.user_sort_sno
+		      ,E.record_center_cd
+		      ,E.record_center_id
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                    ,C.*
+		        FROM (
+		            SELECT A.*, B.record_center_cd
+		            FROM TB_STRECORDCHRGR a, tb_strecordcenter b
+		            WHERE a.record_center_id = #recordCenterId:VARCHAR#
+		            and b.record_center_id = a.record_center_id
+		            order by a.user_sort_sno
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		일반현황_업무분장
+		: 업무분장을 등록한다.
+	 -->
+	<insert id="createDutyDiv" parameterClass="rms.sys.rmsstate.domain.RmsState">
+		INSERT INTO TB_STRECORDCHRGR(
+			record_center_id, sno, chrgr_nm, pos, duty, tel_no, email, remk, user_sort_sno
+		) VALUES (
+			 #recordCenterId#
+			,(SELECT NVL(MAX(sno),0) + 1 FROM TB_STRECORDCHRGR WHERE record_center_id = #recordCenterId:VARCHAR#)
+		    ,#chrgrNm#,#pos#,#duty#,#telNo#,#email#,#remk#,#userSortSno#
+		)
+	</insert>
+	
+	<!-- 
+		일반현황_업무분장
+		: 업무분장을 수정한다.
+	 -->
+	<update id="updateDutyDiv" parameterClass="rms.sys.rmsstate.domain.RmsState">
+		UPDATE TB_STRECORDCHRGR
+		SET   chrgr_nm = #chrgrNm:VARCHAR#
+		     ,pos = #pos:VARCHAR#
+		     ,duty = #duty:VARCHAR#
+		     ,tel_no = #telNo:VARCHAR#
+		     ,email = #email:VARCHAR#
+		     ,remk = #remk:VARCHAR#
+		     ,user_sort_sno = #userSortSno:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND sno = #sno:VARCHAR#
+	</update>
+	
+	<!-- 
+		일반현황_업무분장
+		: 업무분장을 삭제한다.
+	 -->
+	<delete id="deleteDutyDiv" parameterClass="rms.sys.rmsstate.domain.RmsState">
+		DELETE FROM TB_STRECORDCHRGR WHERE record_center_id = #recordCenterId:VARCHAR# AND sno = #sno:VARCHAR#
+	</delete>
+	
+<insert id="creatReportRsltInfo" parameterClass="rms.sys.rmsstate.domain.RmsState">
+	INSERT INTO TB_STREPORTRSLT (CUR_STATE_REPORT_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,
+									CUR_STATE_RECV_ERROR_CONT,RECV_FILE_DTIME,REG_DTIME)
+			VALUES(#curStateReportYyyy:VARCHAR#,#repOrgCd:VARCHAR#,#sendFileDataDiv:VARCHAR#,#listLineNo:VARCHAR#,
+			       #curStateRecvErrorCont:VARCHAR#,#recvFileDtime:VARCHAR#,#regDtime:VARCHAR#
+			)
+	</insert>	
+	
+</sqlMap>

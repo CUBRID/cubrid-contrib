@@ -1,0 +1,782 @@
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Stack;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+public class SqlXmlHandler extends DefaultHandler {
+	private final String SQL_MAP_TAG = "SQLMAP";
+	private final String SQL_DML_TAG = "SELECT|INSERT|UPDATE|DELETE";
+	private final String SQL_QUERY_TAG = "SELECTKEY|DYNAMIC|ITERATE|ISNOTEMPTY|ISEMPTY|ISNOTEQUAL|ISEQUAL|ISGREATEREQUAL|ISLESSTHAN";
+	private final String OTHERS_TAG = "RESULT|RESULTMAP|PROPERTIES|COMMENT|ENTRY";
+	private final String KNOWN_TAG = SQL_MAP_TAG + "|" + SQL_DML_TAG + "|" + SQL_QUERY_TAG + "|" + OTHERS_TAG;
+
+	private final String PTTRN_MASK = "1";		// '$ ~ $'
+	private final String PTTRN_MASK2 = "'1'";	// $# ~ $#
+
+	private boolean plagPrintMessage = false;
+
+	private DBConnection dbconn = null;
+	private String filename = null;
+	private BufferedWriter out = null;
+	
+	private Stack<SqlMapXMLTag> stackReadTag = null;
+	
+	private HashMap<String, String> mapIsEmpty = null;
+	private HashMap<String, String> mapIsEqual = null;
+	private HashMap<String, String> mapIsGreaterLess = null;
+	
+	private StringBuffer sbQueryHeader;
+	private StringBuffer sbQuery;
+	private StringBuffer sbSelectKeyQuery;
+	private Vector<StringBuffer> vQuerySet = null;
+	
+	public SqlXmlHandler() {
+		this.dbconn = SqlMapXMLParser.dbconn;
+		this.filename = SqlMapXMLParser.filePath;
+		this.out = SqlMapXMLParser.out;
+		
+		this.stackReadTag = new Stack<SqlMapXMLTag>();
+
+		this.mapIsEmpty = new HashMap<String, String>();
+		this.mapIsEqual = new HashMap<String, String>();
+		this.mapIsGreaterLess = new HashMap<String, String>();
+		
+		this.sbQueryHeader = new StringBuffer();
+		this.sbQuery = new StringBuffer();
+		this.sbSelectKeyQuery = new StringBuffer();
+		this.vQuerySet = new Vector<StringBuffer>();
+	}
+
+	@Override
+	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+		if (plagPrintMessage) {
+			System.out.println("Start Element : " + localName);
+			
+		}
+
+		if (localName.toUpperCase().matches(SQL_MAP_TAG)) {
+			dbconn.logFileOpen(SqlMapXMLParser.filePath);
+		}
+		
+/*		if (!(localName.toUpperCase().matches(KNOWN_TAG))) {
+			System.out.println("Unknown Tag : " + localName + "(" + filename + ")");
+		}*/
+
+		SqlMapXMLTag currentTag = new SqlMapXMLTag();
+
+		currentTag.setName(localName);
+
+		if (attributes.getValue("id") != null) {
+			currentTag.setId(attributes.getValue("id"));
+		}
+
+		if (attributes.getValue("property") != null) {
+			currentTag.setProperty(attributes.getValue("property"));
+		}
+
+		if (attributes.getValue("prepend") != null) {
+			currentTag.setPrepend(attributes.getValue("prepend"));
+		}
+
+		if (attributes.getValue("compareValue") != null) {
+			currentTag.setCompareValue(attributes.getValue("compareValue"));
+		}
+
+		if (attributes.getValue("open") != null) {
+			currentTag.setOpen(attributes.getValue("open"));
+		}
+
+		if (attributes.getValue("close") != null) {
+			currentTag.setClose(attributes.getValue("close"));
+		}
+
+		if (attributes.getValue("conjunction") != null) {
+			currentTag.setConjunction(attributes.getValue("conjunction"));
+		}
+
+		stackReadTag.push(currentTag);
+
+		if (plagPrintMessage) {
+			System.out.println("Stack Read Tag (Push) : " + currentTag.getName());
+		}
+
+		if (plagPrintMessage) {
+			stackReadTag.peek().print();
+		}
+
+		if (currentTag.getName().toUpperCase().matches(SQL_DML_TAG)) {
+			sbQueryHeader.append(System.getProperty("line.separator"));
+			sbQueryHeader.append(System.getProperty("line.separator"));
+			sbQueryHeader.append("-- Filename : " + filename + System.getProperty("line.separator"));
+			sbQueryHeader.append("-- Query    : " + currentTag.getName() + System.getProperty("line.separator"));
+			sbQueryHeader.append("-- Query Id : " + currentTag.getId() + System.getProperty("line.separator"));
+
+			if (plagPrintMessage) {
+				System.out.println("-- Filename : " + filename);
+				System.out.println("-- Query    : " + currentTag.getName());
+				System.out.println("-- Query Id : " + currentTag.getId());
+			}
+
+			sbQueryHeader.append(System.getProperty("line.separator"));
+			
+			if (SqlMapXMLParser.SET_OPTIMIZATION_LEVEL_2 == 1) {
+				sbQueryHeader.append("SET OPTIMIZATION level 2" + System.getProperty("line.separator"));
+			}
+			
+			sbQuery = new StringBuffer(sbQueryHeader);
+			sbSelectKeyQuery = new StringBuffer(sbQueryHeader);
+			sbQueryHeader.setLength(0);
+		}
+	}
+
+	@Override
+	public void characters(char[] ch, int start, int length) throws SAXException {
+		if (plagPrintMessage) {
+			System.out.println("########## Contents Output 시작 ##########");
+		}
+
+		String contents = (new String(ch, start, length)).replace(System.getProperty("line.separator"), "")
+				.replace("\n", "");
+
+		SqlMapXMLTag currentTag = stackReadTag.peek();
+
+		if (!(contents.trim().equals(""))) {
+			currentTag.addContents(contents);
+
+			if (plagPrintMessage) {
+				System.out.println(contents);
+			}
+		}
+
+		if (plagPrintMessage) {
+			System.out.println("########## Contents Output 끝 ##########");
+		}
+	}
+
+	@Override
+	public void endElement(String uri, String localName, String qName) throws SAXException {
+		if (plagPrintMessage) {
+			System.out.println("End Element : " + localName);
+		}
+
+		SqlMapXMLTag currentTag = stackReadTag.pop();
+		SqlMapXMLTag beforeTag = null;
+		
+		if (plagPrintMessage) {
+			System.out.println("Stack Read Current Tag (Pop) : " + currentTag.getName());
+		}
+
+		if (stackReadTag.size() > 0) {
+			beforeTag = stackReadTag.peek();
+			
+			if (plagPrintMessage) {
+				System.out.println("Stack Read Before Tag (Peek) : " + beforeTag.getName());
+			}
+		}
+
+		switch (currentTag.getName().toUpperCase()) {
+		case "SQLMAP":
+			if (plagPrintMessage) {
+				System.out.println("########## SqlMap Tag 끝 ##########");
+			}
+
+			StringBuffer sb;
+			for (int i = 0; i < vQuerySet.size(); i++) {
+				sb = vQuerySet.elementAt(i);
+
+				try {
+					out.write(sb.toString());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			dbconn.logFileClose();
+			break;
+		case "SELECT":
+			sbQuery.append(pttrnMtchSQL(currentTag.getContents()) + ";");
+			dbconn.logInputQueryID(currentTag.getId());
+			dbconn.selectQuery(sbQuery.toString());
+			vQuerySet.addElement(sbQuery);
+			// sbQuery.setLength(0);
+			break;
+		case "INSERT":
+		case "UPDATE":
+		case "DELETE":
+			sbQuery.append(pttrnMtchSQL(currentTag.getContents()) + ";");
+			dbconn.logInputQueryID(currentTag.getId());
+			dbconn.updateQuery(sbQuery.toString());
+			vQuerySet.addElement(sbQuery);
+			break;
+		default:
+			break;
+		}
+
+		if (!(currentTag.getContents().trim().equals(""))) {
+			switch (currentTag.getName().toUpperCase()) {
+			case "SELECTKEY":
+				if (plagPrintMessage) {
+					System.out.println("########## SelectKey Tag 시작 ##########");
+				}
+
+				sbSelectKeyQuery.append(pttrnMtchSQL(currentTag.getContents()) + ";");
+
+				if (plagPrintMessage) {
+					System.out.println(sbSelectKeyQuery.toString());
+				}
+
+				vQuerySet.addElement(sbSelectKeyQuery);
+
+				sbSelectKeyQuery.setLength(0);
+
+				break;
+			case "DYNAMIC":
+				if (plagPrintMessage) {
+					System.out.println("########## Dynamic Tag 시작 ##########");
+				}
+				
+				/*
+				 * currentTag.getPrepend() == null currentTag.getOpen() == null
+				 * currentTag.getClose() == null
+				 */
+				if ((currentTag.getPrepend() == null) && (currentTag.getOpen() == null)
+						&& (currentTag.getClose() == null)) {
+					beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+					if (plagPrintMessage) {
+						System.out.println(currentTag.getContents());
+					}
+				}
+
+				/*
+				 * currentTag.getPrepend() != null currentTag.getOpen() == null
+				 * currentTag.getClose() == null
+				 */
+				if ((currentTag.getPrepend() != null) && (currentTag.getOpen() == null)
+						&& (currentTag.getClose() == null)) {
+					beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+					if (plagPrintMessage) {
+						System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+					}
+				}
+
+				/*
+				 * currentTag.getPrepend() != null currentTag.getOpen() != null
+				 * currentTag.getClose() != null
+				 */
+				if ((currentTag.getPrepend() != null) && (currentTag.getOpen() != null)
+						&& (currentTag.getClose() != null)) {
+					beforeTag.addContents(" " + currentTag.getPrepend() + currentTag.getOpen()
+							+ currentTag.getContents() + currentTag.getClose() + " ");
+
+					if (plagPrintMessage) {
+						System.out.println(currentTag.getPrepend() + currentTag.getOpen() + currentTag.getContents()
+								+ currentTag.getClose());
+					}
+					
+				}
+
+				break;
+			case "ITERATE":
+				if (plagPrintMessage) {
+					System.out.println("########## Iterate Tag 시작 ##########");
+				}
+
+				/*
+				 * currentTag.getPrepend() == null currentTag.getOpen() != null
+				 * currentTag.getClose() != null currentTag.getConjunction() !=
+				 * null
+				 */
+				if ((currentTag.getPrepend() == null) && (currentTag.getOpen() != null)
+						&& (currentTag.getClose() != null) && (currentTag.getConjunction() != null)) {
+					beforeTag.addContents(pttrnMtchIterate(currentTag.getContents(), " " + currentTag.getOpen() + PTTRN_MASK2 + currentTag.getConjunction()
+					+ PTTRN_MASK2 + currentTag.getConjunction() + PTTRN_MASK2
+					+ currentTag.getClose() + " "));
+
+					if (plagPrintMessage) {
+						System.out.println(pttrnMtchIterate(currentTag.getContents(), " " + currentTag.getOpen() + PTTRN_MASK2 + currentTag.getConjunction()
+						+ PTTRN_MASK2 + currentTag.getConjunction() + PTTRN_MASK2
+						+ currentTag.getClose() + " "));
+					}
+				}
+
+				/*
+				 * currentTag.getPrepend() != null currentTag.getOpen() != null
+				 * currentTag.getClose() != null currentTag.getConjunction() !=
+				 * null
+				 */
+				if ((currentTag.getPrepend() != null) && (currentTag.getOpen() != null)
+						&& (currentTag.getClose() != null) && (currentTag.getConjunction() != null)) {
+					beforeTag.addContents(currentTag.getPrepend() + pttrnMtchIterate(currentTag.getContents(), " " + currentTag.getOpen() + PTTRN_MASK2 + currentTag.getConjunction()
+					+ PTTRN_MASK2 + currentTag.getConjunction() + PTTRN_MASK2
+					+ currentTag.getClose() + " "));
+
+					if (plagPrintMessage) {
+						System.out.println(currentTag.getPrepend() + pttrnMtchIterate(currentTag.getContents(), " " + currentTag.getOpen() + PTTRN_MASK2 + currentTag.getConjunction()
+						+ PTTRN_MASK2 + currentTag.getConjunction() + PTTRN_MASK2
+						+ currentTag.getClose() + " "));
+					}
+				}
+
+				break;
+			case "ISNOTEMPTY":
+				if (plagPrintMessage) {
+					System.out.println("########## IsNotEmpty Tag 시작 ##########");
+				}
+
+				if (!(mapIsEmpty.containsKey(currentTag.getProperty()))) {
+					mapIsEmpty.put(currentTag.getProperty(), "NOTEMPTY");
+				}
+
+				if ("NOTEMPTY".equals(mapIsEmpty.get(currentTag.getProperty()).toUpperCase())) {
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() == null)) {
+						beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() != null)) {
+						beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getOpen() + currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() == null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+							}
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() != null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+					}
+				}
+
+				break;
+			case "ISEMPTY":
+				if (plagPrintMessage) {
+					System.out.println("########## IsEmpty Tag 시작 ##########");
+				}
+
+				if (!(mapIsEmpty.containsKey(currentTag.getProperty()))) {
+					mapIsEmpty.put(currentTag.getProperty(), "NOTEMPTY");
+				}
+
+				if ("EMPTY".equals(mapIsEmpty.get(currentTag.getProperty()).toUpperCase())) {
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() == null)) {
+						beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() != null)) {
+						beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getOpen() + currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() == null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+							}
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() != null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+					}
+				}
+
+				break;
+			case "ISNOTEQUAL":
+				if (plagPrintMessage) {
+					System.out.println("########## IsNotEqual Tag 시작 ##########");
+				}
+
+				if (!(mapIsEqual.containsKey(currentTag.getProperty()))) {
+					mapIsEqual.put(currentTag.getProperty(), currentTag.getCompareValue());
+				}
+
+				if (!(currentTag.getCompareValue().equals(mapIsEqual.get(currentTag.getProperty())))) {
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() == null)) {
+						beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() != null)) {
+						beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getOpen() + currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() == null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+							}
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() != null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+					}
+				}
+
+				break;
+			case "ISEQUAL":
+				if (plagPrintMessage) {
+					System.out.println("########## IsEqual Tag 시작 ##########");
+				}
+
+				if (!(mapIsEqual.containsKey(currentTag.getProperty()))) {
+					mapIsEqual.put(currentTag.getProperty(), currentTag.getCompareValue());
+				}
+
+				if (currentTag.getCompareValue().equals(mapIsEqual.get(currentTag.getProperty()))) {
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() == null)) {
+						beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() == null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() == null) && (currentTag.getOpen() != null)) {
+						beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getOpen() + currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() ==
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() == null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+							}
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null currentTag.getOpen() !=
+					 * null
+					 */
+					if ((currentTag.getPrepend() != null) && (currentTag.getOpen() != null)) {
+						if ((beforeTag.getPrepend() != null) && (beforeTag.getContents().length() == 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+						
+						if ((beforeTag.getContents().length() > 0) && (currentTag.getContents().length() > 0)) {
+							beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents() + " ");
+
+							if (plagPrintMessage) {
+								System.out.println(currentTag.getPrepend() + " " + currentTag.getOpen() + currentTag.getContents());
+							}
+						}
+					}
+				}
+
+				break;
+			case "ISGREATEREQUAL":
+				if (plagPrintMessage) {
+					System.out.println("########## IsGreaterEqual Tag 시작 ##########");
+				}
+
+				if (!(mapIsGreaterLess.containsKey(currentTag.getProperty()))) {
+					mapIsGreaterLess.put(currentTag.getProperty(),
+							String.valueOf(Integer.parseInt(currentTag.getCompareValue()) + 1));
+				}
+
+				if (Integer.parseInt(mapIsGreaterLess.get(currentTag.getProperty())) >= Integer
+						.parseInt(currentTag.getCompareValue())) {
+					/*
+					 * currentTag.getPrepend() == null
+					 */
+					if (currentTag.getPrepend() == null) {
+						beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null
+					 */
+					if (currentTag.getPrepend() != null) {
+						beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+						}
+					}
+				}
+
+				break;
+			case "ISLESSTHAN":
+				if (plagPrintMessage) {
+					System.out.println("########## IsLessThan Tag 시작 ##########");
+				}
+
+				if (!(mapIsGreaterLess.containsKey(currentTag.getProperty()))) {
+					mapIsGreaterLess.put(currentTag.getProperty(),
+							String.valueOf(Integer.parseInt(currentTag.getCompareValue()) + 1));
+				}
+
+				if (Integer.parseInt(mapIsGreaterLess.get(currentTag.getProperty())) < Integer
+						.parseInt(currentTag.getCompareValue())) {
+					/*
+					 * currentTag.getPrepend() == null
+					 */
+					if (currentTag.getPrepend() == null) {
+						beforeTag.addContents(" " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getContents());
+						}
+					}
+
+					/*
+					 * currentTag.getPrepend() != null
+					 */
+					if (currentTag.getPrepend() != null) {
+						beforeTag.addContents(" " + currentTag.getPrepend() + " " + currentTag.getContents() + " ");
+
+						if (plagPrintMessage) {
+							System.out.println(currentTag.getPrepend() + " " + currentTag.getContents());
+						}
+					}
+				}
+
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	
+	public String pttrnMtchBlank(Object sql) {
+
+		String str = String.valueOf(sql);
+
+		String pttrn_str = "[) ]+\\p{Alnum}+$";
+
+		Pattern pattern = Pattern.compile(pttrn_str);
+		Matcher matcher = pattern.matcher(str);
+
+		while (matcher.find()) {
+			return str + " ";
+		}
+		
+		return str;
+	}
+
+	public String pttrnMtchSQL(Object sql) {
+
+		String str = String.valueOf(sql);
+
+		String pttrn_str = "[$][^$]+[$]";
+		String pttrn_str2 = "[#][^#]+[#]";
+
+		Pattern pattern = Pattern.compile(pttrn_str);
+		Matcher matcher = pattern.matcher(str);
+
+		while (matcher.find()) {
+			str = matcher.replaceAll(PTTRN_MASK);
+		}
+
+		pattern = Pattern.compile(pttrn_str2);
+		matcher = pattern.matcher(str);
+
+		while (matcher.find()) {
+			str = matcher.replaceAll(PTTRN_MASK2);
+		}
+
+		return str;
+	}
+	
+	public String pttrnMtchIterate(String replaceStr, String insertStr) {
+		
+		String pttrn_str = "[#][^#]+[#]";
+
+		Pattern pattern = Pattern.compile(pttrn_str);
+		Matcher matcher = pattern.matcher(replaceStr);
+
+		while (matcher.find()) {
+			replaceStr = matcher.replaceAll(insertStr);
+		}
+
+		return replaceStr;
+	}
+}

@@ -1,0 +1,74 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : select
+-- Query Id : findTransfConfmRecvPagedList
+
+		SELECT F.*		FROM (			SELECT ROWNUM AS rnum				, E.*			FROM (				SELECT TRANSF_LIST_ID					, COLL_DIV_CD					, C.ORG_NM					, C.ORG_ABBR_NM					, D.CLSS_NM					, TITLE					, CREAT_YYYY					, RECORD_CNT					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM					, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.TRANSF_DIV_CD) TRANSF_DIV_NM					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.CONFM_TRANSF_DIV_CD) CONFM_TRANSF_DIV_NM					, FOLDER_ID					, KEEP_FLAG				FROM  TB_DFRECVTRANSFLIST A,				TB_STORG C, (					SELECT BIS_CLSS_ID CLSS_ID			        	,BIS_CLSS_NM CLSS_NM 			        FROM TB_ZZBISCLSS 		            WHERE LEVL='6'		            UNION ALL		            SELECT DISTINCT UNIT_CD CLSS_ID		            	,UNIT_NM CLSS_NM		            FROM TB_ZZUNIT		            WHERE RECORD_CENTER_ID = '1'		        ) D				WHERE A.ORG_CD = C.ORG_CD				AND   A.RECORD_CENTER_ID = C.RECORD_CENTER_ID 				AND   A.CLSS_ID = D.CLSS_ID(+)				AND   A.RECORD_CENTER_ID = '1'				AND	  A.TRANSF_YYYY = '1'				AND	  A.TRANSF_GRP_SNO = '1'				AND   A.TRANSF_DIV_CD <> '5'				AND   A.TRANSF_APROV_REQ_INFRM_FLAG IN ('1','2') AND 					A.ORG_CD = '1'				  AND 					(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')				  AND 					A.TITLE LIKE '1' 				  AND 					A.TRANSF_DIV_CD = '1' 				  AND 					A.CONFM_TRANSF_DIV_CD = '1' 				 				ORDER BY title, folder_id			) E			WHERE ROWNUM <= '1'		) F		WHERE F.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : select
+-- Query Id : countTransfConfmRecvPagedList
+
+		SELECT COUNT(1)		FROM  TB_DFRECVTRANSFLIST A,		TB_STORG C, (			SELECT BIS_CLSS_ID CLSS_ID	        	,BIS_CLSS_NM CLSS_NM 	        FROM TB_ZZBISCLSS             WHERE LEVL='6'            UNION ALL            SELECT DISTINCT UNIT_CD CLSS_ID            	,UNIT_NM CLSS_NM            FROM TB_ZZUNIT            WHERE RECORD_CENTER_ID = '1'        ) D			WHERE A.ORG_CD = C.ORG_CD		AND   A.RECORD_CENTER_ID = C.RECORD_CENTER_ID 		AND   A.CLSS_ID = D.CLSS_ID(+)		AND   A.RECORD_CENTER_ID = '1'		AND	  A.TRANSF_YYYY = '1'		AND	  A.TRANSF_GRP_SNO = '1'		AND   A.TRANSF_DIV_CD <> '5'		AND   A.TRANSF_APROV_REQ_INFRM_FLAG IN ('1','2') AND 			A.ORG_CD = '1'		  AND 			(A.CLSS_DIV_CD = '1' AND A.CLSS_ID = '1')		  AND 			A.TITLE LIKE '1' 		  AND 			A.TRANSF_DIV_CD = '1' 		  AND 			A.CONFM_TRANSF_DIV_CD = '1' 		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : select
+-- Query Id : findTransfGroupSno
+
+		SELECT NVL(transf_grp_sno,0) AS transf_grp_sno		FROM TB_DFTRANSFWORK		WHERE record_center_id = '1'		AND	transf_yyyy = '1'		AND	transf_handl_state = '1'		AND	transf_list_choice_fin_ymd IS NOT NULL;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : select
+-- Query Id : findTransfConfmFolderCheckKeepNot
+
+		SELECT MAX(TRANSF_YYYY) AS transf_yyyy		FROM TB_DFRECVTRANSFLIST		WHERE record_center_id = '1'		AND	creat_sys_cd = '1'		AND	org_cd = '1'		AND	clss_id = '1'		AND	creat_yyyy = '1'		AND	folder_reg_seq = '1' AND 			ho_no = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : select
+-- Query Id : findTransfConfmFolderCheckKeep
+
+		SELECT MAX(TRANSF_YYYY) AS transf_yyyy		FROM TB_DFRECVTRANSFLIST		WHERE folder_id IN (			SELECT folder_id			FROM TB_RDFOLDER			WHERE record_center_id = '1'			AND	creat_sys_cd = '1'			AND	org_cd = '1'			AND	clss_id = '1'			AND	creat_yyyy = '1'			AND	folder_reg_seq = '1'			 AND 				ho_no = '1'			 		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : update
+-- Query Id : updateTransfConfmRecvFileKeepNot
+
+ 		UPDATE TB_DFRECVTRANSFLIST		SET	confm_transf_div_cd = '1'			, confm_rsn = '1'			, confm_aprov_yyyy = '1'			, confm_aprov_user_nm = '1'			, confm_aprov_ymd = '1'		WHERE record_center_id = '1'		AND	transf_yyyy = '1'		AND	transf_grp_sno = '1'		AND	creat_sys_cd = '1'		AND	org_cd = '1'		AND	clss_id = '1'		AND	creat_yyyy = '1'		AND	folder_reg_seq = '1' AND 			ho_no = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : update
+-- Query Id : updateTransfConfmRecvFileKeep
+
+		UPDATE TB_DFRECVTRANSFLIST		SET	confm_transf_div_cd = '1'			, confm_rsn = '1'			, confm_aprov_yyyy = '1'			, confm_aprov_user_nm = '1'			, confm_aprov_ymd = '1'		WHERE folder_id IN (			SELECT folder_id			FROM TB_RDFOLDER			WHERE record_center_id = '1'			AND	creat_sys_cd = '1'			AND	org_cd = '1'			AND	clss_id = '1'			AND	creat_yyyy = '1'			AND	folder_reg_seq = '1'			 AND 				ho_no = '1'			 														);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : update
+-- Query Id : updateTransfConfmRecvFileFolder
+
+		UPDATE TB_RDFOLDER		SET	transf_state_cd = '3'			, expt_transf_yyyy = '1'		WHERE creat_sys_cd = '1'		AND	org_cd = '1'		AND	clss_id = '1'		AND	creat_yyyy = '1'		AND	folder_reg_seq = '1' AND 			ho_no = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : update
+-- Query Id : updateTransfConfmRecvFileHist
+
+		UPDATE TB_DFTRANSFHIST		SET	confm_transf_div_cd = '1'			, confm_rsn = '1'			, confm_aprov_yyyy = '1'			, confm_aprov_user_nm = '1'			, confm_aprov_ymd = '1'		WHERE record_center_id = '1'		AND	transf_yyyy = '1'		AND	folder_id = (			SELECT folder_id 			FROM TB_DFRECVTRANSFLIST			WHERE record_center_id = '1'			AND	transf_yyyy = '1'			AND	transf_grp_sno = '1'			AND	creat_sys_cd = '1'			AND	org_cd = '1'			AND	clss_id = '1'			AND	creat_yyyy = '1'			AND	folder_reg_seq = '1'			 AND 				ho_no = '1'			 													);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml
+-- Query    : update
+-- Query Id : updateTransfGroup
+
+		UPDATE TB_DFTRANSFWORK		SET	TRANSF_HANDL_STATE = '2'			, CONFM_LIST_RECV_YMD = TO_CHAR(SYSDATE, 'YYYYMMDD')		WHERE RECORD_CENTER_ID = '1'		AND	TRANSF_YYYY = '1'		AND	TRANSF_GRP_SNO = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\transf\TransfConfirmListRecv.xml

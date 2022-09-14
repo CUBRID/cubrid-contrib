@@ -1,0 +1,2129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="take.undTake.Group">
+
+	<!--SELECT 기록물인수_기록물철/건 등록시 중복되는 기록물철이 있는지 체크-->
+	<resultMap id="findTakeDub-result" class="rms.take.undTake.domain.GrUndTakeCheck">
+		<result property="takeOrgCd"                 column="take_org_cd"/>
+		<result property="takeYyyy"                    column="take_yyyy"/>
+	</resultMap>
+	
+	
+	<!--SELECT 기록물인수_기록물철목록의 건수와 실제 건수 비교 체크-->
+	<resultMap id="findUndTakeCntCheck-result" class="rms.take.undTake.domain.GrUndTakeCheck" >
+		<result property="recordCenterId"                column="RECORD_CENTER_ID"/>
+		<result property="folderTakeSeq"                 column="FOLDER_TAKE_SEQ"/>
+		<result property="orgCd"                 				column="ORG_CD"/>
+		<result property="clssId"                 				column="CLSS_ID"/>
+		<result property="creatYyyy"                 		column="CREAT_YYYY"/>
+		<result property="folderRegSeq"                 	column="FOLDER_REG_SEQ"/>
+		<result property="hoNo"                 				column="HO_NO"/>
+		<result property="title"                 					column="TITLE"/>
+		<result property="folderListCnt"                    	column="FOLDER_LIST_CNT"/>
+		<result property="recordRealCnt"                 column="RECORD_REAL_CNT"/>
+		<result property="lineNo"                 column="line_no"/>
+	</resultMap>
+	
+	
+	<!--SELECT 기록물인수_전자파일 등록시 확장자 유형 체크할 값 select-->
+	<resultMap id="findTakeDataFormatCheckList-result" class="rms.take.undTake.domain.TkAttachFile">
+		<result property="dataFormatCd"                column="com_cd"/>
+		<result property="fileNm"                      column="com_cd_nm"/>
+	</resultMap>
+	
+	
+	<!--SELECT 기록물인수_END 등록시 기록물철에 전자파일누락오류정보 select-->
+	<resultMap id="findTakeEfileCntCheck-result" class="rms.take.undTake.domain.GrUndTakeCheck">
+		<result property="folderTakeSeq"          column="folder_take_seq"/>
+		<result property="folderEfileCnt"         column="folder_efile_cnt"/>
+		<result property="attachEfileCnt"         column="attach_efile_cnt"/>
+		<result property="folderClssNo"           column="folder_clss_no"/>
+		<result property="title"                  column="title"/>
+		<result property="lineNo"                 column="line_no"/>
+		
+	</resultMap>
+	
+	
+	<!--SELECT 기록물인수_END파일접수시 EFILE로 접수되지 않은 전자파일 체크 -->
+	<resultMap id="findTakeEfileRecvCheck-result" class="rms.take.undTake.domain.TkRecord">
+		<result property="recordCenterId"            	column="record_center_id"/>
+		<result property="recordTakeSeq"               	column="record_take_seq"/>
+		<result property="folderClssNo"               	column="folder_clss_no"/>
+		<result property="recordRegNo"               	column="record_reg_no"/>
+		<result property="folderTitle"               	column="folder_title"/>
+		<result property="title"               			column="title"/>
+		<result property="lineNo"               		column="line_no"/>
+	</resultMap>
+	
+	
+	<!--SELECT 기록물인수_END 등록시 기록물철에 전자기록물여부 select-->
+	<resultMap id="findTakeEfileInfo-result" class="rms.take.undTake.domain.TkFolder">
+		<result property="recordCenterId"            column="record_center_id"/>
+		<result property="folderTakeSeq"             column="folder_take_seq"/>
+		<result property="efile"                  			column="efile"/>
+		<result property="notEfile"              			column="not_efile"/>
+	</resultMap>
+	
+	
+	<!--SELECT 기록물인수_END 등록시 기록물건에 (등록건수_파일수,쪽수,용량) select-->
+	<resultMap id="findTakeDocInfo-result" class="rms.take.undTake.domain.TkRecord">
+		<result property="recordCenterId"            column="record_center_id"/>
+		<result property="folderTakeSeq"             column="folder_take_seq"/>
+		<result property="recordTakeSeq"           column="record_take_seq"/>
+		<result property="attachCnt"                  	column="attach_cnt"/>
+		<result property="recordPageCnt"            column="record_page_cnt"/>
+		<result property="recordSize"              		column="record_size"/>
+	</resultMap>
+
+
+	<!--SELECT 처리과별 반려통보처리(반려통보-반려파일생성정보) select-->
+	<resultMap id="takeInfrmInfo-result" class="rms.take.undTake.domain.UndTakeInfrmInfo">
+		<result property="recvIp"            		column="recv_ip"/>
+		<result property="recvPort"           	column="recv_port"/>
+		<result property="className"          column="class_name"/>
+		<result property="grLanguage"         column="gr_language"/>
+	</resultMap>
+
+	
+	<!--SELECT 처리과별 반려통보처리(반려통보-기록물반려파일 대상 조회) select-->
+	<resultMap id="takeInfrmReturnInfo-result" class="rms.take.undTake.domain.TkFolder">
+		<result property="folderTakeSeq" 		column="folder_take_seq"/>
+		<result property="orgCd"            		column="org_cd"/>
+		<result property="creatYyyy"            	column="creat_yyyy"/>
+		<result property="clssId"            		column="clss_id"/>
+		<result property="folderRegSeq"    	column="folder_reg_seq"/>
+		<result property="hoNo"            		column="ho_no"/>
+		<result property="rjctCont"         		column="rjct_cont"/>
+	</resultMap>
+	
+	<!--SELECT 바이러스 검출 파일 목록 select -->
+	<resultMap id="findVirusFileList-result" class="rms.take.undTake.domain.TkOrgRecvError">
+ 		<result property="takeFileNm" 	column="file_nm"/>
+ 		<result property="folderClssNo" column="folder_clss_no"/>
+ 		<result property="folderTitle" 	column="folder_title"/>
+ 		<result property="recordRegNo" 	column="record_reg_no"/>
+ 		<result property="recordTitle" 	column="record_title"/>
+ 		<result property="folderTakeSeq" 	column="folder_take_seq"/>
+ 		<result property="recordTakeSeq" 	column="record_take_seq"/>
+ 	</resultMap>
+	
+	
+	<!--SELECT 기록물인수 인수일정체크-->
+ 	<select id="findTransCheckDate" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT  '00000' AS resultCode
+		FROM 	TB_TKORGTAKESCHED
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND 	take_yyyy = #takeYyyy:VARCHAR#
+		AND 	take_org_cd = #takeOrgCd:VARCHAR#
+		AND 	TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN erecord_take_start_plan_ymd AND erecord_take_close_plan_ymd
+	</select>
+	
+	
+	<!--SELECT 기록물인수 반려통보 처리과 갯수 count-->
+ 	<select id="findOrgCdByReturnFlag" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT	COUNT(1)
+		FROM  	TB_TKORGTAKEPLAN
+		WHERE 	record_center_id 	= #recordCenterId:VARCHAR# 
+		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND 	take_yyyy 			= #takeYyyy:VARCHAR#
+		AND		creat_sys_cd 		= '02'
+		AND		take_state_div_cd 	= '07'
+	</select>
+	
+	
+	<!--SELECT 기록물인수 등록시 반려에 대한  순번 가져오기-->
+	<select id="findSelectTakeSno" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT  take_sno
+		FROM    TB_TKORGTAKEPLAN
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		take_yyyy = #takeYyyy:VARCHAR#
+		AND		take_org_cd = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+		AND		take_state_div_cd = '07'
+	</select>
+	
+	<!--SELECT 기록물인수 등록시 순번 가져오기-->
+	<select id="findSelectedTakeSno" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT  MAX(take_sno)
+		FROM    TB_TKORGTAKEPLAN
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		take_yyyy = #takeYyyy:VARCHAR#
+		AND		take_org_cd = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+	</select>
+	
+	<!--SELECT 기록물인수 등록시 인수 처리과에 대한  Max순번 찾기-->
+	<select id="findMaxTakeSno" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT  NVL(MAX(take_sno), 0)+1 take_sno
+		FROM    TB_TKORGTAKEPLAN
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		take_yyyy = #takeYyyy:VARCHAR#
+		AND		take_org_cd = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd = '02'
+	</select>
+	
+	
+	<!--SELECT 기록물인수 등록시 인수 처리과에 대한  접수상태(인수통보,반려통보가 되지 않은 처리과수) 찾기-->
+ 	<select id="countUndTakeOrgNotEnd" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT	COUNT(1)
+		FROM  	TB_TKORGTAKEPLAN
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	take_yyyy = #takeYyyy:VARCHAR#
+		AND		take_org_cd = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+		AND		take_state_div_cd IN ('03','04','05','06','09')
+		AND     recv_fin_state_cd != '2'
+	</select>
+	
+	
+	<!--SELECT 기록물인수 등록시 인수 처리과에 대한  접수상태(접수중인지 여부) 찾기-->
+ 	<select id="findOrgCdByStatusFlag" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT	COUNT(1)
+		FROM  	TB_TKORGTAKEPLAN
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	take_yyyy = #takeYyyy:VARCHAR#
+		AND		take_org_cd = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+		AND		take_state_div_cd = '03'
+	</select>
+	
+
+	<!--
+	 	기록물철 등록
+	 -->
+	<!--SELECT 기록물인수_기록물철접수시 기록물형태 유효성체크 대상조회 -->
+	<select id="findTakeFolderTypeDivCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD01'
+	</select>
+
+
+	<!--SELECT 기록물인수_기록물철접수시 보존기간 유효성체크 대상조회 -->
+	<select id="findTakePresvTermCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD57'
+	</select>
+
+
+	<!--SELECT 기록물인수_기록물철접수시 보존방법 유효성체크 대상조회 -->
+	<select id="findTakePresvMethodCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD09'
+	</select>
+	
+	
+	<!--SELECT 기록물인수_기록물철접수시 보존장소 유효성체크 대상조회 -->
+	<select id="findTakePresvAreaCdCheck" resultClass="string">
+		SELECT com_cd
+		FROM   TB_ZZCOMCD
+		WHERE  com_type_cd = 'RD10'
+	</select>
+
+
+	<!--SELECT 기록물인수_기록물철 등록시 단위업무명select-->
+	<select id="findTakeClssNm" parameterClass="rms.take.undTake.domain.TkFolder" resultClass="string">
+		SELECT	unit_nm
+		FROM 	TB_ZZUNIT
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	unit_cd = #clssId:VARCHAR#
+	</select>
+
+	<!--
+	 	공통
+	 -->
+	<!--보고기관(처리과코드)로 기록관코드리턴 SELECT -->
+	<select id="findTakeRecordCenterId" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT record_center_id
+		FROM   TB_STORG
+		WHERE  org_cd = #takeOrgCd:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 기록물인수 처리과코드 존재유무 체크-->
+	<select id="findTakeOrgCdCheck" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_STORG
+		WHERE   record_center_id = #recordCenterId:VARCHAR# 
+		AND     org_cd = #orgCd:VARCHAR# 
+	</select>
+	
+	
+	<!--SELECT 기록물인수 기록물철분류번호가 존재하는지 체크-->
+	<select id="findTakeFolderCheck" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_TKFOLDER
+		WHERE   creat_sys_cd = '02'
+		AND     org_cd          = #orgCd:VARCHAR#
+		AND	    clss_id         = #clssId:VARCHAR#
+		AND	    creat_yyyy      = #creatYyyy:VARCHAR#
+		AND	    folder_reg_seq  = #folderRegSeq:VARCHAR#
+		AND	    ho_no           = #hoNo:VARCHAR#
+		AND		(rjct_flag		= '0' OR rjct_flag is null)
+	</select>
+	
+	<!--SELECT 기록물인수 기록물철제목 조회-->
+	<select id="findTakeFolderTitle" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT  title 
+		FROM    TB_TKFOLDER
+		WHERE   creat_sys_cd = '02'
+		AND     org_cd          = #orgCd:VARCHAR#
+		AND	    clss_id         = #clssId:VARCHAR#
+		AND	    creat_yyyy      = #creatYyyy:VARCHAR#
+		AND	    folder_reg_seq  = #folderRegSeq:VARCHAR#
+		AND	    ho_no           = #hoNo:VARCHAR#
+		AND 	take_sno 		= #takeSno:NUMBER#
+	</select>
+	
+	<!--SELECT 기록물인수 기록물건등록번호가 존재하는지 체크-->
+	<select id="findTakeRecordCheck" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_TKRECORD A, TB_TKFOLDER B
+		WHERE A.CREAT_SYS_CD = '02' 
+		AND A.CREAT_YYYY = #creatYyyy:VARCHAR#
+		AND A.CREAT_REG_NO = #creatRegNo:VARCHAR#
+		AND A.DTCH_REG_NO = #dtchRegNo:VARCHAR#
+		AND (B.RJCT_FLAG = '0' OR B.RJCT_FLAG IS NULL)
+		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND A.FOLDER_TAKE_SEQ = B.FOLDER_TAKE_SEQ
+	</select>	
+	
+	<!--SELECT 기록물인수 기록물건제목 조회-->
+	<select id="findTakeRecordTitle" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT  A.title 
+		FROM    TB_TKRECORD A, TB_TKFOLDER B
+		WHERE	A.record_center_id 	= B.record_center_id
+		AND 	A.folder_take_seq 	= B.folder_take_seq   
+		AND 	A.creat_sys_cd 		= '02'
+		AND	    A.creat_yyyy   		= #creatYyyy:VARCHAR#
+		AND	    A.creat_reg_no 		= #creatRegNo:VARCHAR#
+		AND	    A.dtch_reg_no  		= #dtchRegNo:VARCHAR#
+		AND 	B.take_sno 			= #takeSno:NUMBER#		
+	</select>
+	
+	<!--SELECT 기록물인수 기록물건등록번호가 존재하는지 체크 - 기관코드 포함 -->
+	<select id="findTakeRecordCheckAll" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT  COUNT(1) 
+		FROM    TB_TKRECORD
+		WHERE   creat_sys_cd = '02'
+		AND     org_cd = #orgCd:VARCHAR#
+		AND     creat_yyyy = #creatYyyy:VARCHAR#
+		AND     creat_reg_no = #creatRegNo:VARCHAR#
+		AND     dtch_reg_no = #dtchRegNo:VARCHAR#
+	</select>
+	
+	<!--SELECT 기록물인수 기록물철,건 제목 조회 -->
+	<resultMap id="findTakeFolderAndRecordTitle-result" class="java.util.HashMap">
+		<result property="folderClssNo" column="folder_clss_no"/>
+		<result property="folderTitle" column="folder_title"/>
+		<result property="recordTitle" column="record_title"/>
+	</resultMap>
+	<select id="findTakeFolderAndRecordTitle" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findTakeFolderAndRecordTitle-result">
+		SELECT  substr(a.folder_clss_no,0,7)||'-'|| substr(a.folder_clss_no,8,8)||'-'||substr(a.folder_clss_no, 16, 4)||'-'||substr(a.folder_clss_no, 20, 6)||'-'||substr(a.folder_clss_no, 26, 3) folder_clss_no
+		        , B.title folder_title
+		        , A.title record_title
+		FROM    TB_TKRECORD A, TB_TKFOLDER B
+		WHERE 	A.record_center_id = B.record_center_id
+		AND 	A.folder_take_seq = B.folder_take_seq
+		AND 	A.creat_sys_cd = '02'
+		AND     A.org_cd = #orgCd:VARCHAR#
+		AND     A.creat_yyyy = #creatYyyy:VARCHAR#
+		AND     A.creat_reg_no = #creatRegNo:VARCHAR#
+		AND     A.dtch_reg_no = #dtchRegNo:VARCHAR#
+		AND 	B.take_sno = #takeSno:NUMBER#
+	</select>
+	
+	<!--SELECT 기록물인수_기록물철 등록시 중복되는 기록물철이 있는지 체크-->
+	<select id="findTakeGfileDubFolderCheck" parameterClass="rms.take.undTake.domain.TkFolder" resultMap="findTakeDub-result">
+		SELECT  take_org_cd, take_yyyy
+		FROM    TB_TKFOLDER
+		WHERE   record_center_id 	= #recordCenterId:VARCHAR#
+		AND     creat_sys_cd 		= '02'
+		AND     org_cd 				= #orgCd:VARCHAR#
+		AND     clss_id 			= #clssId:VARCHAR#
+		AND     creat_yyyy 			= #creatYyyy:VARCHAR#
+		AND     folder_reg_seq 		= #folderRegSeq:VARCHAR#
+		AND		ho_no 				= #hoNo:VARCHAR#
+		AND 	(rjct_flag 			= '0' OR rjct_flag is null)
+	</select>
+	
+	
+	<!--SELECT 기록물인수_기록물철 등록시 기록물철접수일련번호 max-->
+	<select id="findMaxFolderRecvSeq" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkfolder_sq01.nextval), 15, '0')  
+		FROM     dual
+	</select>
+	
+	<!--
+		기록물건 등록
+	-->
+	<!--SELECT 기록물인수_기록물건 등록시 중복되는 기록물건이 있는지 체크-->
+	<select id="findTakeDocDubRecordCheck" parameterClass="rms.take.undTake.domain.TkRecord" resultMap="findTakeDub-result">
+		SELECT  a.take_org_cd, a.take_yyyy
+		FROM    TB_TKFOLDER a, TB_TKRECORD b
+		WHERE   a.record_center_id 	= b.record_center_id
+		AND     a.folder_take_seq 	= b.folder_take_seq
+		AND     b.creat_sys_cd 		= '02'
+		AND     b.org_cd 			= #orgCd:VARCHAR#
+		AND     b.creat_yyyy 		= #creatYyyy:VARCHAR#
+		AND     b.creat_reg_no 		= #creatRegNo:VARCHAR#
+		AND     b.dtch_reg_no 		= #dtchRegNo:VARCHAR#
+		AND		(A.rjct_flag 		= '0' OR A.rjct_flag is null)
+	</select>
+
+
+	<!--SELECT 기록물인수_기록물건 등록 최대값-->
+	<select id="findMaxRecordTakeSeq" parameterClass="rms.take.undTake.domain.TkRecord" resultClass="string">
+		SELECT  TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkrecord_sq01.nextval), 15, '0') 
+		FROM     dual
+	</select>
+
+
+	<!--SELECT 기록물인수_기록물건생산내역 행위자순번  최대값-->
+<!-- 	<select id="findMaxAgentSno" parameterClass="rms.take.undTake.domain.TkRecordCreat" resultClass="int">
+		SELECT   NVL(MAX(agent_sno),0)+1 agentSno
+		FROM      TB_TKRECORDCREAT
+		WHERE		record_center_id = #recordCenterId:VARCHAR#
+		AND			record_take_seq = #recordTakeSeq:VARCHAR#
+	</select>
+-->
+
+	<!--
+		첨부파일목록 등록
+	-->
+	<!--SELECT 기록물인수_첨부파일 기록물건 인수 일련번호-->
+<!-- 	<select id="findAttachRecordTakeSeq" parameterClass="rms.take.undTake.domain.TkAttachFile" resultClass="string">
+		SELECT  record_take_seq
+		FROM     TB_TKRECORD
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND        creat_yyyy = #creatYyyy:VARCHAR#
+		AND        creat_reg_no = #creatRegNo:VARCHAR#
+		AND        dtch_reg_no = '00'
+	</select>
+	-->
+	
+	<!--SELECT 기록물인수_첨부파일  등록일련번호 등록 최대값-->
+	<!-- <select id="findMaxAttachRegSeq" parameterClass="rms.take.undTake.domain.TkAttachFile" resultClass="int">
+		SELECT  NVL(MAX(reg_seq), 0)+1 regSeq
+		FROM     TB_TKATTACHFILE
+		WHERE    record_center_id = #recordCenterId:VARCHAR#
+		AND	       record_take_seq = #recordTakeSeq:VARCHAR#
+	</select>
+	-->
+	
+	
+	<!--SELECT 기록물인수_첨부파일 문서유형별순번 최대값-->
+	<select id="findMaxDocTypeSno" parameterClass="rms.take.undTake.domain.TkAttachFile" resultClass="int">
+		SELECT  NVL(MAX(doc_type_sno), 0)+1 doc_type_sno
+		FROM    TB_TKATTACHFILE
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND	    record_take_seq = #recordTakeSeq:VARCHAR#
+		AND	    doc_type_cd = #docTypeCd:VARCHAR#
+	</select>
+	
+	
+	<!-- 
+		기록물철변경이력 
+	 -->
+	<!--SELECT 기록물인수_기록물철 변경이력 등록시 기록물철접수일련번호 구하기-->
+<!-- <select id="findFolderChngHistRecvSeq" parameterClass="rms.take.undTake.domain.TkFolderChngHist" resultClass="string">
+		SELECT  folder_take_seq
+		FROM     TB_TKFOLDER
+		WHERE  org_cd = #orgCd:VARCHAR#
+		AND       clss_id = #clssId:VARCHAR#
+		AND       creat_yyyy = #creatYyyy:VARCHAR#
+		AND       folder_reg_seq = #folderRegSeq:VARCHAR#
+		AND       ho_no = #hoNo:VARCHAR#
+		AND       record_center_id = #recordCenterId:VARCHAR#
+	</select>
+-->
+	
+	
+	<!--SELECT 기록물인수_기록물철 변경이력 등록시 변경이력번호 최대값-->
+	<!-- <select id="findMaxFolderChngHistSeq" parameterClass="rms.take.undTake.domain.TkFolderChngHist" resultClass="int">
+		SELECT NVL(MAX(chng_hist_no), 0)+1 chngHistNo 
+		FROM    TB_TKFOLDERCHNGHIST
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND       folder_take_seq = #folderTakeSeq:VARCHAR#
+	</select>
+-->
+
+
+	<!-- 
+		기록물건변경이력 
+	 -->
+	<!--SELECT 기록물인수_기록물건 변경이력 등록시 기록물건인수일련번호 구하기-->
+<!-- <select id="findRecordChngHistTakeSeq" parameterClass="rms.take.undTake.domain.TkRecordChngHist" resultClass="string">
+		SELECT record_take_seq
+		FROM    TB_TKRECORD
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND       org_cd = #orgCd:VARCHAR#
+		AND       creat_reg_no = #creatRegNo:VARCHAR#
+		AND       creat_yyyy = #creatYyyy:VARCHAR#
+		AND       dtch_reg_no = #dtchRegNo:VARCHAR#
+	</select>	
+-->
+
+
+	<!--SELECT 기록물인수_기록물건 변경이력 등록시 변경이력번호 최대값-->
+<!-- 	<select id="findMaxRecordChngHistSeq" parameterClass="rms.take.undTake.domain.TkRecordChngHist" resultClass="int">
+		SELECT NVL(MAX(chng_hist_no), 0)+1 chngHistNo 
+		FROM    TB_TKRECORDCHNGHIST
+		WHERE  record_center_id = #recordCenterId:VARCHAR#
+		AND       record_take_seq = #recordTakeSeq:VARCHAR#
+	</select>
+	-->
+
+	<!--
+		전자파일접수 
+	 -->
+	<!--SELECT 기록물인수_전자파일접수시 이미처리되었는지 전자파일접수여부 확인-->
+	<select id="findTakeEfileCheck" parameterClass="rms.take.undTake.domain.TkAttachFile" resultClass="int">
+		SELECT COUNT(1)
+		FROM   TB_TKATTACHFILE A
+		     , TB_TKRECORD B
+		WHERE  A.record_center_id   = #recordCenterId:VARCHAR#
+		AND    A.creat_reg_no 		= #creatRegNo:VARCHAR#
+		AND    A.creat_yyyy 		= #creatYyyy:VARCHAR#
+		AND    A.attach_file_seq 	= #attachFileSeq:VARCHAR#
+		AND	   A.doc_type_cd 		= #docTypeCd:VARCHAR#
+		AND    A.record_center_id 	= B.record_center_id
+		AND    A.record_take_seq 	= B.record_take_seq
+		AND    B.creat_sys_cd = '02'
+		AND    (SELECT Z.take_sno FROM tb_tkfolder Z WHERE Z.record_center_id = B.record_center_id AND Z.folder_take_seq = B.folder_take_seq) = #takeSno:NUMBER#
+	</select>
+
+	
+	<!--SELECT 기록물인수_전자파일접수시 첨부파일정보  확인-->
+	<select id="findTakeAttachFileCheck" parameterClass="rms.take.undTake.domain.TkAttachFile" resultClass="int">
+		SELECT COUNT(1)
+		FROM   TB_TKATTACHFILE A
+		     , TB_TKRECORD B
+		WHERE  A.record_center_id 	= #recordCenterId:VARCHAR#
+		AND    A.creat_reg_no 		= #creatRegNo:VARCHAR#
+		AND    A.creat_yyyy 		= #creatYyyy:VARCHAR#
+		AND    A.attach_file_seq 	= #attachFileSeq:VARCHAR#
+		AND	   A.doc_type_cd 		= #docTypeCd:VARCHAR#
+		AND    A.record_center_id 	= B.record_center_id
+		AND    A.record_take_seq 	= B.record_take_seq
+		AND    B.creat_sys_cd 		= '02'
+		AND    (SELECT Z.take_sno FROM tb_tkfolder Z WHERE Z.record_center_id = B.record_center_id AND Z.folder_take_seq = B.folder_take_seq) = #takeSno:NUMBER#
+	</select>
+	
+
+	<!--SELECT 기록물인수_전자파일접수시 건정보  확인-->
+	<select id="findTakeDocFileCheck" parameterClass="rms.take.undTake.domain.TkAttachFile" resultClass="int">
+		SELECT COUNT(1)
+		FROM   TB_TKRECORD B
+		WHERE  B.record_center_id 	= #recordCenterId:VARCHAR#
+		AND    B.creat_sys_cd 		= '02'
+		AND    B.creat_reg_no 		= #creatRegNo:VARCHAR#
+		AND    B.creat_yyyy 		= #creatYyyy:VARCHAR#
+		AND    (SELECT Z.take_sno FROM tb_tkfolder Z WHERE Z.record_center_id = B.record_center_id AND Z.folder_take_seq = B.folder_take_seq) = #takeSno:NUMBER#
+	</select>
+	
+	
+	
+	<!--SELECT 전자파일 데이터 포맷 코드 구하기-->
+	<select id="findTakeDataFormatCheckList" parameterClass="rms.take.undTake.domain.TkAttachFile" resultMap="findTakeDataFormatCheckList-result">
+		SELECT	com_cd, com_cd_nm
+		FROM 	TB_ZZCOMCD
+		WHERE 	com_type_cd = 'RD08'
+	</select>
+
+
+	<!--
+		END 파일접수 
+	 -->
+	<!--SELECT 기록물인수_END파일접수시 철정보의 전자파일갯수와 실제접수된 전자파일갯수 체크-->
+	<select id="findTakeEfileCntCheckList" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findTakeEfileCntCheck-result">
+		SELECT folder_take_seq, MAX(folder_efile_cnt) AS folder_efile_cnt, MAX(attach_efile_cnt) AS attach_efile_cnt, MAX(folder_clss_no) as folder_clss_no, MAX(title) as title, MAX(line_no) as line_no
+		FROM 
+					(
+					SELECT folder_take_seq, TO_NUMBER(efile_cnt) AS folder_efile_cnt, 0 AS attach_efile_cnt
+						   ,org_cd||'-'||clss_id||'-'||creat_yyyy||'-'||folder_reg_seq||'-'||ho_no folder_clss_no
+       					   ,title, line_no
+					FROM 	TB_TKFOLDER
+					WHERE record_center_id = #recordCenterId:VARCHAR#
+					AND 		creat_sys_cd = #creatSysCd:VARCHAR#
+					AND 		take_org_cd = #takeOrgCd:VARCHAR#
+					AND 		take_yyyy = #takeYyyy:VARCHAR#
+					AND 		take_sno = #takeSno:VARCHAR#
+					AND 		TO_NUMBER(efile_cnt) > 0
+					UNION ALL
+					SELECT A.folder_take_seq, 0 AS folder_efile_cnt, SUM(DECODE(c.file_nm,'',0,NULL,0,1)) AS attach_efile_cnt
+					       ,MAX(A.org_cd)||'-'||MAX(A.clss_id)||'-'||MAX(A.creat_yyyy)||'-'||MAX(A.folder_reg_seq)||'-'||MAX(A.ho_no)
+        			 	   ,MAX(A.title), MAX(A.line_no)
+					FROM 	TB_TKFOLDER a, TB_TKRECORD b, TB_TKATTACHFILE c
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					AND 		A.creat_sys_cd = #creatSysCd:VARCHAR#
+					AND 		A.take_org_cd = #takeOrgCd:VARCHAR#
+					AND 		A.take_yyyy = #takeYyyy:VARCHAR#
+					AND 		A.take_sno = #takeSno:VARCHAR#
+					AND 		A.record_center_id = b.record_center_id
+					AND 		A.folder_take_seq = b.folder_take_seq
+					AND 		b.record_center_id = c.record_center_id
+					AND 		b.record_take_seq = c.record_take_seq
+					GROUP BY A.record_center_id, A.folder_take_seq
+					)
+		GROUP BY folder_take_seq
+		ORDER BY folder_take_seq
+	</select>
+	
+	<!--SELECT 기록물인수_END파일접수시 EFILE로 접수되지 않은 전자파일 체크-->
+	<select id="findTakeEfileRecvCheckList" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findTakeEfileRecvCheck-result">
+		SELECT   B.record_center_id
+			   , B.record_take_seq
+			   , MAX(A.org_cd)||'-'||MAX(A.clss_id)||'-'||MAX(A.creat_yyyy)||'-'||MAX(A.folder_reg_seq)||'-'||MAX(A.ho_no) folder_clss_no
+		       , MAX(B.creat_yyyy)||'-'||MAX(B.org_cd)||'-'||MAX(substr(B.creat_reg_no, 8, 13))||'-'||MAX(B.dtch_reg_no) record_reg_no
+		       , MAX(A.title) folder_title
+     		   , MAX(B.title) title
+     		   , MAX(B.line_no) line_no
+		FROM  TB_TKFOLDER A, TB_TKRECORD B, TB_TKATTACHFILE C
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.creat_sys_cd = #creatSysCd:VARCHAR#
+		AND   A.take_org_cd = #takeOrgCd:VARCHAR#
+		AND   A.take_yyyy = #takeYyyy:VARCHAR#
+		AND   A.take_sno = #takeSno:VARCHAR#
+		AND   A.record_center_id = B.record_center_id
+		AND   A.folder_take_seq = B.folder_take_seq
+		AND   B.record_center_id = C.record_center_id
+		AND   B.record_take_seq = C.record_take_seq
+		AND   C.file_nm IS NULL
+		GROUP BY B.record_center_id, B.record_take_seq
+		ORDER BY B.record_center_id, B.record_take_seq
+	</select>
+	
+	<!--SELECT 접수중인 기록물인수순번 select-->
+	<select id="findTakeIngTakeSno" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="int">
+		SELECT	take_sno
+		FROM 	TB_TKORGTAKEPLAN
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   	take_yyyy = #takeYyyy:VARCHAR#
+		AND 	take_org_cd = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+		AND		take_state_div_cd = '03'
+	</select>
+
+
+	<!--SELECT 기록물인수_기록물철목록의 건수와 실제 건수 비교 select-->
+	<select id="findTakeCntCheck" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findUndTakeCntCheck-result">	
+		SELECT	record_center_id, folder_take_seq,
+				org_cd, clss_id, creat_yyyy,
+	   			folder_reg_seq, ho_no, title,
+			   	TO_NUMBER(folder_list_cnt) AS folder_list_cnt, 
+			   	record_real_cnt, line_no
+		FROM 
+				(
+					SELECT	a.record_center_id, a.folder_take_seq, 
+							MAX(a.org_cd) AS org_cd, MAX(a.clss_id) AS clss_id, 
+		  		 			MAX(a.creat_yyyy) AS creat_yyyy, MAX(a.folder_reg_seq) AS folder_reg_seq, 
+		  					MAX(a.ho_no) AS ho_no, MAX(a.title) AS title,
+				   			MAX(a.record_reg_cnt) AS folder_list_cnt,
+				   			COUNT(b.record_take_seq) AS record_real_cnt,
+				   			MAX(a.line_no) as line_no
+					FROM 	TB_TKFOLDER a, TB_TKRECORD b
+					WHERE  	a.record_center_id = #recordCenterId:VARCHAR#
+					AND 	a.take_yyyy = #takeYyyy:VARCHAR#
+					AND 	a.take_org_cd = #takeOrgCd:VARCHAR#
+					AND		a.creat_sys_cd = '02'
+					AND 	a.take_sno = #takeSno:NUMBER#
+					AND		a.record_center_id = b.record_center_id(+)
+					AND		a.folder_take_seq = b.folder_take_seq(+)
+					GROUP BY a.record_center_id, a.folder_take_seq
+					ORDER BY a.record_center_id, a.folder_take_seq
+				)
+	</select>
+
+
+
+	<!--SELECT 기록물인수_END 접수시 전자기록물여부 select-->
+	<select id="findTakeEfileInfo" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findTakeEfileInfo-result">
+		SELECT	a.record_center_id,
+						a.folder_take_seq,
+						NVL(SUM(DECODE(b.erecord_flag,'1',1,0)),0) AS efile,
+						NVL(SUM(DECODE(b.erecord_flag,'2',1,0)),0) AS not_efile
+		FROM 		TB_TKFOLDER a, TB_TKRECORD b
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+		AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+		AND   		a.creat_sys_cd = '02' 
+		AND   		a.take_sno = #takeSno:VARCHAR#
+		AND   		a.record_center_id = b.record_center_id
+		AND   		a.folder_take_seq = b.folder_take_seq
+		GROUP BY a.record_center_id, a.folder_take_seq
+		ORDER BY a.record_center_id, a.folder_take_seq
+	</select>	
+
+
+	<!--SELECT 기록물인수_END 접수시 기록물건의(등록건수_파일수,쪽수,용량) select-->
+	<select id="findTakeDocInfo" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findTakeDocInfo-result">
+		SELECT	a.record_center_id,
+						a.folder_take_seq,
+						b.record_take_seq,
+						NVL(COUNT(c.record_take_seq),0) AS attach_cnt,
+						NVL(SUM(TO_NUMBER(c.attach_file_page_cnt)),'0') AS record_page_cnt,
+						NVL(SUM(NVL(c.file_size,0)),0) AS record_size
+		FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKATTACHFILE c
+		WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+		AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+		AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+		AND   		a.creat_sys_cd = '02' 
+		AND   		a.take_sno = #takeSno:VARCHAR#
+		AND   		a.record_center_id = b.record_center_id
+		AND   		a.folder_take_seq = b.folder_take_seq
+		AND   		b.record_center_id = c.record_center_id
+		AND   		b.record_take_seq = c.record_take_seq
+		GROUP BY a.record_center_id, a.folder_take_seq, b.record_take_seq
+		ORDER BY a.record_center_id, a.folder_take_seq, b.record_take_seq
+	</select>	
+
+
+	<!--CREATE 기록물인수보고접수 END 접수시 철별로 전자기록물여부 update-->
+ 	<update id="updateTakeEfileInfo" parameterClass="rms.take.undTake.domain.TkFolder">
+	 	UPDATE	TB_TKFOLDER
+		SET 	erecord_Flag = #erecordFlag:VARCHAR#
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+
+
+	<!--CREATE 기록물인수보고접수 END 접수시 건별로 등록건수_파일수,쪽수,용량 update-->
+ 	<update id="updateTakeDocInfo" parameterClass="rms.take.undTake.domain.TkRecord">
+	 	UPDATE	TB_TKRECORD
+		SET 	attach_cnt = #attachCnt#,
+				record_page_cnt = LPAD(#recordPageCnt#,6,'0'),
+				record_size = #recordSize#
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_take_seq = #recordTakeSeq:VARCHAR#
+	</update>
+
+
+	<!--UPDATE 기록물인수보고접수 END 접수후  철용량 update-->
+ 	<update id="updateTakeFolderInfo" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+	 	UPDATE	TB_TKFOLDER A
+		SET 	A.folder_size = (SELECT NVL(SUM(NVL(B.record_size,0)),0) FROM TB_TKRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_take_seq=A.folder_take_seq )
+ 		WHERE  	A.record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    A.take_yyyy = #takeYyyy:VARCHAR#
+ 		AND		A.take_org_cd = #takeOrgCd:VARCHAR#
+ 		AND		A.creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     A.take_sno = #takeSno:NUMBER#
+	</update>
+
+	
+	<!--CREATE 기록물인수보고접수 철목록에 기록물건수량 오류 update-->
+ 	<update id="updateFolderRecordError" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+	 	UPDATE	TB_TKFOLDER
+		SET 	exam_cont = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '기록물철정보의 기록물건수량오류(목록:'||#folderListCnt:VARCHAR#||'/실제:'|| #recordRealCnt:VARCHAR# ||')',
+				error_flag = 'Y'
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+
+	
+	<!--CREATE 기록물인수보고접수 철목록에 전자파일갯수 오류 update-->
+ 	<update id="updateFolderEfileError" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+	 	UPDATE	TB_TKFOLDER
+		SET 	exam_cont = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '기록물철정보의 전자파일갯수오류(목록:'||#folderEfileCnt:VARCHAR#||'/실제:'|| #attachEfileCnt:VARCHAR# ||')',
+				error_flag = 'Y'
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		folder_take_seq = #folderTakeSeq:VARCHAR#
+	</update>
+
+	
+	<!--CREATE 기록물인수보고접수 철목록에 전자파일 접수파일 누락 오류 update-->
+ 	<update id="updateFolderEfileRecvError" parameterClass="rms.take.undTake.domain.TkRecord">
+	 	UPDATE	TB_TKFOLDER A
+		SET 	A.exam_cont = DECODE( ( SELECT COUNT(1)
+								FROM  TB_TKFOLDER B
+								WHERE B.record_center_id = A.record_center_id
+								AND   B.folder_take_seq = A.folder_take_seq
+								AND   B.exam_cont LIKE '%기록물건오류%')
+								,0,(DECODE(A.exam_cont,'',A.exam_cont,null,'',A.exam_cont||', ') || '기록물건오류')
+								, A.exam_cont)
+				, A.error_flag = 'Y'
+		WHERE  	( A.record_center_id, A.folder_take_seq )
+		        = ( SELECT record_center_id, folder_take_seq
+		            FROM  TB_TKRECORD
+		            WHERE record_center_id = #recordCenterId:VARCHAR#
+		            AND   record_take_seq = #recordTakeSeq:VARCHAR# )
+	</update>
+	
+	
+	<!--CREATE 기록물인수보고접수 건목록에 전자파일 접수파일 누락 오류 update-->
+ 	<update id="updateRecordEfileRecvError" parameterClass="rms.take.undTake.domain.TkRecord">
+	 	UPDATE	TB_TKRECORD
+		SET 	exam_cont = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '전자파일누락오류',
+				error_flag = 'Y'
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_take_seq = #recordTakeSeq:VARCHAR#
+	</update>
+
+
+	<!--CREATE 기록물인수보고접수 END 접수후 테이블에 "접수완료" 접수내역 update-->
+ 	<update id="updateOrgTakePlanEnd" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+ 		UPDATE	TB_TKORGTAKEPLAN K
+ 		SET     K.take_state_div_cd = #takeStateDivCd:VARCHAR#,
+ 				K.rjct_rsn = '', 
+ 				K.rjct_ymd = '', 
+ 				K.infrm_file_nm = '',
+ 				K.recv_fin_state_cd = '3',
+ 				K.parent_take_sno = (SELECT MIN(take_sno) 
+			 					       FROM tb_tkfolder E
+			 						  <!--cubrid WHERE (E.record_center_id, E.creat_sys_cd, E.org_cd, E.clss_id, E.creat_yyyy, E.folder_reg_seq, E.ho_no) 
+			 							 IN (SELECT record_center_id, creat_sys_cd, org_cd, clss_id, creat_yyyy, folder_reg_seq, ho_no -->
+                                                                          WHERE 
+                                                                              EXISTS (SELECT 1
+			 								   FROM tb_tkfolder D
+			 								  WHERE D.record_center_id 	= K.record_center_id 
+			 									AND D.take_yyyy 		= K.take_yyyy 
+			 									AND D.take_org_cd 		= K.take_org_cd 
+			 									AND D.creat_sys_cd 		= K.creat_sys_cd 
+			 									AND D.take_sno 			= K.take_sno
+                                                                                                <!--cubrid-->
+                                                                                                AND record_center_id = E.record_center_id
+                                                                                                AND creat_sys_cd = E.creat_sys_cd
+                                                                                                AND org_cd = E.org_cd
+                                                                                                AND clss_id = E.clss_id
+                                                                                                AND creat_yyyy = E.creat_yyyy
+                                                                                                AND folder_reg_seq = E.folder_reg_seq
+                                                                                                AND ho_no = E.ho_no)),
+ 				K.recv_folder_err_cnt =  (SELECT count(1) FROM tb_tkfolder D
+			                               WHERE D.record_center_id  = K.record_center_id
+			                                 AND D.creat_sys_cd      = K.creat_sys_cd
+			                                 AND D.take_yyyy         = K.take_yyyy
+			                                 AND D.take_org_cd       = K.take_org_cd
+			                                 AND D.take_sno          = K.take_sno
+			                                 AND D.error_flag = 'Y'),
+		        K.recv_record_err_cnt = (SELECT count(1) FROM tb_tkrecord D
+		                                  <!--cubrid WHERE (D.record_center_id, D.folder_take_seq) 
+		                                     IN (
+		                                         SELECT E.record_center_id, E.folder_take_seq -->
+                                                  WHERE 
+                                                     EXISTS (SELECT 1
+		                                           FROM tb_tkfolder E 
+		                                          WHERE E.record_center_id   = K.record_center_id
+		                                            AND E.creat_sys_cd       = K.creat_sys_cd
+		                                       	    AND E.take_yyyy          = K.take_yyyy
+		                                       		AND E.take_org_cd        = K.take_org_cd
+		                                       		AND E.take_sno           = k.take_sno
+                                                            <!--cubrid-->
+                                                            AND E.record_center_id = D.record_center_id
+                                                            AND E.folder_take_seq = D.folder_take_seq
+		                                    	)
+		                                    AND D.error_flag = 'Y')
+ 		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    take_yyyy = #takeYyyy:VARCHAR#
+ 		AND		take_org_cd = #takeOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     take_sno = #takeSno:NUMBER#
+	</update>
+
+	
+	<!--CREATE 기록물인수보고접수 테이블에 "접수중", 접수상태:"접수대기" 접수내역 insert-->
+ 	<insert id="insertOrgTakePlanWait" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+	 	INSERT INTO TB_TKORGTAKEPLAN
+		(
+			record_center_id, 	take_org_cd, 		take_yyyy, 		creat_sys_cd, 		take_state_div_cd,  
+			take_sno,			parent_take_sno, 	record_recv_ymd, 	recv_ymd, 		recv_div_cd,		reg_dtime,
+			recv_fin_state_cd
+		) VALUES (
+			#recordCenterId:VARCHAR#, 	#takeOrgCd:VARCHAR#, 			#takeYyyy:VARCHAR#, 			#creatSysCd:VARCHAR#, 	#takeStateDivCd:VARCHAR#, 
+			<!--cubrid #takeSno:NUMBER#,					#takeSno:NUMBER#,						TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDD'),	#recvDivCd:VARCHAR#,	TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+                        #takeSno:NUMBER#,					#takeSno:NUMBER#,						TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDD'),	#recvDivCd:VARCHAR#,	TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+			'4'
+		)
+	</insert>
+	
+	<!--CREATE 기록물인수보고접수 테이블에 "접수중", 접수상태:"접수대기" 접수내역 update-->
+ 	<update id="updateOrgTakePlanWait" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+ 		UPDATE	TB_TKORGTAKEPLAN
+ 		SET     take_state_div_cd = #takeStateDivCd:VARCHAR#,
+ 				bef_take_state_div_cd = DECODE(take_state_div_cd,'09',bef_take_state_div_cd,take_state_div_cd),
+ 				recv_fin_state_cd = '4'
+ 		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    take_yyyy = #takeYyyy:VARCHAR#
+ 		AND		take_org_cd = #takeOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     take_sno = #takeSno:NUMBER#
+	</update>
+	
+	<!--CREATE 기록물인수보고접수 테이블에 "접수중" 접수내역 insert-->
+ 	<insert id="insertOrgTakePlan" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+	 	INSERT INTO TB_TKORGTAKEPLAN
+		(
+			record_center_id, 	take_org_cd, 		take_yyyy, 		creat_sys_cd, 		take_state_div_cd,  
+			take_sno,			parent_take_sno, 			record_recv_ymd, 	recv_ymd, 		recv_div_cd,		reg_dtime,
+			recv_fin_state_cd
+		) VALUES (
+			#recordCenterId:VARCHAR#, 	#takeOrgCd:VARCHAR#, 			#takeYyyy:VARCHAR#, 			#creatSysCd:VARCHAR#, 	#takeStateDivCd:VARCHAR#, 
+			<!--cubrid #takeSno:NUMBER#,					#takeSno:NUMBER#,						TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDD'),	#recvDivCd:VARCHAR#,	TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+                        #takeSno:NUMBER#,					#takeSno:NUMBER#,						TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDD'),	#recvDivCd:VARCHAR#,	TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+			'1'
+		)
+	</insert>
+
+	<!--CREATE 기록물인수보고접수 테이블에 "접수중" 접수내역 update-->
+ 	<update id="updateOrgTakePlan" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+ 		UPDATE	TB_TKORGTAKEPLAN
+ 		SET     take_state_div_cd = #takeStateDivCd:VARCHAR#,
+ 				recv_fin_state_cd = '1'
+ 		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+ 		AND	    take_yyyy = #takeYyyy:VARCHAR#
+ 		AND		take_org_cd = #takeOrgCd:VARCHAR#
+ 		AND		creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     take_sno = #takeSno:NUMBER#
+	</update>
+
+	
+	<!--CREATE 기록물인수보고접수 테이블에 접수내역 이전접수상태로 되돌리기 (접수실패) update-->
+ 	<update id="updateOrgTakePlanBef" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+ 		UPDATE	TB_TKORGTAKEPLAN
+ 		SET     take_state_div_cd = NVL(bef_take_state_div_cd,'03'),
+ 				bef_take_state_div_cd = '',
+ 				recv_fin_state_cd = '2'
+ 		WHERE  	record_center_id 	= #recordCenterId:VARCHAR#
+ 		AND	    take_yyyy 			= #takeYyyy:VARCHAR#
+ 		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+ 		AND		creat_sys_cd 		= #creatSysCd:VARCHAR#
+ 		AND     take_sno 			= #takeSno:NUMBER#
+	</update>
+
+	<!--CREATE 기록물인수보고접수 테이블에 접수내역 삭제-->
+	<delete id="deleteOrgTakePlan" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		DELETE FROM TB_TKORGTAKEPLAN
+		WHERE   record_center_id = #recordCenterId:VARCHAR#
+		AND	   	take_yyyy = #takeYyyy:VARCHAR#
+ 		AND		take_org_cd = #takeOrgCd:VARCHAR#
+ 		AND	    creat_sys_cd = #creatSysCd:VARCHAR#
+ 		AND     take_state_div_cd = '03'
+ 		AND     recv_fin_state_cd = '2'
+	</delete>
+
+
+	<!--UPDATE 기록물철 수량 update-->
+ 	<update id="updateTakeRecvFolderCnt" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		UPDATE	TB_TKORGTAKEPLAN A
+		SET 	A.recv_folder_cnt 	= #recvFolderCnt:NUMBER#
+		WHERE  	record_center_id 	= #recordCenterId:VARCHAR#
+		AND	    take_yyyy 			= #takeYyyy:VARCHAR#
+		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd 		= #creatSysCd:VARCHAR#
+		AND     take_sno 			= #takeSno:NUMBER#
+	</update>
+	
+	<!--UPDATE 기록물철 오류수량 update-->
+ 	<update id="updateTakeRecvFolderErrorCnt" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		UPDATE	TB_TKORGTAKEPLAN A
+		SET 	A.recv_folder_err_cnt = (NVL(A.recv_folder_err_cnt, 0)+#recvFolderErrCnt:NUMBER#)
+		WHERE  	record_center_id 	= #recordCenterId:VARCHAR#
+		AND	    take_yyyy 			= #takeYyyy:VARCHAR#
+		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd 		= #creatSysCd:VARCHAR#
+		AND     take_sno 			= #takeSno:NUMBER#
+	</update>
+	
+	<!--UPDATE 기록물건 수량 update-->
+ 	<update id="updateTakeRecvRecordCnt" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		UPDATE	TB_TKORGTAKEPLAN A
+		SET 	A.recv_record_cnt 	= #recvRecordCnt:NUMBER#
+		WHERE  	record_center_id 	= #recordCenterId:VARCHAR#
+		AND	    take_yyyy 			= #takeYyyy:VARCHAR#
+		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd 		= #creatSysCd:VARCHAR#
+		AND     take_sno 			= #takeSno:NUMBER#
+	</update>
+	
+	<!--UPDATE 기록물건 수량 update-->
+ 	<update id="updateTakeRecvRecordErrorCnt" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		UPDATE	TB_TKORGTAKEPLAN A
+		SET 	A.recv_record_err_cnt 	= (NVL(A.recv_record_err_cnt, 0)+#recvRecordErrCnt:NUMBER#)
+		WHERE  	record_center_id 	= #recordCenterId:VARCHAR#
+		AND	    take_yyyy 			= #takeYyyy:VARCHAR#
+		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd 		= #creatSysCd:VARCHAR#
+		AND     take_sno 			= #takeSno:NUMBER#
+	</update>
+	
+	<!--UPDATE 기록물첨부 수량 update-->
+ 	<update id="updateTakeRecvAttachCnt" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		UPDATE	TB_TKORGTAKEPLAN A
+		SET 	A.recv_attach_cnt 	= (SELECT COUNT(1) 
+							             FROM TB_TKATTACHFILE Y
+							            <!--cubrid WHERE (RECORD_CENTER_ID, RECORD_TAKE_SEQ) 
+   							               IN (SELECT RECORD_CENTER_ID, RECORD_TAKE_SEQ -->
+                                                                    WHERE 
+                                                                       EXISTS (SELECT 1
+							                     FROM TB_TKRECORD X
+							                    WHERE 
+							                    <!--cubrid update
+							                    (RECORD_CENTER_ID, FOLDER_TAKE_SEQ) 
+ 							                       IN (SELECT RECORD_CENTER_ID, FOLDER_TAKE_SEQ 
+ 							                       -->
+ 							                       EXISTS (SELECT 1
+							                             FROM TB_TKFOLDER 
+							                            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+							                              AND TAKE_YYYY        = #takeYyyy:VARCHAR# 
+							                              AND TAKE_ORG_CD      = #takeOrgCd:VARCHAR#
+							                              AND CREAT_SYS_CD     = '02' 
+							                              AND TAKE_SNO         = #takeSno:NUMBER#
+                                                                                      <!--cubrid-->
+                                                                                      AND RECORD_CENTER_ID = X.RECORD_CENTER_ID
+                                                                                      AND RECORD_TAKE_SEQ = X.RECORD_TAKE_SEQ)
+                                                                                      <!--cubrid-->
+                                                                                      AND RECORD_CENTER_ID = Y.RECORD_CENTER_ID
+                                                                                      AND RECORD_TAKE_SEQ = Y.RECORD_TAKE_SEQ))
+		WHERE  	record_center_id 	= #recordCenterId:VARCHAR#
+		AND	    take_yyyy 			= #takeYyyy:VARCHAR#
+		AND		take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd 		= #creatSysCd:VARCHAR#
+		AND     take_sno 			= #takeSno:NUMBER#
+	</update>
+	
+	
+	<!--UPDATE 기록물인수보고접수 테이블에 등록시 파일오류수량 갱신 -->
+ 	<update id="updateRecvAttachErrorCnt" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		UPDATE	TB_TKORGTAKEPLAN A
+		SET     A.recv_attach_err_cnt = (NVL(A.recv_attach_err_cnt, 0)+#recvAttachErrCnt:NUMBER#)
+		WHERE  	record_center_id = #recordCenterId:VARCHAR#
+		AND	    take_yyyy 		 = #takeYyyy:VARCHAR#
+		AND		take_org_cd 	 = #takeOrgCd:VARCHAR#
+		AND		creat_sys_cd 	 = #creatSysCd:VARCHAR#
+		AND     take_sno 		 = #takeSno:NUMBER#
+	</update>
+	
+	<!--CREATE 기록물인수_기록물철-->
+	<insert id="insertTakeGFile" parameterClass="rms.take.undTake.domain.TkFolder">
+		INSERT INTO TB_TKFOLDER
+		(
+			folder_take_seq,					creat_sys_cd,        		org_cd,                 			clss_id,                    			creat_yyyy,
+			old_folder_creat_org_nm,		folder_reg_seq,      		ho_no,                  			take_yyyy,                  			take_sno, 
+			clss_nm,                           	title,               				folder_type_div_cd,     		folder_detl_type_cd,        		record_reg_cnt, 
+			efile_cnt,                            	new_div_cd,          		chng_flag,              			old_folder_clss_no,         		clss_div_cd, 
+			folder_start_dtime,  				folder_close_dtime,     funsh_end_dtime,            	funsh_rsn, 							presv_term_cd,                 	
+			presv_method_cd,     			presv_area_cd,          	read_range,                 	creat_user_nm,       				creat_dtime,	
+			creat_sys_folder_id,        		error_flag,          			virus_flag,             			exam_rslt_cd,                		rjct_flag,
+			take_fin_flag,							take_type_cd,				record_center_id, 			reg_dtime,							take_org_cd,
+			exam_cont,							group_presv_term_cd,	record_tot_page_cnt,		oper_read_range_cd,		line_no
+		) VALUES (
+			#folderTakeSeq:VARCHAR#,				#creatSysCd:VARCHAR#,       		#orgCd:VARCHAR#,               			#clssId:VARCHAR#,                 			#creatYyyy:VARCHAR#, 
+			#oldFolderCreatOrgNm:VARCHAR#,	#folderRegSeq:VARCHAR#,     		#hoNo:VARCHAR#,                			#takeYyyy:VARCHAR#,               		#takeSno:VARCHAR#, 
+			#clssNm:VARCHAR#,              			#title:VARCHAR#,            				#folderTypeDivCd:VARCHAR#,     		#folderDetlTypeCd:VARCHAR#,       	LPAD(#recordRegCnt:VARCHAR#,6,'0'),
+			LPAD(#efileCnt:VARCHAR#,6,'0'),      #newDivCd:VARCHAR#,         		#chngFlag:VARCHAR#,            			#oldFolderClssNo:VARCHAR#,        	#clssDivCd:VARCHAR#, 
+			#folderStartDtime:VARCHAR#, 			#folderCloseDtime:VARCHAR#,    	#funshEndDtime:VARCHAR#,          	#funshRsn:VARCHAR#, 					#presvTermCd:VARCHAR#,
+			#presvMethodCd:VARCHAR#,    		#presvAreaCd:VARCHAR#,        	#readRange:VARCHAR#,	            	#creatUserNm:VARCHAR#,      			#creatDtime:VARCHAR#, 
+			#creatSysFolderId:VARCHAR#,    		#errorFlag:VARCHAR#,        			#virusFlag:VARCHAR#,          	 		#examRsltCd:VARCHAR#,             	#rjctFlag:VARCHAR#,
+			<!--cubrid #takeFinFlag:VARCHAR#,					#takeTypeCd:VARCHAR#,				#recordCenterId:VARCHAR#, 			TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),  #takeOrgCd:VARCHAR#,-->
+                        #takeFinFlag:VARCHAR#,					#takeTypeCd:VARCHAR#,				#recordCenterId:VARCHAR#, 			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),  #takeOrgCd:VARCHAR#,
+			#examCont:VARCHAR#,					#groupPresvTermCd:VARCHAR#, LPAD(#recordTotPageCnt:VARCHAR#,6,'0'), #operReadRangeCd:VARCHAR#, #lineNo:VARCHAR#
+		)	
+	</insert>
+        
+
+	<!--CREATE 기록물인수_기록물철생산내역에 insert-->
+	<insert id="insertTakeGfileAgent" parameterClass="rms.take.undTake.domain.TkFolderCreat">
+		INSERT INTO TB_TKFOLDERCREAT(
+			record_center_id, 	folder_take_seq, 	agent_sno, 		agent_type_cd, 	agent_nm, 
+			reg_dtime,				agent_id, 				agent_org_cd, agent_org_nm,		agent_pos_rank_nm,
+			opin,							duty_type_cd,		duty_act_dtime
+			
+		) VALUES (
+			#recordCenterId:VARCHAR#, 								#folderTakeSeq:VARCHAR#, 	#agentSno#, 						#agentTypeCd:VARCHAR#,	 	#agentNm:VARCHAR#,
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), 	#agentId:VARCHAR#, 				#agentOrgCd:VARCHAR#, 	#agentOrgNm:VARCHAR#,		#agentPosRankNm:VARCHAR#,-->
+                        TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), 	#agentId:VARCHAR#, 				#agentOrgCd:VARCHAR#, 	#agentOrgNm:VARCHAR#,		#agentPosRankNm:VARCHAR#,
+			#opin:VARCHAR#,													#dutyTypeCd:VARCHAR#,			#dutyActDtime:VARCHAR#
+		)
+	</insert>
+
+
+	<!--CREATE 기록물인수_기록물철인수인계내역에 insert-->
+	<insert id="insertTakeGfileTakovr" parameterClass="rms.take.undTake.domain.TkFolderTakeTakovr">
+		INSERT INTO TB_TKFOLDERTAKETAKOVR 
+		(
+			record_center_id,	 	folder_take_seq, 			sno, 								take_takovr_div_cd, 					take_takovr_org_cd, 
+			reg_dtime, 				take_takovr_clss_id, 	take_takovr_creat_yyyy, 	take_takovr_folder_reg_seq, 	take_takovr_ho_no
+		) VALUES (
+			#recordCenterId:VARCHAR#, 								#folderTakeSeq:VARCHAR#, 		#sno#, 											#takeTakovrDivCd:VARCHAR#, 					#takeTakovrOrgCd:VARCHAR#, 
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), 	#takeTakovrClssId:VARCHAR#, 	#takeTakovrCreatYyyy:VARCHAR#, 	#takeTakovrFolderRegSeq:VARCHAR#, 	#takeTakovrHoNo:VARCHAR#-->
+                        TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), 	#takeTakovrClssId:VARCHAR#, 	#takeTakovrCreatYyyy:VARCHAR#, 	#takeTakovrFolderRegSeq:VARCHAR#, 	#takeTakovrHoNo:VARCHAR#
+		)
+	</insert>
+	
+
+	<!--CREATE 기록물인수_기록물건-->
+	<insert id="insertTakeDoc" parameterClass="rms.take.undTake.domain.TkRecord">
+		INSERT INTO TB_TKRECORD
+		(
+			record_take_seq,	folder_take_seq,            creat_sys_cd,         	org_cd,                     title, 
+			record_reg_div_cd,  record_size,                read_range,            	open_div_cd,                creat_yyyy, 
+			reg_dtime,          creat_reg_dtime,            creat_reg_no,         	dtch_reg_no,                audvis_record_type,
+			record_page_cnt,    aprov_pos_rank_nm,          duty_chrgr_nm,       	enforc_ymd,                 creat_org_reg_no, 
+			erecord_flag,       old_record_creat_org_nm,	old_record_docno, 		old_record_presv_term,		open_limit_part,
+			recver,             sender,                     doc_distr_no,          	folder_clss_no,             spcl_record_type,
+			new_div_cd,         chng_flag,                  rjct_flag,				doc_no,    					creat_sys_record_id, 
+			record_center_id,	open_grade,					audvis_record_sumry,	orign_copy_flag, 			error_flag,
+			take_fin_flag,		exam_rslt_cd,				record_detl_type_cd,	record_sno,					secu_clss_rsn,
+			part_open_rsn,      oper_read_range_cd,			line_no,				exam_cont, 					prod_type_cd
+		) VALUES (
+			#recordTakeSeq:VARCHAR#,
+			(SELECT folder_take_seq FROM TB_TKFOLDER WHERE record_center_id=#recordCenterId:VARCHAR# AND creat_sys_cd='02' AND creat_sys_folder_id=#folderClssNo:VARCHAR# AND take_sno = #takeSno:NUMBER#),
+			#creatSysCd:VARCHAR#,          			#orgCd:VARCHAR#,                    #title:VARCHAR#, 
+			#recordRegDivCd:VARCHAR#,               #recordSize:VARCHAR#,               #readRange:VARCHAR#,           		#openDivCd:VARCHAR#,            #creatYyyy:VARCHAR#, 
+			<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+			#creatRegDtime:VARCHAR#,            #creatRegNo:VARCHAR#,          		#dtchRegNo:VARCHAR#,            #audvisRecordType:VARCHAR#,
+			LPAD( #recordPageCnt:VARCHAR#,6,'0'),   #aprovPosRankNm:VARCHAR#,         	#dutyChrgrNm:VARCHAR#,        		#enforcYmd:VARCHAR#,            #creatOrgRegNo:VARCHAR#, 
+			#erecordFlag:VARCHAR#,                  #oldRecordCreatOrgNm:VARCHAR#,  	#oldRecordDocno:VARCHAR#, 			#oldRecordPresvTerm:VARCHAR#,	#openLimitPart:VARCHAR#, 
+			#recver:VARCHAR#,                       #sender:VARCHAR#,                   #docDistrNo:VARCHAR#,          		#folderClssNo:VARCHAR#,         #spclRecordType:VARCHAR#, 
+			#newDivCd:VARCHAR#,                     #chngFlag:VARCHAR#,                 #rjctFlag:VARCHAR#,                 #docNo:VARCHAR#,                #creatSysRecordId:VARCHAR#, 
+			#recordCenterId:VARCHAR#, 				#openGrade:VARCHAR#,				#audvisRecordSumry:VARCHAR#,		#orignCopyFlag:VARCHAR#,		#errorFlag:VARCHAR#,
+			#takeFinFlag:VARCHAR#, 					#examRsltCd:VARCHAR#,				#recordDetlTypeCd:VARCHAR#,			#recordSno#,					#secuClssRsn:VARCHAR#,
+			#partOpenRsn:VARCHAR#, 					#operReadRangeCd:VARCHAR#,			#lineNo:VARCHAR#,					#examCont:VARCHAR#,				#prodTypeCd:VARCHAR#
+		)
+	</insert>
+
+
+	<!--CREATE 기록물인수_기록물건생산내역등록-->
+	<insert id="insertTakeDocAgent" parameterClass="rms.take.undTake.domain.TkRecordCreat">
+		INSERT INTO TB_TKRECORDCREAT(
+	   		record_center_id, 	record_take_seq, 	agent_sno, 			agent_type_cd, 	agent_nm,
+	   		reg_dtime, 				agent_id, 					agent_org_cd, 		agent_org_nm, 	agent_pos_rank_nm, 
+	   		req_state_val, 			opin,							opin_dtime,			handl_rslt, 	duty_type_cd,
+	   		duty_act_dtime
+		) 
+		(
+			SELECT 	#recordCenterId:VARCHAR#,							#recordTakeSeq:VARCHAR#, 	NVL(MAX(agent_sno),0)+1 agentSno, 	#agentTypeCd:VARCHAR#, 		#agentNm:VARCHAR#,
+					<!--cubrid TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),-->
+					TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),
+ 				#agentId:VARCHAR#, 			#agentOrgCd:VARCHAR#, 				#agentOrgNm:VARCHAR#,		#agentPosRankNm:VARCHAR#, 
+					#reqStateVal:VARCHAR#, 								#opin:VARCHAR#,				#opinDtime:VARCHAR#,				#handlRslt:VARCHAR#, 		#dutyTypeCd:VARCHAR#,
+					#dutyActDtime:VARCHAR#
+			FROM    TB_TKRECORDCREAT
+			WHERE	record_center_id = #recordCenterId:VARCHAR#
+			AND		record_take_seq = #recordTakeSeq:VARCHAR#
+		)
+	</insert>
+	
+	
+	<!--CREATE 기록물인수_특수목록-->
+	<insert id="insertTakeSprecord" parameterClass="rms.take.undTake.domain.TkSpclList">
+		INSERT INTO TB_TKSPCLLIST
+		(
+			record_center_id, 		spcl_list_take_seq,  	folder_take_seq,  		record_take_seq,  	spcl_list_loc,   
+			folder_clss_no, 		record_reg_no,    		seq,                    spcl_list1,         spcl_list2,      
+			spcl_list3, 			reg_dtime
+		)
+		(
+			SELECT 
+				#recordCenterId:VARCHAR#, LPAD((TB_TKSPCLLIST_SQ01.NEXTVAL), 15, '0'),
+				DECODE(#spclListLoc:VARCHAR#, '1' 
+					,(SELECT folder_take_seq 
+					  FROM TB_TKFOLDER 
+					  WHERE record_center_id = #recordCenterId:VARCHAR# 
+					  AND   creat_sys_cd = '02'
+					  AND   creat_sys_folder_id = #folderClssNo:VARCHAR#), NULL),
+				DECODE(#spclListLoc:VARCHAR#, '2' 
+					,(SELECT record_take_seq 
+					  FROM TB_TKRECORD 
+					  WHERE record_center_id = #recordCenterId:VARCHAR#
+					  AND   creat_sys_cd = '02'
+					  AND   creat_yyyy = SUBSTR(#recordRegNo:VARCHAR#,1,4)
+					  AND   creat_reg_no = SUBSTR(#recordRegNo:VARCHAR#,5,13)
+					  AND   dtch_reg_no = SUBSTR(#recordRegNo:VARCHAR#,18,2)), NULL),
+				#spclListLoc:VARCHAR#,
+				#folderClssNo:VARCHAR#, #recordRegNo:VARCHAR#, #seq:VARCHAR#, #spclList1:VARCHAR#, #spclList2:VARCHAR#,
+				<!--cubrid #spclList3:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+				#spclList3:VARCHAR#, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			FROM DUAL
+		)
+	</insert>
+
+
+	<!--CREATE 기록물인수_첨부파일-->
+	<insert id="insertTakePage" parameterClass="rms.take.undTake.domain.TkAttachFile">
+		INSERT INTO TB_TKATTACHFILE
+		(
+			record_center_id,	record_take_seq,		reg_seq,				org_cd,			creat_yyyy,             
+			creat_reg_no, 		attach_file_seq,		attach_file_page_cnt,	doc_type_cd, 	doc_type_sno, 
+			reg_dtime, 			attach_file_type
+		) VALUES (
+			#recordCenterId:VARCHAR#
+			, NVL( #recordTakeSeq:VARCHAR#
+					,( SELECT A.record_take_seq
+					   FROM TB_TKRECORD A, TB_TKFOLDER B
+					   WHERE A.record_center_id = B.record_center_id
+					   AND   A.record_center_id=#recordCenterId:VARCHAR#
+					   ANd 	 A.folder_take_seq = B.folder_take_seq
+					   AND   A.creat_sys_cd='02'
+					   AND   A.creat_yyyy=#creatYyyy:VARCHAR#
+					   AND   A.creat_reg_no=#creatRegNo:VARCHAR#
+					   AND   A.dtch_reg_no='00'
+					   AND   B.take_sno = #takeSno:NUMBER# ) )
+			, (SELECT TO_NUMBER(NVL(MAX(reg_seq), 0)+1)
+			   FROM TB_TKATTACHFILE
+			   WHERE record_center_id = #recordCenterId:VARCHAR#
+			   AND record_take_seq = ( NVL( #recordTakeSeq:VARCHAR#
+					                        ,( SELECT A.record_take_seq
+											   FROM TB_TKRECORD A, TB_TKFOLDER B
+											   WHERE A.record_center_id = B.record_center_id
+											   AND   A.record_center_id=#recordCenterId:VARCHAR#
+											   ANd 	 A.folder_take_seq = B.folder_take_seq
+											   AND   A.creat_sys_cd='02'
+											   AND   A.creat_yyyy=#creatYyyy:VARCHAR#
+											   AND   A.creat_reg_no=#creatRegNo:VARCHAR#
+											   AND   A.dtch_reg_no='00'
+											   AND   B.take_sno = #takeSno:NUMBER# ) ) ) )
+			, #orgCd:VARCHAR#
+			, #creatYyyy:VARCHAR#
+			, #creatRegNo:VARCHAR#
+			, #attachFileSeq:VARCHAR#
+			, LPAD( #attachFilePageCnt:VARCHAR# ,6,'0')
+			, #docTypeCd:VARCHAR#
+			, #docTypeSno#
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, '01'
+		)
+	</insert>
+	
+	
+	<!--CREATE 기록물인수_기록물철 변경이력-->
+	<insert id="insertTakeGfileHist" parameterClass="rms.take.undTake.domain.TkFolderChngHist">
+		INSERT INTO TB_TKFOLDERCHNGHIST
+		(
+			record_center_id, 				folder_take_seq,       	chng_hist_no,      org_cd,       	clss_id,      			
+			creat_yyyy, 					folder_reg_seq,        	ho_no,             title_bef,     	title_aft, 				
+			folder_type_div_cd_bef,  folder_type_div_cd_aft,  	chng_ymd,  			chng_rsn,	chng_user_nm, 	
+			reg_dtime
+		) 
+		(
+			SELECT  B.record_center_id , B.folder_take_seq
+				, (SELECT NVL(MAX(A.chng_hist_no), 0)+1 chng_hist_no
+				   FROM  TB_TKFOLDERCHNGHIST A
+				   WHERE A.record_center_id = B.record_center_id
+				   AND   A.folder_take_seq = B.folder_take_seq) chng_hist_no
+				, #orgCd:VARCHAR#
+				, #clssId:VARCHAR#
+				, #creatYyyy:VARCHAR#
+				, #folderRegSeq:VARCHAR#
+				, #hoNo:VARCHAR#
+				, #titleBef:VARCHAR#
+				, #titleAft:VARCHAR#
+				, #folderTypeDivCdBef:VARCHAR#
+				, #folderTypeDivCdAft:VARCHAR#
+				, #chngYmd:VARCHAR#
+				, #chngRsn:VARCHAR#
+				, #chngUserNm:VARCHAR#
+				<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+				, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			FROM  TB_TKFOLDER B
+			WHERE B.record_center_id = #recordCenterId:VARCHAR#
+			AND   B.creat_sys_cd = '02'
+			AND   B.org_cd = #orgCd:VARCHAR#
+			AND   B.clss_id = #clssId:VARCHAR#
+			AND   B.creat_yyyy = #creatYyyy:VARCHAR#
+			AND   B.folder_reg_seq = #folderRegSeq:VARCHAR#
+			AND   B.ho_no = #hoNo:VARCHAR#
+			AND   B.take_sno = #takeSno:VARCHAR#
+		)
+	</insert>
+	
+	
+	<!--CREATE 기록물인수_기록물건 변경이력-->
+	<insert id="insertTakeDocHist" parameterClass="rms.take.undTake.domain.TkRecordChngHist">
+		INSERT INTO TB_TKRECORDCHNGHIST
+		(
+			record_center_id,		record_take_seq,	chng_hist_no,				org_cd,             			creat_yyyy,
+			creat_reg_no,       	dtch_reg_no,        creat_reg_ymd_bef,  	creat_reg_ymd_aft,  		title_bef,
+			title_aft, 					page_cnt_bef,   	page_cnt_aft, 				aprov_pos_rank_bef, 	aprov_pos_rank_aft,
+			duty_chrgr_bef,  		duty_chrgr_aft,  	enforc_ymd_bef,       	enforc_ymd_aft, 			recver_bef,
+			recver_aft, 				chng_ymd, 			chng_rsn,         			chng_user_nm, 			reg_dtime
+
+		) 
+		(
+			SELECT  B.record_center_id , B.record_take_seq
+				, (SELECT NVL(MAX(A.chng_hist_no), 0)+1 chng_hist_no
+				   FROM  TB_TKRECORDCHNGHIST A
+				   WHERE A.record_center_id = B.record_center_id
+				   AND   A.record_take_seq = B.record_take_seq) chng_hist_no
+				, #orgCd:VARCHAR#,    #creatYyyy:VARCHAR#,
+				#creatRegNo:VARCHAR#,     	#dtchRegNo:VARCHAR#,      	#creatRegYmdBef:VARCHAR#,  	#creatRegYmdAft:VARCHAR#, 		#titleBef:VARCHAR#,
+				#titleAft:VARCHAR#, 					#pageCntBef:VARCHAR#,  		#pageCntAft:VARCHAR#,				#aprovPosRankBef:VARCHAR#, 	#aprovPosRankAft:VARCHAR#,
+				#dutyChrgrBef:VARCHAR#, 		#dutyChrgrAft:VARCHAR#, 		#enforcYmdBef:VARCHAR#,      	#enforcYmdAft:VARCHAR#,  			#recverBef:VARCHAR#,
+				<!--cubrid #recverAft:VARCHAR#,				#chngYmd:VARCHAR#, 			#chngRsn:VARCHAR#,      			#chngUserNm:VARCHAR#, 			TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+                                #recverAft:VARCHAR#,				#chngYmd:VARCHAR#, 			#chngRsn:VARCHAR#,      			#chngUserNm:VARCHAR#, 			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			FROM  TB_TKRECORD B
+			WHERE B.record_center_id = #recordCenterId:VARCHAR#
+			AND   B.creat_yyyy = #creatYyyy:VARCHAR#
+			AND   B.creat_reg_no = #creatRegNo:VARCHAR#
+			AND   B.dtch_reg_no = #dtchRegNo:VARCHAR#
+		)
+	</insert>	
+
+
+	<!--CREATE 기록물인수_전자파일접수시 첨부파일정보 update-->
+	<update id="updateTakePage" parameterClass="rms.take.undTake.domain.TkAttachFile">
+		UPDATE	tb_tkattachfile A
+		SET 	A.file_nm = #fileNm:VARCHAR#,
+		    	A.data_format_cd = #dataFormatCd:VARCHAR#,
+				A.file_size = #fileSize:VARCHAR#,
+				A.attach_file_path = #attachFilePath:VARCHAR#
+		WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+		AND 	A.creat_yyyy = #creatYyyy:VARCHAR#
+		AND 	A.creat_reg_no = #creatRegNo:VARCHAR#
+		AND 	A.attach_file_seq = #attachFileSeq:VARCHAR#
+		AND		A.doc_type_cd = #docTypeCd:VARCHAR#
+		AND     '02' = ( SELECT B.creat_sys_cd 
+	                      FROM  TB_TKRECORD B 
+	                      WHERE B.record_center_id=A.record_center_id
+	                      AND   B.record_take_seq=A.record_take_seq )
+	</update>
+	
+	
+	<!--delete 기록물인수_기록물건변경이력정보TB삭제-->
+	<delete id="deleteTakeDocHistGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKRECORDCHNGHIST AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, record_take_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKRECORDCHNGHIST c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_take_seq = c.record_take_seq
+			AND AAA.record_center_id = C.record_center_id
+			AND AAA.record_take_seq = C.record_take_seq
+			)
+	</delete>	
+	
+
+	<!--delete 기록물인수_기록물건생산내역TB삭제-->
+	<delete id="deleteTakeDocAgentGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKRECORDCREAT AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, record_take_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKRECORDCREAT c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_take_seq = c.record_take_seq
+			AND AAA.record_center_id = C.record_center_id
+			AND AAA.record_take_seq = C.record_take_seq
+			)
+	</delete>
+
+
+	<!--delete 기록물인수_첨부파일정보TB삭제-->
+	<delete id="deleteTakePageGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKATTACHFILE AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, record_take_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKATTACHFILE c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_take_seq = c.record_take_seq
+			AND AAA.record_center_id = C.record_center_id
+			AND AAA.record_take_seq = C.record_take_seq
+			)
+	</delete>
+	
+	
+	<!--delete 기록물인수_특수목록TB 건내역삭제-->
+	<delete id="deleteTakeDocSpecGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKSPCLLIST AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, record_take_seq)
+		IN 
+			(SELECT	c.record_center_id, c.record_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKSPCLLIST c
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		c.spcl_list_loc = '2'
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND   		b.record_center_id = c.record_center_id
+			AND   		b.record_take_seq = c.record_take_seq
+			AND AAA.record_center_id = C.record_center_id
+			AND AAA.record_take_seq = C.record_take_seq
+			)
+	</delete>
+
+
+	<!--delete 기록물인수_기록물건TB 건내역삭제-->
+	<delete id="deleteTakeDocGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKRECORD AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, folder_take_seq) 
+		IN
+			(SELECT	b.record_center_id, b.folder_take_seq
+			-->
+			EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKRECORD b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_take_seq = B.folder_take_seq
+			)
+	</delete>
+	
+	
+	<!--delete 기록물인수_기록물철변경이력정보TB삭제-->
+	<delete id="deleteTakeGfileHistGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKFOLDERCHNGHIST AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, folder_take_seq)
+		IN
+			(SELECT	b.record_center_id, b.folder_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKFOLDERCHNGHIST b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_take_seq = B.folder_take_seq
+			)
+	</delete>
+
+
+	<!--delete 기록물인수_기록물철생산내역TB삭제-->
+	<delete id="deleteTakeGfileAgentGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKFOLDERCREAT AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, folder_take_seq)
+		IN
+			(SELECT	b.record_center_id, b.folder_take_seq
+			-->
+			EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKFOLDERCREAT b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_take_seq = B.folder_take_seq
+			)
+	</delete>
+	
+
+	<!--delete 기록물인수_기록물철인수인계정보TB삭제-->
+	<delete id="deleteTakeGfileTakovrGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKFOLDERTAKETAKOVR AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, folder_take_seq)
+		IN 
+			(SELECT	b.record_center_id, b.folder_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKFOLDERTAKETAKOVR b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_take_seq = B.folder_take_seq
+			)
+	</delete>
+
+
+	<!--delete 기록물인수_특수목록TB 철내역삭제-->
+	<delete id="deleteTakeGfileSpecGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKSPCLLIST AAA
+		WHERE 
+		<!--cubrid delete
+		(record_center_id, folder_take_seq)
+		IN 
+			(SELECT	b.record_center_id, b.folder_take_seq
+		-->
+		EXISTS (SELECT 1
+			FROM 		TB_TKFOLDER a, TB_TKSPCLLIST b
+			WHERE 	a.record_center_id = #recordCenterId:VARCHAR#
+			AND   		a.take_yyyy = #takeYyyy:VARCHAR#
+			AND   		a.take_org_cd = #takeOrgCd:VARCHAR#
+			AND   		a.creat_sys_cd = '02' 
+			AND   		a.take_sno = #takeSno:NUMBER#
+		    <isNotEmpty prepend="AND" property="rjctFlag">
+				  a.rjct_flag = '1'
+			</isNotEmpty>
+			AND   		b.spcl_list_loc = '1'
+			AND   		a.record_center_id = b.record_center_id
+			AND   		a.folder_take_seq = b.folder_take_seq
+			AND AAA.record_center_id = B.record_center_id
+			AND AAA.folder_take_seq = B.folder_take_seq
+			)
+	</delete>
+
+
+	<!--delete 기록물인수_기록물철TB삭제-->
+	<delete id="deleteTakeGfileGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKFOLDER
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND   	take_yyyy = #takeYyyy:VARCHAR#		
+		AND   	take_org_cd = #takeOrgCd:VARCHAR#
+		AND   	creat_sys_cd = '02' 
+		AND   	take_sno = #takeSno:NUMBER#
+	    <isNotEmpty prepend="AND" property="rjctFlag">
+			  rjct_flag = '1'
+		</isNotEmpty>
+	</delete>
+
+	<!--delete 기록물인수_기록물철TB삭제-->
+	<delete id="deleteTakeErrorGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKORGRECVERROR
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND   	take_yyyy = #takeYyyy:VARCHAR#		
+		AND   	take_org_cd = #takeOrgCd:VARCHAR#
+		AND   	creat_sys_cd = '02' 
+		AND   	take_sno = #takeSno:NUMBER#
+	</delete>
+
+	<!--delete 기록물인수_처리과별인수계획TB삭제-->
+	<delete id="deleteTakeOrgPlanGr" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		DELETE FROM TB_TKORGTAKEPLAN
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND 	take_yyyy = #takeYyyy:VARCHAR#
+		AND 	take_org_cd = #takeOrgCd:VARCHAR#
+		AND 	creat_sys_cd = '02'
+		AND 	take_sno = #takeSno:NUMBER#
+	</delete>
+	
+	
+	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 반려통보처리(반려통보-반려파일생성정보) (SELECT)
+	 -->
+	<select id="findTakeRecvRjctInfrmInfoList" parameterClass="rms.take.undTake.domain.UndTakeCheckRjctInfrm" resultMap="takeInfrmReturnInfo-result">
+		SELECT	folder_take_seq, org_cd, creat_yyyy, clss_id, 
+						folder_reg_seq, ho_no, rjct_cont
+		FROM  		TB_TKFOLDER
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		take_yyyy = #takeYyyy:VARCHAR#
+		AND   		take_org_cd = #takeOrgCd:VARCHAR#
+		AND   		creat_sys_cd = '02'
+		AND   		take_sno = #takeSno:VARCHAR#
+		AND   		rjct_flag = '1'
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 반려통보처리(반려통보-반려파일생성정보) (SELECT)
+	 -->
+	<select id="findTakeRecvInfrmInfo" parameterClass="rms.take.undTake.domain.UndTakeCheckRjctInfrm" resultMap="takeInfrmInfo-result">
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,
+						b.link_class AS class_name, link_lang AS gr_language
+		FROM  		TB_STORG A, 
+						(SELECT 	* 
+		       			FROM 		TB_STLINKTRGT 
+		       			WHERE 	creat_sys_cd = '02') B 
+		WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+		AND   		A.org_cd = #takeOrgCd:VARCHAR#
+		AND   		A.link_trgt_id = B.link_trgt_id(+)
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 인수통보처리(인수통보-인수파일생성정보) (SELECT)
+	 -->
+	<select id="findTakeRecvTakeInfrmInfo" parameterClass="rms.take.undTake.domain.UndTakeCheckTakeInfrm" resultMap="takeInfrmInfo-result">
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,
+						b.link_class AS class_name, link_lang AS gr_language
+		FROM  		TB_STORG A, 
+						(SELECT 	* 
+		       			FROM 		TB_STLINKTRGT 
+		       			WHERE 	creat_sys_cd = '02') B 
+		WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+		AND   		A.org_cd = #takeOrgCd:VARCHAR#
+		AND   		A.link_trgt_id = B.link_trgt_id(+)
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 반려통보처리 파일생성 (UPDATE)
+	 -->	
+  	<update id="updateTakeRecvRjctInfrm" parameterClass="rms.take.undTake.domain.UndTakeCheckRjctInfrm">
+		UPDATE	TB_TKORGTAKEPLAN
+		SET   		rjct_rsn = #rjctRsn:VARCHAR#,
+						infrm_file_nm = 	#rjctInfrmXml:VARCHAR#
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND 			take_yyyy = #takeYyyy:VARCHAR#
+		AND 			take_org_cd = #takeOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 		take_sno = #takeSno:NUMBER#
+	</update>
+	
+	
+	<!--SELECT 기록물인수>연계인수>연계인수>처리과별 반려통보처리시 반려통보파일 정보 select-->
+	<select id="findTakeRjctSendInfo" parameterClass="rms.take.undTake.domain.UndTakeCheckRjctInfrm" resultClass="string">
+		SELECT  infrm_file_nm
+		FROM     TB_TKORGTAKEPLAN
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		take_yyyy = #takeYyyy:VARCHAR#
+		AND   		take_org_cd = #takeOrgCd:VARCHAR#
+		AND   		creat_sys_cd = '02'
+		AND   		take_sno = #takeSno:VARCHAR#
+	</select>
+	
+	
+	<!--SELECT 기록물인수>연계인수>연계인수>처리과별 인수통보처리시 인수통보파일 정보 select-->
+	<select id="findTakeTakeSendInfo" parameterClass="rms.take.undTake.domain.UndTakeCheckTakeInfrm" resultClass="string">
+		SELECT  infrm_file_nm
+		FROM     TB_TKORGTAKEPLAN
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND   		take_yyyy = #takeYyyy:VARCHAR#
+		AND   		take_org_cd = #takeOrgCd:VARCHAR#
+		AND   		creat_sys_cd = '02'
+		AND   		take_sno = #takeSno:VARCHAR#
+	</select>
+	
+	
+	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 반려통보전송처리(UPDATE)
+	 -->	
+  	<update id="updateTakeRecvRjctInfrmSend" parameterClass="rms.take.undTake.domain.UndTakeCheckRjctInfrm">
+		UPDATE TB_TKORGTAKEPLAN
+		SET    rjct_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , take_state_div_cd = '07'
+		     , infrm_div_cd = #infrmDivCd:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   take_yyyy = #takeYyyy:VARCHAR#
+		AND   take_org_cd = #takeOrgCd:VARCHAR#
+		AND   creat_sys_cd = '02'
+		AND   take_sno = #takeSno:NUMBER#
+	</update>
+	
+	
+	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 인수통보처리 파일생성(UPDATE)
+	 -->	
+  	<update id="updateTakeRecvTakeInfrm" parameterClass="rms.take.undTake.domain.UndTakeCheckTakeInfrm">
+		UPDATE	TB_TKORGTAKEPLAN
+		SET   		take_user_nm = #takeUserNm:VARCHAR#,
+						takovr_user_nm = #takovrUserNm:VARCHAR#,
+						infrm_file_nm = 	#takeInfrmXml:VARCHAR#
+		WHERE	 	record_center_id = #recordCenterId:VARCHAR#
+		AND 			take_yyyy = #takeYyyy:VARCHAR#
+		AND 			take_org_cd = #takeOrgCd:VARCHAR#
+		AND 			creat_sys_cd = '02'
+		AND 			take_sno = #takeSno:NUMBER#
+	</update>
+ 
+ 
+ 	<!-- 
+		기록물인수>연계인수>연계인수>처리과별 인수통보전송처리 (UPDATE)
+	 -->	
+  	<update id="updateTakeRecvTakeInfrmSend" parameterClass="rms.take.undTake.domain.UndTakeCheckTakeInfrm">
+		UPDATE TB_TKORGTAKEPLAN
+		SET    take_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , take_state_div_cd = '08'
+		     , infrm_div_cd = #infrmDivCd:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   take_yyyy = #takeYyyy:VARCHAR#
+		AND   take_org_cd = #takeOrgCd:VARCHAR#
+		AND   creat_sys_cd = '02'
+		AND   take_sno = #takeSno:NUMBER#
+	</update>
+	
+ 
+ 	<!-- 
+		UPDATE 처리과별 해당 기록물철에 검사결과(정상) 처리 
+	 -->
+	<update id="updateVaccineFolderCommit" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		UPDATE TB_TKFOLDER
+		SET   virus_flag = '0'
+     		<!--cubrid , virus_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+     		, virus_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   TAKE_YYYY = #takeYyyy:VARCHAR#
+		AND   TAKE_ORG_CD = #takeOrgCd:VARCHAR#
+		AND   CREAT_SYS_CD = '02'
+		AND   TAKE_SNO = #takeSno:NUMBER#
+	</update>
+	<!-- 
+		UPDATE 처리과별 검사완료 처리 
+	 -->
+	<update id="updateVaccineOrgTakePlanCommit" parameterClass="rms.take.undTake.domain.GrUndTakeCheck">
+		UPDATE TB_TKORGTAKEPLAN
+		SET   virus_check_flag = '1'
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   TAKE_YYYY = #takeYyyy:VARCHAR#
+		AND   TAKE_ORG_CD = #takeOrgCd:VARCHAR#
+		AND   CREAT_SYS_CD = '02'
+		AND   TAKE_SNO = #takeSno:NUMBER#
+	</update>
+ 
+ 
+ 	<insert id="creatUndTakeRecvErrorDesc" parameterClass="rms.take.undTake.domain.TkOrgRecvError">
+ 		INSERT INTO TB_TKORGRECVERROR(
+		     RECORD_CENTER_ID, 		TAKE_YYYY, 		TAKE_ORG_CD, 		CREAT_SYS_CD, 		TAKE_SNO,
+		     RECV_DTIME, 			TAKE_FILE_NM, 	FILE_DIV_CD, 		LINE_NO, 			FOLDER_CLSS_NO,
+		     FOLDER_TITLE, 			RECORD_REG_NO, 	RECORD_TITLE, 		RECV_ERROR_FLAG, 	RECV_ERROR_RSN, 
+		     FOLDER_TAKE_SEQ,		RECORD_TAKE_SEQ
+		)
+		VALUES (
+			#recordCenterId:VARCHAR#, 		#takeYyyy:VARCHAR#, 		#takeOrgCd:VARCHAR#, 		#creatSysCd:VARCHAR#, 		#takeSno:NUMBER#,
+		    NVL((SELECT Z.reg_dtime FROM TB_TKORGTAKEPLAN Z 
+		      WHERE Z.RECORD_CENTER_ID  = #recordCenterId:VARCHAR# 
+		        AND Z.TAKE_YYYY         = #takeYyyy:VARCHAR#
+		        AND Z.TAKE_ORG_CD       = #takeOrgCd:VARCHAR#
+		        AND Z.CREAT_SYS_CD      = #creatSysCd:VARCHAR#
+		        AND Z.TAKE_SNO          = #takeSno:NUMBER#)
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MI')), -->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MI')), 
+		     #takeFileNm:VARCHAR#, 			#fileDivCd:VARCHAR#, 		#lineNo:VARCHAR#, 			#folderClssNo:VARCHAR#,
+		     #folderTitle:VARCHAR#, 		#recordRegNo:VARCHAR#, 		#recordTitle:VARCHAR#, 		#recvErrorFlag:VARCHAR#, 	SUBSTR(#recvErrorRsn:VARCHAR#, 0 , 1800),
+		     #folderTakeSeq:VARCHAR#,		#recordTakeSeq:VARCHAR#
+		)
+ 	</insert>
+ 	
+ 	<select id="findTakeListFaildCount" parameterClass="rms.take.undTake.domain.TkOrgTakePlan" resultClass="int">
+ 		SELECT 	count(1) 
+ 		FROM 	tb_tkorgrecverror
+ 		WHERE	record_center_id = #recordCenterId:VARCHAR#
+ 		AND 	take_yyyy   	 = #takeYyyy:VARCHAR#
+ 		AND 	take_org_cd 	 = #takeOrgCd:VARCHAR#
+ 		AND 	creat_sys_cd 	 = #creatSysCd:VARCHAR#
+ 		AND 	take_sno		 = #takeSno:VARCHAR#
+ 	</select> 
+
+	<select id="findTakeRecvError" parameterClass="rms.take.undTake.domain.TkOrgRecvError" resultClass="int">
+		SELECT 	COUNT(1)
+		FROM 	tb_tkorgrecverror
+		WHERE 	record_center_id 	= 	#recordCenterId:VARCHAR#
+		AND 	take_yyyy 			= 	#takeYyyy:VARCHAR#
+		AND 	take_org_cd 		= 	#takeOrgCd:VARCHAR#
+		AND 	creat_sys_cd 		= 	#creatSysCd:VARCHAR#
+		AND 	take_sno 			= 	#takeSno:VARCHAR#
+		AND 	file_div_cd 		= 	#fileDivCd:VARCHAR#
+		AND 	line_no 			= 	#lineNo:VARCHAR#
+		<dynamic>
+			<isEqual prepend="AND" property="fileDivCd" compareValue="4">
+				take_file_nm 		=   #takeFileNm:VARCHAR#	
+			</isEqual>
+		</dynamic>
+	</select> 	
+	
+	<update id="updateUndTakeRecvErrorDesc" parameterClass="rms.take.undTake.domain.TkOrgRecvError">
+		UPDATE 	tb_tkorgrecverror
+		SET		recv_error_rsn = DECODE(recv_error_rsn, '', recv_error_rsn, null, '', recv_error_rsn||', ')||#recvErrorRsn:VARCHAR#
+		WHERE 	record_center_id 	= #recordCenterId:VARCHAR#
+		AND 	take_yyyy 			= #takeYyyy:VARCHAR#
+		AND 	take_org_cd 		= #takeOrgCd:VARCHAR#
+		AND 	creat_sys_cd 		= #creatSysCd:VARCHAR#
+		AND 	take_sno 			= #takeSno:VARCHAR#
+		AND 	file_div_cd 		= #fileDivCd:VARCHAR#
+		AND 	line_no 			= #lineNo:VARCHAR#
+	</update>
+	
+	<select id="findVirusFileList" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findVirusFileList-result">
+		SELECT   attach_file_path file_nm
+		        ,(SELECT Z.org_cd||'-'||Z.clss_id||'-'||Z.creat_yyyy||'-'||Z.folder_reg_seq||'-'||Z.ho_no FROM tb_tkfolder z WHERE Z.folder_take_seq = (SELECT Y.folder_take_seq FROM tb_tkrecord y WHERE Y.record_take_seq = A.record_take_seq)) folder_clss_no
+		        ,(SELECT Z.title FROM tb_tkfolder z WHERE Z.folder_take_seq = (SELECT Y.folder_take_seq FROM tb_tkrecord y WHERE Y.record_take_seq = A.record_take_seq)) folder_title
+		        ,(SELECT Z.creat_yyyy||'-'||Z.org_cd||'-'||substr(Z.creat_reg_no, 8)||'-'||Z.dtch_reg_no FROM tb_tkrecord z WHERE Z.record_take_seq = A.record_take_seq) record_reg_no
+		        ,(SELECT Z.title FROM tb_tkrecord z WHERE Z.record_take_seq = A.record_take_seq) record_title
+		        ,(SELECT Z.folder_take_seq FROM tb_tkrecord Z WHERE Z.record_take_seq = A.record_take_seq) folder_take_seq 
+		        ,record_take_seq
+		FROM tb_tkattachfile A
+		<!--cubrid WHERE (record_center_id, record_take_seq) 
+		IN (
+		    SELECT  B.record_center_id, B.record_take_seq-->
+                WHERE
+                EXISTS
+                    (SELECT 1
+		    FROM    TB_TKFOLDER aA, TB_TKRECORD b
+		    WHERE   AA.record_center_id 	= 	#recordCenterId:VARCHAR#
+		    AND     AA.take_yyyy 		= 	#takeYyyy:VARCHAR#
+		    AND     AA.take_org_cd 		= 	#takeOrgCd:VARCHAR#
+		    AND     AA.creat_sys_cd 		= 	#creatSysCd:VARCHAR#
+		    AND     AA.take_sno 			BETWEEN (SELECT Z.parent_take_sno 
+                                                   FROM tb_tkorgtakeplan Z 
+                                                  WHERE Z.record_center_id 	= #recordCenterId:VARCHAR# 
+                                                    AND Z.take_yyyy 		= #takeYyyy:VARCHAR# 
+                                                    AND Z.take_org_cd 		= #takeOrgCd:VARCHAR# 
+                                                    AND Z.creat_sys_cd 		= #creatSysCd:VARCHAR#
+                                                    AND Z.take_sno 			= #takeSno:NUMBER#) AND #takeSno:NUMBER#
+		    AND     AA.record_center_id 	= 	B.record_center_id(+)
+		    AND     AA.folder_take_seq 	= 	B.folder_take_seq(+)
+                    <!--cubrid-->
+                    AND     B.record_center_id = A.record_center_id
+                    AND     B.record_take_seq = A.record_take_seq
+		    GROUP BY B.record_center_id, B.record_take_seq
+		)
+		AND virus_flag = '1'
+	</select>
+	
+	<!--SELECT 기록물인수 기록물철분류번호 조회-->
+	<select id="findFolderTakeSeq" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT  folder_take_seq 
+		FROM    TB_TKFOLDER
+		WHERE   creat_sys_cd = '02'
+		AND     org_cd         	= #orgCd:VARCHAR#
+		AND	    clss_id        	= #clssId:VARCHAR#
+		AND	    creat_yyyy     	= #creatYyyy:VARCHAR#
+		AND	    folder_reg_seq 	= #folderRegSeq:VARCHAR#
+		AND	    ho_no          	= #hoNo:VARCHAR#
+		AND		take_sno 		= #takeSno:NUMBER#
+	</select>
+	
+	<!--SELECT 기록물인수 기록물건등록번호 조회-->
+	<select id="findRecordTakeSeq" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultClass="string">
+		SELECT  record_take_seq 
+		FROM    TB_TKRECORD A, TB_TKFOLDER B
+		WHERE 	A.record_center_id 	= B.record_center_id
+		AND		A.folder_take_seq	= B.folder_take_seq
+		AND 	A.creat_sys_cd 		= '02'
+		AND     A.creat_yyyy 		= #creatYyyy:VARCHAR#
+		AND     A.creat_reg_no 		= #creatRegNo:VARCHAR#
+		AND     A.dtch_reg_no 		= #dtchRegNo:VARCHAR#
+		AND 	B.take_sno 			= #takeSno:NUMBER#		
+	</select>
+	
+
+	<!--UPDATE 철 오류정보 갱신-->
+	<update id="creatUndTakeFolderError" parameterClass="rms.take.undTake.domain.TkOrgRecvError">
+		UPDATE TB_TKFOLDER
+		   SET EXAM_CONT = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || #examCont:VARCHAR#
+		   		, error_flag = 'Y'
+		 WHERE RECORD_CENTER_ID 	= #recordCenterId:VARCHAR#
+		   AND FOLDER_TAKE_SEQ	 	= #folderTakeSeq:VARCHAR#	 
+	</update>
+	
+	<!--UPDATE 건 오류정보 갱신-->
+	<update id="creatUndTakeRecordError" parameterClass="rms.take.undTake.domain.TkOrgRecvError">
+		UPDATE TB_TKRECORD
+		   SET EXAM_CONT = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || #examCont:VARCHAR#
+		   		, error_flag = 'Y'
+		 WHERE RECORD_CENTER_ID 	= #recordCenterId:VARCHAR#
+		   AND RECORD_TAKE_SEQ	 	= #recordTakeSeq:VARCHAR#
+	</update>
+	
+	<!-- 접수/반려 이력등록  -->
+	<insert id="insertFolderTakeHist" parameterClass="rms.take.undTake.domain.TkOrgTakePlan">
+		INSERT INTO TB_TKFOLDERTAKEHIST(
+		    record_center_id,   folder_take_seq,    title, 				hist_sno,       creat_sys_cd,       
+		    org_cd,				clss_div_cd,        clss_id,            creat_yyyy,     folder_reg_seq,
+		    ho_no,				take_org_cd,        take_yyyy,          take_sno,       take_state_cd,
+		    exam_cont,			rjct_cont,			folder_err_flag,    record_err_cnt, record_tot_cnt, 
+		    file_err_cnt,		file_tot_cnt,		reg_dtime,			rjct_dtime
+		)
+		(
+		    SELECT    record_center_id, folder_take_seq, title
+                    ,(SELECT count(1)+1
+                      FROM   tb_tkfoldertakehist Z
+                      WHERE Z.record_center_id = K.record_center_id
+                      AND   Z.creat_sys_cd     = K.creat_sys_cd
+                      AND   Z.clss_id          = K.clss_id
+                      AND   Z.creat_yyyy       = K.creat_yyyy
+                      AND   Z.folder_reg_seq   = K.folder_reg_seq
+                      AND   Z.ho_no            = K.ho_no) hist_sno
+                    ,creat_sys_cd, org_cd, clss_div_cd, clss_id, creat_yyyy
+                    ,folder_reg_seq, ho_no, take_org_cd, take_yyyy, take_sno
+                    ,#takeStateCd:VARCHAR#
+                    <dynamic>
+                    	<isNotEmpty property="rjctFlag">
+                    		<isEqual prepend=", " property="rjctFlag" compareValue="1">
+	                    		exam_cont
+					            ||(CASE WHEN record_err_cnt > 0 THEN ' 건정보에 오류가있습니다. ' ELSE '' END)
+					            ||(CASE WHEN file_err_cnt>0 THEN ', 전자파일에 오류(바이러스)가있습니다. ' ELSE '' END) exam_cont,
+                    			rjct_cont, folder_err_flag, record_err_cnt, record_tot_cnt, file_err_cnt, file_tot_cnt
+                    		</isEqual>
+	                    	<isNotEqual prepend=", " property="rjctFlag" compareValue="1">
+	                    		'','', '0', '', '', '', ''
+	                    	</isNotEqual>
+                    	</isNotEmpty>
+                    	<isEmpty prepend=", " property="rjctFlag">
+                    		'','', '0', '', '', '', ''
+                    	</isEmpty>
+                    </dynamic>
+                    , reg_dtime, rjct_dtime
+		    FROM (
+		        SELECT      A.record_center_id
+                          , A.folder_take_seq
+                          , MAX(A.title) title
+                          , MAX(A.creat_sys_cd) creat_sys_cd
+                          , MAX(A.org_cd) org_cd
+                          , MAX(A.clss_div_cd) clss_div_cd
+                          , MAX(A.clss_id) clss_id
+                          , MAX(A.creat_yyyy) creat_yyyy
+                          , MAX(A.folder_reg_seq) folder_reg_seq
+                          , MAX(A.ho_no) ho_no
+                          , MAX(A.take_org_cd) take_org_cd
+                          , MAX(A.take_yyyy) take_yyyy
+                          , MAX(A.take_sno) take_sno
+                          , MAX(A.exam_cont) exam_cont
+                          , (CASE WHEN MAX(a.error_flag) = 'Y' THEN '1'
+                                  ELSE '0'
+                             END) folder_err_flag
+                          , NVL(SUM(CASE WHEN B.error_flag = 'Y' THEN 1
+                                         ELSE 0
+                                    END), 0) record_err_cnt
+                          , MAX(A.rjct_cont) rjct_cont
+                          , COUNT(B.record_take_seq) record_tot_cnt
+                          , SUM((select COUNT(1) FROM tb_tkattachfile Z WHERE Z.record_center_id = B.record_center_id AND Z.record_take_seq = B.record_take_seq AND Z.virus_flag = '1')) file_err_cnt
+                          , SUM((select COUNT(1) FROM tb_tkattachfile Z WHERE Z.record_center_id = B.record_center_id AND Z.record_take_seq = B.record_take_seq)) file_tot_cnt
+                          , MAX(A.reg_dtime) reg_dtime
+                           <dynamic>
+	                    	<isNotEmpty property="rjctFlag">
+	                    		<isEqual prepend=", " property="rjctFlag" compareValue="1">
+				                   <!--cubrid to_char(sysdate, 'YYYYMMDDHH24MISS') rjct_dtime-->
+				                   to_char(sys_datetime, 'YYYYMMDDHH24MISS') rjct_dtime
+	                    		</isEqual>
+		                    	<isNotEqual prepend=", " property="rjctFlag" compareValue="1">
+		                    		'' rjct_dtime
+		                    	</isNotEqual>
+	                    	</isNotEmpty>
+	                    	<isEmpty prepend=", " property="rjctFlag">
+	                    		'' rjct_dtime
+	                    	</isEmpty>
+	                   	   </dynamic>
+		        FROM  tb_tkfolder A
+		            , tb_tkrecord B
+		        WHERE   A.record_center_id  =   #recordCenterId:VARCHAR#
+		        AND     A.record_center_id  =   B.record_center_id
+		        AND     A.folder_take_seq   =   B.folder_take_seq
+		        AND     A.take_yyyy         =   #takeYyyy:VARCHAR#
+		        AND     A.take_org_cd       =   #takeOrgCd:VARCHAR#
+		        AND     A.creat_sys_cd      =   #creatSysCd:VARCHAR#
+		        AND     A.take_sno          =   #takeSno:VARCHAR#
+		        <dynamic>
+		        	<isEqual prepend="AND" property="rjctFlag" compareValue="1">
+		        		A.rjct_flag = #rjctFlag:VARCHAR#
+		        	</isEqual>
+		        </dynamic>
+		        GROUP BY A.record_center_id, A.folder_take_seq
+		    ) K
+		)
+	</insert>
+	
+	
+	<update id="testUpdateVirusFlag" parameterClass="rms.take.undTake.domain.TkAttachFile">
+		update tb_tkattachfile 
+		<!--set virus_flag = '1' , virus_dtime = to_char(sysdate, 'YYYYMMDDHH24MISS')-->
+		set virus_flag = '1' , virus_dtime = to_char(sys_datetime, 'YYYYMMDDHH24MISS')
+		where record_center_id = #recordCenterId:VARCHAR#
+		and creat_yyyy = #creatYyyy:VARCHAR#
+		and creat_reg_no = #creatRegNo:VARCHAR#
+		and org_cd = #orgCd:VARCHAR#
+		and doc_type_cd = #docTypeCd:VARCHAR#
+		and doc_type_sno = #docTypeSno:VARCHAR#
+	</update>
+	
+	<update id="updateFolderRecvReFlag" parameterClass="rms.take.undTake.domain.TkFolder">
+		UPDATE tb_tkfolder set recv_re_flag = '1'
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+		   AND org_cd 			= #orgCd:VARCHAR#
+		   AND clss_id 			= #clssId:VARCHAR#
+		   AND creat_yyyy 		= #creatYyyy:VARCHAR#
+		   AND folder_reg_seq 	= #folderRegSeq:VARCHAR#
+		   AND ho_no 			= #hoNo:VARCHAR#	 
+	</update>
+	
+	<update id="updateTakeFolderError" parameterClass="rms.take.undTake.domain.TkFolder">
+		UPDATE TB_TKFOLDER Z
+           SET ERROR_FLAG = 'Y'
+              ,EXAM_CONT = EXAM_CONT||DECODE(EXAM_CONT, NULL, '', '', '', ', ')||'이상이있는 기록물건이 확인되었습니다..'
+          <!--cubrid WHERE (RECORD_CENTER_ID, FOLDER_TAKE_SEQ)
+            IN (
+                SELECT A.RECORD_CENTER_ID, A.FOLDER_TAKE_SEQ-->
+          WHERE 
+            EXISTS
+                (SELECT 1
+                FROM TB_TKFOLDER A, TB_TKRECORD B
+                WHERE A.RECORD_CENTER_ID     = #recordCenterId:VARCHAR#
+                AND   A.RECORD_CENTER_ID     = B.RECORD_CENTER_ID
+                AND   A.FOLDER_TAKE_SEQ     = B.FOLDER_TAKE_SEQ
+                AND   A.TAKE_YYYY             = #takeYyyy:VARCHAR#
+                AND   A.TAKE_ORG_CD         = #takeOrgCd:VARCHAR#
+                AND   A.CREAT_SYS_CD         = #creatSysCd:VARCHAR#
+                AND   A.TAKE_SNO             = #takeSno:NUMBER#
+                AND   B.ERROR_FLAG             = 'Y'
+                <!--cubrid-->
+                AND   A.RECORD_CENTER_ID = Z.RECORD_CENTER_ID
+                AND   A.FOLDER_TAKE_SEQ = Z.FOLDER_TAKE_SEQ
+                )
+	</update>
+	
+	<select id="findFolderLine" parameterClass="rms.take.undTake.domain.TkOrgRecvError" resultClass="string">
+		SELECT line_no 
+		FROM tb_tkfolder
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   folder_take_seq = #folderTakeSeq:VARCHAR#
+	</select>
+	
+	<select id="findRecordLine" parameterClass="rms.take.undTake.domain.TkOrgRecvError" resultClass="string">
+		SELECT line_no 
+		FROM tb_tkrecord
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+	</select>
+	
+	<resultMap id="findErrorRecordList-result" class="rms.take.undTake.domain.TkOrgRecvError">
+		<result property="recordCenterId" 	column="record_center_id"/>
+		<result property="takeYyyy" 		column="take_yyyy"/>
+		<result property="takeOrgCd" 		column="take_org_cd"/>
+		<result property="creatSysCd" 		column="creat_sys_cd"/>
+		<result property="takeSno" 			column="take_sno"/>
+		<result property="regDtime" 		column="reg_dtime"/>
+		<result property="lineNo" 			column="line_no"/>
+		<result property="folderClssNo" 	column="folder_clss_no"/>
+		<result property="folderTitle" 		column="title"/>
+		<result property="folderTakeSeq" 	column="folder_take_seq"/>
+	</resultMap>
+	
+	<select id="findErrorRecordList" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findErrorRecordList-result">
+		SELECT DISTINCT A.record_center_id
+		      ,A.take_yyyy
+		      ,A.take_org_cd
+		      ,A.creat_sys_cd
+		      ,A.take_sno
+		      ,A.reg_dtime
+		      ,A.line_no
+		      ,a.org_cd||'-'||a.clss_id||'-'||a.creat_yyyy||'-'||a.folder_reg_seq||'-'||a.ho_no folder_clss_no
+		      ,A.title
+		      ,A.folder_take_seq 
+		FROM tb_tkfolder A, tb_tkrecord B
+		WHERE A.record_center_id 	= B.record_center_id
+		AND A.record_center_id 		= #recordCenterId:VARCHAR#
+		AND A.folder_take_seq 		= B.folder_take_seq
+		AND A.take_yyyy 			= #takeYyyy:VARCHAR#
+		AND A.take_org_cd 			= #takeOrgCd:VARCHAR#
+		AND A.creat_sys_cd 			= '02'
+		AND A.take_sno 				= #takeSno:NUMBER#
+		AND B.error_flag 			= 'Y'
+	</select>
+	
+	
+	<resultMap id="findErrorAttachList-result" class="rms.take.undTake.domain.TkOrgRecvError">
+		<result property="recordCenterId" 	column="record_center_id"/>
+		<result property="takeYyyy" 		column="take_yyyy"/>
+		<result property="takeOrgCd" 		column="take_org_cd"/>
+		<result property="creatSysCd" 		column="creat_sys_cd"/>
+		<result property="takeSno" 			column="take_sno"/>
+		<result property="regDtime" 		column="reg_dtime"/>
+		<result property="lineNo" 			column="line_no"/>
+		<result property="folderClssNo" 	column="folder_clss_no"/>
+		<result property="recordRegNo" 	column="record_reg_no"/>
+		<result property="folderTitle" 		column="folder_title"/>
+		<result property="recordTitle" 		column="record_title"/>
+		<result property="folderTakeSeq" 	column="folder_take_seq"/>
+	</resultMap>
+	
+	<select id="findErrorAttachList" parameterClass="rms.take.undTake.domain.GrUndTakeCheck" resultMap="findErrorAttachList-result">
+		SELECT a.record_center_id,
+      	   a.take_yyyy,
+	  	   a.take_org_cd,
+	       a.creat_sys_cd,
+	       a.take_sno,
+	       a.reg_dtime,
+	       b.line_no,
+	       a.title folder_title,
+	       b.title record_title,
+	       a.org_cd||'-'||a.clss_id||'-'||a.creat_yyyy||'-'||a.folder_reg_seq||'-'||a.ho_no folder_clss_no,
+	       b.creat_yyyy||'-'||b.org_cd||'-'||substr(b.creat_reg_no, 8)||'-'||b.dtch_reg_no record_reg_no,
+	       a.folder_take_seq,
+	       b.record_take_seq
+	  FROM tb_tkfolder a, tb_tkrecord b
+	 WHERE     a.record_Center_id = #recordCenterId:VARCHAR#
+	       AND a.record_Center_id = b.record_Center_id
+	       AND a.folder_take_seq = b.folder_take_seq
+	       AND a.take_yyyy = #takeYyyy:VARCHAR#
+	       AND a.take_org_cd = #takeOrgCd:VARCHAR#
+	       AND a.creat_sys_cd = #creatSysCd:VARCHAR#
+	       AND a.take_sno = #takeSno:NUMBER#
+	       AND (SELECT COUNT (1)
+	              FROM tb_tkattachfile z
+	             WHERE     z.record_center_id = b.record_center_id
+	                   AND z.record_take_seq = b.record_take_seq
+	                   AND z.virus_flag = '1') > 0
+	</select>
+
+ 	<select id="findTakeRecvDtime" parameterClass="rms.take.undTake.domain.TkOrgTakePlan" resultClass="string">
+ 		SELECT reg_dtime 
+ 		  FROM tb_tkorgtakeplan
+ 		 WHERE record_center_id = #recordCenterId:VARCHAR#
+ 		   AND take_yyyy   		= #takeYyyy:VARCHAR#
+ 		   AND take_org_cd 		= #takeOrgCd:VARCHAR#
+ 		   AND creat_sys_cd 	= #creatSysCd:VARCHAR#
+ 		   AND take_sno			= #takeSno:VARCHAR#
+ 	</select>
+</sqlMap>

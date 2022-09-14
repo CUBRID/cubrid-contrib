@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="common.tree">
+
+	<!-- 
+		환경설정 기록관환경설정 연계관리 트리겁색(연게대상별 부서 정렬 - 연계대상검색)
+	 -->
+	<select id="findTreeLinkTrgtList" resultClass="rms.common.tree.domain.OrgLinkTrgt">
+		SELECT DISTINCT '::'||NVL(link_trgt_id,'0000000')||'::'||NVL(link_trgt_id,'0000000') AS id
+			, NVL(link_trgt_nm,'미지정') AS text
+		    , (CASE WHEN link_trgt_id = 'L000001' THEN 'open'
+		    	    ELSE 'closed' END) AS state
+		    , 'icon-search' AS iconCls
+		FROM TB_STLINKTRGT
+		ORDER BY text
+	</select>
+	<!-- 
+		환경설정 기록관환경설정 연계관리 트리겁색(연게대상별 부서 정렬 - 연계대상별 부서검색)
+	 -->
+	<select id="findTreeLinkTrgtOrg" parameterClass="rms.common.tree.domain.OrgLinkTrgt" resultClass="rms.common.tree.domain.OrgLinkTrgt">
+		SELECT A.link_trgt_id AS linkTrgtId
+			, A.record_center_id||'::'||A.org_cd||'::'||A.link_trgt_id AS id
+			, A.org_abbr_nm AS text
+			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+					ELSE 'open'
+				END) AS state 
+			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+					ELSE 'icon-folder_full_accept'
+				END) AS iconCls
+		FROM TB_STORG A
+		WHERE A.link_trgt_id = #linkTrgtId:VARCHAR#
+		<isNotEmpty prepend="AND" property="recordCenterId">
+			A.record_center_id = #recordCenterId:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="id">
+			( A.levl = 1 OR A.link_trgt_id != (SELECT C.link_trgt_id FROM TB_STORG C WHERE C.record_center_id = A.record_center_id AND C.org_cd = A.upper_org_cd) )
+		</isEmpty>
+		<isNotEmpty prepend="AND" property="id">
+			A.upper_org_cd = #id:VARCHAR#
+		</isNotEmpty>
+		ORDER BY A.record_center_id, A.levl, A.org_seq
+	</select>
+	<!-- 
+		환경설정 기록관환경설정 연계관리 트리겁색(연게대상별 부서 정렬 - 부서별 연계대상검색)
+	 -->
+	<select id="findTreeOrgLinkTrgt" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.multi.admin.domain.RmsTree">
+		SELECT A.record_center_id AS recordCenterId
+			, A.record_center_id||'::'||A.org_cd||'::'||A.link_trgt_id AS id
+			, A.org_abbr_nm AS text
+			, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+					ELSE 'open'
+				END) AS state 
+			, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+					ELSE 'icon-folder_full_accept'
+				END) AS iconCls
+		FROM TB_STORG A
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="recordCenterId">
+				A.record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="id">
+				A.levl = 1
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="id">
+				A.upper_org_cd = #id:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.record_center_id, A.levl, A.org_seq
+	</select>
+</sqlMap>

@@ -1,0 +1,46 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+-- Query    : select
+-- Query Id : findDownloadIpMngPagedList
+
+		SELECT C.user_ip			, C.dept_cd			, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = C.dept_cd AND record_center_id = '1') AS dept_nm			, C.user_nm			, C.use_gb			, decode(C.use_gb,1,'이관용',2,'광디스크수록용','') AS use_nm		FROM (			SELECT B.*			FROM (				SELECT ROWNUM AS rnum,					A.*				FROM (					SELECT user_ip					 	 , dept_cd					 	 , user_nm					 	 , use_gb					FROM  TB_STDOWNIPMNG					WHERE record_center_id = '1'					ORDER BY user_ip				) A				WHERE ROWNUM <= '1'			) B			WHERE B.rnum >= '1'		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+-- Query    : select
+-- Query Id : countDownloadIpMngPagedList
+
+		SELECT COUNT(1)		FROM  TB_STDOWNIPMNG		WHERE record_center_id = '1'  		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+-- Query    : select
+-- Query Id : countDownloadIp
+
+		SELECT COUNT(1) FROM TB_STDOWNIPMNG WHERE record_center_id = '1' AND user_ip = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+-- Query    : insert
+-- Query Id : createDownloadIp
+
+		INSERT INTO TB_STDOWNIPMNG(			record_center_id, user_ip, dept_cd, user_nm, use_gb		) VALUES (			'1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+-- Query    : update
+-- Query Id : updateDownloadIp
+
+		UPDATE TB_STDOWNIPMNG		SET  dept_cd = '1'			,user_nm = '1'			,use_gb  = '1'		WHERE RECORD_CENTER_ID = '1'		AND USER_IP = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml
+-- Query    : delete
+-- Query Id : deleteDownloadIp
+
+		DELETE FROM TB_STDOWNIPMNG WHERE record_center_id = '1' AND user_ip = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\DownloadIp.xml

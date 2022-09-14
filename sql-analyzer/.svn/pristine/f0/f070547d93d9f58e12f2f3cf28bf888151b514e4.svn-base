@@ -1,0 +1,32 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeClss.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeClss.xml
+-- Query    : select
+-- Query Id : countClssNm
+
+		SELECT COUNT(1)		FROM  TB_ZZBISCLSS A		WHERE levl ='6'		     AND 		    	A.bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = '1')		      AND 				A.bis_clss_id LIKE '1'			  AND 				A.bis_clss_nm LIKE '1'			  AND 				A.del_flag = '1'		     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeClss.xml
+-- Query    : select
+-- Query Id : findClssNm
+
+		SELECT C.bis_clss_id			, C.bis_clss_nm			, C.del_flag		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (			    SELECT A.bis_clss_id 					, A.bis_clss_nm					, (CASE WHEN A.del_flag='1' THEN 'Æó±â' ELSE '»ç¿ë' END) AS del_flag				FROM  TB_ZZBISCLSS A				WHERE levl ='6' AND 				    	A.bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = '1')				      AND 						A.bis_clss_id LIKE '1'					  AND 						A.bis_clss_nm LIKE '1'					  AND 						A.del_flag = '1'				     				ORDER BY A.bis_clss_nm			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeClss.xml
+-- Query    : select
+-- Query Id : findClssTree
+
+		SELECT B.*		FROM (			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType				, A.bis_clss_id AS id				, A.bis_clss_nm AS text				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'						ELSE 'open'					END) AS state 				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)					END) AS iconCls			FROM  TB_ZZBISCLSS A WHERE   						A.levl = 1					   AND  						A.levl = 1					   			ORDER BY A.levl, A.sort_sno		) B;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeClss.xml
+-- Query    : select
+-- Query Id : findOrgClssTree
+
+		SELECT B.*		FROM (			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType				, A.bis_clss_id AS id				, A.bis_clss_nm AS text				, (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'						ELSE 'open'					END) AS state 				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)					END) AS iconCls			FROM  TB_ZZBISCLSS A			WHERE A.bis_clss_id IN (				SELECT bis_clss_id FROM TB_ZZBISCLSS				START WITH bis_clss_id IN (SELECT bis_clss_id FROM TB_ZZBISORG WHERE org_cd = '1')				CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id			)			 AND  					A.levl = 1				  			ORDER BY A.levl, A.sort_sno		) B;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\tree\TreeClss.xml

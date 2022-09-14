@@ -1,0 +1,333 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findMultiRecordCenterSetRc
+
+		SELECT A.org_cd		     , A.org_nm		     , A.org_abbr_nm		     , A.hupper_org_cd		     , A.upper_org_cd		     , A.levl		     , A.org_seq		     , A.close_flag		     , A.apply_start_ymd		     , A.apply_close_ymd		     , A.record_center_id		     , A.take_org_flag		     , A.full_org_nm		     , B.record_center_nm		     , '1' record_center_flag		     , NVL((SELECT COUNT(1) FROM TB_STORG O WHERE O.record_center_id=A.record_center_id),1)-1 lower_org_cnt		     , B.remk		     , B.record_center_cd		     , B.rep_org_nm		     , (SELECT COUNT(1) FROM TB_RDFOLDER F WHERE F.record_center_id=A.record_center_id) AS folder_cnt		     , 0 AS org_folder_cnt		     , '1' AS levl_flag		FROM  TB_STORG A		    , TB_STRECORDCENTER B		WHERE B.record_center_id = '1'		AND   A.record_center_id = B.record_center_id		AND   A.org_cd = B.record_center_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findMultiRecordCenterSetOrg
+
+		SELECT C.org_cd		     , C.org_nm		     , C.org_abbr_nm		     , C.hupper_org_cd		     , C.upper_org_cd		     , C.levl		     , C.org_seq		     , C.close_flag		     , C.apply_start_ymd		     , C.apply_close_ymd		     , C.record_center_id		     , C.take_org_flag		     , C.full_org_nm		     , C.record_center_nm		     , C.record_center_flag		     , C.lower_org_cnt		     , C.remk		     , C.record_center_cd		     , C.rep_org_nm		     , DECODE(C.record_center_flag,0,(SELECT COUNT(1)		                                      FROM TB_RDFOLDER D		                                      WHERE D.record_center_id='1'		                                      AND D.org_cd IN (		                                      		SELECT E.org_cd		                                           	FROM TB_STORG E		                                           	WHERE E.record_center_id='1'		                                           	START WITH E.org_cd = '1' AND  E.record_center_id = '1'		                                           	CONNECT BY PRIOR E.org_cd = E.upper_org_cd AND   E.record_center_id = '1')		                                      )		                  , (SELECT COUNT(1) FROM TB_RDFOLDER D WHERE D.record_center_id='1')) folder_cnt			 , (SELECT COUNT(1) FROM TB_RDFOLDER D WHERE D.record_center_id='1' AND   D.org_cd = '1') org_folder_cnt             , (CASE WHEN NVL((SELECT '1' FROM TB_STRECORDCENTER B WHERE B.record_center_cd=C.org_cd),'0')='1' THEN '1'                     WHEN NVL((SELECT '1' FROM TB_STORG B WHERE B.record_center_id=C.record_center_id AND B.org_cd=C.upper_org_cd),'0')='0' THEN '1'                     ELSE '0' END) AS levl_flag		FROM (			SELECT A.org_cd			     , A.org_nm			     , A.org_abbr_nm			     , A.hupper_org_cd			     , A.upper_org_cd			     , A.levl			     , A.org_seq			     , A.close_flag			     , A.apply_start_ymd			     , A.apply_close_ymd			     , A.record_center_id			     , A.take_org_flag			     , A.full_org_nm				 , (SELECT B.record_center_nm FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) record_center_nm				 , '0' record_center_flag				 , NVL((SELECT COUNT(1) FROM TB_STORG C WHERE C.record_center_id=A.record_center_id),1)-1 lower_org_cnt				 , (SELECT B.remk FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) remk				 , (SELECT B.record_center_cd FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) record_center_cd				 , (SELECT B.rep_org_nm FROM TB_STRECORDCENTER B WHERE B.record_center_id=A.record_center_id) rep_org_nm			FROM TB_STORG A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenter
+
+		INSERT INTO TB_STRECORDCENTER		(record_center_id, record_center_cd, record_center_nm, reg_dtime, remk, rep_org_nm)		VALUES(( SELECT LPAD(NVL(SUBSTR(MAX(record_center_id),6),0)+1, 7, '0')				 FROM TB_STRECORDCENTER)		       , '1'		       , '1'		       , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		       , '1'		       , '1' )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findMultiRecordCenter
+
+		SELECT MAX(record_center_id) record_center_id		FROM   TB_STRECORDCENTER;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetOrg
+
+		INSERT INTO TB_STORG		(    		     record_center_id		     , org_cd, org_nm, org_abbr_nm, full_org_nm, hupper_org_cd			 , upper_org_cd, levl, org_seq, close_flag, apply_start_ymd			 , apply_close_ymd, take_org_flag, link_trgt_id		)		(			SELECT '1'			     , A.org_cd, A.org_nm, A.org_abbr_nm, A.full_org_nm, A.hupper_org_cd				 , A.upper_org_cd, A.levl, A.org_seq, A.close_flag, A.apply_start_ymd				 , A.apply_close_ymd, A.take_org_flag, A.link_trgt_id			FROM  TB_STORG A			WHERE A.record_center_id = '1'			AND   A.org_cd IN			          (SELECT org_cd			           FROM  TB_STORG			           WHERE record_center_id = '1'			           START WITH org_cd = '1'			                 AND  record_center_id = '1'			           CONNECT BY PRIOR org_cd = upper_org_cd			                      AND   record_center_id = '1')    		AND   NOT EXISTS (SELECT 1 FROM TB_STORG O WHERE O.RECORD_CENTER_ID='1' AND O.ORG_CD=A.ORG_CD)		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetDept
+
+		UPDATE TB_STDEPT		SET   record_center_id = '1'		WHERE record_center_id = '1'		AND   org_cd IN		          (SELECT org_cd		           FROM  TB_STORG		           WHERE record_center_id = '1'		           START WITH org_cd = '1'		                 AND  record_center_id = '1'		           CONNECT BY PRIOR org_cd = upper_org_cd		                      AND   record_center_id = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetCreatSys
+
+		UPDATE TB_STCREATSYS		SET   record_center_id = '1'		WHERE record_center_id = '1'		AND   org_cd IN		          (SELECT org_cd		           FROM  TB_STORG		           WHERE record_center_id = '1'		           START WITH org_cd = '1'		                 AND  record_center_id = '1'		           CONNECT BY PRIOR org_cd = upper_org_cd		                      AND   record_center_id = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetUser
+
+		UPDATE TB_STUSER		SET   record_center_id = '1'		WHERE record_center_id = '1'		AND   dept_cd IN				(SELECT dept_cd				 FROM  TB_STDEPT				 WHERE record_center_id = '1'				 AND   org_cd IN				          (SELECT org_cd				           FROM  TB_STORG				           WHERE record_center_id = '1'				           START WITH org_cd = '1'				                 AND  record_center_id = '1'				           CONNECT BY PRIOR org_cd = upper_org_cd				                      AND   record_center_id = '1')				);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetGrantGrp
+
+		INSERT INTO TB_STGRANTGRP (record_center_id, grant_grp_cd, grant_grp_nm, grant_grp_descr, use_flag, work_user_id, work_dtime)		(		SELECT '1', '001', '심의위원그룹', '폐기 및 재평가 심의위원 그룹', '1', '0000000000', TO_CHAR (sys_datetime, 'YYYYMMDDHH24MISS') FROM DUAL		UNION 		SELECT '1', '002', '공개심의위원', '공개 심의위원', '1', '0000000000', TO_CHAR (sys_datetime, 'YYYYMMDDHH24MISS') FROM DUAL		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetUnit
+
+		INSERT INTO TB_ZZUNIT		(		       record_center_id		     , unit_cd, unit_nm, unit_descr, nars_handl_dtime, creat_stnd_ymd			 , temp_unit_cd, lrg_cd, lrg_nm, mid_cd, mid_nm			 , sml_cd, sml_nm, presv_term_cd, presv_term_fix_rsn, presv_method_cd			 , presv_area_cd, funsh_record_flag, funsh_record_transf_ymd, main_read_usg, transf_read_expt_cnt			 , spcl_list_loc, spcl_list1, spcl_list2, spcl_list3, state_cd			 , reg_user_id, reg_dtime, take_flag		)		(			SELECT '1'			     , A.unit_cd, A.unit_nm, A.unit_descr, A.nars_handl_dtime, A.creat_stnd_ymd				 , A.temp_unit_cd, A.lrg_cd, A.lrg_nm, A.mid_cd, A.mid_nm				 , A.sml_cd, A.sml_nm, A.presv_term_cd, A.presv_term_fix_rsn, A.presv_method_cd				 , A.presv_area_cd, A.funsh_record_flag, A.funsh_record_transf_ymd, A.main_read_usg, A.transf_read_expt_cnt				 , A.spcl_list_loc, A.spcl_list1, A.spcl_list2, A.spcl_list3, A.state_cd				 , A.reg_user_id, A.reg_dtime, A.take_flag			FROM TB_ZZUNIT A			WHERE A.record_center_id = '1'			AND   A.unit_cd IN					(SELECT DISTINCT unit_cd					 FROM  TB_ZZORGUNIT					 WHERE record_center_id = '1'					 AND   org_cd IN					          (SELECT org_cd					           FROM  TB_STORG					           WHERE record_center_id = '1'					           START WITH org_cd = '1'					                 AND  record_center_id = '1'					           CONNECT BY PRIOR org_cd = upper_org_cd					                      AND   record_center_id = '1')					 )			AND   (SELECT COUNT(1)			       FROM TB_ZZUNIT B			       WHERE B.record_center_id = '1'			       AND   B.unit_cd = A.unit_cd) = 0		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetUnitOrg
+
+		UPDATE TB_ZZORGUNIT		SET   record_center_id = '1'		WHERE record_center_id = '1'		AND   (org_cd||unit_cd) IN				(SELECT DISTINCT org_cd||unit_cd				 FROM TB_ZZORGUNIT				 WHERE record_center_id = '1'				 AND   org_cd IN				          (SELECT org_cd				           FROM TB_STORG				           WHERE record_center_id = '1'				           START WITH org_cd = '1'				                 AND  record_center_id = '1'				           CONNECT BY PRIOR org_cd = upper_org_cd				                      AND   record_center_id = '1'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetUnit
+
+		DELETE TB_ZZUNIT a		WHERE a.record_center_id = '1'		AND   a.unit_cd IN				(SELECT DISTINCT unit_cd				 FROM TB_ZZORGUNIT				 WHERE record_center_id = '1'				 AND   org_cd IN				          (SELECT org_cd				           FROM TB_STORG				           WHERE record_center_id = '1'				           START WITH org_cd = '1'				                 AND  record_center_id = '1'				           CONNECT BY PRIOR org_cd = upper_org_cd				                      AND   record_center_id = '1')				 )		AND   (SELECT COUNT(1)		       FROM TB_ZZORGUNIT B		       WHERE B.record_center_id = '1'		       AND   B.unit_cd = A.unit_cd) = 0	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetOrg
+
+		DELETE TB_STORG		WHERE record_center_id = '1'		AND   org_cd IN		          (SELECT org_cd		           FROM  TB_STORG		           WHERE record_center_id = '1'		           START WITH org_cd = '1'		                 AND  record_center_id = '1'		           CONNECT BY PRIOR org_cd = upper_org_cd		                      AND   record_center_id = '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetOrgNm
+
+		UPDATE TB_STORG A		SET    A.org_nm		       = NVL(TRIM(SUBSTR(A.FULL_ORG_NM, DECODE(INSTR(A.FULL_ORG_NM, 														       (SELECT B.rep_org_nm																FROM TB_STRECORDCENTER B																WHERE B.record_center_id=A.record_center_id))														,1,LENGTH((SELECT B.rep_org_nm																FROM TB_STRECORDCENTER B																WHERE B.record_center_id=A.record_center_id))+1,0) )),A.FULL_ORG_NM)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetOrgDeptNm
+
+		UPDATE TB_STDEPT A		SET    A.dept_nm = (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetMenu
+
+		INSERT INTO TB_STMENU		(record_center_id, menu_id, menu_nm, upper_menu_id, menu_div_cd, menu_sort_sno, use_flag, work_dtime, menu_link_sno, menu_grant_levl)		(		    SELECT '1', menu_id, menu_nm, upper_menu_id, menu_div_cd, menu_sort_sno, use_flag, work_dtime, menu_link_sno, menu_grant_levl		    FROM  TB_STMENU			WHERE record_center_id = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetMenuGrantGrp
+
+		INSERT INTO TB_STMENUGRANTGRP 		(			record_center_id, menu_grant_grp_cd, menu_grant_grp_nm, menu_grant_grp_descr, use_flag, work_user_id, work_dtime, default_grant_div		)		(			SELECT '1' record_center_id				, menu_grant_grp_cd				, menu_grant_grp_nm				, menu_grant_grp_descr				, use_flag				, work_user_id				, work_dtime				, TO_NUMBER(menu_grant_grp_cd)			FROM  TB_STMENUGRANTGRP			WHERE record_center_id = '1'			AND   menu_grant_grp_cd IN ('001','002','003','004')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetMenuGrantLink
+
+		INSERT INTO TB_STMENUGRANTLINK		(		    RECORD_CENTER_ID, MENU_GRANT_GRP_CD, MENU_ID, WORK_DTIME		)		(		    SELECT '1', MENU_GRANT_GRP_CD, MENU_ID, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		    FROM TB_STMENUGRANTLINK		    WHERE record_center_id = '1'		    AND   TO_NUMBER(MENU_GRANT_GRP_CD) <= 4		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createMultiRecordCenterSetFileExt
+
+	 	INSERT INTO TB_STFILEEXTMNG (	 		RECORD_CENTER_ID, FILE_EXT, FILE_EXT_NM, FILE_EXT_DESC, FILE_TRANS_FLAG, REG_DTIME, UPD_DTIME, WORK_USER_ID	 	) (	 		SELECT '1', FILE_EXT, FILE_EXT_NM, FILE_EXT_DESC, FILE_TRANS_FLAG, REG_DTIME, UPD_DTIME, WORK_USER_ID	 		FROM TB_STFILEEXTMNG	 		WHERE RECORD_CENTER_ID = '1'	 	)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenter
+
+		UPDATE TB_STRECORDCENTER		SET    record_center_nm = '1'		     , remk = '1'		     , rep_org_nm = '1'		WHERE  record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMultiRecordCenterSetRc
+
+		UPDATE TB_STRECORDCENTER		SET   record_center_cd = '1'			, record_center_nm = '1'			, rep_org_nm = '1'		WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findMultiRecordCenterUpper
+
+		SELECT record_center_id		FROM  TB_STORG		WHERE org_cd =		    (SELECT upper_org_cd		     FROM   TB_STORG		     WHERE  record_center_id = '1'		     AND    org_cd = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : deleteMultiRecordCenterSetGrantGrp
+
+		DELETE FROM TB_STGRANTGRP		WHERE record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenter
+
+		DELETE TB_STRECORDCENTER		WHERE  record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetUserMenuGrant
+
+		DELETE TB_STUSERMENUGRANT		WHERE  record_center_id = '1'		AND    user_id IN (SELECT B.user_id		                   FROM  TB_STUSERMENUGRANT B		                   WHERE B.record_center_id = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetMenuGrantLink
+
+		DELETE FROM TB_STMENUGRANTLINK 		WHERE record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetMenuGrantGrp
+
+		DELETE FROM TB_STMENUGRANTGRP		WHERE record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetMenu
+
+		DELETE TB_STMENU		WHERE  record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteMultiRecordCenterSetFileExt
+
+	 	DELETE TB_STFILEEXTMNG	 	WHERE RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findNewRecordCenterId
+
+		SELECT RECORD_CENTER_ID, RECORD_CENTER_NM FROM TB_STRECORDCENTER WHERE RECORD_CENTER_ID != '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findRecordCenterSet
+
+		SELECT A.record_center_id		     , A.noml_mng_no_rule			 , A.spcl_mng_no_rule			 , A.handl_org_cd			 , A.link_server_ip			 , A.link_server_port			 , A.link_server_user_id			 , A.link_server_pwd			 , A.link_server_class			 , A.link_server_lang			 , (SELECT B.org_nm FROM  TB_STORG B WHERE B.record_center_id=A.record_center_id AND   B.org_cd=A.handl_org_cd) handl_org_nm			 , A.presv_box_id_rule 		FROM TB_STCONFIG A		WHERE A.record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findConfig
+
+		SELECT A.record_center_id		     , A.noml_mng_no_rule			 , A.spcl_mng_no_rule			 , A.handl_org_cd			 , A.link_server_ip			 , A.link_server_port			 , A.link_server_user_id			 , A.link_server_pwd			 , A.link_server_class			 , A.link_server_lang			 , (SELECT B.org_nm			    FROM  TB_STORG B				WHERE B.record_center_id=A.record_center_id				AND   B.org_cd=A.handl_org_cd) handl_org_nm			 , A.presv_box_id_rule         		FROM TB_STCONFIG A		WHERE A.record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : countRecordCenterSet
+
+		SELECT COUNT(1)		FROM TB_STCONFIG		WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createRecordCenterSet
+
+		INSERT INTO TB_STCONFIG (			record_center_id, noml_mng_no_rule, spcl_mng_no_rule, handl_org_cd, link_server_ip	  	   ,link_server_port, link_server_user_id, link_server_pwd, link_server_class, link_server_lang	  	   ,presv_box_id_rule		) VALUES (			'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1'	       ,'1' 		)    	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateRecordCenterSet
+
+		UPDATE TB_STCONFIG		SET  noml_mng_no_rule = '1'			,spcl_mng_no_rule = '1'						,link_server_ip = '1'			,link_server_port = '1'			,link_server_user_id = '1'			,link_server_pwd = '1'			,link_server_class = '1'			,link_server_lang = '1'			,presv_box_id_rule = '1'    		WHERE record_center_id = '1'   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findCreatSysPagedList
+
+		SELECT  F.record_center_id			, F.org_cd			, F.creat_sys_cd		    , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id = F.record_center_id AND B.org_cd = F.org_cd) org_nm			, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD17' AND C.com_cd = F.creat_sys_cd) creat_sys_nm		FROM (			SELECT E.*			FROM (				SELECT ROWNUM AS rnum					, D.*				FROM (					SELECT A.record_center_id						, A.org_cd						, A.creat_sys_cd					FROM  TB_STCREATSYS A					WHERE A.record_center_id = '1' AND 						A.org_cd = '1'					  AND 						A.creat_sys_cd IN  ('1','1','1')  					ORDER BY org_cd				) D				WHERE ROWNUM <= '1'			) E			WHERE E.rnum >= '1'		) F		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : countCreatSysPagedList
+
+		SELECT COUNT(1)		FROM  TB_STCREATSYS A		WHERE A.record_center_id = '1'		 AND 			A.org_cd = '1'		  AND 			A.creat_sys_cd IN  ('1','1','1')  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteCreatSys
+
+		DELETE FROM TB_STCREATSYS 		WHERE record_center_id = '1' 						AND org_cd in(  SELECT org_cd							FROM TB_STORG							START WITH org_cd = '1'							       AND  record_center_id = '1'							CONNECT BY PRIOR org_cd = upper_org_cd					            AND   record_center_id = '1')			 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createCreatSys
+
+		INSERT INTO TB_STCREATSYS ( record_center_id, org_cd, creat_sys_cd )		 						SELECT record_center_id, org_cd, '1'			 FROM  TB_STORG a			 WHERE record_center_id = '1'			 START WITH org_cd = '1'			       AND  record_center_id = '1'			 CONNECT BY PRIOR org_cd = upper_org_cd	            AND   record_center_id = '1'			 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : countCreatSysUse
+
+		SELECT count(1) 		FROM TB_STCREATSYS		WHERE record_center_id = '1'		AND creat_sys_cd = '1'		AND ROWNUM=1       	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateMenuUse
+
+		UPDATE TB_STMENU		SET use_flag = '1'		WHERE record_center_id = '1'		 AND				(menu_id =  ('1'OR'1'OR'1') ) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findRegCreatSys
+
+		SELECT CREAT_SYS_CD FROM TB_STCREATSYS WHERE RECORD_CENTER_ID = '1' AND ORG_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findLinkTrgtSetOrg
+
+		SELECT A.link_trgt_id		    , A.link_trgt_nm			, A.link_ip			, A.link_port			, A.link_user_id			, A.link_pwd			, A.link_class			, A.link_lang			, A.creat_sys_cd			, (SELECT COUNT(1) FROM TB_STORG B WHERE B.link_trgt_id=A.link_trgt_id) link_cnt		FROM TB_STLINKTRGT A		WHERE A.link_trgt_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : select
+-- Query Id : findLinkTrgtId
+
+		SELECT 'L'||LPAD(SUBSTR(NVL(MAX(link_trgt_id),0),2,6) + 1, 6, '0') FROM TB_STLINKTRGT 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : delete
+-- Query Id : deleteLinkTrgt
+
+		DELETE FROM TB_STLINKTRGT WHERE LINK_TRGT_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : insert
+-- Query Id : createLinkTrgt
+
+		INSERT INTO TB_STLINKTRGT (			link_trgt_id, link_trgt_nm, link_ip, link_port, link_user_id		   ,link_pwd, link_class, link_lang, creat_sys_cd, monitor_port		) VALUES (	  		  '1'			 ,'1'			 ,'1'			 ,'1'			 ,'1'			 ,'1'			 ,'1'			 ,'1'			 ,'1'			 ,DECODE('1','04','9610')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml
+-- Query    : update
+-- Query Id : updateLinkTrgtSetOrg
+
+		UPDATE TB_STORG		SET   link_trgt_id = '1'		WHERE record_center_id = '1'		AND   org_cd IN		          (SELECT org_cd		           FROM TB_STORG		           WHERE record_center_id = '1'		           START WITH org_cd = '1'		                 AND  record_center_id = '1'		           CONNECT BY PRIOR org_cd = upper_org_cd		                      AND   record_center_id = '1')	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon_source\rmsUndTakeDaemon\src\main\resources\sqlmap\rms\default\rms\sys\confset\ConfSet.xml

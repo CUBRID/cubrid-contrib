@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.file">
+	
+	<!-- 
+		파일 정보 조회
+	 -->
+	<resultMap id="findFileInfo-result" class="rms.common.file.domain.RmsFile">
+		<result property="fileKey"		column="FILE_KEY"/>
+		<result property="fileName"			column="FILE_NM"/>
+		<result property="fileSize"				column="FILE_SIZE"/>
+		<result property="filePath"			column="FILE_PATH"/>
+	</resultMap>
+	<select id="findFileInfo" parameterClass="rms.common.file.domain.RmsFile" resultMap="findFileInfo-result">
+		SELECT FILE_KEY
+			, FILE_NM
+			, FILE_SIZE
+			, FILE_PATH
+		FROM  TB_STFILEMNG
+		WHERE FILE_KEY = #fileKey:VARCHAR#
+	</select>
+	
+	<!-- 
+		파일 정보 등록
+	 -->
+	<insert id="createFileInfo" parameterClass="rms.common.file.domain.RmsFile">
+		INSERT INTO TB_STFILEMNG
+		(
+			FILE_KEY, FILE_NM, FILE_SIZE, FILE_PATH
+		)
+		VALUES
+		(
+			#fileKey:VARCHAR#, #fileName:VARCHAR#, #fileSize:NUMBER#, #filePath:VARCHAR#
+		)
+	</insert>		 
+	 
+	<!-- 
+		파일 정보 삭제
+	 -->	 
+	 <delete id="deleteFileInfo" parameterClass="rms.common.file.domain.RmsFile">
+		DELETE TB_STFILEMNG
+		WHERE FILE_KEY = #fileKey:VARCHAR#
+	</delete>
+</sqlMap>

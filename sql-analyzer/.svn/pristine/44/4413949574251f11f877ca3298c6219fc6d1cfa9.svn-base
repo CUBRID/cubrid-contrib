@@ -1,0 +1,151 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : countCompuEquipPagedList
+
+		SELECT COUNT(1)        FROM TB_STCOMPUEQUIP A, TB_STRECORDCENTER B        WHERE A.record_center_id = '1'         AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : findCompuEquipPagedList
+
+		SELECT E.sno		      ,E.equip_nm		      ,E.goods_nm		      ,E.goods_cnt		      ,E.intro_ymd		      ,E.remk		      ,E.record_center_cd		      ,E.record_center_id		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.*, B.record_center_cd		            FROM TB_STCOMPUEQUIP A, TB_STRECORDCENTER B		            WHERE A.record_center_id = '1' 		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            ORDER BY A.sno		            ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : insert
+-- Query Id : createCompuEquip
+
+		INSERT INTO TB_STCOMPUEQUIP(			record_center_id, sno, equip_nm, goods_nm, goods_cnt, intro_ymd, remk		) VALUES (			'1', (SELECT NVL(MAX(sno),0) + 1 FROM TB_STCOMPUEQUIP WHERE record_center_id = '1'), '1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : update
+-- Query Id : updateCompuEquip
+
+		UPDATE TB_STCOMPUEQUIP		SET   equip_nm  = '1'		     ,goods_nm  = '1'		     ,goods_cnt = '1'		     ,intro_ymd = '1'		     ,remk  = '1'		WHERE record_center_id = '1'		AND   sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : delete
+-- Query Id : deleteCompuEquip
+
+		DELETE FROM TB_STCOMPUEQUIP WHERE record_center_id = '1' AND sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : countPresvFacPagedList
+
+		SELECT COUNT(1)		FROM TB_STSTAKRMINFO A, TB_ZZCOMCD B		WHERE A.record_center_id = '1' 		AND (A.stakrm_type_cd = B.COM_CD and B.COM_TYPE_CD = 'ST17');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : findPresvFacPagedList
+
+		SELECT E.sno		      ,E.stakrm_nm		      ,E.com_cd_nm AS stakrm_type_nm		      ,E.com_cd AS stakrm_type_cd		      ,E.area		      ,E.use_rate		      ,E.remk		      ,E.info_file_id		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST19' AND Z.com_cd = E.stakrm_loc) AS stakrm_loc_nm		      ,E.stakrm_loc		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*  		        FROM (		            SELECT A.*, B.*		            FROM TB_STSTAKRMINFO A, TB_ZZCOMCD B		            WHERE A.record_center_id = '1' 		            AND (A.stakrm_type_cd = B.COM_CD and B.COM_TYPE_CD = 'ST17')		            ORDER BY A.sno		        ) C		   		WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : insert
+-- Query Id : createPresvFac
+
+		INSERT INTO TB_STSTAKRMINFO (			record_center_id, sno, stakrm_nm, stakrm_loc, area, stakrm_Type_Cd, use_Rate, remk, info_file_id		) VALUES (			 '1'			,(SELECT NVL(MAX(sno),0) + 1 FROM TB_STSTAKRMINFO WHERE record_center_id = '1')		    ,'1'		    ,'1'		    ,'1'		    ,'1'		    ,'1'		    ,'1'		    ,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : findPresvFacInfoFile
+
+		SELECT INFO_FILE_ID FROM TB_STSTAKRMINFO		WHERE RECORD_CENTER_ID = '1'		AND SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : update
+-- Query Id : updatePresvFac
+
+		UPDATE TB_STSTAKRMINFO		SET   stakrm_nm =  '1' 		     ,stakrm_loc = '1'		     ,area = '1'		     ,stakrm_type_cd = '1'		     ,use_rate = '1'		     ,remk = '1'		       		     		,info_file_id = '1'		     	  		WHERE record_center_id = '1'		AND sno = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : delete
+-- Query Id : deletePresvFac
+
+		DELETE FROM TB_STSTAKRMINFO WHERE record_center_id = '1' AND sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : countPresvEquipPagedList
+
+		SELECT  COUNT(1)        FROM TB_STPRESVEQUIP A        WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : findPresvEquipPagedList
+
+		SELECT E.record_center_id	          ,E.sno	          ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST13' AND Z.com_cd = E.equip_clss_cd) AS equip_clss_nm	          ,E.equip_clss_cd	          ,E.equip_type	          ,E.goods_nm	          ,E.goods_cnt	          ,E.intro_ymd	          ,E.remk		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT  A.*		            FROM TB_STPRESVEQUIP A		            WHERE RECORD_CENTER_ID = '1'		            ORDER BY A.sno		        ) C		        WHERE ROWNUM <= '1'		    ) D 		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : insert
+-- Query Id : createPresvEquip
+
+		INSERT INTO TB_STPRESVEQUIP (			RECORD_CENTER_ID, SNO, EQUIP_CLSS_CD, EQUIP_TYPE, GOODS_NM, GOODS_CNT, INTRO_YMD,REMK		) VALUES (			 '1'			,(SELECT DECODE((MAX(TO_NUMBER(SNO))),null,0,(MAX(TO_NUMBER(SNO))))+1 FROM TB_STPRESVEQUIP)			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : update
+-- Query Id : updatePresvEquip
+
+		UPDATE TB_STPRESVEQUIP	 	SET    EQUIP_CLSS_CD = '1'	 		  ,EQUIP_TYPE = '1'	 		  ,GOODS_NM = '1'	 		  ,GOODS_CNT = '1'	 		  ,INTRO_YMD = '1'	 		  ,REMK =  '1'	  	WHERE  RECORD_CENTER_ID = '1'	  	AND    SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : delete
+-- Query Id : deletePresvEquip
+
+		DELETE TB_STPRESVEQUIP WHERE record_center_id = '1' AND sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : countDisInfecPagedList
+
+		SELECT COUNT(1)          FROM TB_STDISINF A, TB_ZZCOMCD B        WHERE B.com_type_cd='ST14'         AND B.com_cd=A.disinf_trgt_cd        AND A.record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : select
+-- Query Id : findDisInfecPagedList
+
+		SELECT E.record_center_id		      ,E.sno		      ,E.disinf_ymd		      ,E.com_cd_nm AS disinf_target		      ,E.disinf_trgt_cd		      ,E.drug_nm		      ,E.disinf_user_nm		      ,E.remk		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.*, B.*  		            FROM TB_STDISINF A, TB_ZZCOMCD B		            WHERE B.com_type_cd ='ST14' 		            AND B.com_cd = A.disinf_trgt_cd		            AND A.record_center_id = '1'		            ORDER BY A.sno		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : insert
+-- Query Id : createDisInfec
+
+		INSERT INTO TB_STDISINF (			RECORD_CENTER_ID, SNO, DISINF_YMD, DISINF_TRGT_CD, DRUG_NM, DISINF_USER_NM, REMK		) VALUES (			 '1'			,(SELECT DECODE((MAX(TO_NUMBER(SNO))),null,0,(MAX(TO_NUMBER(SNO))))+1 FROM TB_STDISINF WHERE RECORD_CENTER_ID = '1')			,'1'			,'1'			,'1'			,'1'			,'1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : update
+-- Query Id : updateDisInfec
+
+		UPDATE TB_STDISINF	  	SET  DISINF_YMD = '1'	  		,DISINF_TRGT_CD = '1'	  		,DRUG_NM = '1'	  		,DISINF_USER_NM = '1'	  		,REMK =  '1'	  	WHERE RECORD_CENTER_ID = '1'	  	AND   SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml
+-- Query    : delete
+-- Query Id : deleteDisInfec
+
+		DELETE FROM TB_STDISINF WHERE RECORD_CENTER_ID = '1' AND SNO = '1' 	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsEquip.xml

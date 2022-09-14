@@ -1,0 +1,39 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml
+-- Query    : select
+-- Query Id : findTopMenuLvl1
+
+		SELECT menu_id		     , menu_nm		     , upper_menu_id		     , NVL(B.link_img_top_on,'inc/top/menu_over_00.gif') link_img_top_on		     , NVL(B.link_img_top_off,'inc/top/menu_00.gif') link_img_top_off		FROM			(SELECT DISTINCT			         A.menu_id			        ,A.menu_nm			        ,A.upper_menu_id			        ,A.menu_sort_sno			        ,A.menu_link_sno			FROM    TB_STMENU A			WHERE   A.record_center_id = '1'			AND     A.use_flag = '1'			AND     A.menu_div_cd = '1'				       AND   A.record_center_id = '1'			) A			, TB_STMENULINK B		WHERE A.menu_link_sno = B.menu_link_sno(+)		ORDER BY upper_menu_id, menu_sort_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml
+-- Query    : select
+-- Query Id : findTopMenuLvl2
+
+		SELECT menu_id		     , menu_nm		     , upper_menu_id		     , row_idx		     , ROWNUM row_num		FROM(			SELECT menu_id			     , menu_nm				 , upper_menu_id				 , ROW_NUMBER() OVER (PARTITION BY upper_menu_id ORDER BY menu_sort_sno) row_idx			FROM (				SELECT  DISTINCT				         A.menu_id				        ,A.menu_nm				        ,A.upper_menu_id				        ,A.menu_sort_sno				FROM    TB_STMENU A				WHERE   A.record_center_id = '1'				AND     A.use_flag = '1'				AND     A.menu_div_cd = '2'				START WITH A.menu_id IN ( SELECT C.menu_id FROM TB_STMENUGRANTLINK C						                    WHERE C.menu_grant_grp_cd in ( SELECT D.menu_grant_grp_cd from TB_STUSER D						                                                   WHERE D.user_id = '1'						                                                   AND   D.record_center_id = '1'						                   										  )						                    AND   C.record_center_id = '1'						                  )					  AND  A.record_center_id = '1'				CONNECT BY PRIOR A.upper_menu_id = A.menu_id 				           AND   A.record_center_id = '1'				)			ORDER BY upper_menu_id, menu_sort_sno		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml
+-- Query    : select
+-- Query Id : findLeftMenuObject
+
+		SELECT A.menu_id, A.menu_nm			, LOWER(NVL(B.link_css,'SYS.css')) AS link_css			, NVL(B.link_img_left,'inc/top/menu_00.gif') AS link_img_left		FROM TB_STMENU A		   , TB_STMENULINK B		WHERE A.record_center_id = '1'		AND   A.menu_id = '1'		AND   A.menu_link_sno = B.menu_link_sno(+);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml
+-- Query    : select
+-- Query Id : findLeftMenuList
+
+		SELECT E.menu_id, E.menu_nm, E.upper_menu_id, E.menu_div_cd, E.menu_sort_sno		     , ROW_NUMBER() OVER (PARTITION BY upper_menu_id ORDER BY menu_sort_sno) row_idx		     , E.link_url, E.row_num, E.lower_cnt		FROM		(		    SELECT  A.menu_id, A.menu_nm, A.upper_menu_id, A.menu_div_cd, A.menu_sort_sno, B.link_url		          , ROWNUM row_num		          , (SELECT COUNT(1)		             FROM TB_STMENU D, (SELECT G.user_id, G.record_center_id, H.menu_id 		                                FROM TB_STUSER G, TB_STMENUGRANTLINK H		                                WHERE G.record_center_id = H.record_center_id		                                AND   G.menu_grant_grp_cd = H.menu_grant_grp_cd		                                AND   G.record_center_id = '1'		                                AND   G.user_id          = '1') E		             WHERE D.record_center_id = '1'		             AND   D.upper_menu_id    = A.menu_id			         AND   D.menu_id          = E.menu_id			         					 AND   E.record_center_id = '1'					 AND   E.user_id          = '1') lower_cnt		    FROM (		           SELECT A.record_center_id, A.menu_id, A.menu_nm, A.upper_menu_id, A.menu_div_cd, A.menu_sort_sno, A.menu_link_sno		           FROM   TB_STMENU A		           WHERE  A.menu_id in ( SELECT C.menu_id FROM TB_STMENUGRANTLINK C													WHERE C.menu_grant_grp_cd in ( SELECT F.menu_grant_grp_cd from TB_STUSER F													                               WHERE F.user_id = '1'													                               AND   F.record_center_id = '1')													AND   C.record_center_id = '1' )		           AND    A.upper_menu_id IN ( SELECT menu_id FROM TB_STMENU		                                       WHERE record_center_id = '1'		                                       AND   upper_menu_id = '1' )		           AND    A.record_center_id = '1'		           AND    A.use_flag = '1'		           UNION ALL		           SELECT A.record_center_id, A.menu_id, A.menu_nm, A.upper_menu_id, A.menu_div_cd, A.menu_sort_sno, A.menu_link_sno		           FROM   TB_STMENU A		           WHERE  A.upper_menu_id = '1'		           AND    A.record_center_id = '1'		           AND    A.menu_id IN ( SELECT DISTINCT upper_menu_id FROM TB_STMENU		                                 WHERE menu_id IN (SELECT C.menu_id FROM TB_STMENUGRANTLINK C																			WHERE C.menu_grant_grp_cd in ( SELECT D.menu_grant_grp_cd from TB_STUSER D																			                               WHERE D.user_id = '1'																			                               AND   D.record_center_id = '1')																			AND   C.record_center_id = '1')		                                 AND   record_center_id = '1'		                                 AND   use_flag = '1'		                                )		           AND    A.RECORD_CENTER_ID = '1'		           AND    A.use_flag = '1'		    ) A , TB_STMENULINK B		    WHERE A.menu_link_sno = B.menu_link_sno(+)		    START WITH A.upper_menu_id = '1'		          AND  A.record_center_id = '1'		    CONNECT BY PRIOR A.menu_id = A.upper_menu_id		          AND  A.record_center_id = '1'		    ORDER SIBLINGS BY A.menu_div_cd, A.menu_sort_sno		)E		ORDER BY row_num	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml
+-- Query    : select
+-- Query Id : findMultiAdminId
+
+	    SELECT multi_admin_id		FROM TB_STCENTERADMIN		WHERE record_center_id = '1' 		AND	user_id = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\layout\menu.xml

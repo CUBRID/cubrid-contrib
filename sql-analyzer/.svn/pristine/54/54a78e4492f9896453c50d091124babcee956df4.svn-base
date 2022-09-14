@@ -1,0 +1,109 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderHead
+
+		SELECT A.record_center_id			, A.folder_recv_seq			, A.creat_sys_cd			, A.title AS org_title			, A.title			, A.clss_id	    FROM  TB_CRFOLDER A	    WHERE A.record_center_id = '1'	    AND   A.folder_recv_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderInfo
+
+		SELECT A.record_center_id			, A.folder_recv_seq		    , A.creat_sys_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=A.creat_sys_cd) creat_sys_nm		    , A.folder_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD41' AND Z.com_cd=A.folder_detl_type_cd) folder_detl_type_nm		    , A.title AS org_title		    , A.title		    , A.creat_purps			, A.sumry			, A.folder_bispjt_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD20' AND Z.com_cd=A.folder_bispjt_div_cd) folder_bispjt_div_nm			, A.org_cd			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_nm			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_abbr_nm			, A.read_range			, NVL((SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD43' AND Z.com_cd=A.read_range),(SELECT org_abbr_nm FROM TB_STORG WHERE record_center_id=A.record_center_id AND org_cd=A.read_range)) read_range_nm			, A.chk_oper_read_range_cd oper_read_range_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=A.chk_oper_read_range_cd) oper_read_range_nm			, A.presv_term_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=DECODE(A.presv_term_cd, '20', '25', A.presv_term_cd)) presv_term_nm			, A.clss_id			, A.clss_nm			, A.folder_type_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd) folder_type_div_nm		    , A.sub_title		    , A.creat_yyyy		    , SUBSTR(RPAD(A.folder_close_dtime,14,'0'),1,4) close_yyyy		    , A.folder_reg_seq		    , A.ho_no			, A.old_folder_creat_org_nm			, A.old_folder_clss_no			, A.group_presv_term_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=DECODE(A.group_presv_term_cd, '20', '25', A.group_presv_term_cd)) group_presv_term_nm			, A.presv_term_fix_rsn			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD09' AND Z.com_cd=A.presv_method_cd) presv_method_nm			, A.presv_area_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD10' AND Z.com_cd=A.presv_area_cd) presv_area_nm			, A.presv_loc			, RPAD(A.funsh_end_dtime,14,'0') funsh_end_dtime			, A.funsh_rsn			, A.cr_report_org_cd take_org_cd			, A.cr_report_yyyy take_yyyy			, A.cr_report_sno take_sno			, NVL(A.folder_size,0) folder_size			, TO_NUMBER(NVL(A.record_tot_page_cnt,'0')) record_tot_page_cnt			, TO_NUMBER(NVL(A.record_reg_cnt,'0')) record_reg_cnt			, (SELECT COUNT(1) FROM TB_CRRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_recv_seq=A.folder_recv_seq AND R.erecord_flag='1') elect_record_reg_cnt			, (SELECT COUNT(1) FROM TB_CRRECORD R WHERE R.record_center_id=A.record_center_id AND R.folder_recv_seq=A.folder_recv_seq AND R.erecord_flag='2') nonelect_record_reg_cnt			, TO_NUMBER(NVL(A.efile_cnt,'0')) efile_cnt			, '' adjst_descr			, '' damg_cont			, '' damg_handl_rslt			, A.creat_user_nm			, A.creat_user_org_nm			, A.creat_user_pos_rank_nm			, RPAD(A.creat_dtime,14,'0') creat_dtime			, '' scan_prog_state_cd			, '' scan_prog_state_nm			, '' opti_disk_store_state_cd			, '' opti_disk_store_state_nm			, '' mf_pic_state_cd			, '' mf_pic_state_nm			, '' neo_trans_state			, '' neo_trans_state_nm			, '' stakrm_mng_no			, A.erecord_flag			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=A.erecord_flag) erecord_flag_nm			, '1' accs_flag	         , (SELECT COUNT(*)			  FROM TB_CRFOLDER 				WHERE CREAT_SYS_CD = A.CREAT_SYS_CD 				AND ORG_CD = A.ORG_CD 				AND CLSS_ID = A.CLSS_ID 				AND CREAT_YYYY = A.CREAT_YYYY 				AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS ho_no_cnt		FROM (			SELECT A.*			     , DECODE(A.creat_sys_cd,'01',DECODE( A.read_range,'0','03','1','01'					                                              ,DECODE( (SELECT COUNT(1) FROM TB_STORG WHERE record_center_id=A.record_center_id AND upper_org_cd=A.read_range)					                                                        ,0,'02','01') )								        ,'02','01'								        ,'04',DECODE( A.read_range,'0','03','1','01'					                                              ,DECODE( (SELECT COUNT(1) FROM TB_STORG WHERE record_center_id=A.record_center_id AND upper_org_cd=A.read_range)					                                                        ,0,'02','01') )								        ,A.read_range) chk_oper_read_range_cd			FROM  TB_CRFOLDER A			WHERE A.record_center_id = '1'			AND   A.folder_recv_seq = '1'		) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : countCrFolderRecordPagedList
+
+		SELECT COUNT(1)		FROM  TB_CRRECORD A		WHERE A.record_center_id = '1'		AND   A.folder_recv_seq = '1' AND 			A.title LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderRecordPagedList
+
+		SELECT E.record_center_id			, E.record_recv_seq			, E.title			, E.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=E.record_detl_type_cd) record_detl_type_nm			, RPAD(E.creat_reg_dtime,14,'0') creat_reg_dtime			, E.duty_chrgr_nm			, E.erecord_flag			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm			, E.oper_read_range_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm			, E.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=E.record_reg_div_cd) record_reg_div_nm			, E.open_div_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm			, (CASE WHEN E.prod_type_cd is not null THEN E.prod_type_cd ELSE (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END) prod_type_cd						, '1' AS accs_flag		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT /*+ index(A, TB_CRRECORD_IX10) */ A.*			        FROM   TB_CRRECORD A			        WHERE  A.record_center_id = '1'			        AND    A.folder_recv_seq = '1' AND 						A.title LIKE '1'					 					ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findExcelCrFolderRecordPagedList
+
+		SELECT E.record_center_id			, E.record_recv_seq			, E.title			, E.record_detl_type_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=E.record_detl_type_cd) record_detl_type_nm			, RPAD(E.creat_reg_dtime,14,'0') creat_reg_dtime			, E.duty_chrgr_nm			, E.erecord_flag			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm			, E.oper_read_range_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm			, E.record_reg_div_cd			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=E.record_reg_div_cd) record_reg_div_nm			, E.open_div_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm			, DECODE((CASE WHEN E.prod_type_cd is not null THEN E.prod_type_cd ELSE (CASE WHEN E.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END),'0','생산','접수') prod_type_cd			, 'O' AS accs_flag		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT /*+ index(A, TB_CRRECORD_IX10) */ A.*			        FROM   TB_CRRECORD A			        WHERE  A.record_center_id = '1'			        AND    A.folder_recv_seq = '1' AND 						A.title LIKE '1'					 					ORDER BY A.record_center_id, A.creat_reg_dtime, A.creat_reg_no				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : countCrFolderTaskPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT /*+ index(A, TB_CRRECORD_IX10) */			       A.record_center_id			     , A.record_recv_seq			     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime			     , A.creat_reg_no				 , A.record_detl_type_cd				 , DECODE(A.record_detl_type_cd,'01','문서','02','메모','03','회의','') record_detl_type_nm				 , A.duty_chrgr_nm 				 , A.org_cd                 , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_nm                 , (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_abbr_nm				 , A.title				 , TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt				 , A.oper_read_range_cd			FROM  TB_CRRECORD A			WHERE A.record_center_id = '1'			AND   A.folder_recv_seq = '1'			 AND 				A.prod_type_cd = '1'			 		) B		 WHERE  			B.title LIKE '1'			  AND 			B.title LIKE '1'			  AND 			B.creat_reg_dtime >= '1'||'000000'			  AND 			B.creat_reg_dtime <= '1'||'240000'			  AND 			B.duty_chrgr_nm LIKE '1'			  AND 			B.org_abbr_nm LIKE '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderTaskPagedList
+
+		SELECT E.record_center_id		     , E.record_recv_seq		     , E.creat_reg_dtime		     , E.record_detl_type_cd		     , E.record_detl_type_nm		     , E.duty_chrgr_nm		     , E.org_cd		     , E.org_nm		     , E.org_abbr_nm		     , E.title		     , E.attach_cnt		     , E.oper_read_range_cd		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT B.*					FROM (						SELECT /*+ index(A, TB_CRRECORD_IX10) */						       A.record_center_id						     , A.record_recv_seq						     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime						     , A.creat_reg_no							 , A.record_detl_type_cd							 , DECODE(A.record_detl_type_cd,'01','문서','02','메모','03','회의','') record_detl_type_nm							 , A.duty_chrgr_nm 							 , A.org_cd			                 , (SELECT B.org_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_nm			                 , (SELECT B.org_abbr_nm FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.org_cd) org_abbr_nm							 , A.title							 , TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt							 , A.oper_read_range_cd						FROM  TB_CRRECORD A						WHERE A.record_center_id = '1'						AND   A.folder_recv_seq = '1'						 AND 							A.prod_type_cd = '1'						 					) B					 WHERE  						B.title LIKE '1'						  AND 						B.title LIKE '1'						  AND 						B.creat_reg_dtime >= '1'||'000000'						  AND 						B.creat_reg_dtime <= '1'||'240000'						  AND 						B.duty_chrgr_nm LIKE '1'						  AND 						B.org_abbr_nm LIKE '1'						  					ORDER BY B.record_center_id, B.creat_reg_dtime, B.creat_reg_no				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderTaskOrderList
+
+		SELECT A.record_recv_seq		     , RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime			 , A.duty_chrgr_nm 			 , A.title			 , A.oper_read_range_cd		FROM  TB_CRRECORD A		WHERE A.record_center_id = '1'		AND   A.folder_recv_seq = '1'		AND   A.record_detl_type_cd = '04'		 AND 			A.prod_type_cd = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderClssBisList
+
+		SELECT bis_clss_id, bis_clss_nm, levl		FROM  TB_ZZBISCLSS		START WITH bis_clss_id = '1'		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderClssPjtList
+
+		SELECT bis_clss_id, bis_clss_nm, levl		FROM TB_ZZBISCLSS		START WITH bis_clss_id IN ( SELECT C.bis_clss_id		                            FROM TB_CRFOLDER A, TB_CRFOLDERPJTCLSS B, TB_ZZPJTMAPPNG C		                            WHERE A.record_center_id = '1'									AND   A.folder_recv_seq = '1'									AND   B.record_center_id = A.record_center_id									AND   B.folder_recv_seq = A.folder_recv_seq									AND   C.pjt_clss_id = B.pjt_clss_id )		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderClssRelList
+
+		SELECT bis_clss_id, bis_clss_nm, levl		FROM  TB_ZZBISCLSS		START WITH bis_clss_id IN ( SELECT B.rel_trgt_id		                            FROM  TB_CRFOLDER A, TB_CRFOLDERREL B		                            WHERE A.record_center_id = '1'									AND   A.folder_recv_seq = '1'									AND   B.record_center_id = A.record_center_id									AND   B.folder_recv_seq = A.folder_recv_seq									AND   B.rel_type_cd = '03' )		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderChngHistList
+
+	    SELECT A.chng_ymd	         , A.chng_user_nm	         , A.chng_rsn		     , A.title_bef		     , A.title_aft		     , A.folder_type_div_cd_bef			 , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd_bef) AS folder_type_div_cd_bef_nm		     , A.folder_type_div_cd_aft			 , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.folder_type_div_cd_aft) AS folder_type_div_cd_aft_nm	    FROM  TB_CRFOLDERCHNGHIST A	    WHERE A.record_center_id = '1'	    AND   A.folder_recv_seq = '1'		ORDER BY A.record_center_id, A.folder_recv_seq, A.chng_hist_no	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderTakeTakovrList
+
+		SELECT ROWNUM AS take_takovr_sno, take_takovr_type_nm, take_takovr_div_nm, take_takovr_org_cd, take_takovr_org_nm			, take_takovr_clss_id, take_takovr_clss_nm, take_takovr_folder_id, take_takovr_folder_title, take_takovr_dt		FROM (			SELECT '생산기관간 인수인계' take_takovr_type_nm				, (CASE WHEN take_takovr_div_cd='1' THEN '인수' WHEN take_takovr_div_cd='2' THEN '인계' END) take_takovr_div_nm				, A.take_takovr_org_cd				, A.take_takovr_org_nm				, A.TAKE_TAKOVR_CLSS_ID				, NVL((SELECT Z.BIS_CLSS_NM FROM TB_ZZBISCLSS Z WHERE Z.BIS_CLSS_ID = A.TAKE_TAKOVR_CLSS_ID), 					(SELECT Z.UNIT_NM FROM TB_ZZUNIT Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.UNIT_CD = A.TAKE_TAKOVR_CLSS_ID)) AS TAKE_TAKOVR_CLSS_NM				, A.TAKE_TAKOVR_FOLDER_ID				, A.TAKE_TAKOVR_FOLDER_TITLE				, SUBSTR(A.take_takovr_creat_dtime,1,8) take_takovr_dt			FROM  TB_CRFOLDERTAKETAKOVR A			WHERE A.record_center_id = '1'			AND   A.folder_recv_seq = '1'			AND   A.take_takovr_div_cd IN ('1','2')			ORDER BY A.record_center_id, A.folder_recv_seq, A.take_takovr_creat_dtime		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderRjctHistList
+
+		SELECT (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'TK22' AND Z.com_cd = A.take_state_cd) take_state_cd_nm			   ,A.rjct_dtime		       ,(CASE WHEN A.folder_err_flag = '1' THEN 'Y' 		              ELSE 'N'		         END) folder_err_yn		       ,A.record_err_cnt||'/'||A.record_tot_cnt record_cnt		       ,A.file_err_cnt||'/'||A.file_tot_cnt file_cnt		       ,A.exam_cont		       ,A.rjct_cont 		  FROM TB_CRFOLDERTAKEHIST A		 WHERE 		    EXISTS (		        SELECT 1		          FROM TB_CRFOLDER B 		         WHERE B.RECORD_CENTER_ID = '1'		           AND B.FOLDER_TAKE_SEQ = '1'			   AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID			   AND B.CREAT_SYS_CD = A.CREAT_SYS_CD			   AND B.ORG_CD = A.ORG_CD			   AND B.CLSS_ID = A.CLSS_ID			   AND B.CREAT_YYYY = A.CREAT_YYYY			   AND B.FOLDER_REG_SEQ = A.FOLDER_REG_SEQ			   AND B.HO_NO = A.HO_NO		       )		   AND TAKE_STATE_CD IN ('02','03')		ORDER BY hist_sno;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml
+-- Query    : select
+-- Query Id : findCrFolderKeywdList
+
+		SELECT A.spcl_list1 keywd		FROM  TB_CRSPCLLIST A		WHERE A.record_center_id = '1'		AND   A.folder_recv_seq = '1'		AND   A.spcl_list_loc = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailCrFolder.xml

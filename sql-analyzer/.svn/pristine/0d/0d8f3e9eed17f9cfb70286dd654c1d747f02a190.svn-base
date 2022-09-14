@@ -1,0 +1,939 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="transf.offer">
+
+	<resultMap id="findCreatStateApprInfrmFormPagedList-result" class="rms.transf.offer.domain.CrInfrmForm" >
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="infrmYyyy" 				column="infrm_yyyy"/>
+		<result property="infrmFormTypeCd" 			column="infrm_form_type_cd"/>
+		<result property="infrmFormTypeNm" 			column="infrm_form_type_nm"/>
+		<result property="fileCreatState" 			column="file_creat_state"/>
+		<result property="fileCreatStateNm" 		column="file_creat_state_nm"/>
+		<result property="fileNm" 					column="file_nm"/>
+		<result property="filePath" 				column="file_path"/>
+		<result property="fileCreatDtime" 			column="file_creat_dtime"/>
+	</resultMap>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황통보>생산현황통보서식 (조회)
+	 -->
+	<select id="findCreatStateApprInfrmFormPagedList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreatStateApprInfrmFormPagedList-result">
+	    SELECT record_center_id
+	    	, infrm_yyyy
+	    	, infrm_form_type_cd
+	    	, (SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd='CR03' AND com_cd=infrm_form_type_cd) AS infrm_form_type_nm
+	    	, file_creat_state
+	    	, (CASE WHEN file_creat_state='0' THEN '미생성' WHEN file_creat_state='1' THEN '생성중' WHEN file_creat_state='2' THEN '생성완료' END) AS file_creat_state_nm
+	    	, file_nm
+	    	, file_path
+	    	, file_creat_dtime
+	    FROM  TB_CRINFRMFORM
+	    WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   infrm_yyyy = #infrmYyyy:VARCHAR#
+	    ORDER BY record_center_id, infrm_yyyy, infrm_form_type_cd
+	</select>
+	
+	<!--
+		기록물인수>연계인수>생산현황통보>생산현황통보서식 (파일생성내역 저장 - 1.통보서식 생성정보 삭제) 
+	 -->
+	<insert id="deleteCreateStateInfrmFormList" parameterClass="rms.transf.offer.domain.CrInfrmForm">
+		DELETE FROM TB_CRINFRMFORM
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   infrm_yyyy = #infrmYyyy:VARCHAR#
+	</insert>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황통보>생산현황통보서식 (파일생성내역 저장 - 2.통보서식 미생성 상태 추가)
+	 -->
+	<insert id="creatCreateStateInfrmForm" parameterClass="rms.transf.offer.domain.CrInfrmForm">
+		INSERT INTO TB_CRINFRMFORM
+		(record_center_id, infrm_yyyy, infrm_form_type_cd, file_creat_state, file_nm, file_path, file_creat_dtime, reg_dtime)
+		VALUES
+		(#recordCenterId:VARCHAR#, #infrmYyyy:VARCHAR#, #infrmFormTypeCd:VARCHAR#, '0', '', '', '', #regDtime:VARCHAR#)
+	</insert>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황통보>생산현황통보서식 (파일생성내역 저장 - 3.통보서식 생성중 상태 갱신)
+	 -->
+	<update id="updateCreateStateInfrmFormIng" parameterClass="rms.transf.offer.domain.CrInfrmForm">
+		UPDATE TB_CRINFRMFORM
+		SET   file_creat_state = '1'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   infrm_yyyy = #infrmYyyy:VARCHAR#
+		AND   infrm_form_type_cd = #infrmFormTypeCd:VARCHAR#
+	</update>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황통보>생산현황통보서식 (파일생성내역 저장 - 4.통보서식 생성완료 상태 갱신)
+	 -->
+	<update id="updateCreateStateInfrmFormEnd" parameterClass="rms.transf.offer.domain.CrInfrmForm">
+		UPDATE TB_CRINFRMFORM
+		SET   file_creat_state = '2'
+		    , file_nm = #fileNm:VARCHAR#
+		    , file_path = #filePath:VARCHAR#
+		    <!--cubrid , file_creat_dtime = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+		    , file_creat_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   infrm_yyyy = #infrmYyyy:VARCHAR#
+		AND   infrm_form_type_cd = #infrmFormTypeCd:VARCHAR#
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<resultMap id="findCreateStateApprCreateCurStateList-result" class="rms.transf.offer.domain.StateApprExcelState" >
+		<result property="presvSum" 					column="presv_sum"/>
+		<result property="presv40" 						column="presv_40"/>
+		<result property="presv30" 						column="presv_30"/>
+		<result property="presv25" 						column="presv_25"/>
+		<result property="presv10" 						column="presv_10"/>
+		<result property="presv05" 						column="presv_05"/>
+		<result property="presv03" 						column="presv_03"/>
+		<result property="presv01" 						column="presv_01"/>
+	</resultMap>
+	
+	<!-- 
+		생산현황통보서식 - 서식1.생산기록물 현황(총괄표)
+		쿼리 성능을 위하여 소계,총계는 service 에서 합하도록 처리
+	 -->
+	<select id="findCreateStateApprCreateCurStateList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreateStateApprCreateCurStateList-result">
+		SELECT TA.type, TA.sno, TA.gubun
+		    , TA.presv_sum, TA.presv_40, TA.presv_30, TA.presv_25, TA.presv_10, TA.presv_05, TA.presv_03, TA.presv_01
+		FROM (
+		    SELECT '0' AS type, 1 sno, '총계_권수' gubun
+		    , 0 presv_sum, 0 presv_40, 0 presv_30, 0 presv_25, 0 presv_10, 0 presv_05, 0 presv_03, 0 presv_01
+		    FROM DUAL
+		    UNION
+		    SELECT '1' AS type, 1 sno, '비전자_소계(권)' gubun
+		    , 0 presv_sum, 0 presv_40, 0 presv_30, 0 presv_25, 0 presv_10, 0 presv_05, 0 presv_03, 0 presv_01
+		    FROM DUAL
+		    UNION
+		    SELECT '1' AS type, ROWNUM+1 AS sno, '비전자_'||(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=C.com_cd) AS gubun
+		        , C.presv_sum, C.presv_40, C.presv_30, C.presv_25, C.presv_10, C.presv_05, C.presv_03, C.presv_01
+		    FROM (
+		        SELECT
+		            A.com_cd
+		            , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		            , NVL(SUM(B.presv_40),0) AS presv_40
+		            , NVL(SUM(B.presv_30),0) AS presv_30
+		            , NVL(SUM(B.presv_25),0) AS presv_25
+		            , NVL(SUM(B.presv_10),0) AS presv_10
+		            , NVL(SUM(B.presv_05),0) AS presv_05
+		            , NVL(SUM(B.presv_03),0) AS presv_03
+		            , NVL(SUM(B.presv_01),0) AS presv_01
+		        FROM (
+		            SELECT A.folder_type_div_cd
+		                , A.presv_term_cd
+		                , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		                , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		                , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		                , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		                , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		                , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		                , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		            FROM  TB_CRFOLDER A
+		            <!--cubrid WHERE (A.record_center_id, A.folder_recv_seq)-->
+		            WHERE
+		            EXISTS 
+			    (
+				<!--cubrid SELECT record_center_id, folder_recv_seq-->
+				SELECT 1
+		                FROM  TB_CRRECORD
+		                WHERE record_center_id = #recordCenterId:VARCHAR#
+		                AND   erecord_flag = '2'
+				AND   record_center_id = A.record_center_id
+				AND   folder_recv_seq = A.folder_recv_seq
+		            )
+		            AND   A.creat_yyyy = #creatYyyy:VARCHAR#
+        		) B, (SELECT com_cd FROM TB_ZZCOMCD WHERE com_type_cd = 'RD01' AND com_cd in ('1', '2', '5')) A
+		        WHERE A.com_cd = B.folder_type_div_cd(+)
+		        GROUP BY A.com_cd
+		        ORDER BY (CASE WHEN A.com_cd='1' THEN 1 WHEN A.com_cd='5' THEN 2 WHEN A.com_cd='2' THEN 3 END)
+		    ) C
+		    UNION
+		    SELECT '2', 1, '전자_문서_문서(권)'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM  TB_CRFOLDER A
+		        <!--cubrid WHERE (A.record_center_id, A.folder_recv_seq)
+		        IN (SELECT record_center_id, folder_recv_seq -->
+		        WHERE 
+		        EXISTS (SELECT 1
+		            FROM  TB_CRRECORD
+		            WHERE record_center_id = #recordCenterId:VARCHAR#
+		            AND   erecord_flag = '1'
+			    AND   record_center_id = A.record_center_id
+			    AND   folder_recv_seq = A.folder_recv_seq
+		        )
+		        AND   A.creat_yyyy = #creatYyyy:VARCHAR#
+		    ) B
+		    UNION
+		    SELECT '2', 2, '전자_문서_문서(건)'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT 
+		                (SELECT F.creat_yyyy FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS creat_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS presv_term_cd
+		            FROM  TB_CRRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		        ) A
+		        WHERE A.creat_yyyy = #creatYyyy:VARCHAR#
+		    ) B
+		    UNION
+		    SELECT '2', 3, '전자_문서_크기(MB)'
+		        <!--cubrid , ( TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) ) AS presv_sum
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990')) AS presv_40
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990')) AS presv_30
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990')) AS presv_25
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990')) AS presv_10
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990')) AS presv_05
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990')) AS presv_03
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) AS presv_01-->
+		        , ( TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) ) AS presv_sum
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' ')) AS presv_40
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' ')) AS presv_30
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' ')) AS presv_25
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' ')) AS presv_10
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' ')) AS presv_05
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' ')) AS presv_03
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN A.record_size ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN A.record_size ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN A.record_size ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN A.record_size ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN A.record_size ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN A.record_size ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN A.record_size ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT 
+		                (SELECT F.creat_yyyy FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS creat_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS presv_term_cd
+		                , R.record_size
+		            FROM  TB_CRRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		        ) A
+		        WHERE A.creat_yyyy = #creatYyyy:VARCHAR#
+		    ) B
+		    UNION
+		    SELECT '3', 1, '전자_메모보고_단위과제카드수'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM  TB_CRFOLDER A
+		        <!--cubrid WHERE (A.record_center_id, A.folder_recv_seq)
+		        IN (SELECT record_center_id, folder_recv_seq-->
+		        WHERE
+		        EXISTS (SELECT 1
+		            FROM  TB_CRRECORD
+		            WHERE record_center_id = #recordCenterId:VARCHAR#
+		            AND   erecord_flag = '1'
+		            AND   record_detl_type_cd = '02'
+			    AND   record_center_id = A.record_center_id
+			    AND   folder_recv_seq = A.folder_recv_seq
+		        )
+		        AND   A.creat_yyyy = #creatYyyy:VARCHAR#
+		    ) B
+		    UNION
+		    SELECT '3', 2, '전자_메모보고_메모보고(건)'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT 
+		                (SELECT F.creat_yyyy FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS creat_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS presv_term_cd
+		            FROM  TB_CRRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		            AND   R.record_detl_type_cd = '02'
+		        ) A
+		        WHERE A.creat_yyyy = #creatYyyy:VARCHAR#
+		    ) B
+		    UNION
+		    SELECT '3', 3, '전자_메모보고_크기(MB)'
+		        <!--cubrid , ( TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) ) AS presv_sum
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990')) AS presv_40
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990')) AS presv_30
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990')) AS presv_25
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990')) AS presv_10
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990')) AS presv_05
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990')) AS presv_03
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) AS presv_01-->
+		        , ( TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) ) AS presv_sum
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' ')) AS presv_40
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' ')) AS presv_30
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' ')) AS presv_25
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' ')) AS presv_10
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' ')) AS presv_05
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' ')) AS presv_03
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN A.record_size ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN A.record_size ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN A.record_size ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN A.record_size ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN A.record_size ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN A.record_size ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN A.record_size ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT 
+		                (SELECT F.creat_yyyy FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS creat_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_CRFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_recv_seq=R.folder_recv_seq) AS presv_term_cd
+		                , R.record_size
+		            FROM  TB_CRRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		            AND   R.record_detl_type_cd = '02'
+		        ) A
+		        WHERE A.creat_yyyy = #creatYyyy:VARCHAR#
+		    ) B
+		) TA
+		ORDER BY TA.type, TA.sno
+	</select>
+	
+	<!-- 
+		생산현황통보서식 - 서식2.보유기록물 현황(총괄표)
+		쿼리 성능을 위하여 소계,총계는 service 에서 합하도록 처리
+	 -->
+	<select id="findCreateStateApprKeepCurStateList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreateStateApprCreateCurStateList-result">
+		SELECT TA.type, TA.sno, TA.gubun
+		    , TA.presv_sum, TA.presv_40, TA.presv_30, TA.presv_25, TA.presv_10, TA.presv_05, TA.presv_03, TA.presv_01
+		FROM (
+		    SELECT '0' AS type, 1 sno, '총계_권수' gubun
+		        , 0 presv_sum, 0 presv_40, 0 presv_30, 0 presv_25, 0 presv_10, 0 presv_05, 0 presv_03, 0 presv_01
+		    FROM DUAL
+		    UNION
+		    SELECT '1' AS type, 1 sno, '비전자_소계(권)' gubun
+		        , 0 presv_sum, 0 presv_40, 0 presv_30, 0 presv_25, 0 presv_10, 0 presv_05, 0 presv_03, 0 presv_01
+		    FROM DUAL
+		    UNION
+		    SELECT '1' AS type, ROWNUM+1 AS sno, C.gubun
+		        , C.presv_sum, C.presv_40, C.presv_30, C.presv_25, C.presv_10, C.presv_05, C.presv_03, C.presv_01
+		    FROM (
+		        SELECT
+		            '비전자_'||(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD01' AND Z.com_cd=A.com_cd) AS gubun
+		            , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		            , NVL(SUM(B.presv_40),0) AS presv_40
+		            , NVL(SUM(B.presv_30),0) AS presv_30
+		            , NVL(SUM(B.presv_25),0) AS presv_25
+		            , NVL(SUM(B.presv_10),0) AS presv_10
+		            , NVL(SUM(B.presv_05),0) AS presv_05
+		            , NVL(SUM(B.presv_03),0) AS presv_03
+		            , NVL(SUM(B.presv_01),0) AS presv_01
+		        FROM (
+		            SELECT A.folder_type_div_cd
+		                , A.presv_term_cd
+		                , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		                , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		                , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		                , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		                , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		                , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		                , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		            FROM  TB_RDFOLDER A
+		            <!--cubrid WHERE (A.record_center_id, A.folder_id)
+		            IN (SELECT record_center_id, folder_id-->
+		            WHERE 
+		            EXISTS (SELECT 1
+		                FROM  TB_RDRECORD
+		                WHERE record_center_id = #recordCenterId:VARCHAR#
+		                AND   erecord_flag = '2'
+				AND   record_center_id = A.record_center_id
+				AND   folder_id = A.folder_id
+		            )
+		            AND   A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+		            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+		                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+		                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+		                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+		                                                                            WHERE L.record_center_id=A.record_center_id
+		                                                                            AND L.folder_id=A.folder_id
+		                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+		                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+		                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+		                        ELSE 1 END ) = 1
+                ) B, (SELECT com_cd FROM TB_ZZCOMCD WHERE com_type_cd = 'RD01' AND com_cd in ('1', '2', '5')) A
+                WHERE A.com_cd = B.folder_type_div_cd(+)
+                GROUP BY A.com_cd
+                ORDER BY (CASE WHEN A.com_cd='1' THEN 1 WHEN A.com_cd='5' THEN 2 WHEN A.com_cd='2' THEN 3 END)
+		    ) C
+		    UNION
+		    SELECT '2', 1, '전자_문서_문서(권)'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM  TB_RDFOLDER A
+		        <!--cubrid WHERE (A.record_center_id, A.folder_id)
+		        IN (SELECT record_center_id, folder_id-->
+		        WHERE 
+		        EXISTS (SELECT 1
+		            FROM  TB_RDRECORD
+		            WHERE record_center_id = #recordCenterId:VARCHAR#
+		            AND   erecord_flag = '1'
+			    AND   record_center_id = A.record_center_id
+			    AND   folder_id = A.folder_id
+		        )
+		        AND   A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+	            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+	                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+	                                                                            WHERE L.record_center_id=A.record_center_id
+	                                                                            AND L.folder_id=A.folder_id
+	                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+	                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+	                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        ELSE 1 END ) = 1
+		    ) B
+		    UNION
+		    SELECT '2', 2, '전자_문서_문서(건)'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT R.record_center_id, R.folder_id
+		                , (SELECT F.take_yyyy FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS take_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS presv_term_cd
+		                , (SELECT F.folder_keep_state_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS folder_keep_state_cd
+		                , (SELECT F.transf_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS transf_ymd
+		                , (SELECT F.disuse_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS disuse_ymd
+		            FROM  TB_RDRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		        ) A
+		        WHERE A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+	            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+	                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+	                                                                            WHERE L.record_center_id=A.record_center_id
+	                                                                            AND L.folder_id=A.folder_id
+	                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+	                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+	                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        ELSE 1 END ) = 1
+		    ) B
+		    UNION
+		    SELECT '2', 3, '전자_문서_크기(MB)'
+		        <!--cubrid , ( TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) ) AS presv_sum
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990')) AS presv_40
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990')) AS presv_30
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990')) AS presv_25
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990')) AS presv_10
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990')) AS presv_05
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990')) AS presv_03
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) AS presv_01-->
+		        , ( TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) ) AS presv_sum
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' ')) AS presv_40
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' ')) AS presv_30
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' ')) AS presv_25
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' ')) AS presv_10
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' ')) AS presv_05
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' ')) AS presv_03
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN A.record_size ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN A.record_size ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN A.record_size ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN A.record_size ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN A.record_size ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN A.record_size ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN A.record_size ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT R.record_center_id, R.folder_id
+		                , (SELECT F.take_yyyy FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS take_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS presv_term_cd
+		                , (SELECT F.folder_keep_state_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS folder_keep_state_cd
+		                , (SELECT F.transf_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS transf_ymd
+		                , (SELECT F.disuse_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS disuse_ymd
+		                , R.record_size
+		            FROM  TB_RDRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		        ) A
+		        WHERE A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+	            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+	                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+	                                                                            WHERE L.record_center_id=A.record_center_id
+	                                                                            AND L.folder_id=A.folder_id
+	                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+	                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+	                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        ELSE 1 END ) = 1
+		    ) B
+		    UNION
+		    SELECT '3', 1, '전자_메모보고_단위과제카드수'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM  TB_RDFOLDER A
+		        <!--cubrid WHERE (A.record_center_id, A.folder_id)
+		        IN (SELECT record_center_id, folder_id -->
+		        WHERE
+		        EXISTS (SELECT 1
+		            FROM  TB_RDRECORD
+		            WHERE record_center_id = #recordCenterId:VARCHAR#
+		            AND   erecord_flag = '1'
+		            AND   record_detl_type_cd = '02'
+			    AND   record_center_id = A.record_center_id
+			    AND   folder_id = A.folder_id
+		        )
+		        AND   A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+	            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+	                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+	                                                                            WHERE L.record_center_id=A.record_center_id
+	                                                                            AND L.folder_id=A.folder_id
+	                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+	                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+	                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        ELSE 1 END ) = 1
+		    ) B
+		    UNION
+		    SELECT '3', 2, '전자_메모보고_메모보고(건)'
+		        , (NVL(SUM(B.presv_40),0) + NVL(SUM(B.presv_30),0) + NVL(SUM(B.presv_25),0) + NVL(SUM(B.presv_10),0) + NVL(SUM(B.presv_05),0) + NVL(SUM(B.presv_03),0) + NVL(SUM(B.presv_01),0)) AS presv_sum
+		        , NVL(SUM(B.presv_40),0) AS presv_40
+		        , NVL(SUM(B.presv_30),0) AS presv_30
+		        , NVL(SUM(B.presv_25),0) AS presv_25
+		        , NVL(SUM(B.presv_10),0) AS presv_10
+		        , NVL(SUM(B.presv_05),0) AS presv_05
+		        , NVL(SUM(B.presv_03),0) AS presv_03
+		        , NVL(SUM(B.presv_01),0) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN 1 ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN 1 ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN 1 ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN 1 ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN 1 ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN 1 ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN 1 ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT R.record_center_id, R.folder_id
+		                , (SELECT F.take_yyyy FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS take_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS presv_term_cd
+		                , (SELECT F.folder_keep_state_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS folder_keep_state_cd
+		                , (SELECT F.transf_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS transf_ymd
+		                , (SELECT F.disuse_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS disuse_ymd
+		            FROM  TB_RDRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		            AND   R.record_detl_type_cd = '02'
+		        ) A
+		        WHERE A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+	            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+	                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+	                                                                            WHERE L.record_center_id=A.record_center_id
+	                                                                            AND L.folder_id=A.folder_id
+	                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+	                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+	                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        ELSE 1 END ) = 1
+		    ) B
+		    UNION
+		    SELECT '3', 3, '전자_메모보고_크기(MB)'
+		        <!--cubrid , ( TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990'))
+		            + TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) ) AS presv_sum
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'FM9999999990')) AS presv_40
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'FM9999999990')) AS presv_30
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'FM9999999990')) AS presv_25
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'FM9999999990')) AS presv_10
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'FM9999999990')) AS presv_05
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'FM9999999990')) AS presv_03
+		        , TO_NUMBER(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'FM9999999990')) AS presv_01-->
+		        , ( TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' '))
+		            + TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) ) AS presv_sum
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_40),0)/1024/1024),'9999999990'),' '),' ')) AS presv_40
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_30),0)/1024/1024),'9999999990'),' '),' ')) AS presv_30
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_25),0)/1024/1024),'9999999990'),' '),' ')) AS presv_25
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_10),0)/1024/1024),'9999999990'),' '),' ')) AS presv_10
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_05),0)/1024/1024),'9999999990'),' '),' ')) AS presv_05
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_03),0)/1024/1024),'9999999990'),' '),' ')) AS presv_03
+		        , TO_NUMBER(RTRIM(LTRIM(TO_CHAR((NVL(SUM(B.presv_01),0)/1024/1024),'9999999990'),' '),' ')) AS presv_01
+		    FROM (
+		        SELECT A.presv_term_cd
+		            , (CASE WHEN A.presv_term_cd='40' THEN A.record_size ELSE 0 END) AS presv_40
+		            , (CASE WHEN A.presv_term_cd='30' THEN A.record_size ELSE 0 END) AS presv_30
+		            , (CASE WHEN A.presv_term_cd IN ('20','25') THEN A.record_size ELSE 0 END) AS presv_25
+		            , (CASE WHEN A.presv_term_cd='10' THEN A.record_size ELSE 0 END) AS presv_10
+		            , (CASE WHEN A.presv_term_cd='05' THEN A.record_size ELSE 0 END) AS presv_05
+		            , (CASE WHEN A.presv_term_cd='03' THEN A.record_size ELSE 0 END) AS presv_03
+		            , (CASE WHEN A.presv_term_cd='01' THEN A.record_size ELSE 0 END) AS presv_01
+		        FROM (
+		            SELECT R.record_center_id, R.folder_id
+		                , (SELECT F.take_yyyy FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS take_yyyy
+		                , (SELECT F.presv_term_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS presv_term_cd
+		                , (SELECT F.folder_keep_state_cd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS folder_keep_state_cd
+		                , (SELECT F.transf_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS transf_ymd
+		                , (SELECT F.disuse_ymd FROM TB_RDFOLDER F WHERE F.record_center_id=R.record_center_id AND F.folder_id=R.folder_id) AS disuse_ymd
+		                , R.record_size
+		            FROM  TB_RDRECORD R
+		            WHERE R.record_center_id = #recordCenterId:VARCHAR#
+		            AND   R.erecord_flag = '1'
+		            AND   R.record_detl_type_cd = '02'
+		        ) A
+		        WHERE A.take_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+	            AND  ( CASE WHEN A.folder_keep_state_cd='02' THEN (CASE WHEN (A.transf_ymd IS NULL OR A.transf_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='03' THEN (CASE WHEN (A.disuse_ymd IS NULL OR A.disuse_ymd >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        WHEN A.folder_keep_state_cd='05' THEN (CASE WHEN ( NVL((SELECT P.takovr_end_dtime
+	                                                                            FROM TB_DFTAKOVRPLAN P, TB_DFTAKOVRFOLDERLIST L
+	                                                                            WHERE L.record_center_id=A.record_center_id
+	                                                                            AND L.folder_id=A.folder_id
+	                                                                            AND P.takovr_rep_cd=L.takovr_rep_cd
+	                                                                            AND P.takovr_yyyy=L.takovr_yyyy
+	                                                                            AND P.takovr_sno=L.takovr_sno),'99991231') >= #creatYyyy:VARCHAR#||'0101') THEN 1 ELSE 0 END)
+	                        ELSE 1 END ) = 1
+		    ) B
+		) TA
+		ORDER BY TA.type, TA.sno
+	</select>
+	
+	
+	<resultMap id="findCreateStateApprArchivalKeepCurStateList-result" class="rms.transf.offer.domain.StateApprExcelArchivalState" >
+		<result property="clssSum" 					column="clss_sum"/>
+		<result property="clss01" 					column="clss_01"/>
+		<result property="clss02" 					column="clss_02"/>
+		<result property="clss03" 					column="clss_03"/>
+		<result property="clss04" 					column="clss_04"/>
+		<result property="clss05" 					column="clss_05"/>
+		<result property="clss06" 					column="clss_06"/>
+		<result property="clss07" 					column="clss_07"/>
+	</resultMap>
+	<!-- 
+		생산현황통보서식 - 서식12.행정박물 유형별 보유현황
+	 -->
+	<select id="findCreateStateApprArchivalKeepCurStateList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreateStateApprArchivalKeepCurStateList-result">
+		SELECT 
+		      NVL(SUM(B.clss_01),0) AS clss_01
+		    , NVL(SUM(B.clss_02),0) AS clss_02
+		    , NVL(SUM(B.clss_03),0) AS clss_03
+		    , NVL(SUM(B.clss_04),0) AS clss_04
+		    , NVL(SUM(B.clss_05),0) AS clss_05
+		    , NVL(SUM(B.clss_06),0) AS clss_06
+		    , NVL(SUM(B.clss_07),0) AS clss_07
+		    , COUNT(1) AS clss_sum
+		FROM (
+		    SELECT 
+		          (CASE WHEN A.clss='01' THEN 1 ELSE 0 END) AS clss_01
+		        , (CASE WHEN A.clss='02' THEN 1 ELSE 0 END) AS clss_02
+		        , (CASE WHEN A.clss='03' THEN 1 ELSE 0 END) AS clss_03
+		        , (CASE WHEN A.clss='04' THEN 1 ELSE 0 END) AS clss_04
+		        , (CASE WHEN A.clss='05' THEN 1 ELSE 0 END) AS clss_05
+		        , (CASE WHEN A.clss='06' THEN 1 ELSE 0 END) AS clss_06
+		        , (CASE WHEN A.clss='07' THEN 1 ELSE 0 END) AS clss_07
+		    FROM (
+		        SELECT (CASE WHEN clss IN ('01','02','03','04','05','06') THEN clss ELSE '07' END) AS clss
+		        FROM  TB_ADARCHIVALOBJ
+		        WHERE record_center_id = #recordCenterId:VARCHAR#
+		        AND   creat_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+		    ) A
+		) B
+	</select>
+	
+	<resultMap id="findCreateStateApprArchivalKeepList-result" class="rms.transf.offer.domain.StateApprExcelArchivalList" >
+		<result property="rnum" 					column="rnum"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="shapeNm" 					column="shape_nm"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="admnatnlhistNm" 			column="admnatnlhist_nm"/>
+		<result property="sumry" 					column="sumry"/>
+		<result property="material" 				column="material"/>
+		<result property="sizeDiv"	 				column="size_div"/>
+		<result property="qty" 						column="qty"/>
+		<result property="remk" 					column="remk"/>
+	</resultMap>
+	<!-- 
+		생산현황통보서식 - 서식13.행정박물 보유목록
+	 -->
+	<select id="findCreateStateApprArchivalKeepList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreateStateApprArchivalKeepList-result">
+		SELECT ROWNUM AS rnum
+		    , B.clss_nm
+		    , B.shape_nm
+		    , B.org_nm
+		    , B.creat_yyyy
+		    , B.admnatnlhist_nm
+		    , B.sumry
+		    , B.material
+		    , B.size_div
+		    , B.qty
+		    , B.remk
+		FROM (
+		    SELECT
+		          (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD01' AND Z.com_cd=A.clss) AS clss_nm
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='AD02' AND Z.com_cd=A.shape) AS shape_nm
+		        , (SELECT O.org_nm FROM TB_STORG O WHERE O.record_center_id=A.record_center_id AND O.org_cd=A.creat_org_cd) AS org_nm
+		        , A.creat_yyyy
+		        , A.admnatnlhist_nm
+		        , A.sumry
+		        , A.material
+		        , A.size_div
+		        , A.qty
+		        , A.remk
+		    FROM (
+		        SELECT record_center_id
+		            , (CASE WHEN clss IN ('01','02','03','04','05','06') THEN clss ELSE '07' END) AS clss
+		            , shape
+		            , creat_org_cd
+		            , creat_yyyy
+		            , admnatnlhist_nm
+		            , sumry
+		            , material
+		            , size_div
+		            , qty
+		            , remk
+		        FROM  TB_ADARCHIVALOBJ
+		        WHERE record_center_id = #recordCenterId:VARCHAR#
+				AND   creat_yyyy <![CDATA[<=]]> #creatYyyy:VARCHAR#
+		    ) A
+		    ORDER BY A.record_center_id, A.clss, A.shape, A.creat_org_cd, A.creat_yyyy, A.admnatnlhist_nm
+		) B
+	</select>
+	
+	
+	<resultMap id="findCreateStateApprPublCreateCurStateList-result" class="rms.transf.offer.domain.StateApprExcelPublState" >
+		<result property="rnum" 						column="rnum"/>
+		<result property="orgDivNm" 					column="org_div_nm"/>
+		<result property="creatOrgNm" 					column="creat_org_nm"/>
+		<result property="creatCnt" 					column="creat_cnt"/>
+		<result property="depositCnt" 					column="deposit_cnt"/>
+	</resultMap>
+	<!-- 
+		생산현황통보서식 - 서식14.간행물 생산현황
+	 -->
+	<select id="findCreateStateApprPublCreateCurStateList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreateStateApprPublCreateCurStateList-result">
+		SELECT ROWNUM AS rnum
+		    , B.org_div_nm
+		    , B.creat_org_nm
+		    , B.creat_cnt
+		    , B.deposit_cnt
+		FROM (
+		    SELECT A.record_center_id
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV01' AND Z.com_cd=A.org_div) AS org_div_nm
+		        , A.creat_org_nm
+		        , COUNT(1) AS creat_cnt
+		        , NVL(SUM(A.deposit_cnt),0) AS deposit_cnt
+		    FROM (
+		        SELECT record_center_id
+		            , org_div
+		            , creat_org_nm
+		            , (CASE WHEN deposit_flag='1' THEN 1 ELSE 0 END) AS deposit_cnt
+		        FROM  TB_GVPUBL
+		        WHERE record_center_id = #recordCenterId:VARCHAR#
+				AND   creat_yyyy = #creatYyyy:VARCHAR#
+		    ) A
+		    GROUP BY A.record_center_id, A.org_div, A.creat_org_nm
+		    ORDER BY A.record_center_id, A.org_div, A.creat_org_nm
+		) B
+	</select>
+	
+	<resultMap id="findCreateStateApprPublCreateList-result" class="rms.transf.offer.domain.StateApprExcelPublList" >
+		<result property="rnum" 					column="rnum"/>
+		<result property="orgDivNm" 				column="org_div_nm"/>
+		<result property="creatOrgNm" 				column="creat_org_nm"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="title" 					column="title"/>
+		<result property="publRegId" 				column="publ_reg_id"/>
+		<result property="publYmd" 					column="publ_ymd"/>
+		<result property="depositFlag" 				column="deposit_flag"/>
+		<result property="pageCnt" 					column="page_cnt"/>
+		<result property="remk" 					column="remk"/>
+	</resultMap>
+	<!-- 
+		생산현황통보서식 - 서식15.간행물 생산목록
+	 -->
+	<select id="findCreateStateApprPublCreateList" parameterClass="rms.transf.offer.domain.CrInfrmForm"  resultMap="findCreateStateApprPublCreateList-result">
+		SELECT ROWNUM AS rnum
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV01' AND Z.com_cd=A.org_div) AS org_div_nm
+		    , A.creat_org_nm
+		    , (SELECT O.org_nm FROM TB_STORG O WHERE O.record_center_id=A.record_center_id AND O.org_cd=A.org_cd) AS org_nm
+		    , A.title
+		    , (CASE WHEN A.publ_slt_flag='1' THEN '발간등록번호 생략대상유형' ELSE A.publ_reg_id END) AS publ_reg_id
+		    , A.publ_ymd
+		    , (CASE WHEN A.deposit_flag='1' THEN 'O' ELSE 'X' END) AS deposit_flag
+		    , A.page_cnt
+		    , A.remk
+		FROM (
+		    SELECT record_center_id
+		        , org_div
+		        , creat_org_nm
+		        , org_cd
+		        , title
+		        , publ_reg_id
+		        , publ_slt_flag
+		        , publ_ymd
+		        , deposit_flag
+		        , page_cnt
+		        , remk
+		    FROM  TB_GVPUBL
+	        WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND   creat_yyyy = #creatYyyy:VARCHAR#
+		    ORDER BY record_center_id, org_div, creat_org_nm, org_cd, title
+		) A
+	</select>
+	
+</sqlMap>

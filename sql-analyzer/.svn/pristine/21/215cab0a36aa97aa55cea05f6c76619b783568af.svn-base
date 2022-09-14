@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SyncUser">
+
+	<delete id="deleteUserSyncData">
+		DELETE FROM TB_STUSER_SYNC
+	</delete>
+
+	<insert id="insertUserSyncData" parameterClass="rms.receive.domain.StUserSync">
+		INSERT INTO TB_STUSER_SYNC 
+		(
+			LOGIN_USER_ID,NEIS_DEPT_CD,DEPT_CD,USER_DIV,USER_NM,USER_PWD,POS,RANK,TEL_NO,ADDR,USE_FLAG,BIRTH_DATE	
+		)
+		VALUES (
+			#loginUserId:VARCHAR#
+			, #neisDeptCd:VARCHAR#
+			, #deptCd:VARCHAR#
+			, #userDiv:VARCHAR#
+			, #userNm:VARCHAR#
+			, #userPwd:VARCHAR#
+			, #pos:VARCHAR#
+			, #rank:VARCHAR#
+			, #telNo:VARCHAR#
+			, #addr:VARCHAR#
+			, #useFlag:VARCHAR#
+			, #birthDate:VARCHAR#
+		)
+	</insert>
+
+	<resultMap id="ReadUserSyncData-result" class="rms.receive.domain.StUserSync">
+		<result property="loginUserId" column="LOGIN_USER_ID" />
+		<result property="neisDeptCd" column="NEIS_DEPT_CD" />
+		<result property="deptCd" column="DEPT_CD" />
+		<result property="userDiv" column="USER_DIV" />
+		<result property="userNm" column="USER_NM" />
+		<result property="userPwd" column="USER_PWD" />
+		<result property="pos" column="POS" />
+		<result property="rank" column="RANK" />
+		<result property="telNo" column="TEL_NO" />
+		<result property="addr" column="ADDR" />
+		<result property="useFlag" column="USE_FLAG" />
+		<result property="birthDate" column="BIRTH_DATE" />
+	</resultMap>
+	
+	<select id="selectUserSyncData" resultMap="ReadUserSyncData-result">
+		SELECT LOGIN_USER_ID,NEIS_DEPT_CD,DEPT_CD,USER_DIV,USER_NM,USER_PWD,POS,RANK,TEL_NO,ADDR,USE_FLAG,BIRTH_DATE
+		FROM TB_STUSER_SYNC
+	</select>
+	
+	<insert id="insertUserData" parameterClass="rms.sync.domain.StUser">
+		INSERT INTO TB_STUSER 
+		(
+			USER_ID,RECORD_CENTER_ID,DEPT_CD,USER_DIV,USER_NM,LOGIN_USER_ID,USER_PWD,POS,RANK,WORK_FLAG,RESID_NO,USE_FLAG,REG_DTIME,MENU_GRANT_GRP_CD
+		)
+		VALUES 
+		(
+			#userId:VARCHAR#
+			,#recordCenterId:VARCHAR#
+			,#deptCd:VARCHAR#
+			,#userDiv:VARCHAR#
+			,#userNm:VARCHAR#
+			,#loginUserId:VARCHAR#
+			,#userPwd:VARCHAR#
+			,#pos:VARCHAR#
+			,#rank:VARCHAR#
+			,#workFlag:VARCHAR#
+			,#birthDate:VARCHAR#
+			,#useFlag:VARCHAR#
+			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, #menuGrantGrpCd:VARHCAR#
+		)
+	</insert>
+	
+	<select id="selectRecordCenterId" parameterClass="java.lang.String" resultClass="java.lang.String">
+		SELECT RECORD_CENTER_ID
+		FROM TB_STORG
+		WHERE ORG_CD = #ORG_CD:VARCHAR#
+	</select>	
+	
+	<select id="checkStuser" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+		SELECT COUNT(*) FROM TB_STUSER
+		WHERE LOGIN_USER_ID = #LOGIN_USER_ID:VARCHAR#
+	</select>
+	
+	<select id="selectMaxUserId" resultClass="java.lang.String">
+		SELECT LPAD(NVL(MAX(USER_ID),0)+ 1, 10, '0') AS USER_ID 
+		FROM  TB_STUSER
+	</select>
+	
+	<update id="updateUserData" parameterClass="rms.sync.domain.StUser">
+		UPDATE TB_STUSER A
+		SET RECORD_CENTER_ID = (SELECT RECORD_CENTER_ID FROM TB_STORG WHERE ORG_CD = #deptCd:VARCHAR#)
+		    , USE_FLAG = #useFlag:VARCHAR#
+		    , POS = #pos:VARCHAR#
+		    , RANK = #rank:VARCHAR#
+		    , DEPT_CD = #deptCd:VARCHAR#
+		WHERE EXISTS (SELECT USER_ID FROM TB_STUSER B WHERE A.LOGIN_USER_ID = B.LOGIN_USER_ID AND B.LOGIN_USER_ID = #loginUserId:VARCHAR#)
+	</update>
+</sqlMap>
+
+
+
+
+
+
+
+
+

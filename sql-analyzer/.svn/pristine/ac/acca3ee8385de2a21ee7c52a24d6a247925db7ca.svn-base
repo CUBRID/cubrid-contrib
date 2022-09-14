@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.srch">
+
+	<!--
+		정부간행물검색_정부간행물검색
+		: 간행물 목록 조회
+	-->
+	<resultMap id="findDetailsPublicationsPagedList-result" class="rms.srch.srch.domain.Publications">
+		<result property="recordCenterId"	column="record_center_id"/>
+		<result property="publRegId"		column="publ_reg_id" />
+		<result property="publSltFlag"		column="publ_slt_flag"/>
+		<result property="orgDiv"			column="org_div"/>
+		<result property="orgCd"			column="org_cd"/>
+		<result property="orgNm"			column="org_nm"/>
+		<result property="orgAbbrNm"		column="org_abbr_nm"/>
+		<result property="title"			column="title"/>
+		<result property="content"			column="content"/>
+		<result property="publYmd"			column="publ_ymd"/>
+		<result property="pageCnt"			column="page_cnt"/>
+		<result property="depositFlag"		column="deposit_flag"/>
+		<result property="remk"				column="remk"/>
+		<result property="publPrd"			column="publ_prd"/>
+		<result property="publType"			column="publ_type"/>
+		<result property="publMedia"		column="publ_media"/>
+		<result property="shapMat"			column="shap_mat"/>
+		<result property="stakrmId"			column="stakrm_id"/>
+		<result property="booksfId"			column="booksf_id"/>
+		<result property="firstKeepCnt"		column="first_keep_cnt"/>
+		<result property="curKeepCnt"		column="cur_keep_cnt"/>
+		<result property="destryRsn1"		column="destry_rsn1"/>
+		<result property="destryRsn2"		column="destry_rsn2"/>
+		<result property="destryRsn3"		column="destry_rsn3"/>
+		<result property="openDivCd"		column="open_div_cd"/>
+		<result property="openGrade"		column="open_grade"/>
+		<result property="partOpenRsn"		column="part_open_rsn"/>
+		<result property="publProgStat"		column="publ_prog_stat"/>
+		<result property="crReportYmd"		column="cr_report_ymd"/>
+		<result property="destryFlagNm"		column="destry_flag_nm"/>
+		<result property="publPrdNm"		column="publ_prd_nm"/>
+		<result property="creatOrgNm"		column="creat_org_nm"/>
+		<result property="publTypeNm"		column="publ_type_nm"/> 
+		<result property="orgDivNm"			column="org_div_nm"/>
+		<result property="depositFlagNm"	column="deposit_flag_nm"/>
+		<result property="openDivCdNm"		column="open_div_cd_nm"/>
+		<result property="destryFlag"		column="destry_flag"/>
+	</resultMap>
+	<select id="countDetailsPublicationsPagedList" parameterClass="rms.srch.srch.domain.Publications" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_GVPUBL A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="publYmdF">
+			<isNotEmpty property="publYmdT">
+				(A.publ_ymd BETWEEN #publYmdF:VARCHAR# AND #publYmdT:VARCHAR#)
+			</isNotEmpty>
+			<isEmpty property="publYmdT">
+				A.publ_ymd <![CDATA[>=]]> #publYmdF:VARCHAR#
+			</isEmpty>
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="publYmdF">
+			<isNotEmpty property="publYmdT">
+				A.publ_ymd <![CDATA[<=]]> #publYmdT:VARCHAR#
+			</isNotEmpty>
+		</isEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.org_cd = #orgCd:VARCHAR#
+        </isNotEmpty>
+		<isNotEmpty prepend="AND" property="arrTitle">
+			<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="innerTitle">
+			A.title LIKE #innerTitle:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="publRegId">
+			A.publ_reg_id = #publRegId:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findDetailsPublicationsPagedList" parameterClass="rms.srch.srch.domain.Publications" resultMap="findDetailsPublicationsPagedList-result">
+		SELECT E.record_center_id
+			, E.publ_reg_id
+			, E.publ_slt_flag
+			, E.org_div
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV01' AND Z.com_cd=E.org_div) AS org_div_nm
+			, E.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm
+			, E.title
+			, E.content
+			, E.publ_ymd
+			, E.page_cnt
+			, E.deposit_flag
+			, (CASE WHEN E.deposit_flag='1' THEN 'O' ELSE 'X' END) AS deposit_flag_nm
+			, E.remk
+			, E.publ_prd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV02' AND Z.com_cd=E.publ_prd) AS publ_prd_nm
+			, E.publ_type
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV03' AND Z.com_cd=E.publ_type) AS publ_type_nm
+			, E.publ_media
+			, E.shap_mat
+			, E.stakrm_id
+			, E.booksf_id
+			, E.first_keep_cnt
+			, E.cur_keep_cnt
+			, E.destry_rsn1
+			, E.destry_rsn2
+			, E.destry_rsn3
+			, E.open_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.org_div) AS open_div_cd_nm
+			, E.open_grade
+			, E.part_open_rsn
+			, E.publ_prog_stat
+			, E.cr_report_ymd
+			, E.destry_flag
+			, (CASE WHEN E.destry_flag='0' THEN '보존' ELSE '폐기' END) AS destry_flag_nm
+			, E.creat_org_nm
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.*
+					FROM  TB_GVPUBL A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty prepend="AND" property="publYmdF">
+						<isNotEmpty property="publYmdT">
+							(A.publ_ymd BETWEEN #publYmdF:VARCHAR# AND #publYmdT:VARCHAR#)
+						</isNotEmpty>
+						<isEmpty property="publYmdT">
+							A.publ_ymd <![CDATA[>=]]> #publYmdF:VARCHAR#
+						</isEmpty>
+					</isNotEmpty>
+					<isEmpty prepend="AND" property="publYmdF">
+						<isNotEmpty property="publYmdT">
+							A.publ_ymd <![CDATA[<=]]> #publYmdT:VARCHAR#
+						</isNotEmpty>
+					</isEmpty>
+			        <isNotEmpty prepend="AND" property="orgCd">
+			            A.org_cd = #orgCd:VARCHAR#
+			        </isNotEmpty>
+					<isNotEmpty prepend="AND" property="arrTitle">
+						<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="innerTitle">
+						A.title LIKE #innerTitle:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="publRegId">
+						A.publ_reg_id = #publRegId:VARCHAR#
+					</isNotEmpty>
+					ORDER BY A.cr_report_ymd DESC
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+
+</sqlMap>

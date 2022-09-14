@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.rangeresortopin">
+
+
+	<!-- 접근범위재분류 대상현황 -->
+	<resultMap id="rangeRangeTrgtSelect-result" class="rms.eval.rangeresortopin.domain.RangeResortTrgtSel" >
+		<result property="lastReadResortYyyy" 	column="LAST_READ_RESORT_YYYY"/>
+		<result property="curAll" 			 	column="CUR_ALL"/>
+		<result property="curList"	     		column="CUR_LIST"/>
+		<result property="curUnuse" 		 	column="CUR_UNUSE"/>
+		<result property="planAll" 		 	 	column="PLAN_ALL"/>
+		<result property="planList" 		 	column="PLAN_LIST"/>
+		<result property="planUnuse" 		 	column="PLAN_UNUSE"/>
+	</resultMap>
+	<!-- 
+		SELECT - 접근범위재분류 대상현황을 조회한다.
+	 -->
+	<select id="findRangeResortTrgtCurStateRecordPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortTrgtSel" resultMap="rangeRangeTrgtSelect-result">
+	 	<isEqual property="yyyyDivCd" compareValue="1">
+			SELECT E.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT D.LAST_READ_RESORT_YYYY
+						, SUM(CUR_ALL) AS CUR_ALL
+						, SUM(CUR_LIST) AS CUR_LIST
+						, SUM(CUR_UNUSE) AS CUR_UNUSE
+						, SUM(PLAN_ALL) AS PLAN_ALL
+						, SUM(PLAN_LIST) AS PLAN_LIST
+						, SUM(PLAN_UNUSE) AS PLAN_UNUSE 
+					FROM (
+					    SELECT A.LAST_READ_RESORT_YYYY
+					    	, SUM(CASE  WHEN A.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) CUR_ALL
+					    	, SUM(CASE  WHEN A.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) CUR_LIST
+					    	, SUM(CASE  WHEN A.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) CUR_UNUSE
+					    	, 0  PLAN_ALL
+					    	, 0  PLAN_LIST
+					    	, 0  PLAN_UNUSE 
+			            FROM TB_RDRECORD A, TB_RDFOLDER B  
+					    WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+						AND A.FOLDER_ID = B.FOLDER_ID 
+						AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						AND B.FOLDER_KEEP_STATE_CD IN('01', '04')
+					    AND A.LAST_READ_RESORT_YYYY IS NOT NULL
+					    GROUP BY A.LAST_READ_RESORT_YYYY
+					    UNION ALL
+					    SELECT O.BEF_RESORT_YYYY
+					    	, 0  CUR_ALL
+					    	, 0  CUR_LIST
+					    	, 0  CUR_UNUSE
+					    	, SUM(CASE  WHEN R.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) PLAN_ALL
+					    	, SUM(CASE  WHEN R.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) PLAN_LIST
+					    	, SUM(CASE  WHEN R.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) PLAN_UNUSE
+			            FROM TB_RDRANGERESORTOPIN O, TB_RDRECORD R
+			            WHERE O.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			            AND O.RECORD_CENTER_ID = R.RECORD_CENTER_ID
+			            AND	O.RECORD_ID = R.RECORD_ID
+			            AND	O.CASE_TYPE = '01'
+					    <isNotEmpty prepend="AND" property="resortYyyy">
+					        O.RESORT_YYYY = #resortYyyy#
+					    </isNotEmpty>
+					    GROUP BY  O.BEF_RESORT_YYYY
+					) D
+					WHERE D.LAST_READ_RESORT_YYYY IS NOT NULL
+					GROUP BY D.LAST_READ_RESORT_YYYY
+					ORDER BY D.LAST_READ_RESORT_YYYY DESC
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) E
+			WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		</isEqual>
+		<isEqual property="yyyyDivCd" compareValue="2">
+			SELECT E.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT D.TAKE_YYYY AS LAST_READ_RESORT_YYYY
+						, SUM(CUR_ALL) AS CUR_ALL
+						, SUM(CUR_LIST) AS CUR_LIST
+						, SUM(CUR_UNUSE) AS CUR_UNUSE
+						, SUM(PLAN_ALL) AS PLAN_ALL
+						, SUM(PLAN_LIST) AS PLAN_LIST
+						, SUM(PLAN_UNUSE) AS PLAN_UNUSE
+					FROM (
+					    SELECT  A.TAKE_YYYY
+					    	, SUM(CASE  WHEN B.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) CUR_ALL
+					    	, SUM(CASE  WHEN B.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) CUR_LIST
+					    	, SUM(CASE  WHEN B.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) CUR_UNUSE
+					    	, 0 PLAN_ALL
+					    	, 0 PLAN_LIST
+					    	, 0 PLAN_UNUSE 
+					    FROM TB_RDFOLDER A, TB_RDRECORD B
+					    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					    AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+					    AND A.FOLDER_ID = B.FOLDER_ID
+					    AND B.LAST_READ_RESORT_YYYY IS NULL                
+					    GROUP BY  A.TAKE_YYYY
+					    UNION ALL
+					    SELECT O.TAKE_YYYY
+					    	, 0 CUR_ALL
+					    	, 0 CUR_LIST
+					    	, 0 CUR_UNUSE
+					    	, SUM(CASE WHEN R.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) PLAN_ALL
+					    	, SUM(CASE WHEN R.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) PLAN_LIST
+					    	, SUM(CASE WHEN R.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) PLAN_UNUSE 		                       
+						FROM TB_RDRANGERESORTOPIN O, TB_RDRECORD R
+						WHERE O.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 		                    
+						AND O.RECORD_CENTER_ID = R.RECORD_CENTER_ID
+						AND O.RECORD_ID = R.RECORD_ID
+						AND O.CASE_TYPE = '02'
+					    <isNotEmpty prepend="AND" property="resortYyyy">
+					        O.RESORT_YYYY = #resortYyyy#
+					    </isNotEmpty>
+					    GROUP BY  O.TAKE_YYYY
+					) D
+					GROUP BY D.TAKE_YYYY
+					ORDER BY D.TAKE_YYYY DESC
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) E
+			WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		</isEqual>
+	 </select>
+	 <!-- 
+		COUNT - 접근범위재분류 대상현황을 조회한다.
+	 -->
+	 <select id="countRangeResortTrgtCurStateRecordPagedList" parameterClass="rms.eval.rangeresortopin.domain.RangeResortTrgtSel" resultClass="java.lang.Long">
+ 		<isEqual property="yyyyDivCd" compareValue="1">
+			SELECT COUNT(1) CNT
+			FROM (
+		        SELECT D.LAST_READ_RESORT_YYYY
+					, SUM(CUR_ALL) AS CUR_ALL
+					, SUM(CUR_LIST) AS CUR_LIST
+					, SUM(CUR_UNUSE) AS CUR_UNUSE
+					, SUM(PLAN_ALL) AS PLAN_ALL
+					, SUM(PLAN_LIST) AS PLAN_LIST
+					, SUM(PLAN_UNUSE) AS PLAN_UNUSE 
+				FROM (
+				    SELECT A.LAST_READ_RESORT_YYYY
+				    	, SUM(CASE  WHEN A.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) CUR_ALL
+				    	, SUM(CASE  WHEN A.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) CUR_LIST
+				    	, SUM(CASE  WHEN A.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) CUR_UNUSE
+				    	, 0  PLAN_ALL
+				    	, 0  PLAN_LIST
+				    	, 0  PLAN_UNUSE 
+		            FROM TB_RDRECORD A, TB_RDFOLDER B  
+				    WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+					AND A.FOLDER_ID = B.FOLDER_ID 
+					AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND B.FOLDER_KEEP_STATE_CD IN('01', '04')
+				    AND A.LAST_READ_RESORT_YYYY IS NOT NULL
+				    GROUP BY A.LAST_READ_RESORT_YYYY
+				    UNION ALL
+				    SELECT O.BEF_RESORT_YYYY
+				    	, 0  CUR_ALL
+				    	, 0  CUR_LIST
+				    	, 0  CUR_UNUSE
+				    	, SUM(CASE  WHEN R.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) PLAN_ALL
+				    	, SUM(CASE  WHEN R.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) PLAN_LIST
+				    	, SUM(CASE  WHEN R.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) PLAN_UNUSE
+		            FROM TB_RDRANGERESORTOPIN O, TB_RDRECORD R
+		            WHERE O.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND O.RECORD_CENTER_ID = R.RECORD_CENTER_ID
+		            AND	O.RECORD_ID = R.RECORD_ID
+		            AND	O.CASE_TYPE = '01'
+				    <isNotEmpty prepend="AND" property="resortYyyy">
+				        O.RESORT_YYYY = #resortYyyy#
+				    </isNotEmpty>
+				    GROUP BY  O.BEF_RESORT_YYYY
+				) D
+				WHERE D.LAST_READ_RESORT_YYYY IS NOT NULL
+				GROUP BY D.LAST_READ_RESORT_YYYY
+			)
+		</isEqual>
+		<isEqual property="yyyyDivCd" compareValue="2">
+			SELECT COUNT(1) CNT
+			FROM (
+		        SELECT D.TAKE_YYYY AS LAST_READ_RESORT_YYYY
+					, SUM(CUR_ALL) AS CUR_ALL
+					, SUM(CUR_LIST) AS CUR_LIST
+					, SUM(CUR_UNUSE) AS CUR_UNUSE
+					, SUM(PLAN_ALL) AS PLAN_ALL
+					, SUM(PLAN_LIST) AS PLAN_LIST
+					, SUM(PLAN_UNUSE) AS PLAN_UNUSE
+				FROM (
+				    SELECT  A.TAKE_YYYY
+				    	, SUM(CASE  WHEN B.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) CUR_ALL
+				    	, SUM(CASE  WHEN B.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) CUR_LIST
+				    	, SUM(CASE  WHEN B.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) CUR_UNUSE
+				    	, 0 PLAN_ALL
+				    	, 0 PLAN_LIST
+				    	, 0 PLAN_UNUSE 
+				    FROM TB_RDFOLDER A, TB_RDRECORD B
+				    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				    AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+				    AND A.FOLDER_ID = B.FOLDER_ID
+				    AND B.LAST_READ_RESORT_YYYY IS NULL                
+				    GROUP BY  A.TAKE_YYYY
+				    UNION ALL
+				    SELECT O.TAKE_YYYY
+				    	, 0 CUR_ALL
+				    	, 0 CUR_LIST
+				    	, 0 CUR_UNUSE
+				    	, SUM(CASE WHEN R.OPER_READ_RANGE_CD = '01' THEN 1 ELSE 0 END) PLAN_ALL
+				    	, SUM(CASE WHEN R.OPER_READ_RANGE_CD = '02' THEN 1 ELSE 0 END) PLAN_LIST
+				    	, SUM(CASE WHEN R.OPER_READ_RANGE_CD = '03' THEN 1 ELSE 0 END) PLAN_UNUSE 		                       
+					FROM TB_RDRANGERESORTOPIN O, TB_RDRECORD R
+					WHERE O.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 		                    
+					AND O.RECORD_CENTER_ID = R.RECORD_CENTER_ID
+					AND O.RECORD_ID = R.RECORD_ID
+					AND O.CASE_TYPE = '02'
+				    <isNotEmpty prepend="AND" property="resortYyyy">
+				        O.RESORT_YYYY = #resortYyyy#
+				    </isNotEmpty>
+				    GROUP BY  O.TAKE_YYYY
+				) D
+				GROUP BY D.TAKE_YYYY
+			)		
+		</isEqual>
+	 </select>
+</sqlMap>

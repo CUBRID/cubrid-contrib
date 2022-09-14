@@ -1,0 +1,466 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakeProcPagedList
+
+		SELECT C.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.take_takovr_snd_rep_cd				    , (SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_id = A.record_center_id AND Z.record_center_cd = A.take_takovr_snd_rep_cd) take_takovr_snd_rep_nm				    , A.take_takovr_yyyy				    , A.take_takovr_sno				    , LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str				    , A.take_takovr_folder_cnt				    , A.take_takovr_record_cnt				    , A.take_state_snd_div_cd				    , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD88' AND Z.com_cd = A.take_state_snd_div_cd) take_state_snd_div_nm				    , A.take_state_flag				    , (CASE WHEN A.take_state_snd_div_cd = '02' THEN '미처리'				            WHEN A.take_state_snd_div_cd = '03' THEN (CASE WHEN A.take_state_flag = '1' THEN '인계처리중'				                                                           WHEN A.take_state_flag = '2' THEN '인계완료'				                                                           ELSE '미처리'				                                                      END)				            WHEN A.take_state_snd_div_cd = '04' THEN '인계완료'				       END) take_state_flag_nm				    , A.take_state_rcv_div_cd		          	, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD89' AND Z.com_cd = A.take_state_rcv_div_cd) take_state_rcv_div_nm		          	, A.take_state_rcv_flag				FROM tb_rdmultitakovrplan A				WHERE A.take_state_snd_div_cd IN ('02', '03', '04')		  		 AND 		 			A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1') 				  		  AND 					A.take_takovr_yyyy = '1'					  AND 				   	A.take_state_rcv_div_cd IS NOT NULL				  AND 					A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1')				 				ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : countMultiTakeProcPagedList
+
+		SELECT COUNT(1)		FROM tb_rdmultitakovrplan A		WHERE A.take_state_snd_div_cd IN ('02', '03', '04')		 AND  			A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1') 		  		  AND 			A.take_takovr_yyyy = '1'			  AND 		   	A.take_state_rcv_div_cd IS NOT NULL		  AND 			A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1')		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : countMultiTakeTrgtFolderPagedList
+
+		SELECT COUNT(1)        FROM tb_rdfolder A, (SELECT (CASE WHEN B.take_fin_flag = '0' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)                                          WHEN B.take_fin_flag = '2' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd)                                          ELSE (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)                                     END) record_center_id                                    ,A.take_takovr_snd_rep_cd                                    ,A.take_takovr_yyyy                                    ,A.take_takovr_sno                                    ,B.folder_id                                    ,B.take_fin_flag                                    ,(CASE WHEN B.take_fin_flag = '1' THEN '인수중'                                           WHEN B.take_fin_flag = '2' THEN '인수완료'                                           ELSE '미처리'                                      END) take_fin_flag_nm                             FROM tb_rdmultitakovrplan A, tb_rdmultitakovrlist B                             WHERE A.take_takovr_snd_rep_cd = B.take_takovr_snd_rep_cd                             AND A.take_takovr_yyyy         = B.take_takovr_yyyy                             AND A.take_takovr_sno             = B.take_takovr_sno) B        WHERE A.record_center_id         = B.record_center_id        AND A.folder_id                 = B.folder_id        AND B.take_takovr_snd_rep_cd = '1'        AND B.take_takovr_yyyy           = '1'        AND B.take_takovr_sno            = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakeTrgtFolderPagedList
+
+		SELECT E.*		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT A.record_center_id		                   ,A.folder_id		                  ,A.org_cd		                  ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm		                  ,(SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_abbr_nm		                  ,A.title		                  ,A.creat_yyyy		                  ,A.presv_term_cd		                  ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = A.presv_term_cd) presv_term_nm		                  ,A.erecord_flag		                  ,(CASE WHEN A.erecord_flag = '1' THEN '전자'		                         WHEN A.erecord_flag = '2' THEN '비전자'		                         ELSE '혼용'		                    END) erecord_flag_nm		                  ,A.creat_sys_cd		                  ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD10' AND Z.com_cd = A.creat_sys_cd) creat_sys_nm		                  ,B.take_fin_flag		                  ,B.take_fin_flag_nm		            FROM tb_rdfolder A, (SELECT (CASE WHEN B.take_fin_flag = '0' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)		                                              WHEN B.take_fin_flag = '2' THEN (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd)		                                              ELSE (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd)		                                         END) record_center_id		                                        ,A.take_takovr_snd_rep_cd		                                        ,A.take_takovr_yyyy		                                        ,A.take_takovr_sno		                                        ,B.folder_id		                                        ,B.take_fin_flag		                                        ,(CASE WHEN B.take_fin_flag = '1' THEN '인수중'		                                               WHEN B.take_fin_flag = '2' THEN '인수완료'		                                               ELSE '미처리'		                                          END) take_fin_flag_nm		                                 FROM tb_rdmultitakovrplan A, tb_rdmultitakovrlist B		                                 WHERE A.take_takovr_snd_rep_cd = B.take_takovr_snd_rep_cd		                                 AND A.take_takovr_yyyy         = B.take_takovr_yyyy		                                 AND A.take_takovr_sno             = B.take_takovr_sno) B		            WHERE A.record_center_id         = B.record_center_id		            AND A.folder_id                 = B.folder_id		            AND B.take_takovr_snd_rep_cd = '1'		            AND B.take_takovr_yyyy           = '1'		            AND B.take_takovr_sno            = '1'		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRcvRecordCenterLstVolm
+
+	 	SELECT MAX(volm_id) FROM tb_stvolm WHERE record_center_id = '1' AND volm_div_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateMultiTakovrPlan
+
+	 	UPDATE tb_rdmultitakovrplan	 	   SET take_state_rcv_div_cd 	= '1'	 	      ,take_state_rcv_flag 		= '1'	 	 WHERE take_takovr_snd_rep_cd 	= '1'	 	   AND take_takovr_yyyy 		= '1'	 	   AND take_takovr_sno 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : createOrgCd
+
+	 	INSERT INTO tb_storg (		    record_center_id, org_cd, org_nm, org_abbr_nm, full_org_nm, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd, take_org_flag, link_trgt_id, take_takovr_mng_no		)		(		    SELECT *		    FROM (		        SELECT DISTINCT (SELECT Z.record_center_id                                  FROM tb_strecordcenter Z                                  WHERE Z.record_center_cd = (SELECT take_takovr_rcv_rep_cd                                                              FROM tb_rdmultitakovrplan                                                              WHERE take_takovr_snd_rep_cd = '1'                                                             AND take_takovr_yyyy = '1'                                                             AND take_takovr_sno = '1')) record_center_id 					, org_cd, org_nm, org_abbr_nm, full_org_nm, hupper_org_cd, upper_org_cd, levl, org_seq, close_flag, apply_start_ymd, apply_close_ymd, '1', link_trgt_id, take_takovr_mng_no		        FROM tb_storg		        START WITH  org_cd IN (SELECT org_cd 		                               FROM tb_rdfolder AAA		                               		                               WHERE EXISTS (SELECT 1		                                                                       FROM tb_rdmultitakovrlist		                                                                       WHERE take_takovr_snd_rep_cd = '1'		                                                                       AND take_takovr_yyyy = '1'		                                                                       AND take_takovr_sno = '1'		                                                                       AND AAA.record_center_id = record_center_id		                                                                       AND AAA.folder_id = folder_id		                                                                       )		                               GROUP BY org_cd)		        CONNECT BY PRIOR upper_org_cd = org_cd		    ) A WHERE NOT EXISTS (		        SELECT Z.org_cd FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd		    )		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : creatUnitCd
+
+	 	INSERT INTO tb_zzunit (		        record_center_id,unit_cd,unit_nm,unit_descr,nars_handl_dtime		        ,creat_stnd_ymd,temp_unit_cd,lrg_cd,lrg_nm,mid_cd		        ,mid_nm,sml_cd,sml_nm,presv_term_cd,presv_term_fix_rsn,presv_method_cd		        ,presv_area_cd,funsh_record_flag,funsh_record_transf_ymd,main_read_usg,transf_read_expt_cnt		        ,spcl_list_loc,spcl_list1,spcl_list2,spcl_list3,state_cd		        ,take_flag,reg_user_id,reg_dtime,take_takovr_mng_no,presvterm_state_cd		        ,com_unit_flag,presvterm_chng_rsn_cd,take_mng_no,unit_alias		)		(		    SELECT *		    FROM (		        SELECT   (SELECT Z.record_center_id                                  FROM tb_strecordcenter Z                                  WHERE Z.record_center_cd = (SELECT take_takovr_rcv_rep_cd                                                              FROM tb_rdmultitakovrplan                                                              WHERE take_takovr_snd_rep_cd = '1'                                                             AND take_takovr_yyyy = '1'                                                             AND take_takovr_sno = '1')) record_center_id					 	,unit_cd,unit_nm,unit_descr,nars_handl_dtime		                ,creat_stnd_ymd,temp_unit_cd,lrg_cd,lrg_nm,mid_cd		                ,mid_nm,sml_cd,sml_nm,presv_term_cd,presv_term_fix_rsn,presv_method_cd		                ,presv_area_cd,funsh_record_flag,funsh_record_transf_ymd,main_read_usg,transf_read_expt_cnt		                ,spcl_list_loc,spcl_list1,spcl_list2,spcl_list3,state_cd		                		                ,take_flag,reg_user_id,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')				,take_takovr_mng_no,presvterm_state_cd		                ,com_unit_flag,presvterm_chng_rsn_cd,take_mng_no,unit_alias 		        FROM  tb_zzunit 		        WHERE record_center_id = (SELECT record_center_id FROM TB_STRECORDCENTER WHERE record_center_cd = '1')		        AND   unit_cd IN (SELECT clss_id 		                          FROM tb_rdfolder AAA		                          		                                                    WHERE EXISTS ( SELECT 1		                                                                  FROM tb_rdmultitakovrlist 		                                                                  WHERE take_takovr_snd_rep_cd = '1'		                                                                  AND take_takovr_yyyy = '1'		                                                                  AND take_takovr_sno = '1'		                                                                  AND AAA.record_center_id = record_center_id		                                                                  AND AAA.folder_id = folder_id		                                                                  )		                          AND clss_div_cd = '2'		                          GROUP BY clss_id)    		    ) A WHERE NOT EXISTS (		        SELECT Z.unit_cd FROM tb_zzunit Z WHERE Z.record_center_id = A.record_center_id AND Z.unit_cd = A.unit_cd		    )		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : creatOrgUnit
+
+		 INSERT INTO tb_zzorgunit (		     record_center_id, org_cd, unit_cd, use_flag, take_flag, reg_dtime		    ,take_takovr_mng_no, com_unit_flag, take_mng_no, state_cd 		)		(		    SELECT * 		    FROM (		            SELECT (SELECT Z.record_center_id                                  FROM tb_strecordcenter Z                                  WHERE Z.record_center_cd = (SELECT take_takovr_rcv_rep_cd                                                              FROM tb_rdmultitakovrplan                                                              WHERE take_takovr_snd_rep_cd = '1'                                                             AND take_takovr_yyyy = '1'                                                             AND take_takovr_sno = '1')) record_center_id					    , org_cd, unit_cd, use_flag, take_flag					    					    , TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		                , take_takovr_mng_no, com_unit_flag, take_mng_no, state_cd 		        FROM tb_zzorgunit AAAA		        WHERE  		             EXISTS (SELECT 1		                          FROM tb_rdfolder AAA		                          		                          WHERE EXISTS ( SELECT 1		                                                              FROM tb_rdmultitakovrlist		                                                              WHERE take_takovr_snd_rep_cd = '1'		                                                              AND take_takovr_yyyy = '1'		                                                              AND take_takovr_sno = '1'		                                                              AND AAA.record_center_id = record_center_id		                                                              AND AAA.folder_id = folder_id		                                                              )		                          AND clss_div_cd = '2'		                          AND AAAA.org_cd = AAA.org_cd		                          AND AAAA.unit_cd = AAA.clss_id		                          GROUP BY org_cd, clss_id)		       		    ) A WHERE NOT EXISTS (		        SELECT Z.unit_cd, Z.org_cd FROM tb_zzorgunit Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd AND Z.unit_cd = A.unit_cd		    )		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakovrTrgtFolderList
+
+		SELECT A.snd_record_center_id		 	   ,A.folder_id		 	   ,A.rcv_record_center_id		 	   ,(SELECT Z.folder_neo_file_id FROM tb_rdfolder Z WHERE Z.record_center_id = A.snd_record_center_id AND Z.folder_id = A.folder_id) folder_neo_file_id 		 FROM 		 (			SELECT 	 (SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd) snd_record_center_id					,folder_id					,(SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) rcv_record_center_id	  		  FROM tb_rdmultitakovrlist A			 WHERE take_takovr_snd_rep_cd 	= '1'		   	   AND take_takovr_yyyy 		= '1'				   AND take_takovr_sno 			= '1'		 	 ) A;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateMultiTakovrFolderTakeFinState
+
+	 	UPDATE tb_rdmultitakovrlist	 	   SET take_fin_flag 			= '1'	 	 WHERE take_takovr_snd_rep_cd 	= '1'	 	   AND take_takovr_yyyy 		= '1'	 	   AND take_takovr_sno 			= '1'	 	   AND folder_id 				= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakeDfDisuseReason
+
+	    SELECT discu_yyyy	         , discu_reason 	    FROM TB_DFDISUSEREASON AAA	    WHERE 	       EXISTS (SELECT 1	        FROM   TB_DFDISUSEOPINHIST	        WHERE  record_center_id = '1'	        AND    folder_id = '1'	        AND AAA.record_center_id = record_center_id	        AND AAA.discu_yyyy = discu_yyyy	        AND AAA.discu_seq = discu_seq	    ) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : countMultiTakeDfDisuseReason
+
+	 	SELECT COUNT(1)		FROM   TB_DFDISUSEREASON		WHERE  record_center_id = '1'		AND    discu_yyyy = '1'		AND    discu_reason = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : createDfDisuseReason
+
+	 	INSERT INTO TB_DFDISUSEREASON  (	 		record_center_id, discu_yyyy, discu_seq, discu_reason	 	) VALUES (			  '1'			, '1'			, NVL(( SELECT MAX(discu_seq)+1 			 		FROM   TB_DFDISUSEREASON 			  	    WHERE  record_center_id = '1'			  	    AND    discu_yyyy = '1'), 1)			, '1'	 	)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findDfDisuseReasonSeq
+
+	 	SELECT DISTINCT discu_seq 		FROM   TB_DFDISUSEREASON		WHERE  record_center_id = '1'		AND    discu_yyyy = '1'		AND    discu_reason = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateDfDisuseOpin
+
+	 	UPDATE tb_dfdisuseopin SET record_center_id = '1'  WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateDfDisuseOpinHist
+
+	 	UPDATE tb_dfdisuseopinhist SET record_center_id = '1'  WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderChngHist
+
+	 	UPDATE tb_rdfolderchnghist SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderCreat
+
+	 	UPDATE tb_rdfoldercreat SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderKeywd
+
+	 	UPDATE tb_rdfolderkeywd SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderPjtClss
+
+	 	UPDATE tb_rdfolderpjtclss SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderReadRang
+
+	 	UPDATE tb_rdfolderreadrang SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderRel
+
+	 	UPDATE tb_rdfolderrel SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolderTakeTakovr
+
+	 	UPDATE tb_rdfoldertaketakovr SET record_center_id = '1' WHERE record_center_id = '1' AND folder_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdFolder
+
+	 	UPDATE TB_RDFOLDER A	 	   SET A.record_center_id 			= '1'	 		  ,A.booksf_arng_flag 			= '0'	 		  ,A.stakrm_mng_no_div_cd 		= ''	 		  ,A.stakrm_mng_no_rule 		= ''	 		  ,A.stakrm_mng_no				= ''	 		  ,A.presv_box_id				= ''	 		  ,A.folder_keep_state_cd 		= (CASE WHEN A.folder_keep_state_cd = '01' THEN '04'	 		  										ELSE A.folder_keep_state_cd	 		  								   END)	 		  ,A.opti_disk_store_state_cd	= ''	 	 WHERE record_center_id 	= '1' 	 	   AND folder_id 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findFolderNeoFileList
+
+		 SELECT A.record_center_id              ,folder_neo_file_id              ,medium_id              ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd              ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd              ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path              ,file_size        FROM tb_stfolderneofile A        WHERE A.record_center_id = '1'        AND   A.folder_neo_file_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRcvMediumId
+
+		SELECT MIN(medium_id)		FROM TB_STMEDIUM 		WHERE record_center_id = '1'		AND   volm_id          = '1'		AND   medium_cd        = '1'		AND   (tot_size - use_size) > 0 AND 			medium_detail_cd = '1'		  AND 		      medium_path = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findTakovrTrgtSize
+
+		SELECT SUM(FILE_SIZE) 		FROM (		    SELECT SUM(RECORD_SIZE) AS FILE_SIZE		    FROM TB_RDRECORD AAA		    WHERE EXISTS (SELECT 1		        FROM TB_RDMULTITAKOVRLIST 		        WHERE TAKE_TAKOVR_SND_REP_CD = '1'		        AND TAKE_TAKOVR_YYYY = '1'		        AND TAKE_TAKOVR_SNO = '1'		        AND AAA.record_center_id = record_center_id		        AND AAA.folder_id = folder_id		    )		    UNION ALL		    SELECT FILE_SIZE 		    FROM TB_STFOLDERNEOFILE AAA		    		    WHERE EXISTS (SELECT 1		        FROM TB_RDMULTITAKOVRLIST 		        WHERE TAKE_TAKOVR_SND_REP_CD = '1'		        AND TAKE_TAKOVR_YYYY = '1'		        AND TAKE_TAKOVR_SNO = '1'		        AND AAA.record_center_id = record_center_id		        AND AAA.folder_id = folder_id		    )		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : createMultiTakeMediumId
+
+	 	INSERT INTO TB_STMEDIUM (		    record_center_id, medium_id, volm_id, medium_nm, medium_cd, medium_path, tot_size, use_size, del_flag, reg_dtime, chng_dtime, remk, medium_detail_cd 		)		(		    SELECT '1'		          ,NVL(LPAD(MAX(medium_id)+1, 3, '0'), '001')		          ,'1'		          ,'MEDIUM'||NVL(LPAD(MAX(medium_id)+1, 3, '0'), '001')		          ,'1'		          		          ,'1'		          ,'1'		          ,'0'		          		          ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		          ,''		          ,'공동형인계인수 추가저장소'||NVL(LPAD(MAX(medium_id)+1, 3, '0'), '001')		          ,'1'		    FROM tb_stmedium		    WHERE record_center_id = '1'		)	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRcvFolderNeoFileSize
+
+		SELECT file_size FROM tb_stfolderneofile WHERE folder_neo_file_id = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStFolderNeoFile
+
+  	 	UPDATE tb_stfolderneofile	 	   SET record_center_id = '1'	 	      ,medium_id 		= '1'	 	 WHERE record_center_id = '1'		AND folder_id   = '1'		AND folder_neo_file_id= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateMediumSize
+
+		UPDATE TB_STMEDIUM		   SET use_size = (use_size-'1')		 WHERE record_center_id = '1'		   AND medium_id = '1'		   AND medium_cd = '1'		   AND medium_detail_cd = '1' AND 			   medium_path = '1'		    ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : createFolderTakeTakovrHist
+
+	 	INSERT INTO tb_rdfoldertaketakovr(record_center_id, folder_id, sno, take_takovr_div_cd, take_takovr_creat_dtime, take_takovr_org_cd, take_takovr_org_nm, reg_dtime)		VALUES (		    '1'		   ,'1'		   ,(SELECT NVL(MAX(sno)+1, 1) FROM tb_rdfoldertaketakovr WHERE record_center_id = '1' AND folder_id = '1')		   ,'2'		   ,'1'		   ,(SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')		   ,(SELECT Z.org_nm FROM tb_storg Z WHERE record_center_id = '1' AND org_cd = (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1'))		   		   ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')    		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakovrTrgtRecordList
+
+	 	SELECT record_id, orign_id	 	FROM tb_rdrecord 	 	WHERE record_center_id = '1'	 	AND folder_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakeRdOpenResortReason
+
+	    SELECT '1'	         , resort_yyyy	         , resort_case	         , resort_reason	    FROM TB_RDOPENRESORTREASON AAA	    WHERE 	        EXISTS (SELECT 1	        FROM   TB_RDOPENHIST	        WHERE  record_center_id = '1'	        AND    record_id = '1'	        AND record_center_id = AAA.record_center_id	        AND resort_yyyy = AAA.resort_yyyy	        AND resort_case = AAA.resort_case	        AND resort_case_no = AAA.resort_case_no	    )  	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : countMultiTakeRdOpenResortReason
+
+	 	SELECT COUNT(1)		FROM   TB_RDOPENRESORTREASON		WHERE  record_center_id = '1'		AND    resort_yyyy = '1'		AND    resort_case = '1'		AND    resort_reason = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : createRdOpenResortReason
+
+		INSERT INTO TB_RDOPENRESORTREASON  (			record_center_id, resort_yyyy, resort_case, resort_case_no, resort_reason		) VALUES (			  '1'			, '1'			, '1'			, NVL(( SELECT MAX(resort_case_no)+1 			        FROM   TB_RDOPENRESORTREASON 			        WHERE  record_center_id = '1'			        AND    resort_yyyy = '1'			        AND    resort_case = '1'), 1)			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRdOpenResortReasonCaseNo
+
+		SELECT DISTINCT resort_case_no		FROM   TB_RDOPENRESORTREASON		WHERE  record_center_id = '1'		AND    resort_yyyy = '1'		AND    resort_case = '1'		AND    resort_reason = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdOpenResortOpin
+
+	 	UPDATE tb_rdopenresortopin SET record_center_id = '1'  WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdOpenHist
+
+	 	UPDATE tb_rdopenhist SET record_center_id = '1'  WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakeRdRangeResortReason
+
+	 	SELECT '1'	         , resort_yyyy	         , resort_case	         , resort_reason	    FROM TB_RDRANGERESORTREASON AAA	    WHERE     	    EXISTS (SELECT 1	        FROM   TB_RDRANGERESORTHIST	        WHERE  record_center_id = '1'	        AND    record_id = '1'	        AND record_center_id = AAA.record_center_id	        AND resort_yyyy = AAA.resort_yyyy	        AND resort_case = AAA.resort_case	        AND resort_case_no = AAA.resort_case_no	    ) ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : countMultiTakeRdRangeResortReason
+
+	 	SELECT COUNT(1)		FROM   TB_RDRANGERESORTREASON		WHERE  record_center_id = '1'		AND    resort_yyyy = '1'		AND    resort_case = '1'		AND    resort_reason = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : insert
+-- Query Id : createRdRangeResortReason
+
+		INSERT INTO TB_RDRANGERESORTREASON  (			record_center_id, resort_yyyy, resort_case, resort_case_no, resort_reason		) VALUES (			  '1'			, '1'			, '1'			, NVL(( SELECT MAX(resort_case_no)+1 			        FROM   TB_RDRANGERESORTREASON 			        WHERE  record_center_id = '1'			        AND    resort_yyyy = '1'			        AND    resort_case = '1'), 1)			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRdRangeResortReasonCaseNo
+
+		SELECT DISTINCT resort_case_no		FROM   TB_RDRANGERESORTREASON		WHERE  record_center_id = '1'		AND    resort_yyyy = '1'		AND    resort_case = '1'		AND    resort_reason = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRangeResortOpin
+
+	 	UPDATE tb_rdrangeresortopin SET record_center_id = '1'  WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRangeResortHist
+
+		UPDATE tb_rdrangeresorthist SET record_center_id = '1'  WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecordChngHist
+
+	 	UPDATE tb_rdrecordchnghist SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecordCreat
+
+	 	UPDATE tb_rdrecordcreat SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecordInfoSrc
+
+	 	UPDATE tb_rdrecordinfosrc SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecordKeywd
+
+	 	UPDATE tb_rdrecordkeywd SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecordRel
+
+	 	UPDATE tb_rdrecordrel SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecordTitleHist
+
+	 	UPDATE tb_rdrecordtitlehist SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateRdRecord
+
+	 	UPDATE tb_rdrecord SET record_center_id = '1' WHERE record_center_id = '1' AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakovrTrgtOrignFileIdList
+
+	 	SELECT A.record_center_id	 		  ,orign_id		      ,orign_file_id		      ,medium_id		      ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd		      ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd		      ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path		      ,file_size		FROM tb_storignfile A		WHERE A.record_center_id = '1'		AND A.orign_id 			 = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRcvOrignFileSize
+
+		SELECT file_size FROM tb_storignfile WHERE record_center_id = '1' AND orign_id = '1' AND orign_file_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStRecordOrignHist
+
+		UPDATE tb_strecordorignhist		   SET record_center_id = '1'		 WHERE record_center_id = '1'	   	   AND orign_id         = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStRecordOrign
+
+	 	UPDATE tb_strecordorign		   SET record_center_id = '1'		 WHERE record_center_id = '1'	   	   AND orign_id         = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStOrignFileHist
+
+	 	UPDATE tb_storignfilehist   		   SET record_center_id = '1'	    	  ,medium_id 		= '1'	 	 WHERE record_center_id = '1'	   	   AND orign_id         = '1'	   	   AND orign_file_id    = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStOrignFile
+
+	 	UPDATE tb_storignfile   		   SET record_center_id = '1'	    	  ,medium_id 		= '1'	 	 WHERE record_center_id = '1'	   	   AND orign_id         = '1'	   	   AND orign_file_id    = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakovrTrgtOrignPdfA1FileIdList
+
+	 	SELECT A.record_center_id	 		  ,orign_id		      ,pdf_a1_file_id		      ,medium_id		      ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd		      ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd		      ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path		      ,file_size		FROM tb_storignpdfa1file A		WHERE A.record_center_id = '1'		AND A.orign_id 			 = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRcvOrignPdfA1FileSize
+
+		SELECT file_size FROM tb_storignpdfa1file WHERE record_center_id = '1' AND orign_id = '1' AND pdf_a1_file_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStOrignPdfA1File
+
+  	 	UPDATE tb_storignpdfa1file	 	   SET record_center_id = '1'	 	      ,medium_id 		= '1'	 	 WHERE record_center_id = '1'	 	   AND orign_id 		= '1'	 	   AND pdf_a1_file_id	= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findMultiTakovrTrgtOrignNeoFileIdList
+
+	 	SELECT A.record_center_id	 		  ,orign_id		      ,orign_neo_file_id		      ,medium_id		      ,(SELECT Z.medium_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_cd		      ,(SELECT Z.medium_detail_cd FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_detail_cd		      ,(SELECT Z.medium_path FROM tb_stmedium Z WHERE Z.record_center_id = A.record_center_id AND Z.medium_id = A.medium_id) medium_path		      ,file_size		FROM tb_storignneofile A		WHERE A.record_center_id = '1'		AND A.orign_id 			 = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : select
+-- Query Id : findRcvOrignNeoFileSize
+
+		SELECT file_size FROM tb_storignneofile WHERE record_center_id = '1' AND orign_id = '1' AND orign_neo_file_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateStOrignNeoFile
+
+  	 	UPDATE tb_storignneofile	 	   SET record_center_id = '1'	 	      ,medium_id 		= '1'	 	 WHERE record_center_id = '1'	 	   AND orign_id 		= '1'	 	   AND orign_neo_file_id= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml
+-- Query    : update
+-- Query Id : updateMultiTakeState
+
+		UPDATE tb_rdmultitakovrplan 		   SET take_state_snd_div_cd  = '1'		      ,take_state_rcv_div_cd  = '1'		 WHERE take_takovr_snd_rep_cd = '1'		   AND take_takovr_yyyy		  = '1'		   AND take_takovr_sno		  = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTake\MultiTake.xml

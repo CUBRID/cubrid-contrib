@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.unitMng">
+<resultMap id="stnd-task-remedi-result" class="rms.stnd.unitMng.domain.RecordConfm" >
+			<result property="unitCd"				      column="UNIT_CD"/>
+			<result property="unitNm"				      column="UNIT_NM"/>
+			<result property="unitPathNm"				  column="UNIT_PATH_NM"/>
+			<result property="presvTermNm" 			      column="PRESV_TERM_NM"/>
+			<result property="regDtime" 				  column="REG_DTIME"/>	
+			<result property="presvTermStateNm" 		  column="PRESVTERM_STATE_NM"/>
+			<result property="presvTermChngRsnNm" 		  column="PRESVTERM_CHNG_RSN_NM"/>
+			<result property="unitDescr" 		          column="UNIT_DESCR"/>
+			<result property="narsPresvTermNm" 			  column="NARS_PRESV_TERM_NM"/>
+			<result property="narsCheckYmd" 			  column="NARS_CHECK_YMD"/>	
+			<result property="narsOpin" 		          column="NARS_OPIN"/>
+		</resultMap>
+		<resultMap id="recordInfo-result"     class="rms.stnd.unitMng.domain.RecordConfm" >
+			<result property="recordCenterId"			  column="RECORD_CENTER_ID"/>
+			<result property="recordCenterCd"			  column="RECORD_CENTER_CD"/>
+			<result property="recordCenterNm"			  column="RECORD_CENTER_NM"/>
+		</resultMap>
+		<resultMap id="presvReqInfo-result"         class="rms.stnd.unitMng.domain.RecordConfm" >
+			<result property="presvTermChngRsnCd"		  column="PRESVTERM_CHNG_RSN_CD"/>
+			<result property="unitCd"				      column="UNIT_CD"/>
+			<result property="unitNm"				      column="UNIT_NM"/>
+			<result property="orgPresvTermCd"			  column="ORG_PRESV_TERM_CD"/>
+			<result property="orgOpin" 			          column="ORG_OPIN"/>
+			<result property="orgFixYmd" 				  column="ORG_FIX_YMD"/>	
+			<result property="recordCenterPresvTermCd" 	  column="RECORD_CENTER_PRESV_TERM_CD"/>
+			<result property="recordCenterOpin" 	      column="RECORD_CENTER_PRESV_TERM_CD"/>
+			<result property="recordCenterPresvTermCd" 	  column="RECORD_CENTER_OPIN"/>
+			<result property="recordCenterCheckYmd" 	  column="RECORD_CENTER_CHECK_YMD"/>
+			<result property="unitDescr" 	  			  column="UNIT_DESCR"/>
+			<result property="regDtime" 	  			  column="REG_DTIME"/>
+		</resultMap>
+		<resultMap id="unitCurState-result" class="rms.stnd.unitMng.domain.RecordConfm" >
+			<result property="unitNm"				      column="UNIT_NM"/>
+			<result property="unitCd"				      column="UNIT_CD"/>
+			<result property="unitPathNm"				  column="UNIT_PATH_NM"/>
+			<result property="unitDescr" 			      column="UNIT_DESCR"/>
+			<result property="presvArea" 				  column="PRESV_AREA"/>	
+			<result property="presvMethod" 		  		  column="PRESV_METHOD"/>
+			<result property="funshRecordFlagNm"		  column="FUNSH_RECORD_FLAG_NM"/>
+			<result property="funshRecordTransfYmd"		  column="FUNSH_RECORD_TRANSF_YMD"/>
+			<result property="transfReadExptCntNm"	      column="TRANSF_READ_EXPT_CNT_NM"/>
+			<result property="mainReadUsgNm" 			  column="MAIN_READ_USG_NM"/>
+			<result property="spclListLocNm" 			  column="SPCL_LIST_LOC_NM"/>	
+			<result property="spclList1" 		          column="SPCL_LIST1"/>
+			<result property="spclList2"				  column="SPCL_LIST2"/>
+			<result property="spclList3"				  column="SPCL_LIST3"/>
+			<result property="stateNm"				      column="STATE_NM"/>
+			<result property="presvTermNm" 			      column="PRESV_TERM_NM"/>
+			<result property="presvTermFixYmd" 		      column="PRESV_TERM_FIX_YMD"/>	
+			<result property="presvTermFixRsn" 		      column="PRESV_TERM_FIX_RSN"/>
+			<result property="orgPresvTermNm"			  column="ORG_PRESV_TERM_NM"/>
+			<result property="orgFixYmd"				  column="ORG_FIX_YMD"/>
+			<result property="orgOpin"				      column="ORG_OPIN"/>
+			<result property="recordCenterPresvTermNm" 	  column="RECORD_CENTER_PRESV_TERM_NM"/>
+			<result property="recordCenterCheckYmd" 	  column="RECORD_CENTER_CHECK_YMD"/>	
+			<result property="recordCenterOpin" 		  column="RECORD_CENTER_OPIN"/>
+			<result property="narsPresvTermNm" 			  column="NARS_PRESV_TERM_NM"/>
+			<result property="narsCheckYmd" 			  column="NARS_CHECK_YMD"/>	
+			<result property="narsOpin" 		          column="NARS_OPIN"/>
+		</resultMap>
+		<resultMap id="org-result"    class="rms.stnd.unitMng.domain.RecordConfm" >
+			<result property="orgCd"			  	 	  column="ORG_CD"/>
+			<result property="orgNm"			  		  column="ORG_NM"/>
+		</resultMap>
+		
+<!-- 기록원 확정 조회 COUNT -->
+	<select id="countRecordConfmPageList" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="int">
+		SELECT COUNT(1)
+		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.UNIT_CD = B.UNIT_CD(+)
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		<dynamic>
+		    <isNotEmpty prepend="AND" property="unitPathNm">
+		  	    LRG_NM || MID_NM || SML_NM LIKE #unitPathNm:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="unitCd">
+			    A.UNIT_CD = #unitCd:VARCHAR# 
+			</isNotEmpty>
+			<isNotEmpty property="presvTermStateCd">
+				<isEqual prepend="AND" property="presvTermStateCd" compareValue="0">
+				  	(PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR# OR PRESVTERM_STATE_CD IS NULL)
+				</isEqual>
+				<isEqual prepend="AND" property="presvTermStateCd" compareValue="1">
+					 PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+				</isEqual>
+				<isEqual prepend="AND" property="presvTermStateCd" compareValue="2">
+					PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+				</isEqual>
+			</isNotEmpty>
+			<isNotEmpty property="presvTermChngRsnCd">
+				<isEqual prepend="AND" property="presvTermChngRsnCd" compareValue="0">
+					(PRESVTERM_CHNG_RSN_CD = #presvTermChngRsnCd:VARCHAR# OR PRESVTERM_CHNG_RSN_CD IS NULL)
+			    </isEqual>
+				<isEqual prepend="AND" property="presvTermChngRsnCd" compareValue="1">
+					PRESVTERM_CHNG_RSN_CD = #presvTermChngRsnCd:VARCHAR#
+				</isEqual>
+			</isNotEmpty>								
+		    <isNotEmpty prepend="AND" property="regDtimeF">
+		    	<isNotEmpty property="regDtimeT">
+		    		(REG_DTIME BETWEEN #regDtimeF:VARCHAR#||'000000' AND #regDtimeT:VARCHAR#||'240000')
+		    	</isNotEmpty>
+				<isEmpty property="regDtimeT">
+					REG_DTIME <![CDATA[>=]]> #regDtimeF:VARCHAR#||'000000'
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="regDtimeF">
+				<isNotEmpty property="regDtimeT">
+					REG_DTIME <![CDATA[<=]]> #regDtimeT:VARCHAR#||'240000'
+				</isNotEmpty>
+			</isEmpty>
+		</dynamic>	 
+		<dynamic>
+		 	<isEqual property="order" compareValue="1">
+				ORDER BY REG_DTIME
+			</isEqual>
+			<isEqual property="order" compareValue="2">
+				ORDER BY REG_DTIME DESC
+			</isEqual>
+		</dynamic>
+	</select>
+		
+<!-- 기록원 확정 조회 SELECT -->
+	<select id="findRecordConfmPageList" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="stnd-task-remedi-result">
+		SELECT A.UNIT_CD
+			 , UNIT_NM
+			 , CASE WHEN LRG_NM IS NULL OR MID_NM IS NULL OR SML_NM IS NULL
+				 THEN ''
+				 ELSE (LRG_NM || '>' || MID_NM || '>' || SML_NM )
+				 END UNIT_PATH_NM
+			 , DECODE(REG_DTIME, '', '', SUBSTR(REG_DTIME, 0,8)) REG_DTIME
+			 , (SELECT com_cd_nm
+		          FROM tb_zzcomcd
+		         WHERE com_type_cd = 'RD57'
+		           AND use_flag = '1'
+		           AND com_cd = presv_term_cd) PRESV_TERM_NM
+			 , (SELECT com_cd_nm
+		          FROM tb_zzcomcd
+		         WHERE com_type_cd = 'ZZ28'
+		           AND use_flag = '1'
+		           AND com_cd = presvterm_state_cd) PRESVTERM_STATE_NM
+			 , (SELECT com_cd_nm
+		          FROM tb_zzcomcd
+		         WHERE com_type_cd = 'ZZ27'
+		           AND use_flag = '1'
+		           AND com_cd = presvterm_chng_rsn_cd) PRESVTERM_CHNG_RSN_NM
+			 , UNIT_DESCR
+			 , (SELECT com_cd_nm
+		          FROM tb_zzcomcd
+		         WHERE com_type_cd = 'RD57'
+		           AND use_flag = '1'
+		           AND com_cd = nars_presv_term_cd) NARS_PRESV_TERM_NM
+			 , NARS_OPIN
+			 , NARS_CHECK_YMD
+		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.UNIT_CD = B.UNIT_CD(+)
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		<dynamic>
+			<isNotEmpty prepend="AND" property="unitPathNm">
+			  	 LRG_NM || MID_NM || SML_NM LIKE #unitPathNm:VARCHAR#
+		    </isNotEmpty>
+			<isNotEmpty prepend="AND" property="unitCd">
+				 A.UNIT_CD = #unitCd:VARCHAR# 
+		    </isNotEmpty>
+		    <isNotEmpty property="presvTermStateCd">
+				<isEqual prepend="AND" property="presvTermStateCd" compareValue="0">
+					(PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR# OR PRESVTERM_STATE_CD IS NULL)
+			    </isEqual>
+				<isEqual prepend="AND" property="presvTermStateCd" compareValue="1">
+					PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+				</isEqual>
+				<isEqual prepend="AND" property="presvTermStateCd" compareValue="2">
+					PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+				</isEqual>
+			</isNotEmpty>	
+			<isNotEmpty property="presvTermChngRsnCd">
+				<isEqual prepend="AND" property="presvTermChngRsnCd" compareValue="0">
+					(PRESVTERM_CHNG_RSN_CD = #presvTermChngRsnCd:VARCHAR# OR PRESVTERM_CHNG_RSN_CD IS NULL)
+			    </isEqual>
+				<isEqual prepend="AND" property="presvTermChngRsnCd" compareValue="1">
+					PRESVTERM_CHNG_RSN_CD = #presvTermChngRsnCd:VARCHAR#
+				</isEqual>
+			</isNotEmpty>							
+			<isNotEmpty prepend="AND" property="regDtimeF">
+		    	<isNotEmpty property="regDtimeT">
+		    		(REG_DTIME BETWEEN #regDtimeF:VARCHAR#||'000000' AND #regDtimeT:VARCHAR#||'240000')
+		    	</isNotEmpty>
+				<isEmpty property="regDtimeT">
+					REG_DTIME <![CDATA[>=]]> #regDtimeF:VARCHAR#||'000000'
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="regDtimeF">
+				<isNotEmpty property="regDtimeT">
+					REG_DTIME <![CDATA[<=]]> #regDtimeT:VARCHAR#||'240000'
+				</isNotEmpty>
+			</isEmpty>
+	    </dynamic>	
+		<dynamic>
+			<isEqual property="order" compareValue="1">
+				ORDER BY REG_DTIME
+			</isEqual>
+			<isEqual property="order" compareValue="2">
+				ORDER BY REG_DTIME DESC
+			</isEqual>
+		</dynamic>
+	</select>
+	
+<!-- 기록관 정보 조회 -->
+	<select id="findRecordInfo" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="recordInfo-result">
+		SELECT RECORD_CENTER_ID,
+			   RECORD_CENTER_CD,
+		       RECORD_CENTER_NM
+		  FROM TB_STRECORDCENTER
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+<!-- 신청파일 정보 조회 count -->
+	<select id="countPresvTermReqFileList" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="int">
+		SELECT COUNT(1)
+		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND A.UNIT_CD = B.UNIT_CD
+		   AND A.PRESVTERM_STATE_CD = '0'
+	</select>
+	  
+<!-- 신청파일 정보 조회 -->
+	<select id="findPresvTermReqFileList" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="presvReqInfo-result">
+		SELECT DECODE(A.PRESVTERM_CHNG_RSN_CD,'0','01','1','02') PRESVTERM_CHNG_RSN_CD,
+			   A.UNIT_CD, 
+			   A.UNIT_NM, 
+			   B.ORG_PRESV_TERM_CD, 
+			   B.ORG_OPIN, 
+			   B.ORG_FIX_YMD, 
+			   B.RECORD_CENTER_PRESV_TERM_CD, 
+			   B.RECORD_CENTER_OPIN, 
+			   B.RECORD_CENTER_CHECK_YMD, 
+			   A.UNIT_DESCR,
+			   SUBSTR(A.REG_DTIME,1,4) REG_DTIME
+		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND A.UNIT_CD = B.UNIT_CD
+		   AND A.PRESVTERM_STATE_CD = '0'
+	</select>
+	  
+<!-- 신청 상태 업데이트 -->
+	<update id="updatePresvTermState" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+		UPDATE TB_ZZUNIT
+		   SET PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+		 WHERE UNIT_CD = #unitCd:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+
+<!-- 기록원 확정 단위업무 상세보기 -->
+	<select id="findUnitCurState" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="unitCurState-result">
+		SELECT A.UNIT_NM
+			 , A.UNIT_CD
+			 , CASE WHEN A.LRG_NM IS NULL OR A.MID_NM IS NULL OR A.SML_NM IS NULL
+				 THEN ''
+				 ELSE (A.LRG_NM || '>' || A.MID_NM || '>' || A.SML_NM )
+				 END UNIT_PATH_NM
+		     , A.UNIT_DESCR
+		     , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD10' AND COM_CD = A.PRESV_AREA_CD) PRESV_AREA
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD09' AND COM_CD = A.PRESV_METHOD_CD) PRESV_METHOD
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ21' AND COM_CD = A.FUNSH_RECORD_FLAG) FUNSH_RECORD_FLAG_NM
+			 , A.FUNSH_RECORD_TRANSF_YMD
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ05' AND COM_CD = A.TRANSF_READ_EXPT_CNT) TRANSF_READ_EXPT_CNT_NM
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ04' AND COM_CD = A.MAIN_READ_USG) MAIN_READ_USG_NM
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD22' AND COM_CD = A.SPCL_LIST_LOC) SPCL_LIST_LOC_NM
+			 , A.SPCL_LIST1
+			 , A.SPCL_LIST2
+			 , A.SPCL_LIST3
+			 , DECODE(A.STATE_CD, '2', '폐지', '현존') STATE_NM
+		     , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM
+		     , DECODE(A.REG_DTIME, '', '', SUBSTR(A.REG_DTIME,1,8)) PRESV_TERM_FIX_YMD
+		     , A.PRESV_TERM_FIX_RSN
+		     , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = B.ORG_PRESV_TERM_CD) ORG_PRESV_TERM_NM
+		     , B.ORG_FIX_YMD 
+		     , B.ORG_OPIN  
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM
+		     , B.RECORD_CENTER_CHECK_YMD
+			 , B.RECORD_CENTER_OPIN
+			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = B.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM
+		     , B.NARS_CHECK_YMD
+			 , B.NARS_OPIN
+		  FROM TB_ZZUNIT A
+		     , TB_ZZUNITPRESVTERMHIST B
+		 WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		   AND A.UNIT_CD = B.UNIT_CD(+)
+		   AND A.UNIT_CD = #unitCd:VARCHAR#
+		   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+
+<!-- 기록원 확정 단위업무 상세보기(주관부서 - 공통단위업무확인) -->
+	<select id="checkComUnit" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="string">	
+		SELECT COM_UNIT_FLAG
+		  FROM TB_ZZUNIT
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND UNIT_CD = #unitCd:VARCHAR#
+	</select>
+	
+<!-- 기록원 확정 단위업무 상세보기(주관부서) -->
+	<select id="findOrg" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="org-result">	
+		SELECT ORG_NM, ORG_CD
+		  FROM TB_STORG 
+		 WHERE ORG_CD IN (SELECT ORG_CD FROM TB_ZZORGUNIT WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND UNIT_CD = #unitCd:VARCHAR# AND USE_FLAG = '1')
+	</select>
+	
+<!-- 기록원 확정 단위업무 상세보기(주관부서:공통단위업무 일때) -->
+	<select id="findOrgComUnit" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="org-result">	
+		SELECT record_center_nm ORG_NM
+			 , record_center_cd ORG_CD
+		  FROM TB_STRECORDCENTER 
+		 WHERE record_center_id = #recordCenterId:VARCHAR#
+	</select>
+
+<!-- 기록원 확정 대상확인 -->
+	<select id="checkConfmReq" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B
+		 WHERE A.UNIT_CD = #unitCd:VARCHAR#
+		   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.PRESVTERM_STATE_CD = '1'
+		   AND A.UNIT_CD = B.UNIT_CD
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+	</select>
+	
+<!-- 기록원 확정 조정 시 확정 정보 업데이트 -->
+	<update id="updateNarPresvTermHist" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+	    UPDATE TB_ZZUNITPRESVTERMHIST
+	       SET NARS_PRESV_TERM_CD = (SELECT COM_CD 
+	                                   FROM TB_ZZCOMCD 
+	                                  WHERE COM_TYPE_CD = 'RD57'
+	                                    AND COM_CD = #narsPresvTermCd:VARCHAR#
+	                                UNION
+                                     SELECT COM_CD
+                                       FROM TB_ZZCOMCD
+                                      WHERE COM_TYPE_CD = 'RD57'
+                                        AND COM_CD_NM = #narsPresvTermCd:VARCHAR#)
+	         , NARS_CHECK_YMD = #narsCheckYmd:VARCHAR#
+	  	     , NARS_OPIN = #narsOpin:VARCHAR#
+	     WHERE UNIT_CD = #unitCd:VARCHAR#
+	     AND   RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 기록관확정 조정 시 확정 정보 업데이트 -->
+	<update id="updateUnitPresvTerm" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+	    UPDATE TB_ZZUNIT
+	       SET PRESV_TERM_CD = (SELECT COM_CD 
+                                  FROM TB_ZZCOMCD 
+                                 WHERE COM_TYPE_CD = 'RD57'
+                                   AND COM_CD = #narsPresvTermCd:VARCHAR#
+	                           UNION
+                                SELECT COM_CD
+                                  FROM TB_ZZCOMCD
+                                 WHERE COM_TYPE_CD = 'RD57'
+                                   AND COM_CD_NM = #narsPresvTermCd:VARCHAR#)
+	         , PRESV_TERM_FIX_RSN = #narsOpin:VARCHAR#
+	  	     <!--cubrid , REG_DTIME = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+	  	     , REG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+	  	     , PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+	     WHERE UNIT_CD = #unitCd:VARCHAR#
+	     AND   RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<insert id="createUnitChngHist" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+		INSERT INTO TB_ZZUNITCHNGHIST (
+   	   					       RECORD_CENTER_ID
+							 , UNIT_CD
+							 , CHNG_SEQ
+							 , CHNG_YMD
+							 , CHNG_ITEM_CD
+							 , CHNG_BEF_VAL
+							 , CHNG_AFT_VAL
+							 , CHNG_RSN
+							  ) 
+                       VALUES ( 
+					           #recordCenterId:VARCHAR#
+							 , #unitCd:VARCHAR#
+							 , LPAD((SELECT NVL(MAX(CHNG_SEQ),0)+1 
+							           FROM TB_ZZUNITCHNGHIST
+									  WHERE UNIT_CD = #unitCd:VARCHAR#
+									    AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#), 6, '0')
+							 , TO_CHAR(SYSDATE,'YYYYMMDD')
+    						 , '04'
+							 , (SELECT PRESV_TERM_CD 
+							      FROM TB_ZZUNIT 
+							     WHERE UNIT_CD = #unitCd:VARCHAR#
+								   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+							 , #chngAftVal:VARCHAR#
+    						 , #chngRsn:VARCHAR#
+							 )
+	</insert>
+	
+	<resultMap id="stnd-org-result" class="rms.stnd.unitMng.domain.RecordConfm" >
+		<result property="orgCd"			column="ORG_CD"/>
+	</resultMap>
+	<!-- 단위업무별 처리과 조회-->
+	<select id="findOrgCd" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="stnd-org-result">
+	    SELECT ORG_CD 
+		  FROM TB_ZZUNIT A, TB_ZZORGUNIT B
+		 WHERE A.UNIT_CD = #unitCd:VARCHAR#
+		   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.UNIT_CD = B.UNIT_CD
+		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		   AND B.USE_FLAG = '1'
+	</select>
+	
+	<!-- 처리과별 단위업무 작업이력 등록 -->
+	<insert id="creatOrgUnitWorkHist" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+		INSERT INTO TB_ZZORGUNITWORKHIST (
+		 			 					   RECORD_CENTER_ID
+										 , ORG_CD
+										 , UNIT_CD
+										 , WORK_TYPE_CD
+										 , WORK_DTIME
+										 ) 
+								  VALUES ( #recordCenterId:VARCHAR#
+								         , #orgCd:VARCHAR#
+										 , #unitCd:VARCHAR#
+										 , '2'
+										 <!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+										 , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+										 )
+	</insert>
+	
+	<!-- 기록관확정 미조정 시 확정 정보 업데이트 -->
+	<update id="updateUnitPresvTermNotMedi" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+	    UPDATE TB_ZZUNIT
+	       SET PRESVTERM_STATE_CD = #presvTermStateCd:VARCHAR#
+	  	     <!--cubrid , REG_DTIME = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+	  	     , REG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+	     WHERE UNIT_CD = #unitCd:VARCHAR#
+	     AND   RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 단위업무 설명 업데이트 -->
+	<update id="updateUnitDescr" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+	    UPDATE TB_ZZUNIT
+	       SET UNIT_DESCR = #unitDescr:VARCHAR#
+	     WHERE UNIT_CD = #unitCd:VARCHAR#
+	       AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 단위업무 공통여부 조회-->
+	<select id="findComUnitFlag" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="int">
+       SELECT COUNT(1)
+	     FROM TB_ZZUNIT
+	    WHERE UNIT_CD = #unitCd:VARCHAR#
+	      AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	      AND COM_UNIT_FLAG = '1'
+	</select>
+	
+	<!-- 조정보존기간 조회 -->
+	<select id="countPresvTerm" parameterClass="string" resultClass="int">
+	    SELECT count(1)
+	      FROM TB_ZZCOMCD
+	     WHERE COM_TYPE_CD = 'RD57'
+	       AND (COM_CD = #value#
+	        OR COM_CD_NM = #value#)
+	</select>
+	
+	<!-- 미조정 조회 -->
+	<select id="checkUnitHist" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="int">
+		SELECT count(1)
+		  FROM TB_ZZUNITPRESVTERMHIST
+		 WHERE UNIT_CD = #unitCd:VARCHAR#
+		   AND NARS_OPIN = #narsOpin:VARCHAR#
+           AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+
+<!-- CAMS 연계오류 조회 -->
+	<resultMap id="stnd-camslinkerror-result" class="rms.stnd.unitMng.domain.RecordConfm" >
+		<result property="sendFileDataDiv"			column="SEND_FILE_DATA_DIV"/>
+		<result property="presvTermMediReqYyyy"		column="PRESV_TERM_MEDI_REQ_YYYY"/>
+		<result property="repOrgCd"		            column="REP_ORG_CD"/>
+		<result property="listLineNo" 			    column="LIST_LINE_NO"/>		
+		<result property="presvTermRecvErrorCont" 	column="PRESV_TERM_RECV_ERROR_CONT"/>	
+		<result property="regDtime" 			    column="REG_DTIME"/>
+		<result property="recvFileDtime" 			column="RECV_FILE_DTIME"/>
+	</resultMap>	
+	 <select id="findCAMSLinkErrorPagedList" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultMap="stnd-camslinkerror-result">
+		SELECT PRESV_TERM_MEDI_REQ_YYYY, 
+			   SEND_FILE_DATA_DIV,		       
+			   REP_ORG_CD, 		       
+			   LIST_LINE_NO, 		       
+               PRESV_TERM_RECV_ERROR_CONT,
+               RECV_FILE_DTIME,
+               REG_DTIME 		
+        FROM  TB_ZZPRESVRECVRSLT	
+        <dynamic prepend="WHERE">			
+			<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+				PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>	
+	<select id="countCAMSLinkErrorPagedList" parameterClass="rms.stnd.unitMng.domain.RecordConfm" resultClass="int">
+		SELECT COUNT(1)
+		FROM  TB_ZZPRESVRECVRSLT		
+       <dynamic prepend="WHERE">			
+			<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+				PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>	
+	
+	<!-- 기록원 확정 > CAMS 연계오류 OFF LINE 반영-->
+	<insert id="creatPresvTermReqFileInfo" parameterClass="rms.stnd.unitMng.domain.RecordConfm">
+		INSERT INTO TB_ZZPRESVRECVRSLT (PRESV_TERM_MEDI_REQ_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,
+									PRESV_TERM_RECV_ERROR_CONT,REG_DTIME,RECV_FILE_DTIME)
+			VALUES(#presvTermMediReqYyyy:VARCHAR#,#repOrgCd:VARCHAR#,#sendFileDataDiv:VARCHAR#,#listLineNo:VARCHAR#,
+			       #presvTermRecvErrorCont:VARCHAR#,#regDtime:VARCHAR#,#recvFileDtime:VARCHAR#
+			)
+	</insert>
+
+</sqlMap>

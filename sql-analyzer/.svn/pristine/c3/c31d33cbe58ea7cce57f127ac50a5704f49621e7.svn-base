@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.disuseeval">
+
+
+	<!-- 평가폐기 대체보존 국가기록관리위원회 의견등록 -->
+	<resultMap id="dis-use-natcmt-opin-reg-result" class="rms.eval.disuseeval.domain.Disuse">
+		<result property="folderId"				column="FOLDER_ID"		nullValue="" />
+		<result property="bisClssNm"			column="BIS_CLSS_NM"	nullValue="" />
+		<result property="title"				column="TITLE"			nullValue="" />
+		<result property="creatYyyy"			column="CREAT_YYYY"    	nullValue="" />
+		<result property="curPresvTermCd"		column="CUR_PRESV_TERM_CD"    	nullValue="" />
+		<result property="handlOrgDisuDivCd"	column="HANDL_ORG_DISU_DIV_CD"    	nullValue="" />
+		<result property="expertDisuDivCd"		column="EXPERT_DISU_DIV_CD"    		nullValue="" />
+		<result property="discuProgStateCd"		column="DISCU_PROG_STATE_CD"     	nullValue="" />
+		<result property="expertDisuDivCd"		column="EXPERT_DISU_DIV_CD"     	nullValue="" />
+		<result property="expertDisuDeferCd"	column="EXPERT_DISU_DEFER_CD"     	nullValue="" />
+		<result property="expertDisuTermCd"		column="EXPERT_DISU_TERM_CD"     	nullValue="" />
+		<result property="expertDisuRsn"		column="EXPERT_DISU_RSN"     		nullValue="" />
+		<result property="reviewDivCd"			column="REVIEW_DIV_CD"     			nullValue="" />
+		<result property="reviewDeferCd"		column="REVIEW_DEFER_CD"     		nullValue="" />
+		<result property="reviewTermCd"			column="REVIEW_TERM_CD"     		nullValue="" />
+		<result property="reviewRsn"			column="REVIEW_RSN"     			nullValue="" />
+		<result property="discuReqFlag"			column="DISCU_REQ_FLAG"     		nullValue="" />
+		<result property="curPresvTermNm"		column="CUR_PRESV_TERM_NM"     		nullValue="" />
+		<result property="handlOrgDeferNm"		column="HANDL_ORG_DEFER_NM"     	nullValue="" />
+		<result property="handlOrgTermNm"		column="HANDL_ORG_TERM_NM"     		nullValue="" />
+		<result property="expertDisuDeferNm"	column="EXPERT_DISU_DEFER_NM"     	nullValue="" />
+		<result property="expertDisuTermNm"		column="EXPERT_DISU_TERM_NM"     	nullValue="" />
+		<result property="reviewDeferNm"		column="REVIEW_DEFER_NM"     		nullValue="" />
+		<result property="reviewTermNm"			column="REVIEW_TERM_NM"     		nullValue="" />
+		<result property="discuReqFlagNm"		column="DISCU_REQ_FLAG_NM"     		nullValue="" />
+		<result property="excelDwnFlag"			column="EXCEL_DWN_FLAG"     		nullValue="" />		
+		<result property="natCmtTermCdSkip"		column="NAT_CMT_TERM_CD_SKIP"     	nullValue="" />
+		<result property="natCmtDivCd"			column="NAT_CMT_DIV_CD"     		nullValue="" />
+		<result property="natCmtDeferCd"		column="NAT_CMT_DEFER_CD"     		nullValue="" />
+		<result property="natCmtTermCd"			column="NAT_CMT_TERM_CD"     		nullValue="" />
+		<result property="natCmtRsn"			column="NAT_CMT_RSN"     			nullValue="" />
+		<result property="natCmtExcelDwnFlag"	column="NAT_CMT_EXCEL_DWN_FLAG"     nullValue="" />
+		<result property="natCmtDeferNm"		column="NAT_CMT_DEFER_NM"     		nullValue="" />
+		<result property="natCmtTermNm"			column="NAT_CMT_TERM_NM"     		nullValue="" />
+		<result property="folderKeepStateCd"	column="folder_keep_state_cd" 		nullValue="" />
+	</resultMap>
+	<!-- 
+		SELECT - 평가폐기 대체보존 국가기록관리위원회 의견등록
+	 -->
+	<select id="findDisuseNatCmtOpinRegPagedList" parameterClass="rms.eval.disuseeval.domain.Disuse" resultMap="dis-use-natcmt-opin-reg-result" >
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.FOLDER_ID
+					, (CASE WHEN B.CLSS_DIV_CD = '1' THEN (SELECT MAX(A.BIS_CLSS_NM) FROM TB_ZZBISCLSS A WHERE A.BIS_CLSS_ID = B.CLSS_ID)
+						    WHEN B.CLSS_DIV_CD = '2' THEN (SELECT MAX(A.UNIT_NM) FROM TB_ZZUNIT A WHERE A.UNIT_CD = B.CLSS_ID)
+					   END) AS BIS_CLSS_NM
+				    , B.TITLE
+				    , B.CREAT_YYYY
+				    , A.CUR_PRESV_TERM_CD
+				    , A.DISCU_PROG_STATE_CD
+				    , CASE WHEN A.CUR_PRESV_TERM_CD = '01' THEN '01'
+				           WHEN A.CUR_PRESV_TERM_CD = '03' THEN '01,03'
+				           WHEN A.CUR_PRESV_TERM_CD = '05' THEN '01,03,05'
+				           WHEN A.CUR_PRESV_TERM_CD = '10' THEN '01,03,05,10'
+				           WHEN A.CUR_PRESV_TERM_CD = '25' THEN '01,03,05,10,25'
+				           WHEN A.CUR_PRESV_TERM_CD = '30' THEN '01,03,05,10,25,30'
+				           WHEN A.CUR_PRESV_TERM_CD = '40' THEN '01,03,05,10,25,30,40'
+				      END AS NAT_CMT_TERM_CD_SKIP
+				    , A.HANDL_ORG_DISU_DIV_CD
+				    , A.HANDL_ORG_DEFER_CD
+				    , A.HANDL_ORG_TERM_CD
+				    , A.HANDL_ORG_RSN
+				    , A.EXPERT_DISU_DIV_CD
+				    , A.EXPERT_DISU_DEFER_CD
+				    , A.EXPERT_DISU_TERM_CD
+				    , A.EXPERT_DISU_RSN
+				    , A.REVIEW_DIV_CD
+				    , A.REVIEW_DEFER_CD
+				    , A.REVIEW_REFIX_AFT_PRESV_TERM AS REVIEW_TERM_CD
+				    , A.REVIEW_REFIX_AFT_RSN AS REVIEW_RSN
+				    , A.DISCU_REQ_FLAG     
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.CUR_PRESV_TERM_CD) AS CUR_PRESV_TERM_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.HANDL_ORG_DEFER_CD) AS HANDL_ORG_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.HANDL_ORG_TERM_CD) AS HANDL_ORG_TERM_NM     
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.EXPERT_DISU_DEFER_CD) AS EXPERT_DISU_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.EXPERT_DISU_TERM_CD) AS EXPERT_DISU_TERM_NM     
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.REVIEW_DEFER_CD) AS REVIEW_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.REVIEW_REFIX_AFT_PRESV_TERM) AS REVIEW_TERM_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = A.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG_NM
+				    , A.EXCEL_DWN_FLAG     
+				    , A.NAT_CMT_DIV_CD
+				    , A.NAT_CMT_DEFER_CD
+				    , A.NAT_CMT_REFIX_AFT_PRESV_TERM AS NAT_CMT_TERM_CD
+				    , A.NAT_CMT_REFIX_AFT_RSN AS NAT_CMT_RSN
+				    , A.NAT_CMT_EXCEL_DWN_FLAG
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.NAT_CMT_DEFER_CD) AS NAT_CMT_DEFER_NM
+				    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.NAT_CMT_REFIX_AFT_PRESV_TERM) AS NAT_CMT_TERM_NM
+				    , B.folder_keep_state_cd
+				FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B
+				WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+				AND A.DISCU_PROG_STATE_CD IN ('07','08','09')
+				AND A.DISCU_REQ_FLAG = '1'
+				<isNotEmpty property="discuYyyySeq">
+					<isNotEqual property="discuYyyySeq" prepend="AND" compareValue="0">
+						A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+					</isNotEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="reviewDivCd">
+					A.REVIEW_DIV_CD = #reviewDivCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="natCmtDivCd">
+					A.NAT_CMT_DIV_CD = #natCmtDivCd:VARCHAR#
+				</isNotEmpty>
+				AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+				AND B.FOLDER_ID = A.FOLDER_ID
+				<isNotEmpty prepend="AND" property="orgCd">
+					B.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="startYyyy">
+					<isNotEmpty property="endYyyy" prepend="AND">
+						B.CREAT_YYYY BETWEEN #startYyyy:VARCHAR# AND #endYyyy:VARCHAR#
+					</isNotEmpty>
+				</isNotEmpty>
+				<isNotEmpty property="clssId">
+					<isNotEmpty prepend="AND" property="clssDivCd">
+						B.CLSS_DIV_CD = #clssDivCd:VARCHAR#
+					</isNotEmpty>	
+					<isNotEmpty prepend="AND" property="clssId">
+						B.CLSS_ID = #clssId:VARCHAR#
+					</isNotEmpty>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND">
+					<isEqual property="disusePresv30yearDiv" compareValue="1">
+						B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+					</isEqual>
+					<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+						B.PRESV_TERM_CD in ('01', '03', '05', '10')
+					</isNotEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="presvTermCd">
+					B.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					B.TITLE LIKE #title:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.ORG_CD, A.FOLDER_ID
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 평가폐기 대체보존 국가기록관리위원회 의견등록
+	 -->
+	<select id="countDisuseNatCmtOpinRegPagedList" parameterClass="rms.eval.disuseeval.domain.Disuse" resultClass="java.lang.Long" >
+		SELECT COUNT(1)
+		FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.DISCU_PROG_STATE_CD IN ('07','08','09')
+		AND A.DISCU_REQ_FLAG = '1'
+		<isNotEmpty property="discuYyyySeq">
+			<isNotEqual property="discuYyyySeq" prepend="AND" compareValue="0">
+				A.DISCU_YYYY_SEQ = #discuYyyySeq:NUMBER#
+			</isNotEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="reviewDivCd">
+			A.REVIEW_DIV_CD = #reviewDivCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="natCmtDivCd">
+			A.NAT_CMT_DIV_CD = #natCmtDivCd:VARCHAR#
+		</isNotEmpty>
+		AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		AND B.FOLDER_ID = A.FOLDER_ID
+		<isNotEmpty prepend="AND" property="orgCd">
+			B.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="startYyyy">
+			<isNotEmpty property="endYyyy" prepend="AND">
+				B.CREAT_YYYY BETWEEN #startYyyy:VARCHAR# AND #endYyyy:VARCHAR#
+			</isNotEmpty>
+		</isNotEmpty>
+		<isNotEmpty property="clssId">
+			<isNotEmpty prepend="AND" property="clssDivCd">
+				B.CLSS_DIV_CD = #clssDivCd:VARCHAR#
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="clssId">
+				B.CLSS_ID = #clssId:VARCHAR#
+			</isNotEmpty>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND">
+			<isEqual property="disusePresv30yearDiv" compareValue="1">
+				B.PRESV_TERM_CD in ('01', '03', '05', '10', '25')
+			</isEqual>
+			<isNotEqual property="disusePresv30yearDiv" compareValue="1">
+				B.PRESV_TERM_CD in ('01', '03', '05', '10')
+			</isNotEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="presvTermCd">
+			B.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="title">
+			B.TITLE LIKE #title:VARCHAR#
+		</isNotEmpty>
+	</select>
+	
+	
+	<!-- 
+		SELECT - 평가폐기 대체보존 심의서번호 목록조회
+	 -->
+	<select id="findDisuseNatCmtDiscuDocList" resultClass="rms.eval.disuseeval.domain.DisuseDiscuDoc" parameterClass="rms.eval.disuseeval.domain.DisuseFolder">
+		SELECT A.DISCU_YYYY as discuYyyy
+			, A.DISCU_YYYY_SEQ as discuYyyySeq
+			, LPAD(A.DISCU_YYYY_SEQ,6,'0') lpadDiscuYyyySeq
+		    , '[' || A.DISCU_YYYY || '-' || LPAD(A.DISCU_YYYY_SEQ,6,'0') || '] ' || A.DISCU_CHOICE_RSN AS discuChoiceRsn
+		FROM TB_DFDISUSEDISCUDOC A
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.DISCU_REQ_FLAG = '1'
+		ORDER BY A.DISCU_YYYY_SEQ
+	</select>
+	
+	
+	<!-- 평가폐기 대체보존 국가기록관리위원의 의견내용 -->
+	<resultMap id="dis-use-natcmt-opin-reg-each-result" class="rms.eval.disuseeval.domain.DisuseOpin">
+		<result property="folderId"				column="FOLDER_ID"				nullValue="" />
+		<result property="title"				column="TITLE"					nullValue="" />
+		<result property="creatYyyy"			column="CREAT_YYYY"    			nullValue="" />
+		<result property="discuProgStateCd"		column="DISCU_PROG_STATE_CD"    nullValue="" />
+		<result property="curDelayCd"			column="CUR_DELAY_CD"     		nullValue="" />
+		<result property="curPresvTermCd"		column="CUR_PRESV_TERM_CD"     	nullValue="" />
+		<result property="handlOrgDisuDivCd"	column="HANDL_ORG_DISU_DIV_CD"  nullValue="" />
+		<result property="handlOrgDeferCd"		column="HANDL_ORG_DEFER_CD"     nullValue="" />
+		<result property="handlOrgTermCd"		column="HANDL_ORG_TERM_CD"     	nullValue="" />
+		<result property="handlOrgRsn"			column="HANDL_ORG_RSN"     		nullValue="" />
+		<result property="handlOrgDisuDivNm"	column="HANDL_ORG_DISU_DIV_NM"  nullValue="" />
+		<result property="handlOrgDeferNm"		column="HANDL_ORG_DEFER_NM"     nullValue="" />
+		<result property="handlOrgTermNm"		column="HANDL_ORG_TERM_NM"     	nullValue="" />
+		<result property="curDelayNm"			column="CUR_DELAY_NM"     		nullValue="" />
+		<result property="curPresvTermNm"		column="CUR_PRESV_TERM_NM"     	nullValue="" />
+		<result property="handlOrgYmd"			column="HANDL_ORG_YMD" 			nullValue="" />
+		<result property="expertDisuDivCd"		column="EXPERT_DISU_DIV_CD" 	nullValue="" />		
+		<result property="expertDisuDeferCd"	column="EXPERT_DISU_DEFER_CD" 	nullValue="" />		
+		<result property="expertDisuTermCd"		column="EXPERT_DISU_TERM_CD" 	nullValue="" />		
+		<result property="expertDisuRsn"		column="EXPERT_DISU_RSN" 		nullValue="" />		
+		<result property="expertDisuYmd"		column="EXPERT_DISU_YMD" 		nullValue="" />		
+		<result property="expertDisuUserId"		column="EXPERT_DISU_USER_ID" 	nullValue="" />
+		<result property="expertDisuDivNm"		column="EXPERT_DISU_DIV_NM" 	nullValue="" />		
+		<result property="expertDisuDeferNm"	column="EXPERT_DISU_DEFER_NM" 	nullValue="" />		
+		<result property="expertDisuTermNm"		column="EXPERT_DISU_TERM_NM" 	nullValue="" />
+		<result property="reviewDivCd"			column="REVIEW_DIV_CD" 			nullValue="" />
+		<result property="reviewDeferCd"		column="REVIEW_DEFER_CD" 		nullValue="" />
+		<result property="reviewTermCd"			column="REVIEW_TERM_CD" 		nullValue="" />
+		<result property="reviewRsn"			column="REVIEW_RSN" 			nullValue="" />
+		<result property="reviewDivNm"			column="REVIEW_DIV_NM" 			nullValue="" />
+		<result property="reviewDeferNm"		column="REVIEW_DEFER_NM" 		nullValue="" />
+		<result property="reviewTermNm"			column="REVIEW_TERM_NM" 		nullValue="" />
+		<result property="discuReqFlag"			column="DISCU_REQ_FLAG" 		nullValue="" />
+		<result property="discuReqFlagNm"		column="DISCU_REQ_FLAG_NM" 		nullValue="" />
+		<result property="discuOrignTypeNm"		column="DISCU_ORIGN_TYPE_NM" 	nullValue="" />
+		<result property="presvTypeNm"			column="PRESV_TYPE_NM" 			nullValue="" />
+		<result property="mfPicStateNm"			column="MF_PIC_STATE_NM" 		nullValue="" />
+		<result property="scanProgStateNm"		column="SCAN_PROG_STATE_NM" 	nullValue="" />
+		<result property="natCmtTermCdSkip"		column="NAT_CMT_TERM_CD_SKIP" 	nullValue="" />
+		<result property="natCmtDivCd"			column="NAT_CMT_DIV_CD" 		nullValue="" />
+		<result property="natCmtDeferCd"		column="NAT_CMT_DEFER_CD" 		nullValue="" />
+		<result property="natCmtTermCd"			column="NAT_CMT_TERM_CD" 		nullValue="" />
+		<result property="natCmtRsn"			column="NAT_CMT_RSN" 			nullValue="" />
+		<result property="natCmtDivNm"			column="NAT_CMT_DIV_NM" 		nullValue="" />
+		<result property="natCmtDeferNm"		column="NAT_CMT_DEFER_NM" 		nullValue="" />
+		<result property="natCmtTermNm"			column="NAT_CMT_TERM_NM" 		nullValue="" />		
+	</resultMap>
+	<!-- 
+		SELECT - 평가폐기 대체보존 국가기록관리위원의 의견내용
+	 -->
+	<select id="findDisuseNatCmtOpinRegEach" parameterClass="rms.eval.disuseeval.domain.DisuseOpin" resultMap="dis-use-natcmt-opin-reg-each-result">
+		SELECT A.FOLDER_ID
+			, B.TITLE
+		    , B.CREAT_YYYY
+		    , A.DISCU_PROG_STATE_CD
+		    , A.CUR_DELAY_CD
+		    , A.CUR_PRESV_TERM_CD
+		    , A.EXPERT_DISU_DIV_CD
+		    , A.EXPERT_DISU_DEFER_CD
+		    , A.EXPERT_DISU_TERM_CD
+		    , A.EXPERT_DISU_RSN
+		    , A.EXPERT_DISU_YMD
+		    , A.EXPERT_DISU_USER_ID
+		    , A.HANDL_ORG_DISU_DIV_CD
+		    , A.HANDL_ORG_DEFER_CD
+		    , A.HANDL_ORG_TERM_CD
+		    , A.HANDL_ORG_RSN
+		    , A.HANDL_ORG_YMD
+		    , A.HANDL_ORG_USER_ID
+		    , A.REVIEW_DIV_CD
+		    , A.REVIEW_DEFER_CD
+		    , A.REVIEW_REFIX_AFT_PRESV_TERM AS REVIEW_TERM_CD
+		    , A.REVIEW_REFIX_AFT_RSN AS REVIEW_RSN
+		    , A.NAT_CMT_DIV_CD
+		    , A.NAT_CMT_DEFER_CD
+		    , A.NAT_CMT_REFIX_AFT_PRESV_TERM AS NAT_CMT_TERM_CD
+		    , A.NAT_CMT_REFIX_AFT_RSN AS NAT_CMT_RSN
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.HANDL_ORG_DISU_DIV_CD) AS HANDL_ORG_DISU_DIV_NM     
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.HANDL_ORG_DEFER_CD) AS HANDL_ORG_DEFER_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.HANDL_ORG_TERM_CD) AS HANDL_ORG_TERM_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.CUR_DELAY_CD) AS CUR_DELAY_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.CUR_PRESV_TERM_CD) AS CUR_PRESV_TERM_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.EXPERT_DISU_DIV_CD) AS EXPERT_DISU_DIV_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.EXPERT_DISU_DEFER_CD) AS EXPERT_DISU_DEFER_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.EXPERT_DISU_TERM_CD) AS EXPERT_DISU_TERM_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.REVIEW_DIV_CD) AS REVIEW_DIV_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.REVIEW_DEFER_CD) AS REVIEW_DEFER_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.REVIEW_REFIX_AFT_PRESV_TERM) AS REVIEW_TERM_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF02' AND COM_CD = A.NAT_CMT_DIV_CD) AS NAT_CMT_DIV_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF07' AND COM_CD = A.NAT_CMT_DEFER_CD) AS NAT_CMT_DEFER_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.NAT_CMT_REFIX_AFT_PRESV_TERM) AS NAT_CMT_TERM_NM
+		    , CASE WHEN A.CUR_PRESV_TERM_CD = '01' THEN '01'
+		           WHEN A.CUR_PRESV_TERM_CD = '03' THEN '01,03'
+		           WHEN A.CUR_PRESV_TERM_CD = '05' THEN '01,03,05'
+		           WHEN A.CUR_PRESV_TERM_CD = '10' THEN '01,03,05,10'
+		           WHEN A.CUR_PRESV_TERM_CD = '25' THEN '01,03,05,10,25'
+		           WHEN A.CUR_PRESV_TERM_CD = '30' THEN '01,03,05,10,25,30'
+		           WHEN A.CUR_PRESV_TERM_CD = '40' THEN '01,03,05,10,25,30,40'
+		      END AS NAT_CMT_TERM_CD_SKIP
+		    , A.DISCU_REQ_FLAG
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF14' AND COM_CD = A.DISCU_REQ_FLAG) AS DISCU_REQ_FLAG_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'DF13' AND COM_CD = A.DISCU_ORIGN_TYPE_CD) AS DISCU_ORIGN_TYPE_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD85' AND COM_CD = B.PRESV_TYPE_CD) AS PRESV_TYPE_NM
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD37' AND COM_CD = B.MF_PIC_STATE_CD) AS MF_PIC_STATE_NM     
+		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD50' AND COM_CD = B.SCAN_PROG_STATE_CD) AS SCAN_PROG_STATE_NM       
+		FROM TB_DFDISUSEOPIN A, TB_RDFOLDER B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.FOLDER_ID = #folderId:VARCHAR#
+		AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		AND B.FOLDER_ID = A.FOLDER_ID
+	</select>
+	
+	
+	<!-- 
+		UPDATE - 평가폐기 대체보존 국가기록관리위원회 의견등록
+	 -->
+	<update id="updateDisuseNatCmtOpinRegEach" parameterClass="rms.eval.disuseeval.domain.Disuse">
+		UPDATE TB_DFDISUSEOPIN A
+		SET A.DISCU_PROG_STATE_CD = '08'
+		    , A.NAT_CMT_DIV_CD = #natCmtDivCd:VARCHAR#
+		    , A.NAT_CMT_DEFER_CD = CASE WHEN #natCmtDivCd:VARCHAR# = '2' THEN LPAD(#natCmtDeferCd:VARCHAR#,2,'0') ELSE NULL END
+		    , A.NAT_CMT_REFIX_AFT_PRESV_TERM = CASE WHEN A.DISCU_REQ_FLAG = '0' AND #natCmtDivCd:VARCHAR# = '3' THEN LPAD(#natCmtTermCd:VARCHAR#,2,'0') ELSE NULL END
+		    , A.NAT_CMT_REFIX_AFT_RSN = #natCmtRsn:VARCHAR#
+		    , A.NAT_CMT_YMD = TO_CHAR(SYSDATE,'YYYYMMDD')     
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.DISCU_YYYY = #discuYyyy:VARCHAR#
+		AND A.FOLDER_ID  = #folderId:VARCHAR# 
+		AND A.DISCU_PROG_STATE_CD IN ('07','08')
+		AND A.REVIEW_COFIRM_CD = '0'
+	</update>
+</sqlMap>

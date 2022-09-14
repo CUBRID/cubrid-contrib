@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.clssdiv">
+
+	<!-- 
+		세부유형등록_세부유형등록
+		: 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findClssDivFolderPagedList-result" class="rms.presv.clssdiv.domain.ClssDiv">
+		<result property="folderId"         column="FOLDER_ID"/>            <!-- 기록물철ID -->
+		<result property="orgCd"            column="ORG_CD"/>               <!-- 생산부서코드 -->
+        <result property="orgNm"            column="ORG_NM"/>               <!-- 생산부서명 -->
+        <result property="orgAbbrNm"        column="ORG_ABBR_NM"/>          <!-- 생산부서명 -->
+        <result property="clssNm"           column="CLSS_NM"/>              <!-- 분류체계명 -->
+        <result property="title"            column="TITLE"/>                <!-- 철제목 -->
+        <result property="creatYyyy"        column="CREAT_YYYY"/>           <!-- 생산년도 -->
+        <result property="presvTermCd"      column="PRESV_TERM_CD"/>        <!-- 보존기간명 -->  
+        <result property="presvTermNm"      column="PRESV_TERM_NM"/>        <!-- 보존기간명 -->
+        <result property="creatSysNm"       column="CREAT_SYS_NM"/>         <!-- 생산시스템명 -->
+        <result property="folderTypeDivCd"  column="FOLDER_TYPE_DIV_CD"/>   <!-- 기록물철 유형구분 코드 -->
+        <result property="folderTypeDivNm"  column="FOLDER_TYPE_DIV_NM"/>   <!-- 기록물철 유형구분명 -->
+	</resultMap>
+	<select id="countClssDivFolderPagedList" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDFOLDER A 
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+        AND A.ERECORD_FLAG IN ('2','3') 
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+            	<isEmpty property="creatYyyyT">
+            		A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+            	</isEmpty>
+            	<isNotEmpty property="creatYyyyT">
+            		(A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            	</isNotEmpty>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="presvTermCd">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                A.TITLE LIKE #title:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatSysCd">
+                A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="folderTypeDivCd">
+                A.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findClssDivFolderPagedList" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultMap="findClssDivFolderPagedList-result">
+		SELECT D.folder_id
+		      ,D.org_cd
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_Cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_Cd) AS org_abbr_nm
+		      ,D.clss_nm
+		      ,D.title
+		      ,D.creat_yyyy
+		      ,D.presv_term_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = D.presv_term_cd) AS presv_term_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm
+		      ,D.folder_type_div_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD01' AND Z.com_cd = D.folder_type_div_cd) AS folder_type_div_nm
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,B.*
+		        FROM (
+		            SELECT *
+		            FROM TB_RDFOLDER A 
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		            AND A.ERECORD_FLAG IN ('2','3') 
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+			            	<isEmpty property="creatYyyyT">
+			            		A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+			            	</isEmpty>
+			            	<isNotEmpty property="creatYyyyT">
+			            		(A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+			            	</isNotEmpty>
+			            </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="presvTermCd">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    A.TITLE LIKE #title:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatSysCd">
+		                    A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="folderTypeDivCd">
+		                    A.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+
+	<!-- 
+		세부유형등록_세부유형등록
+		: 기록물건 목록을 조회한다.
+	 -->
+	<resultMap id="findClssDivRecordPagedList-result" class="rms.presv.clssdiv.domain.ClssDiv">
+		<result property="folderId"             column="FOLDER_ID"/>
+        <result property="recordId"             column="RECORD_ID"/>        
+        <result property="creatSysNm"           column="CREAT_SYS_NM"/>
+        <result property="orgCd"                column="ORG_CD"/>
+        <result property="orgAbbrNm"            column="ORG_ABBR_NM"/>
+        <result property="orgNm"                column="ORG_NM"/>
+        <result property="title"                column="TITLE"/>
+        <result property="recordRegDivNm"       column="RECORD_REG_DIV_NM"/>
+        <result property="creatYyyy"            column="CREAT_YYYY"/>
+        <result property="recordClssNm"         column="RECORD_CLSS_NM"/>
+        <result property="recordClssCd"         column="RECORD_CLSS_CD"/>
+        <result property="subComTypeCd"         column="SUB_COM_TYPE_CD"/>
+	</resultMap>
+	<select id="countClssDivRecordPagedList" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDRECORD A
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.FOLDER_ID = #folderId:VARCHAR#
+        AND A.ERECORD_FLAG = '2'
+        AND (SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' AND Z.com_cd = A.record_reg_div_cd) IS NOT NULL
+        <dynamic>
+            <isNotEmpty prepend="AND" property="title">
+                A.TITLE LIKE #title:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatSysCd">
+                A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="recordRegDivCd">
+                A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+                <isEmpty property="creatYyyyT">
+                   A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+                </isEmpty>
+                <isNotEmpty property="creatYyyyT">
+                   (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+                </isNotEmpty>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isEqual prepend="AND" property="recordClssSt" compareValue="1">
+                A.RECORD_CLSS_CD IS NULL
+            </isEqual>
+            <isEqual prepend="AND" property="recordClssSt" compareValue="2">
+                A.RECORD_CLSS_CD IS NOT NULL
+            </isEqual> 
+        </dynamic>
+	</select>
+	<select id="findClssDivRecordPagedList" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultMap="findClssDivRecordPagedList-result">
+		SELECT D.folder_id
+		      ,D.record_id
+		      ,D.org_cd
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_abbr_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_nm
+		      ,D.title
+		      ,DECODE(D.record_reg_div_cd,'1','일반문서','2','일반문서','3','도면류','4','도면류','5','사진·필름류','6','녹음·동영상류','7','카드류','8','카드류') AS record_reg_div_nm
+		      ,D.creat_yyyy
+		      ,DECODE(D.record_clss_cd,'','',(SELECT Z.com_cd_nm 
+		                                      FROM TB_ZZCOMCD Z 
+		                                      WHERE Z.com_type_cd = (SELECT Y.sub_com_type_cd 
+		                                                             FROM TB_ZZCOMCD Y 
+		                                                             WHERE Y.com_type_cd = 'RD02' 
+		                                                             AND Y.com_cd = D.record_reg_div_cd) 
+		                                      AND Z.com_cd = D.record_clss_cd)) AS record_clss_nm
+			  ,D.record_clss_cd
+			  ,(SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' AND Z.com_cd = D.record_reg_div_cd) AS sub_com_type_cd
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,B.*
+		        FROM (
+		            SELECT *
+		            FROM TB_RDRECORD A
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.FOLDER_ID = #folderId:VARCHAR#
+		            AND A.ERECORD_FLAG = '2'
+		            AND (SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD02' AND Z.com_cd = A.record_reg_div_cd) IS NOT NULL
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="title">
+		                    A.TITLE LIKE #title:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatSysCd">
+		                    A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordRegDivCd">
+		                    A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    <isEmpty property="creatYyyyT">
+		                       A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+		                    </isEmpty>
+		                    <isNotEmpty property="creatYyyyT">
+		                       (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                    </isNotEmpty>
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isEqual prepend="AND" property="recordClssSt" compareValue="1">
+		                    A.RECORD_CLSS_CD IS NULL
+		                </isEqual>
+		                <isEqual prepend="AND" property="recordClssSt" compareValue="2">
+		                    A.RECORD_CLSS_CD IS NOT NULL
+		                </isEqual> 
+		            </dynamic>
+		            ORDER BY A.RECORD_CENTER_ID, A.CREAT_REG_DTIME, A.CREAT_REG_NO   
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+
+	<!-- 
+		세부유형등록_세부유형등록
+		: 기록물건의 세부유형을 등록한다. 
+	-->
+	<update id="updateClssDivRecord" parameterClass="rms.presv.clssdiv.domain.ClssDiv">
+		UPDATE TB_RDRECORD
+		   SET RECORD_CLSS_CD = #recordClssCd:VARCHAR#      
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND RECORD_ID = #recordId:VARCHAR#
+	</update> 
+
+	<!-- 
+		세부유형등록_세부유형등록
+		: 일괄지정 체크 
+	--> 
+	<resultMap id="clssDivListBatch-result"      class="rms.presv.clssdiv.domain.ClssDiv" >
+        <result property="subComTypeCd"         column="SUB_COM_TYPE_CD"/>
+        <result property="batchCnt"             column="CNT"/>
+    </resultMap>
+    <select id="findClssDivListBatch" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultMap="clssDivListBatch-result">
+        SELECT SUB_COM_TYPE_CD, COUNT(*) AS CNT
+          FROM (
+                SELECT C.sub_com_type_cd
+                  FROM TB_RDRECORD A, (SELECT COM_CD,SUB_COM_TYPE_CD FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD02')C 
+                 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                   AND A.folder_id = #folderId:VARCHAR#
+                   AND A.erecord_flag = '2'
+	               AND A.record_reg_div_cd = C.com_cd
+                   AND C.SUB_COM_TYPE_CD IS NOT NULL
+		        <isNotEmpty prepend="AND" property="title">
+		            A.TITLE LIKE #title:VARCHAR#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="creatSysCd">
+		            A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="recordRegDivCd">
+		            A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="creatYyyy">
+		            (A.CREAT_YYYY BETWEEN #creatYyyy:VARCHAR#
+		            <isNotEmpty prepend="AND" property="creatYyyyEnd">
+		                #creatYyyyEnd:VARCHAR#)
+		            </isNotEmpty>
+		        </isNotEmpty>
+		        <isNotEmpty prepend="AND" property="orgCd">
+		             A.ORG_CD = #orgCd:VARCHAR#
+		        </isNotEmpty>
+		        <isEqual prepend="AND" property="recordClssSt" compareValue="1">
+		             A.RECORD_CLSS_CD IS NULL
+		        </isEqual>
+		        <isEqual prepend="AND" property="recordClssSt" compareValue="2">
+		             A.RECORD_CLSS_CD IS NOT NULL
+		        </isEqual>
+              )S 
+         GROUP BY S.SUB_COM_TYPE_CD
+    </select>
+    
+    <!-- 
+    	세부유형등록_세부유형등록
+    	: 기록물철별 세부유형을 일괄등록한다.
+     -->
+    <update id="updateClssDivRecordBatch" parameterClass="rms.presv.clssdiv.domain.ClssDiv">
+		UPDATE TB_RDRECORD
+		   SET RECORD_CLSS_CD = #recordClssCd:VARCHAR#     
+		 WHERE RECORD_ID IN (
+		   SELECT RECORD_ID FROM TB_RDRECORD A, (SELECT COM_CD,SUB_COM_TYPE_CD FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD02')C
+		   WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.folder_id = #folderId:VARCHAR#
+		   AND A.erecord_flag = '2'
+		   AND A.record_reg_div_cd = C.com_cd
+           AND C.SUB_COM_TYPE_CD IS NOT NULL
+        <isNotEmpty prepend="AND" property="title">
+            A.TITLE LIKE #title:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="creatSysCd">
+            A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="recordRegDivCd">
+            A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="creatYyyy">
+            (A.CREAT_YYYY BETWEEN #creatYyyy:VARCHAR#
+            <isNotEmpty prepend="AND" property="creatYyyyEnd">
+                #creatYyyyEnd:VARCHAR#)
+            </isNotEmpty>
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+             A.ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>
+        <isEqual prepend="AND" property="recordClssSt" compareValue="1">
+             A.RECORD_CLSS_CD IS NULL
+        </isEqual>
+        <isEqual prepend="AND" property="recordClssSt" compareValue="2">
+             A.RECORD_CLSS_CD IS NOT NULL
+        </isEqual>
+        )
+	</update> 
+	
+	<!-- 
+		세부유형등록_세부유형등록현황
+		: 기록물건 목록을 조회한다.
+	 -->
+	<resultMap id="findClssDivRegStateRecordPagedList-result" class="rms.presv.clssdiv.domain.ClssDiv">
+		<result property="recordId"             column="RECORD_ID"/>        
+        <result property="creatSysNm"           column="CREAT_SYS_NM"/>
+        <result property="orgCd"                column="ORG_CD"/>
+        <result property="orgNm"                column="ORG_NM"/>
+        <result property="orgAbbrNm"            column="ORG_ABBR_NM"/>
+        <result property="title"                column="TITLE"/>
+        <result property="recordRegDivNm"       column="RECORD_REG_DIV_NM"/>
+        <result property="creatYyyy"            column="CREAT_YYYY"/>
+        <result property="recordClssNm"         column="RECORD_CLSS_NM"/>
+        <result property="recordClssCd"         column="RECORD_CLSS_CD"/>
+	</resultMap>
+	<select id="countClssDivRegStateRecordPagedList" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDRECORD A
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.ERECORD_FLAG = '2'
+        AND (SELECT Y.sub_com_type_cd FROM TB_ZZCOMCD Y WHERE Y.com_type_cd = 'RD02' AND Y.com_cd = A.record_reg_div_cd) IS NOT NULL
+        <isNotEmpty prepend="AND" property="title">
+            A.TITLE LIKE #title:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="creatSysCd">
+            A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="recordRegDivCd">
+            A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="creatYyyyF">
+            <isEmpty property="creatYyyyF">
+                A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+            </isEmpty>
+            <isNotEmpty property="creatYyyyT">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            A.ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="recordClssCd">
+            A.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+        </isNotEmpty>
+        <isEqual prepend="AND" property="recordClssSt" compareValue="1">
+            A.RECORD_CLSS_CD IS NULL
+        </isEqual>
+        <isEqual prepend="AND" property="recordClssSt" compareValue="2">
+            A.RECORD_CLSS_CD IS NOT NULL
+        </isEqual>
+	</select>
+	<select id="findClssDivRegStateRecordPagedList" parameterClass="rms.presv.clssdiv.domain.ClssDiv" resultMap="findClssDivRegStateRecordPagedList-result">
+		SELECT D.record_id
+		      ,D.title
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = D.creat_sys_cd) AS creat_sys_nm
+		      ,D.org_cd
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_abbr_nm
+		      ,DECODE(D.record_reg_div_cd,'1','일반문서','2','일반문서','3','도면류','4','도면류','5','사진·필름류','6','녹음·동영상류','7','카드류','8','카드류') AS record_reg_div_nm
+		      ,D.creat_yyyy
+		      ,D.record_clss_cd
+		      ,DECODE(D.record_clss_cd,'','',(SELECT Z.com_cd_nm 
+		      								  FROM TB_ZZCOMCD Z 
+		      								  WHERE Z.com_type_cd = (SELECT Y.sub_com_type_cd 
+		      								  						 FROM TB_ZZCOMCD Y 
+		      								  						 WHERE Y.com_type_cd = 'RD02' 
+		      								  						 AND Y.com_cd = D.record_reg_div_cd) 
+		      								  AND Z.com_cd = D.record_clss_cd)) AS record_clss_nm
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,B.*
+		        FROM (
+		            SELECT *
+		            FROM TB_RDRECORD A
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.ERECORD_FLAG = '2'
+		            AND (SELECT Y.sub_com_type_cd FROM TB_ZZCOMCD Y WHERE Y.com_type_cd = 'RD02' AND Y.com_cd = A.record_reg_div_cd) IS NOT NULL
+		            <isNotEmpty prepend="AND" property="title">
+		                A.TITLE LIKE #title:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="creatSysCd">
+		                A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="recordRegDivCd">
+		                A.RECORD_REG_DIV_CD = #recordRegDivCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="creatYyyyF">
+		                <isEmpty property="creatYyyyF">
+		                    A.CREAT_YYYY = #creatYyyyF:VARCHAR#
+		                </isEmpty>
+		                <isNotEmpty property="creatYyyyT">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                A.ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="recordClssCd">
+		                A.RECORD_CLSS_CD = #recordClssCd:VARCHAR#
+		            </isNotEmpty>
+		            <isEqual prepend="AND" property="recordClssSt" compareValue="1">
+		                A.RECORD_CLSS_CD IS NULL
+		            </isEqual>
+		            <isEqual prepend="AND" property="recordClssSt" compareValue="2">
+		                A.RECORD_CLSS_CD IS NOT NULL
+		            </isEqual> 
+		            ORDER BY A.RECORD_CENTER_ID, A.CREAT_REG_DTIME, A.CREAT_REG_NO
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+	
+</sqlMap>

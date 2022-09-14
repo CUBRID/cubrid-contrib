@@ -1,0 +1,1647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.media">
+	
+	<!-- 
+		M/F촬영_M/F대상선정
+		: M/F촬영대상 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicTrgtPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="folderId" 	column="FOLDER_ID"/>
+		<result property="creatSysCd" 	column="CREAT_SYS_CD"/>
+		<result property="creatSysNm" 	column="CREAT_SYS_NM"/>
+		<result property="orgCd" 		column="ORG_CD"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm"	column="ORG_ABBR_NM"/>
+		<result property="clssId" 		column="CLSS_ID"/>
+		<result property="clssNm" 		column="CLSS_NM"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="createYyyy" 	column="CREAT_YYYY"/>
+		<result property="presvTermNm" 	column="PRESV_TERM_NM"/>
+		<result property="mfPicStateCd" column="MF_PIC_STATE_CD"/>
+		<result property="mfPicStateNm" column="MF_PIC_STATE_NM"/>
+	</resultMap>
+	<select id="countMfPicTrgtPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM  TB_RDFOLDER BIND, TB_STORG ORG, TB_ZZCOMCD C 
+        WHERE BIND.ORG_CD = ORG.ORG_CD
+        AND BIND.FOLDER_KEEP_STATE_CD IN ('01', '04') 
+        AND (DECODE(BIND.PRESV_TERM_CD, '20', '25', BIND.PRESV_TERM_CD) = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+        AND BIND.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID
+        AND BIND.PRESV_TYPE_CD IN ('1','2')
+        <isNotEmpty prepend="AND" property="orgCd">
+          	BIND.ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createYyyyF">
+           (BIND.CREAT_YYYY BETWEEN #createYyyyF:VARCHAR# AND #createYyyyT:VARCHAR#)
+        </isNotEmpty>
+        <isNotEmpty property="presvTermCd">
+	        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            BIND.PRESV_TERM_CD IN ('20','25')
+            </isEqual>
+	        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+           BIND.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEqual>		            
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="title">
+           (BIND.TITLE LIKE #title:VARCHAR# OR BIND.SUB_TITLE LIKE #title:VARCHAR# OR BIND.CORCT_TITLE LIKE #title:VARCHAR#)
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="clssId">
+	          (BIND.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND BIND.CLSS_ID = #clssId:VARCHAR#)
+        </isNotEmpty>
+        <isEqual  prepend="AND" property="mfPicStateCd" compareValue="1">
+    	      BIND.MF_PIC_STATE_CD IN ('1', '2')
+        </isEqual>    
+        <isEqual prepend="AND" property="mfPicStateCd" compareValue="0">    <!--  미선정  -->
+        	  (NVL(BIND.MF_PIC_STATE_CD, 0) = '0' OR BIND.MF_PIC_STATE_CD ='3') 
+        </isEqual>
+	</select>
+	<select id="findMfPicTrgtPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicTrgtPagedList-result">
+		SELECT F.folder_id
+		      ,F.creat_sys_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = F.creat_sys_cd) AS creat_sys_nm
+		      ,F.org_cd
+		      ,F.clss_id
+		      ,F.clss_nm
+		      ,F.title
+		      ,F.creat_yyyy
+		      ,F.com_cd_nm AS presv_term_nm
+		      ,DECODE(NVL(F.MF_PIC_STATE_CD, '0'),'0', '미선정','1','선정','2','선정', '3','미선정') AS mf_pic_state_nm
+		      ,NVL(F.mf_pic_state_cd, '0') AS mf_pic_state_cd
+		      ,F.org_nm
+		      ,F.org_abbr_nm
+		FROM (
+		    SELECT E.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,D.*
+		        FROM (
+		            SELECT  BIND.FOLDER_ID,BIND.CREAT_SYS_CD,BIND.ORG_CD,BIND.CLSS_ID,BIND.CLSS_NM
+		                   ,BIND.TITLE,BIND.CREAT_YYYY,C.COM_CD_NM,BIND.MF_PIC_STATE_CD,ORG.ORG_NM
+		                   ,ORG.ORG_ABBR_NM
+		            FROM  TB_RDFOLDER BIND, TB_STORG ORG, TB_ZZCOMCD C 
+		            WHERE BIND.ORG_CD = ORG.ORG_CD
+		            AND BIND.FOLDER_KEEP_STATE_CD IN ('01', '04') 
+		            AND (DECODE(BIND.PRESV_TERM_CD, '20', '25', BIND.PRESV_TERM_CD) = C.COM_CD and C.COM_TYPE_CD = 'RD07')
+		            AND BIND.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID
+		            AND BIND.PRESV_TYPE_CD IN ('1','2')
+		            <isNotEmpty prepend="AND" property="orgCd">
+		              	BIND.ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="createYyyyF">
+			              (BIND.CREAT_YYYY BETWEEN #createYyyyF:VARCHAR# AND #createYyyyT:VARCHAR#)
+		            </isNotEmpty>
+			        <isNotEmpty property="presvTermCd">
+				        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+				            BIND.PRESV_TERM_CD IN ('20','25')
+			            </isEqual>
+				        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+			              BIND.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+			            </isNotEqual>		            
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="title">
+			              (BIND.TITLE LIKE #title:VARCHAR# OR BIND.SUB_TITLE LIKE #title:VARCHAR# OR BIND.CORCT_TITLE LIKE #title:VARCHAR#)
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="clssId">
+		    	          (BIND.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND BIND.CLSS_ID = #clssId:VARCHAR#)
+		            </isNotEmpty>
+		            <isEqual  prepend="AND" property="mfPicStateCd" compareValue="1">
+		        	      BIND.MF_PIC_STATE_CD IN ('1', '2')
+		            </isEqual>    
+		            <isEqual prepend="AND" property="mfPicStateCd" compareValue="0">    <!--  미선정  -->
+		            	  (NVL(BIND.MF_PIC_STATE_CD, 0) = '0' OR BIND.MF_PIC_STATE_CD ='3') 
+		            </isEqual>
+		            ORDER BY BIND.FOLDER_ID
+		        ) D
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) E
+		    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) F
+		ORDER BY F.rnum
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: 대상선정을 한다.
+	-->
+	<update id="updateMfPicChoice" parameterClass="rms.presv.media.domain.BkrmMfBean">
+	  UPDATE TB_RDFOLDER
+	  	 SET MEDIUM   = 'M/F',
+	  	   	 MF_PIC_STATE_CD = '1'
+	   WHERE FOLDER_ID = #folderId:VARCHAR#
+	     AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: 대상선정을 취소한다.
+	-->
+	<update id="updateMfPicCncl" parameterClass="rms.presv.media.domain.BkrmMfBean">
+	  UPDATE TB_RDFOLDER
+	  	 SET MEDIUM   = '',
+	  	   	 MF_PIC_STATE_CD = ''
+	   WHERE FOLDER_ID = #folderId:VARCHAR#
+	     AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서 목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicPlanPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="recordCenterId"		column="RECORD_CENTER_ID"/>
+		<result property="picSno" 				column="PIC_SNO"/>
+		<result property="editUserNm" 			column="EDIT_USER_NM"/>
+		<result property="picUserNm" 			column="PIC_USER_NM"/>
+		<result property="supvsUserNm" 			column="SUPVS_USER_NM"/>
+		<result property="cutCnt" 				column="CUT_CNT"/>
+		<result property="orgNm" 				column="ORG_NM"/>
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>
+		<result property="orgCd" 				column="ORG_CD"/>
+		<result property="picExptYmd" 			column="PIC_EXPT_YMD"/>
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="picRegFlag" 			column="PIC_REG_FLAG"/>
+		<result property="mfPicPlanNo" 			column="MF_PIC_PLAN_NO"/>
+		<result property="picPlanWriteFinFlag"	column="PIC_PLAN_WRITE_FIN_FLAG"/>
+	</resultMap>
+	<select id="countMfPicPlanPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT  COUNT(1)
+        FROM TB_SRMFPIC MF, TB_STORG ORG, (SELECT * 
+                                                 FROM TB_SRMFPIC Z
+                                                 <!--cubrid WHERE (RECORD_CENTER_ID,PIC_SNO) 
+                                                 IN (SELECT RECORD_CENTER_ID,PIC_SNO -->
+                                                 WHERE
+                                                 EXISTS (SELECT 1
+                                                 FROM TB_SRMFPICDETL 
+                                                 WHERE CONFM_FLAG='1'
+						 <!--cubrid-->
+						 AND RECORD_CENTER_ID = Z.RECORD_CENTER_ID
+						 AND PIC_SNO = Z.PIC_SNO)) PIC
+        WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+        AND MF.PIC_SNO = PIC.PIC_SNO
+        AND MF.CREAT_ORG_CD = ORG.ORG_CD
+        AND MF.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID
+        AND MF.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+         <isNotEmpty prepend="AND" property="picSno">
+             MF.PIC_SNO = #picSno:VARCHAR#
+        </isNotEmpty>                
+         <isNotEmpty prepend="AND" property="orgCd">
+             MF.CREAT_ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>            
+        <isNotEmpty prepend="AND" property="picRegFlag">
+             MF.PIC_REG_FLAG = #picRegFlag:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="picExptYmd">
+             MF.pic_Expt_Ymd LIKE REPLACE(#picExptYmd:VARCHAR#,'-','')
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="picUserNm">
+             MF.pic_User_Nm LIKE #picUserNm:VARCHAR#
+        </isNotEmpty>
+	</select>
+	<select id="findMfPicPlanPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicPlanPagedList-result">
+		SELECT C.record_center_id
+		      ,C.pic_sno
+		      ,C.record_center_id||'-'||LPAD(C.pic_sno,6,'0') AS mf_pic_plan_no
+		      ,C.edit_user_nm
+		      ,C.pic_expt_ymd
+		      ,C.pic_user_nm
+		      ,C.supvs_user_nm
+		      ,C.cut_cnt
+		      ,C.creat_org_cd AS org_cd
+		      ,C.org_nm AS org_nm
+		      ,DECODE(C.pic_reg_flag,'0','계획','1','등록') AS pic_reg_flag
+		      ,C.org_abbr_nm
+		      ,C.pic_plan_write_fin_flag
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,A.*
+		        FROM (
+		            SELECT  MF.RECORD_CENTER_ID,MF.PIC_SNO,MF.EDIT_USER_NM,MF.PIC_EXPT_YMD,MF.pic_User_Nm
+		                   ,MF.SUPVS_USER_NM,MF.CUT_CNT,MF.CREAT_ORG_CD,ORG.ORG_NM,MF.PIC_REG_FLAG
+		                   ,ORG.ORG_ABBR_NM,MF.PIC_PLAN_WRITE_FIN_FLAG
+		            FROM TB_SRMFPIC MF, TB_STORG ORG, (SELECT * 
+                                                       FROM TB_SRMFPIC Z
+                                                       <!--cubrid WHERE (RECORD_CENTER_ID,PIC_SNO) 
+                                                       IN (SELECT RECORD_CENTER_ID,PIC_SNO -->
+                                                       WHERE
+                                                       EXISTS (SELECT 1
+                                                       FROM TB_SRMFPICDETL 
+                                                       WHERE CONFM_FLAG='1'
+						       <!--cubrid-->
+                                                       AND RECORD_CENTER_ID = Z.RECORD_CENTER_ID
+                                                       AND PIC_SNO = Z.PIC_SNO )) PIC
+		            WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+		            AND MF.PIC_SNO = PIC.PIC_SNO
+		            AND MF.CREAT_ORG_CD = ORG.ORG_CD
+		            AND MF.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID
+		            AND MF.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		             <isNotEmpty prepend="AND" property="picSno">
+		                 MF.PIC_SNO = #picSno:VARCHAR#
+		            </isNotEmpty>                
+		             <isNotEmpty prepend="AND" property="orgCd">
+		                 MF.CREAT_ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>            
+		            <isNotEmpty prepend="AND" property="picRegFlag">
+		                 MF.PIC_REG_FLAG = #picRegFlag:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="picExptYmd">
+		                 MF.pic_Expt_Ymd LIKE REPLACE(#picExptYmd:VARCHAR#,'-','')
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="picUserNm">
+		                 MF.pic_User_Nm LIKE #picUserNm:VARCHAR#
+		            </isNotEmpty>
+		            <!--cubrid ORDER BY PIC_SNO DESC-->
+		            ORDER BY MF.PIC_SNO DESC
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: 촬영계획서 ID를 조회한다. 
+	 -->
+	<select id="findMfId" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="string">
+		SELECT (CASE WHEN A.PIC_PLAN_WRITE_FIN_FLAG = '0' THEN A.PIC_SNO 
+		             ELSE A.PIC_SNO + 1
+		        END) AS PIC_SNO 
+		FROM TB_SRMFPIC A
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND PIC_SNO = (
+		    SELECT MAX(PIC_SNO)
+		    FROM TB_SRMFPIC B
+		    WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		) 
+	</select>	
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: 촬영계획서 작성 건목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicPlanWrite-result" class="rms.presv.media.domain.BkrmMfBean" >
+		<result property="picSno" 			column="PIC_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="title" 			column="TITLE"/>
+		<result property="recordId" 		column="RECORD_ID"/>
+		<result property="docTitle" 		column="DOC_TITLE"/>
+		<result property="folderId" 		column="FOLDER_ID"/>
+		<result property="creatRegDtime"	column="CREAT_REG_DTIME"/>
+		<result property="recordRegCnt" 	column="RECORD_REG_CNT"/>
+		<result property="recordPageCnt" 	column="RECORD_PAGE_CNT"/>
+		<result property="startCutLoc" 		column="START_CUT_LOC"/>
+		<result property="endCutLoc" 		column="END_CUT_LOC"/>
+		<result property="cutSno" 			column="CUT_SNO"/>
+	</resultMap>
+	<select id="countMfPicPlanWrite" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_SRMFPICDETL PIC, TB_RDRECORD DOC, TB_SRMFPIC PLN
+		WHERE PIC.RECORD_CENTER_ID	= #recordCenterId:VARCHAR#
+		AND   PIC.CONFM_FLAG		= '0'
+		AND   PIC.RECORD_CENTER_ID 	= DOC.RECORD_CENTER_ID
+		AND   PIC.RECORD_ID 		= DOC.RECORD_ID
+		AND   PIC.RECORD_CENTER_ID 	= PLN.RECORD_CENTER_ID
+		AND   PIC.PIC_SNO 			= PLN.PIC_SNO
+	</select>
+	<select id="findMfPicPlanWrite" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicPlanWrite-result">
+		SELECT  PIC.RECORD_CENTER_ID
+		       ,PIC.PIC_SNO
+		       ,DOC.TITLE AS DOC_TITLE
+		       ,DOC.RECORD_ID
+		       ,DOC.FOLDER_ID
+		       ,(SELECT TITLE FROM TB_RDFOLDER WHERE RECORD_CENTER_ID=DOC.RECORD_CENTER_ID AND FOLDER_ID=DOC.FOLDER_ID) AS TITLE
+		       ,DOC.CREAT_REG_DTIME
+		       ,DOC.RECORD_PAGE_CNT AS RECORD_PAGE_CNT
+		       ,0 AS RECORD_REG_CNT
+		       ,0 AS START_CUT_LOC
+		       ,0 AS END_CUT_LOC
+		       ,NVL(PIC.CUT_SNO,0) AS CUT_SNO
+		FROM  TB_SRMFPICDETL PIC, TB_RDRECORD DOC, TB_SRMFPIC PLN
+		WHERE PIC.RECORD_CENTER_ID	= #recordCenterId:VARCHAR#
+		AND   PIC.CONFM_FLAG		= '0'
+		AND   PIC.RECORD_CENTER_ID 	= DOC.RECORD_CENTER_ID
+		AND   PIC.RECORD_ID 		= DOC.RECORD_ID
+		AND   PIC.RECORD_CENTER_ID 	= PLN.RECORD_CENTER_ID
+		AND   PIC.PIC_SNO 			= PLN.PIC_SNO
+		ORDER BY PIC.CUT_SNO
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: 기록물건 추가 팝업목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicTrgtRecordPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="folderId" 		column="FOLDER_ID"/>
+		<result property="orgCd" 			column="ORG_CD"/>
+		<result property="orgNm" 			column="ORG_NM"/>
+		<result property="orgAbbrNm"		column="ORG_ABBR_NM"/>
+		<result property="clssId" 			column="CLSS_ID"/>
+		<result property="clssNm" 			column="CLSS_NM"/>
+		<result property="title" 			column="TITLE"/>
+		<result property="createYyyy" 		column="CREAT_YYYY"/>
+		<result property="presvTermCd" 		column="PRESV_TERM_CD"/>
+		<result property="mfPicStateCd" 	column="MF_PIC_STATE_CD"/>
+		<result property="stakrmMngNo" 		column="STAKRM_MNG_NO"/>
+		<result property="outFlag" 			column="OUT_FLAG"/>
+		<result property="docTitle" 		column="docTitle"/>
+		<result property="recordId" 		column="RECORD_ID"/>
+		<result property="recordRegCnt" 	column="RECORD_REG_CNT"/>
+		<result property="recordPageCnt" 	column="RECORD_PAGE_CNT"/>
+	</resultMap>
+	<select id="countMfPicTrgtRecordPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_STORG ORG, TB_RDFOLDER  BIND
+            ,TB_RDRECORD PIC
+    <!--cubrid
+        , (SELECT * 
+                                               FROM TB_RDRECORD K
+                                               WHERE NOT EXISTS (SELECT RECORD_ID 
+                                                                 FROM TB_SRMFPICDETL Z
+                                                                 WHERE Z.RECORD_CENTER_ID = K.RECORD_CENTER_ID
+                                                                 AND Z.RECORD_ID = K.RECORD_ID)  
+                                               AND K.RECORD_PAGE_CNT IS NOT NULL) PIC
+        -->                                       
+                                               
+        WHERE BIND.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND BIND.ORG_CD = ORG.ORG_CD
+        AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID
+        AND PIC.FOLDER_ID = BIND.FOLDER_ID
+        AND PIC.RECORD_CENTER_ID = BIND.RECORD_CENTER_ID
+        AND BIND.MEDIUM ='M/F'
+        AND BIND.MF_PIC_STATE_CD is not null
+        <!--CUBRID-->
+        AND NOT EXISTS (SELECT RECORD_ID 
+                          FROM TB_SRMFPICDETL Z
+                         WHERE Z.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+                           AND Z.RECORD_ID = PIC.RECORD_ID)  
+        AND PIC.RECORD_PAGE_CNT IS NOT NULL
+        <!--CUBRID-->
+        <isNotEmpty prepend="AND" property="title">
+            (BIND.TITLE LIKE #title:VARCHAR# OR BIND.SUB_TITLE LIKE #title:VARCHAR# OR BIND.CORCT_TITLE LIKE #title:VARCHAR#)
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+            BIND.ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="createYyyy">
+            BIND.CREAT_YYYY = #createYyyy:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty  prepend="AND" property="clssId" >
+            (BIND.CLSS_DIV_CD= #clssDivCd# AND BIND.CLSS_ID = #clssId:VARCHAR#)
+        </isNotEmpty>    
+	</select>
+	<select id="findMfPicTrgtRecordPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicTrgtRecordPagedList-result">
+		SELECT C.*
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT BIND.FOLDER_ID
+		                    ,BIND.TITLE
+		                    ,BIND.CREAT_YYYY
+		                    ,BIND.PRESV_TERM_CD
+		                    ,PIC.TITLE AS DOCTITLE
+		                    ,PIC.RECORD_ID
+		                    ,BIND.STAKRM_MNG_NO
+		                    ,DECODE(NVL(BIND.OUT_FLAG, '0'),'0','반입','3','M/F촬영반출') AS OUT_FLAG
+		                    ,ORG.ORG_NM
+		                    ,ORG.ORG_CD
+		                    ,ORG.ORG_ABBR_NM
+		                    ,BIND.CLSS_ID
+		                    ,BIND.CLSS_NM
+		                    ,BIND.MF_PIC_STATE_CD
+		                    ,BIND.RECORD_REG_CNT
+		                    ,PIC.RECORD_PAGE_CNT
+		            FROM TB_STORG ORG, TB_RDFOLDER  BIND
+		                ,TB_RDRECORD PIC
+		            <!--CUBRID
+		            , (SELECT * 
+		                                                   FROM TB_RDRECORD K
+		                                                   WHERE NOT EXISTS (SELECT RECORD_ID 
+		                                                                     FROM TB_SRMFPICDETL Z
+		                                                                     WHERE Z.RECORD_CENTER_ID = K.RECORD_CENTER_ID
+		                                                                     AND Z.RECORD_ID = K.RECORD_ID)  
+		                                                   AND K.RECORD_PAGE_CNT IS NOT NULL) PIC
+		            -->
+		            
+		            WHERE BIND.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND BIND.ORG_CD = ORG.ORG_CD
+		            AND BIND.RECORD_CENTER_ID = ORG.RECORD_CENTER_ID
+		            AND PIC.FOLDER_ID = BIND.FOLDER_ID
+		            AND PIC.RECORD_CENTER_ID = BIND.RECORD_CENTER_ID
+		            AND BIND.MEDIUM ='M/F'
+		            AND BIND.MF_PIC_STATE_CD is not null
+		            <!--CUBRID-->
+		            AND NOT EXISTS (SELECT RECORD_ID 
+		                               FROM TB_SRMFPICDETL Z
+		                              WHERE Z.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+		                                AND Z.RECORD_ID = PIC.RECORD_ID)  
+		              AND PIC.RECORD_PAGE_CNT IS NOT NULL
+		            <!--CUBRID-->                                       
+		            <isNotEmpty prepend="AND" property="title">
+		                (BIND.TITLE LIKE #title:VARCHAR# OR BIND.SUB_TITLE LIKE #title:VARCHAR# OR BIND.CORCT_TITLE LIKE #title:VARCHAR#)
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                BIND.ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="createYyyy">
+		                BIND.CREAT_YYYY = #createYyyy:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty  prepend="AND" property="clssId" >
+		                (BIND.CLSS_DIV_CD= #clssDivCd# AND BIND.CLSS_ID = #clssId:VARCHAR#)
+		            </isNotEmpty>    
+		            ORDER BY BIND.FOLDER_ID, PIC.RECORD_ID
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서를 작성한다.
+	 -->
+	<select id="countMfPic" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM TB_SRMFPIC WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND PIC_SNO = #picSno:NUMBER#
+	</select>
+	<insert id="createMfPic" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		INSERT INTO TB_SRMFPIC (
+			RECORD_CENTER_ID,  PIC_SNO, MF_ARNG_FLAG, TOT_COPY_CNT, PIC_PLAN_WRITE_FIN_FLAG
+		) VALUES (
+			#recordCenterId:VARCHAR#, #picSno:VARCHAR#, '0', '0', '0'
+		) 
+	</insert>
+	<update id="updateMfPic" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		UPDATE TB_SRMFPIC
+		SET   PIC_PLAN_WRITE_FIN_FLAG = '0'
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		AND PIC_SNO = #picSno:NUMBER#
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서내 촬영대상 기록물건을 추가한다.
+	 -->
+	<insert id="createMfTrgtRecord" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		INSERT INTO TB_SRMFPICDETL (
+			RECORD_CENTER_ID, PIC_SNO, RECORD_ID, CONFM_FLAG, DEL_FLAG, REG_DTIME, CUT_SNO, FOLDER_ID
+		) VALUES (
+			#recordCenterId:VARCHAR#, #picSno:NUMBER#, #recordId:VARCHAR#, #confmFlag:VARCHAR#, '0'
+			<!--cubrid ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, NVL((SELECT MAX(CUT_SNO) FROM TB_SRMFPICDETL WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND PIC_SNO=#picSno:NUMBER#),0)+1, #folderId:VARCHAR#
+  		) 
+	</insert>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F 촬영계획서 내 촬영대상 기록물건을 삭제한다.
+	 -->
+	<delete id="deleteMfPicTrgtRecord" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		DELETE FROM TB_SRMFPICDETL WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND RECORD_ID = #recordId:VARCHAR# 
+	</delete>
+	
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서의 정보를 갱신한다. 
+	 -->
+	<update id="updateMfPicPlanWriteFin" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		UPDATE TB_SRMFPIC
+	  	SET  FILM_TYPE_CD 	= #filmTypeCd:VARCHAR#
+	  		,GOODS_NM 		= #goodsNm:VARCHAR#
+	  		,FILM_SPEC 		= #filmSpec:VARCHAR#
+	  		,PIC_EXPT_YMD 	= #picExptYmd:VARCHAR#
+	  		,PIC_REG_FLAG 	= '0'
+	  		,PIC_REG_YMD 	= TO_CHAR(SYSDATE, 'YYYYMMDD')
+	  		,PIC_USER_NM	= #picUserNm:VARCHAR#
+	  		,CUT_CNT 		= #cutCnt:VARCHAR#
+	  		,CHOICE_CUT_CNT = #choiceCutCnt:VARCHAR#
+	  		,EDIT_USER_NM 	= #editUserNm:VARCHAR#
+	  		,CAMERA 		= #camera:VARCHAR#
+	  		,REDUC_RATE 	= #reducRate:VARCHAR#
+	  		,SUPVS_USER_NM 	= #supvsUserNm:VARCHAR#
+	  		,COPY_FLAG		= '0'
+	  		,CREAT_ORG_CD	= #creatOrgCd:VARCHAR#
+	  		,CREAT_ORG_NM 	= #creatOrgNm:VARCHAR#
+	  		,PIC_PLAN_WRITE_FIN_FLAG = '1'
+	  	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND PIC_SNO = #picSno:NUMBER#
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서 상세 건목록의 시작컷, 종료컷 정보를 갱신한다.
+	 -->
+	<update id="updateMfPicPlanDetail" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		UPDATE TB_SRMFPICDETL
+	  	SET  START_CUT_LOC = #startCutLoc:VARCHAR#
+	  		,END_CUT_LOC = #endCutLoc:VARCHAR#
+	  		,CONFM_FLAG = '1'
+	  		<!--cubrid ,REG_DTIME = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+	  		,REG_DTIME = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+	  	WHERE RECORD_ID = #recordId:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서  계획서수정시 계획서정보를 조회한다.
+	 -->
+	<resultMap id="findMfPicPlanInfo-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="creatOrgCd"		column="CREAT_ORG_CD"/>
+		<result property="creatOrgNm"		column="CREAT_ORG_NM"/>
+		<result property="filmTypeCd"		column="FILM_TYPE_CD"/>
+		<result property="goodsNm"			column="GOODS_NM"/>
+		<result property="filmSpec"			column="FILM_SPEC"/>
+		<result property="editUserNm"		column="EDIT_USER_NM"/>
+		<result property="camera"			column="CAMERA"/>
+		<result property="reducRate"		column="REDUC_RATE"/>
+		<result property="supvsUserNm"		column="SUPVS_USER_NM"/>
+		<result property="picExptYmd"		column="PIC_EXPT_YMD"/>
+		<result property="picUserNm"		column="PIC_USER_NM"/>
+		<result property="cutCnt"			column="CUT_CNT"/>
+	</resultMap>	
+	<select id="findMfPicPlanInfo" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicPlanInfo-result">
+		SELECT  CREAT_ORG_CD
+		       ,CREAT_ORG_NM
+		       ,FILM_TYPE_CD
+		       ,GOODS_NM
+		       ,FILM_SPEC
+		       ,EDIT_USER_NM
+		       ,CAMERA
+		       ,REDUC_RATE
+		       ,SUPVS_USER_NM
+		       ,PIC_EXPT_YMD
+		       ,PIC_USER_NM
+		       ,CUT_CNT
+		FROM TB_SRMFPIC
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND PIC_SNO = #picSno:NUMBER#
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서  계획서수정시 촬영대상 목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicPlanModify-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="picSno" 			column="PIC_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="title" 			column="TITLE"/>
+		<result property="recordId" 		column="RECORD_ID"/>
+		<result property="docTitle" 		column="docTitle"/>
+		<result property="folderId" 		column="FOLDER_ID"/>
+		<result property="creatRegDtime"	column="CREAT_REG_DTIME"/>
+		<result property="recordRegCnt" 	column="RECORD_REG_CNT"/>
+		<result property="recordPageCnt" 	column="RECORD_PAGE_CNT"/>
+		<result property="startCutLoc" 		column="START_CUT_LOC" 		nullValue="0"/>
+		<result property="endCutLoc" 		column="END_CUT_LOC"		nullValue="0"/>
+		<result property="cutSno" 			column="CUT_SNO"			nullValue="0"/>
+	</resultMap>
+	<select id="countMfPicPlanModify" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT   COUNT(1)
+		FROM TB_SRMFPICDETL PIC, TB_RDFOLDER BIND, TB_RDRECORD DOC, TB_SRMFPIC PLN
+		<!--cubrid WHERE PIC.RECORD_ID = DOC.RECORD_ID(+)
+		AND DOC.FOLDER_ID = BIND. FOLDER_ID(+)
+		AND PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID(+)
+		AND PLN.PIC_SNO = PIC.PIC_SNO(+)-->
+                WHERE PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID(+)
+                AND PLN.PIC_SNO = PIC.PIC_SNO(+)
+                AND PIC.RECORD_ID = DOC.RECORD_ID(+)
+                AND DOC.FOLDER_ID = BIND.FOLDER_ID(+)
+		AND PIC.CONFM_FLAG = '1'
+		AND PIC.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND PIC.PIC_SNO 		 = #picSno:NUMBER#
+	</select>
+	<select id="findMfPicPlanModify" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicPlanModify-result">
+		SELECT   PIC.RECORD_CENTER_ID
+				,PIC.PIC_SNO
+				,DOC.TITLE AS docTitle
+				,DOC.RECORD_ID
+				,BIND.TITLE
+				,BIND.FOLDER_ID
+				,DOC.CREAT_REG_DTIME
+				,NVL(DOC.RECORD_PAGE_CNT, '0') AS RECORD_PAGE_CNT
+				,NVL(BIND.RECORD_REG_CNT, '0') AS RECORD_REG_CNT
+				,NVL(PIC.START_CUT_LOC, '0') AS START_CUT_LOC
+				,NVL(PIC.END_CUT_LOC, '0') AS END_CUT_LOC
+				,NVL(PIC.CUT_SNO, '0') AS CUT_SNO
+		FROM TB_SRMFPICDETL PIC, TB_RDFOLDER BIND, TB_RDRECORD DOC, TB_SRMFPIC PLN
+		<!--cubrid WHERE PIC.RECORD_ID = DOC.RECORD_ID(+)
+		AND DOC.FOLDER_ID = BIND. FOLDER_ID(+)
+		AND PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID(+)
+		AND PLN.PIC_SNO = PIC.PIC_SNO(+)-->
+                WHERE PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID(+)
+                AND PLN.PIC_SNO = PIC.PIC_SNO(+)
+                AND PIC.RECORD_ID = DOC.RECORD_ID(+)
+                AND DOC.FOLDER_ID = BIND.FOLDER_ID(+)
+		AND PIC.CONFM_FLAG = '1'
+		AND PIC.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND PIC.PIC_SNO 		 = #picSno:NUMBER#
+     	ORDER BY PIC.CUT_SNO, PIC.START_CUT_LOC
+	</select>
+	
+	<!-- 
+		 M/F촬영_M/F촬영계획서
+		: M/F촬영계획서 삭제시 계획서내 상세목록을 삭제한다.
+	 -->
+	<delete id="deleteMfPicPlanDetl" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		DELETE FROM TB_SRMFPICDETL WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND PIC_SNO = #picSno:NUMBER#
+	</delete>
+	
+	<!-- 
+		 M/F촬영_M/F촬영계획서
+		: M/F촬영계획서 를 삭제한다.
+	 -->
+	<delete id="deleteMfPicPlan" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		DELETE FROM TB_SRMFPIC WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND PIC_SNO = #picSno:NUMBER#
+	</delete>
+	
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서 헤더 정보 검색
+	-->	
+	<resultMap id="findPrintDocMfPicPlanHead-result" class="rms.presv.media.domain.BkrmMfBean" >
+		<result property="mfPicPlanNo" 	column="mfPicPlanNo"/>
+		<result property="picExptYmd" 	column="PIC_EXPT_YMD"/>
+		<result property="goodsNm" 		column="GOODS_NM"/>
+		<result property="filmSpec" 	column="FILM_SPEC"/>
+		<result property="picUserNm" 	column="PIC_USER_NM"/>
+	</resultMap>
+	<!-- SELECT -->
+	<select id="findPrintDocMfPicPlanHead" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findPrintDocMfPicPlanHead-result">
+	SELECT MF.RECORD_CENTER_ID||'-'||LPAD(MF.PIC_SNO,6,'0') mfPicPlanNo
+			 ,to_char(to_date(MF.PIC_EXPT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') PIC_EXPT_YMD
+			 ,MF.GOODS_NM
+			 ,MF.FILM_SPEC
+			 ,MF.pic_User_Nm 
+ 		FROM
+ 			TB_SRMFPIC MF,
+ 			(select * 
+ 			   from TB_SRMFPIC 
+ 			  where RECORD_CENTER_ID in  (select RECORD_CENTER_ID from TB_SRMFPICDETL WHERE CONFM_FLAG = '1' )
+ 			    AND PIC_SNO IN (select PIC_SNO from TB_SRMFPICDETL WHERE CONFM_FLAG = '1')) PIC
+ 	    WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+ 	      AND MF.PIC_SNO = PIC. PIC_SNO
+		  AND PIC.RECORD_CENTER_ID = SUBSTR(#mfPicPlanNo:VARCHAR#,1,7)
+		  AND PIC.PIC_SNO = SUBSTR(#mfPicPlanNo:VARCHAR#,8)
+	</select>	
+	
+	<!-- 
+		M/F촬영_M/F촬영계획서
+		: M/F촬영계획서 목록 정보 검색
+	-->	
+	<resultMap id="findPrintDocMfPicPlanData-result" class="rms.presv.media.domain.BkrmMfBean" >
+		<result property="stakrmMngNo" 		column="STAKRM_MNG_NO"/>
+		<result property="title" 			column="TITLE"/>
+		<result property="orgCd" 			column="org_cd"/>
+		<result property="clssId" 			column="clss_id"/>
+		<result property="creatYyyy" 		column="creat_yyyy"/>
+		<result property="folderRegSeq" 	column="folder_reg_seq"/>
+		<result property="hoNo" 			column="ho_no"/>														
+		<result property="docTitle" 		column="DOCTITLE"/>
+		<result property="recordPageCnt" 	column="RECORD_PAGE_CNT"/>
+		<result property="startCutLoc" 		column="START_CUT_LOC"/>
+		<result property="endCutLoc" 		column="END_CUT_LOC"/>
+	</resultMap>
+	<select id="findPrintDocMfPicPlanData" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findPrintDocMfPicPlanData-result">
+		SELECT   BIND.STAKRM_MNG_NO
+				,BIND.TITLE
+				,BIND.org_cd, BIND.clss_id
+				,BIND.creat_yyyy
+				,BIND.folder_reg_seq
+				,BIND.ho_no
+				,DOC.TITLE DOCTITLE
+				,DOC.RECORD_PAGE_CNT
+				,PIC.START_CUT_LOC
+				,PIC.END_CUT_LOC			  			 
+		FROM TB_SRMFPICDETL PIC, TB_RDFOLDER BIND, TB_RDRECORD DOC, TB_SRMFPIC PLN
+		WHERE PIC.RECORD_ID = DOC.RECORD_ID
+		AND DOC.FOLDER_ID = BIND. FOLDER_ID
+		AND PLN.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+		AND PLN.PIC_SNO = PIC.PIC_SNO
+		AND PIC.RECORD_CENTER_ID = SUBSTR(#mfPicPlanNo:VARCHAR#,1,7)
+		AND PIC.PIC_SNO = SUBSTR(#mfPicPlanNo:VARCHAR#,8)
+	</select>	
+	
+	<!-- 
+		M/F촬영_M/F촬영등록
+		: M/F 촬영등록 확정처리를 한다.
+	-->	
+	<update id="updateMfPicConfirm" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		UPDATE TB_SRMFPIC
+		SET  PIC_YMD   	 = #picYmd:VARCHAR#
+			,PIC_REG_YMD  = TO_CHAR(SYSDATE, 'YYYYMMDD')
+			,PIC_REG_FLAG = '1'
+			,PIC_USER_NM  = #picUserNm:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   PIC_SNO = #picSno:NUMBER#
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F촬영등록
+		: M/F 촬영등록 확정 철정보 업데이트
+	-->	
+	<update id="updateMfPicFolderConfirm" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		UPDATE TB_RDFOLDER
+		SET MF_PIC_STATE_CD = #mfPicStateCd:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	  FOLDER_ID  IN (
+							 SELECT DISTINCT FOLDER_ID 
+							 FROM TB_RDRECORD 
+							 WHERE RECORD_ID IN (
+							 					 SELECT RECORD_ID 
+							 					 FROM TB_SRMFPICDETL  
+		                                 		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                                  		 AND PIC_SNO = #picSno:NUMBER#
+		                         				)
+							)
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F촬영등록
+		: M/F촬영등록 목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="picSno" 				column="PIC_SNO"/>
+		<result property="mfPicPlanNo" 			column="MF_PIC_PLAN_NO"/>
+		<result property="editUserNm" 			column="EDIT_USER_NM"/>
+		<result property="picExptYmd" 			column="PIC_EXPT_YMD"/>
+		<result property="picUserNm" 			column="PIC_USER_NM"/>
+		<result property="supvsUserNm" 			column="SUPVS_USER_NM"/>
+		<result property="cutCnt" 				column="CUT_CNT"/>
+		<result property="orgCd" 				column="ORG_CD"/>
+		<result property="picRegFlag" 			column="PIC_REG_FLAG"/>
+		<result property="picRegFlagNm"			column="PIC_REG_FLAG_NM"/>
+		<result property="picPlanWriteFinFlag"	column="PIC_PLAN_WRITE_FIN_FLAG"/>
+	</resultMap>
+	<select id="countMfPicPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRMFPIC MF
+               ,(SELECT ORG_CD FROM TB_STORG GROUP BY ORG_CD) ORG
+               ,(SELECT RECORD_CENTER_ID, PIC_SNO
+                  FROM TB_SRMFPIC
+                  WHERE RECORD_CENTER_ID 
+                  IN (SELECT RECORD_CENTER_ID
+                       FROM TB_SRMFPICDETL
+                       WHERE CONFM_FLAG = '1' 
+                       GROUP BY RECORD_CENTER_ID)
+                  AND PIC_SNO 
+                  IN (SELECT PIC_SNO
+                        FROM TB_SRMFPICDETL
+                        WHERE CONFM_FLAG = '1' GROUP BY PIC_SNO)) PIC
+       WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+       AND MF.PIC_SNO = PIC.PIC_SNO
+       AND MF.CREAT_ORG_CD = ORG.ORG_CD
+       AND MF.PIC_PLAN_WRITE_FIN_FLAG = '1'
+       AND MF.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+       <isNotEmpty prepend="AND" property="picSno">
+           MF.PIC_SNO = #picSno:VARCHAR#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="picExptYmd">
+           MF.pic_Expt_Ymd LIKE REPLACE(#picExptYmd:VARCHAR#,'-','')
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="picUserNm">
+           MF.pic_User_Nm LIKE #picUserNm:VARCHAR#
+       </isNotEmpty>
+       <isNotEmpty prepend="AND" property="orgCd">
+           MF.CREAT_ORG_CD = #orgCd:VARCHAR#
+       </isNotEmpty>        
+       <isNotEmpty prepend="AND" property="picRegFlag">
+           MF.PIC_REG_FLAG = #picRegFlag:VARCHAR#
+       </isNotEmpty>
+	</select>
+	<select id="findMfPicPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicPagedList-result">
+		SELECT C.record_center_id
+		      ,C.pic_sno
+		      ,C.record_center_id||'-'||LPAD(C.pic_sno, 6, '0') AS mf_pic_plan_no
+		      ,C.edit_user_nm
+		      ,C.pic_expt_ymd
+		      ,C.pic_user_nm
+		      ,C.supvs_user_nm
+		      ,C.cut_cnt
+		      ,C.creat_org_cd AS org_cd
+		      ,C.pic_reg_flag
+		      ,DECODE(C.pic_reg_flag,'0','계획','1','등록') AS pic_reg_flag_nm
+		      ,C.pic_plan_write_fin_flag
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT  MF.RECORD_CENTER_ID, MF.PIC_SNO, MF.EDIT_USER_NM, MF.PIC_EXPT_YMD, MF.PIC_USER_NM
+		                   ,MF.SUPVS_USER_NM, MF.CUT_CNT, MF.CREAT_ORG_CD, MF.PIC_REG_FLAG, MF.PIC_PLAN_WRITE_FIN_FLAG
+		             FROM TB_SRMFPIC MF
+		                    ,(SELECT ORG_CD FROM TB_STORG GROUP BY ORG_CD) ORG
+		                    ,(SELECT RECORD_CENTER_ID, PIC_SNO
+		                       FROM TB_SRMFPIC
+		                       WHERE RECORD_CENTER_ID 
+		                       IN (SELECT RECORD_CENTER_ID
+		                            FROM TB_SRMFPICDETL
+		                            WHERE CONFM_FLAG = '1' 
+		                            GROUP BY RECORD_CENTER_ID)
+		                       AND PIC_SNO 
+		                       IN (SELECT PIC_SNO
+		                             FROM TB_SRMFPICDETL
+		                             WHERE CONFM_FLAG = '1' GROUP BY PIC_SNO)) PIC
+		            WHERE MF.RECORD_CENTER_ID = PIC.RECORD_CENTER_ID
+		            AND MF.PIC_SNO = PIC.PIC_SNO
+		            AND MF.CREAT_ORG_CD = ORG.ORG_CD
+		            AND MF.PIC_PLAN_WRITE_FIN_FLAG = '1'
+		            AND MF.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <isNotEmpty prepend="AND" property="picSno">
+		            	MF.PIC_SNO = #picSno:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="picExptYmd">
+		            	MF.pic_Expt_Ymd LIKE REPLACE(#picExptYmd:VARCHAR#,'-','')
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="picUserNm">
+		            	MF.pic_User_Nm LIKE #picUserNm:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		            	MF.CREAT_ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>        
+		            <isNotEmpty prepend="AND" property="picRegFlag">
+		            	MF.PIC_REG_FLAG = #picRegFlag:VARCHAR#
+		            </isNotEmpty>
+		            <!--cubrid ORDER BY PIC_SNO DESC-->
+		            ORDER BY MF.PIC_SNO DESC
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F복제
+		: M/F복제 목록을 조회한다.
+	 -->
+	<resultMap id="findMfPicCopyPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="picSno" 			column="PIC_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="editUserNm" 		column="EDIT_USER_NM"/>
+		<result property="picUserNm" 		column="PIC_USER_NM"/>
+		<result property="copySno" 			column="COPY_SNO"/>
+		<result property="copyYmd" 			column="COPY_YMD"/>
+		<result property="copyCnt" 			column="COPY_CNT"/>
+		<result property="copyRsn" 			column="COPY_RSN"/>
+		<result property="copyFlag" 		column="COPY_FLAG"/>
+		<result property="mfPicPlanNo" 		column="MF_PIC_PLAN_NO"/>
+	</resultMap>
+	<select id="countMfPicCopyPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT  COUNT(1)
+        FROM TB_SRMFPIC PIC, TB_SRMFCOPY CP
+        WHERE PIC.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND CP.RECORD_CENTER_ID(+) = PIC.RECORD_CENTER_ID
+        AND PIC.PIC_REG_FLAG = '1'
+        AND  CP.PIC_SNO(+) = PIC.PIC_SNO
+        <isNotEmpty prepend="AND" property="picSno">
+             PIC.pic_Sno LIKE #picSno:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="picUserNm">
+             PIC.pic_User_Nm LIKE #picUserNm:VARCHAR#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="orgCd">
+             PIC.CREAT_ORG_CD = #orgCd:VARCHAR#
+        </isNotEmpty>        
+        <isNotEmpty prepend="AND" property="picExptYmd">
+             PIC.pic_Expt_Ymd LIKE REPLACE(#picExptYmd:VARCHAR#,'-','')
+        </isNotEmpty>
+        <isEqual  prepend="AND" property="copyFlag" compareValue="1">
+             PIC.COPY_FLAG = #copyFlag:VARCHAR#
+        </isEqual>    
+        <isEqual prepend="AND" property="copyFlag" compareValue="0">
+             PIC.COPY_FLAG = #copyFlag:VARCHAR#
+        </isEqual>
+	</select>
+	<select id="findMfPicCopyPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPicCopyPagedList-result">
+		SELECT C.record_center_id
+		      ,C.pic_sno
+		      ,C.record_center_id||'-'||LPAD(C.pic_sno, 6, '0') AS mf_pic_plan_no
+		      ,C.edit_user_nm
+		      ,C.pic_user_nm
+		      ,DECODE(C.copy_sno,NULL,'0',C.copy_sno) AS copy_sno
+		      ,C.copy_ymd
+		      ,C.copy_cnt
+		      ,C.copy_rsn
+		      ,C.copy_flag
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,A.*
+		        FROM (
+		            SELECT  PIC.RECORD_CENTER_ID,PIC.PIC_SNO,PIC.EDIT_USER_NM,PIC.PIC_USER_NM,CP.COPY_SNO
+		                   ,CP.COPY_YMD,CP.COPY_CNT,CP.COPY_RSN,PIC.COPY_FLAG
+		            FROM TB_SRMFPIC PIC, TB_SRMFCOPY CP
+		            WHERE PIC.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND CP.RECORD_CENTER_ID(+) = PIC.RECORD_CENTER_ID
+		            AND PIC.PIC_REG_FLAG = '1'
+		            AND  CP.PIC_SNO(+) = PIC.PIC_SNO
+		            <isNotEmpty prepend="AND" property="picSno">
+		                 PIC.pic_Sno LIKE #picSno:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="picUserNm">
+		                 PIC.pic_User_Nm LIKE #picUserNm:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty prepend="AND" property="orgCd">
+		                 PIC.CREAT_ORG_CD = #orgCd:VARCHAR#
+		            </isNotEmpty>        
+		            <isNotEmpty prepend="AND" property="picExptYmd">
+		                 PIC.pic_Expt_Ymd LIKE REPLACE(#picExptYmd:VARCHAR#,'-','')
+		            </isNotEmpty>
+		            <isEqual  prepend="AND" property="copyFlag" compareValue="1">
+		                 PIC.COPY_FLAG = #copyFlag:VARCHAR#
+		            </isEqual>    
+		            <isEqual prepend="AND" property="copyFlag" compareValue="0">
+		                 PIC.COPY_FLAG = #copyFlag:VARCHAR#
+		            </isEqual>
+		            ORDER BY PIC.RECORD_CENTER_ID DESC, CP.COPY_SNO DESC, PIC.PIC_SNO DESC
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F복제
+		: M/F복제ID를 조회한다.
+	 -->
+	<select id="findMfCopyId" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.String">
+		SELECT  DECODE(max(COPY_SNO),null,0,max(COPY_SNO))+1 COPY_SNO 
+		FROM TB_SRMFCOPY
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>	
+	
+	<!-- 
+		M/F촬영_M/F복제
+		: M/F복제정보를 등록한다.
+	 -->
+	<insert id="createMfPicCopy" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		INSERT INTO TB_SRMFCOPY (
+			RECORD_CENTER_ID, PIC_SNO, COPY_SNO, COPY_YMD, COPY_CNT, COPY_RSN, WORK_USER_ID
+		)(
+			SELECT   RECORD_CENTER_ID
+            		,PIC_SNO
+            		,#copySno:NUMBER#
+            		,#copyYmd:VARCHAR#
+            		,#copyCnt:NUMBER#
+            		,#copyRsn:VARCHAR#
+            		,#workUserId:VARCHAR# 
+            FROM TB_SRMFPIC 
+			WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			AND PIC_SNO = #picSno:NUMBER#
+        )
+	</insert>
+	
+	<!-- 
+		M/F촬영_M/F복제
+		: M/F 복제수량을 조회한다.
+	 -->
+	<select id="findMfCopyCnt" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="string">
+		SELECT DECODE(SUM(COPY_CNT),null,0, SUM(COPY_CNT)) COPY_CNT 
+		FROM TB_SRMFCOPY
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   PIC_SNO = #picSno:NUMBER#
+	</select>
+	
+	 <!-- 	  
+		M/F촬영 > M/F복제 
+		: M/F복제수량을 갱신한다. (복제, 삭제)
+	 -->
+	<update id="updateMfPicCopy" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		UPDATE TB_SRMFPIC
+		SET  COPY_FLAG = #copyFlag:VARCHAR#
+	  		,TOT_COPY_CNT = #totCopyCnt:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND PIC_SNO = #picSno:NUMBER#
+	</update>
+	
+	<!-- 
+		M/F촬영 > M/F복제 
+		: M/F복제정보를 삭제한다.
+	 -->
+	<delete id="deleteMfPicCopy" parameterClass="rms.presv.media.domain.BkrmMfBean">
+		DELETE FROM TB_SRMFCOPY WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND   PIC_SNO = #picSno:NUMBER#
+	</delete>
+	
+	<!-- 
+		M/F촬영_M/F서가배치
+		: M/F서가배치 목록을 조회한다.
+	 -->
+	<resultMap id="findMfArngPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="recordCenterId"	column="RECORD_CENTER_ID"/>
+		<result property="picSno" 			column="PIC_SNO"/>
+		<result property="editUserNm" 		column="EDIT_USER_NM"/>
+		<result property="picUserNm" 		column="PIC_USER_NM"/>
+		<result property="picYmd" 			column="PIC_YMD"/>
+		<result property="mfStakrmId" 		column="MF_STAKRM_ID"/>
+		<result property="mfBooksfId" 		column="MF_BOOKSF_ID"/>
+		<result property="booksfShelfCno" 	column="BOOKSF_SHELF_CNO"/>
+		<result property="booksfShelfRno" 	column="BOOKSF_SHELF_RNO"/>	
+		<result property="shelfRSno" 		column="SHELF_R_SNO"/>			
+		<result property="mfArngYmd" 		column="MF_ARNG_YMD"/>	
+		<result property="mfArngFlagNm" 	column="MF_ARNG_FLAG_NM"/>		
+		<result property="mfArngFlag" 		column="MF_ARNG_FLAG"/>		
+		<result property="disuDivCd" 		column="DISU_DIV_CD_NM"/>
+		<result property="batchInfo" 	    column="BATCH_INFO"/>
+	</resultMap>
+	<select id="countMfArngPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRMFPIC A,((SELECT B.RECORD_CENTER_ID, B.PIC_SNO
+                            FROM TB_SRMFPICDETL B, TB_RDFOLDER C
+                            WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+                            AND B.FOLDER_ID = C.FOLDER_ID
+                            <isNotEmpty prepend="AND" property="disuDivCd">
+                            	C.DISU_DIV_CD = #disuDivCd:VARCAHR#
+                            </isNotEmpty>
+                            <isNotEmpty prepend="AND" property="lastEvalYyyy">
+                           		C.LAST_EVAL_YYYY = #lastEvalYyyy:VARCAHR#
+                            </isNotEmpty>
+                            GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO
+                            ) 
+                            UNION ALL 
+                            (SELECT B.RECORD_CENTER_ID, B.PIC_SNO
+                             FROM TB_SRMFPICDETL B, TB_NKFOLDER C
+                             WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+                             AND B.FOLDER_ID = C.FOLDER_ID
+                             <isNotEmpty prepend="AND" property="disuDivCd">
+                             	C.DISU_DIV_CD = #disuDivCd:VARCAHR#
+                             </isNotEmpty>
+                             <isNotEmpty prepend="AND" property="lastEvalYyyy">
+                   	          	C.LAST_EVAL_YYYY = #lastEvalYyyy:VARCAHR#
+                             </isNotEmpty>
+                             GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO)) D
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+        AND A.PIC_SNO = D.PIC_SNO
+        AND A.PIC_REG_FLAG = '1'
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="picSno">
+                A.PIC_SNO = TO_NUMBER(#picSno:VARCHAR#)
+            </isNotEmpty>            
+            <isNotEmpty prepend="AND" property="mfArngFlag">
+                A.MF_ARNG_FLAG = #mfArngFlag:VARCHAR#
+            </isNotEmpty>        
+        </dynamic>    
+	</select>
+	<select id="findMfArngPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfArngPagedList-result">
+		SELECT G.record_center_id
+			  ,G.pic_sno
+		      ,G.edit_user_nm
+		      ,G.pic_user_nm
+		      ,G.pic_ymd
+		      ,G.mf_stakrm_id
+		      ,G.mf_booksf_id
+		      ,G.booksf_shelf_cno
+		      ,G.booksf_shelf_rno
+		      ,G.shelf_r_sno
+		      ,G.mf_arng_ymd
+		      ,DECODE(G.mf_arng_flag, '0', '미배치', '1', '배치', '2', '재배치') AS mf_arng_flag_nm
+		      ,G.mf_arng_flag
+		      ,(CASE WHEN (SELECT COUNT(F.disu_div_cd)
+		                   FROM TB_SRMFPICDETL E, TB_RDFOLDER F
+		                   WHERE E.record_center_id = F.record_center_id
+		                   AND E.folder_id = F.folder_id
+		                   AND E.record_center_id = G.record_center_id
+		                   AND E.pic_sno = G.pic_sno) > 0
+		             THEN '재책정'
+		        END) AS disu_div_cd_nm
+		      ,DECODE(G.mf_stakrm_id, '','',G.mf_stakrm_id||'-'||G.mf_booksf_id||'-'||LPAD(G.booksf_shelf_cno, '3', '0')||'-'||LPAD(G.booksf_shelf_rno, '3', '0')||'-'||LPAD(G.shelf_r_sno, '3', '0')) AS batch_info
+		FROM (
+		    SELECT F.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,E.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID,A.PIC_SNO,A.EDIT_USER_NM,A.PIC_USER_NM,A.PIC_YMD
+		                  ,A.MF_STAKRM_ID,A.MF_BOOKSF_ID,A.BOOKSF_SHELF_CNO,A.BOOKSF_SHELF_RNO,A.SHELF_R_SNO
+		                  ,A.MF_ARNG_YMD,A.MF_ARNG_FLAG
+		            FROM TB_SRMFPIC A,((SELECT B.RECORD_CENTER_ID, B.PIC_SNO
+		                                FROM TB_SRMFPICDETL B, TB_RDFOLDER C
+		                                WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		                                AND B.FOLDER_ID = C.FOLDER_ID
+		                                <isNotEmpty prepend="AND" property="disuDivCd">
+		                                	C.DISU_DIV_CD = #disuDivCd:VARCAHR#
+		                                </isNotEmpty>
+		                                <isNotEmpty prepend="AND" property="lastEvalYyyy">
+		                               		C.LAST_EVAL_YYYY = #lastEvalYyyy:VARCAHR#
+		                                </isNotEmpty>
+		                                GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO
+		                                ) 
+		                                UNION ALL 
+		                                (SELECT B.RECORD_CENTER_ID, B.PIC_SNO
+		                                 FROM TB_SRMFPICDETL B, TB_NKFOLDER C
+		                                 WHERE B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		                                 AND B.FOLDER_ID = C.FOLDER_ID
+		                                 <isNotEmpty prepend="AND" property="disuDivCd">
+		                                 	C.DISU_DIV_CD = #disuDivCd:VARCAHR#
+		                                 </isNotEmpty>
+		                                 <isNotEmpty prepend="AND" property="lastEvalYyyy">
+		                       	          	C.LAST_EVAL_YYYY = #lastEvalYyyy:VARCAHR#
+		                                 </isNotEmpty>
+		                                 GROUP BY B.RECORD_CENTER_ID, B.PIC_SNO)) D
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		            AND A.PIC_SNO = D.PIC_SNO
+		            AND A.PIC_REG_FLAG = '1'
+		            <dynamic>        
+		                <isNotEmpty prepend="AND" property="picSno">
+		                    A.PIC_SNO = TO_NUMBER(#picSno:VARCHAR#)
+		                </isNotEmpty>            
+		                <isNotEmpty prepend="AND" property="mfArngFlag">
+		                    A.MF_ARNG_FLAG = #mfArngFlag:VARCHAR#
+		                </isNotEmpty>        
+		            </dynamic>    
+		            ORDER BY A.PIC_SNO
+		        ) E
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) F
+		    WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) G
+		ORDER BY G.rnum
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F서가배치
+		: M/F 서가목록을 조회한다.
+	 -->
+	<resultMap id="findMfBooksfIdList-result" class="rms.presv.media.domain.MFBkrm">
+		<result property="mfStakrmId"			column="MF_STAKRM_ID"/>
+		<result property="mfBooksfId"			column="MF_BOOKSF_ID"/>
+		<result property="mfBooksfNm" 			column="MF_BOOKSF_NM"/>
+		<result property="shelfCcnt" 			column="SHELF_C_CNT"/>
+		<result property="shelfRcnt" 			column="SHELF_R_CNT"/>
+	</resultMap>
+	<select id="findMfBooksfIdList" parameterClass="rms.presv.media.domain.MFBkrm" resultMap="findMfBooksfIdList-result">
+		SELECT MF_STAKRM_ID, MF_BOOKSF_ID, MF_BOOKSF_NM, SHELF_C_CNT, SHELF_R_CNT 
+		FROM TB_SRMFBOOKSF
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MF_STAKRM_ID = #mfStakrmId:VARCHAR#
+		<isNotEmpty prepend="AND" property="mfBooksfId">
+			MF_BOOKSF_ID = #mfBooksfId:VARCHAR#
+		</isNotEmpty>
+		ORDER BY MF_STAKRM_ID, MF_BOOKSF_ID
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F서가배치
+		: 마이크로필름 서가배치를 한다.
+	 -->
+	<update id="updateMfBooksfArng" parameterClass="rms.presv.media.domain.MFBkrm">
+		UPDATE TB_SRMFPIC 
+	  	SET  MF_STAKRM_ID = #mfStakrmId:VARCHAR#
+	  		,MF_BOOKSF_ID = #mfBooksfId:VARCHAR#
+	  		,BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+	  		,BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+	  		,SHELF_R_SNO = (SELECT (NVL(MAX(SHELF_R_SNO),0))+1 
+	  					    FROM TB_SRMFPIC 
+	  					    WHERE MF_STAKRM_ID=#mfStakrmId:VARCHAR# 
+	  					    AND MF_BOOKSF_ID = #mfBooksfId:VARCHAR#
+	  					    AND BOOKSF_SHELF_CNO = #booksfShelfCno:INT# 
+	  					    AND BOOKSF_SHELF_RNO = #booksfShelfRno:INT#
+	  					    AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+			,MF_ARNG_FLAG = #mfArngFlag:VARCHAR#
+			,MF_ARNG_YMD = #mfArngYmd:VARCHAR#  	     
+		WHERE RECORD_CENTER_ID  = #recordCenterId:VARCHAR#
+		AND PIC_SNO 			= #picSno:NUMBER#
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F서가배치
+		: 마이크로필름 서가배치시 서가내 보유필름수량을 갱신한다.
+	 -->
+	<update id="updateMfBooksfFilmCnt" parameterClass="java.lang.String">
+		UPDATE TB_SRMFBOOKSF A
+		SET CUR_ARNG_FILM_CNT = (SELECT COUNT(1) 
+                                 FROM TB_SRMFPIC B 
+                                 WHERE B.RECORD_CENTER_ID = A.RECORD_CENTER_ID 
+                                 AND B.MF_STAKRM_ID = A.MF_STAKRM_ID 
+                                 AND B.MF_BOOKSF_ID = A.MF_BOOKSF_ID)
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F서가배치
+		: 서가배치정보를 Clear 한다.
+	 -->
+	<update id="updateMfBooksfArngCncl" parameterClass="rms.presv.media.domain.MFBkrm">
+	  	UPDATE TB_SRMFPIC 
+	  	SET MF_STAKRM_ID = '',  
+	  		MF_BOOKSF_ID = '', 
+	  		BOOKSF_SHELF_CNO = 0, 
+	  		BOOKSF_SHELF_RNO = 0, 
+	  		SHELF_R_SNO = 0,
+	  		MF_ARNG_FLAG = '0', 
+	  		MF_ARNG_YMD = ''   	     
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			 AND PIC_SNO = #picSno:VARCHAR# 	
+	</update>
+	
+	<!-- 
+		M/F촬영_M/F서가배치
+		: 서가배치순번 갱신한다.
+	 -->
+	<update id="updateMfBooksfShelfRsno" parameterClass="rms.presv.media.domain.MFBkrm">
+	  	UPDATE TB_SRMFPIC 
+		SET SHELF_R_SNO = (SHELF_R_SNO - 1)				  
+		WHERE MF_STAKRM_ID = #mfStakrmId:VARCHAR# 
+	  	AND MF_BOOKSF_ID = #mfBooksfId:VARCHAR# 
+	  	AND BOOKSF_SHELF_CNO = #booksfShelfCno:INT# 
+	  	AND BOOKSF_SHELF_RNO = #booksfShelfRno:INT#
+	  	AND SHELF_R_SNO > #shelfRSno:INT#
+	  	AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 
+		M/F촬영_M/F 서고등록
+		: M/F서고등록 목록을 조회한다.
+	 -->
+	<resultMap id="findMfBooksfPagedList-result" class="rms.presv.media.domain.MFBkrm">
+		<result property="mfStakrmId" 		column="MF_STAKRM_ID"/>
+		<result property="mfStakrmNm" 		column="MF_STAKRM_NM"/>
+		<result property="mfBooksfId" 		column="MF_BOOKSF_ID"/>
+		<result property="mfBooksfNm" 		column="MF_BOOKSF_NM"/>
+		<result property="shelfCcnt" 		column="SHELF_C_CNT" 		nullValue="0"/>
+		<result property="shelfRcnt" 		column="SHELF_R_CNT" 		nullValue="0"/>
+		<result property="maxArngFilmCnt" 	column="MAX_ARNG_FILM_CNT" 	nullValue="0"/>
+		<result property="curArngFilmCnt" 	column="CUR_ARNG_FILM_CNT" 	nullValue="0"/>
+		<result property="booksfRemk"	 	column="BOOKSF_REMK"/>
+	</resultMap>
+	<select id="countMfBooksfPagedList" parameterClass="rms.presv.media.domain.MFBkrm" resultClass="java.lang.Long">
+        SELECT COUNT(1)
+        FROM     TB_SRMFSTAKRM A, TB_SRMFBOOKSF B
+        WHERE     A.MF_STAKRM_ID = B.MF_STAKRM_ID
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="mfStakrmNm">
+                A.MF_STAKRM_NM LIKE #mfStakrmNm:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="mfBooksfNm">
+            	B.MF_BOOKSF_NM LIKE #mfBooksfNm:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findMfBooksfPagedList" parameterClass="rms.presv.media.domain.MFBkrm" resultMap="findMfBooksfPagedList-result">
+		SELECT E.mf_stakrm_id
+		      ,E.mf_stakrm_nm
+		      ,E.mf_booksf_id
+		      ,E.mf_booksf_nm
+		      ,E.shelf_c_cnt
+		      ,E.shelf_r_cnt
+		      ,max_arng_film_cnt
+		      ,cur_arng_film_cnt
+		      ,E.remk AS booksf_remk
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT A.MF_STAKRM_ID,A.MF_STAKRM_NM,B.MF_BOOKSF_ID,B.MF_BOOKSF_NM,B.SHELF_C_CNT
+		                  ,B.SHELF_R_CNT,B.MAX_ARNG_FILM_CNT,B.CUR_ARNG_FILM_CNT,B.REMK 
+		            FROM     TB_SRMFSTAKRM A, TB_SRMFBOOKSF B
+		            WHERE     A.MF_STAKRM_ID = B.MF_STAKRM_ID(+)
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic>        
+		                <isNotEmpty prepend="AND" property="mfStakrmNm">
+		                    A.MF_STAKRM_NM LIKE #mfStakrmNm:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="mfBooksfNm">
+			            	B.MF_BOOKSF_NM LIKE #mfBooksfNm:VARCHAR#
+			            </isNotEmpty>
+		            </dynamic>
+		            ORDER BY B.record_center_id, B.mf_stakrm_id, B.mf_booksf_id
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F 서고등록
+		: M/F서고등록 목록을 조회한다.
+	 -->
+	<resultMap id="findMfStakrm-result" class="rms.presv.media.domain.MFBkrm">
+		<result property="mfStakrmId" 		column="MF_STAKRM_ID"/>
+		<result property="mfStakrmNm" 		column="MF_STAKRM_NM"/>
+		<result property="booksfCnt" 		column="BOOKSF_CNT"/>
+		<result property="stakrmRemk" 		column="STAKRM_REMK"/>
+	</resultMap>
+	<select id="countMfStakrm" parameterClass="rms.presv.media.domain.MFBkrm" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRMFSTAKRM  
+        WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+        <dynamic>        
+         <isNotEmpty prepend="AND" property="mfStakrmNm">
+   		    MF_STAKRM_NM LIKE #mfStakrmNm:VARCHAR# 
+         </isNotEmpty>                
+        </dynamic>
+	</select>
+	<select id="findMfStakrm" parameterClass="rms.presv.media.domain.MFBkrm" resultMap="findMfStakrm-result">
+		SELECT D.mf_stakrm_id
+		      ,D.mf_stakrm_nm
+		      ,D.booksf_cnt
+		      ,D.remk AS stakrm_remk
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,B.*
+		        FROM (
+		            SELECT *
+		            FROM TB_SRMFSTAKRM  
+		            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		            <dynamic>        
+			            <isNotEmpty prepend="AND" property="mfStakrmNm">
+			      		    MF_STAKRM_NM LIKE #mfStakrmNm:VARCHAR# 
+			            </isNotEmpty>                
+		            </dynamic>
+		            ORDER BY MF_STAKRM_ID DESC 
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+	
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서고등록시 최종 서고ID를 조회한다.
+	 -->
+	<select id="findMaxMfStakrmId" parameterClass="java.lang.String" resultClass="java.lang.String">
+		SELECT MAX(MF_STAKRM_ID) AS MF_STAKRM_ID
+		FROM TB_SRMFSTAKRM
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서고를 등록한다.
+	 -->
+	<insert id="createMfStakrm" parameterClass="rms.presv.media.domain.MFBkrm">
+		INSERT INTO TB_SRMFSTAKRM (
+			MF_STAKRM_ID, RECORD_CENTER_ID, MF_STAKRM_NM, BOOKSF_CNT, REMK
+		) VALUES (
+	  		#createMfStakrmId:VARCHAR#, #recordCenterId:VARCHAR#, #createMfStakrmNm:VARCHAR#, #createBooksfCnt:INT#, #createStakrmRemk:VARCHAR#
+	  	)
+	</insert>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서고를 수정한다.
+	 -->
+	<update id="updateMfStakrm" parameterClass="rms.presv.media.domain.MFBkrm">
+		UPDATE TB_SRMFSTAKRM 
+	  	SET 	MF_STAKRM_NM = #createMfStakrmNm:VARCHAR#
+	  	       ,REMK		 = #createStakrmRemk:VARCHAR#	  	     
+		WHERE MF_STAKRM_ID   = #createMfStakrmId:VARCHAR#
+		AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 	
+	</update>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서고를 삭제한다.
+	 -->
+	<delete id="deleteMfStakrm" parameterClass="rms.presv.media.domain.MFBkrm">
+		DELETE FROM TB_SRMFSTAKRM WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND MF_STAKRM_ID = #mfStakrmId:VARCHAR# 
+	</delete>
+	
+
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: M/F서고 목록을 조회한다.
+	 -->	
+	<resultMap id="findMfStakrmIdList-result" class="rms.presv.media.domain.MFBkrm">
+		<result property="mfStakrmId" 		column="MF_STAKRM_ID"/>
+		<result property="mfStakrmNm" 		column="MF_STAKRM_NM"/>
+		<result property="booksfCnt" 		column="MF_BOOKSF_CNT"/>
+		<result property="stakrmRemk" 		column="MF_STAKRM_REMK"/>
+	</resultMap>
+	<select id="findMfStakrmIdList"  parameterClass="rms.presv.media.domain.MFBkrm" resultMap="findMfStakrmIdList-result">
+		SELECT	 MF_STAKRM_ID AS MF_STAKRM_ID
+				,MF_STAKRM_NM AS MF_STAKRM_NM
+				,NVL(BOOKSF_CNT,'0') AS MF_BOOKSF_CNT
+				,REMK AS MF_STAKRM_REMK 
+		FROM  TB_SRMFSTAKRM  
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="mfStakrmNm">
+                MF_STAKRM_NM LIKE #mfStakrmNm:VARCHAR# 
+            </isNotEmpty>                
+        </dynamic>
+        ORDER BY MF_STAKRM_ID ASC 
+	</select>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서가번호 최고값을 얻는다.
+	 -->
+	<select id="findMaxMfStakrmBooksfId" parameterClass="rms.presv.media.domain.MFBkrm" resultClass="java.lang.String">
+		SELECT MAX(MF_BOOKSF_ID)
+		FROM TB_SRMFBOOKSF
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MF_STAKRM_ID = #mfStakrmId:VARCHAR#	
+	</select>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서가를 등록한다.
+	 -->
+	<insert id="createMfBooksf" parameterClass="rms.presv.media.domain.MFBkrm">
+		INSERT INTO TB_SRMFBOOKSF (
+			RECORD_CENTER_ID, MF_BOOKSF_ID, MF_BOOKSF_NM, MF_STAKRM_ID, MF_STAKRM_SNO, 
+	  		   	SHELF_C_CNT, SHELF_R_CNT, MAX_ARNG_FILM_CNT, CUR_ARNG_FILM_CNT, REMK
+		) VALUES (
+			#recordCenterId:VARCHAR#, #createMfBooksfId:VARCHAR#, #createMfBooksfNm:VARCHAR#, #createMfStakrmId:VARCHAR#
+		   ,(SELECT (COUNT(MF_BOOKSF_ID)+1) AS STAKRMSEQ FROM TB_SRMFBOOKSF WHERE MF_STAKRM_ID=#createMfStakrmId:VARCHAR#)
+	  	   ,#createShelfCcnt:NUMBER#, #createShelfRcnt:NUMBER#, #createMaxArngFilmCnt:NUMBER#, #createCurArngFilmCnt:NUMBER#, #createBooksfRemk:VARCHAR#
+	  	)
+	</insert>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 보유 서가수량을 증가한다.
+	 -->
+	<update id="addMfBooksfCnt" parameterClass="rms.presv.media.domain.MFBkrm">
+	  	UPDATE TB_SRMFSTAKRM 
+	  	SET BOOKSF_CNT = (SELECT COUNT(MF_STAKRM_ID) FROM TB_SRMFBOOKSF WHERE MF_STAKRM_ID=#createMfStakrmId:VARCHAR#)	  	     
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   MF_STAKRM_ID = #createMfStakrmId:VARCHAR#
+	</update>
+	
+	<!-- 
+		M/F촬영 > M/F서고등록
+		: 서가를 수정한다.
+	 -->
+	<update id="updateMfBooksf" parameterClass="rms.presv.media.domain.MFBkrm">
+		UPDATE TB_SRMFBOOKSF 
+		SET MF_BOOKSF_NM = #mfBooksfNm:VARCHAR# 
+	  	   	 , REMK	= #booksfRemk:VARCHAR# 
+	  	   	 , SHELF_C_CNT = #shelfCcnt:NUMBER# 
+	  	   	 , SHELF_R_CNT = #shelfRcnt:NUMBER# 
+	  	   	 , MAX_ARNG_FILM_CNT = #maxArngFilmCnt:NUMBER#  
+	 	WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+ 	   	AND MF_STAKRM_ID = #mfStakrmId:VARCHAR#	
+ 	   	AND MF_BOOKSF_ID = #mfBooksfId:VARCHAR#
+	</update>
+	
+	<!-- 
+		광디스크수록_광디스크서고등록
+		: 광디스크 서가를 삭제한다.
+	 --> 	
+	<delete id="deleteMfStakrmBooksf" parameterClass="rms.presv.media.domain.MFBkrm">
+		DELETE FROM TB_SRMFBOOKSF
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND MF_STAKRM_ID = #mfStakrmId:VARCHAR#
+		AND MF_BOOKSF_ID = #mfBooksfId:VARCHAR#	
+	</delete>
+	
+	<!-- 
+		광디스크수록_광디스크서고등록
+		: 광디스크 보유 서가수량을 감소한다.
+	 -->
+	<update id="minMfBooksfCnt" parameterClass="rms.presv.media.domain.MFBkrm">
+	  	UPDATE TB_SRMFSTAKRM 
+	  	SET BOOKSF_CNT=(SELECT NVL(COUNT(MF_STAKRM_ID), 0) FROM TB_SRMFBOOKSF WHERE MF_STAKRM_ID=#mfStakrmId:VARCHAR#)	  	     
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   MF_STAKRM_ID = #mfStakrmId:VARCHAR#
+	</update>
+	
+	<!-- 
+		광디스크수록_광디스크서고등록
+		: 광디스크 서고수량을 조회한다.
+	 -->
+	<select id="findMfStakrmCount" parameterClass="rms.presv.media.domain.MFBkrm" resultClass="java.lang.String">
+		SELECT 	COUNT(MF_STAKRM_ID) 
+		FROM TB_SRMFSTAKRM  	
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		<dynamic>		
+			<isNotEmpty prepend="AND" property="mfStakrmNm">
+				MF_STAKRM_NM LIKE #mfStakrmNm:VARCHAR# 
+			</isNotEmpty>				
+		</dynamic>
+	</select>
+	
+	<!-- 
+		M/F촬영_M/F 현황
+		: M/F현황 목록을 조회한다.
+	 -->
+	<resultMap id="findMfPagedList-result" class="rms.presv.media.domain.BkrmMfBean">
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="picSno" 			column="PIC_SNO"/>
+		<result property="editUserNm" 		column="EDIT_USER_NM"/>
+		<result property="picUserNm" 		column="PIC_USER_NM"/>
+		<result property="picYmd" 			column="PIC_YMD"/>
+		<result property="totCopyCnt" 		column="TOT_COPY_CNT"/>
+		<result property="mfStakrmId" 		column="MF_STAKRM_ID"/>
+		<result property="mfBooksfId" 		column="MF_BOOKSF_ID"/>
+		<result property="booksfShelfCno" 	column="BOOKSF_SHELF_CNO"/>
+		<result property="booksfShelfRno" 	column="BOOKSF_SHELF_RNO"/>	
+		<result property="shelfRSno" 		column="SHELF_R_SNO"/>				
+		<result property="batchInfo" 		column="BATCH_INFO"/>
+	</resultMap>
+	<select id="countMfPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRMFPIC
+        WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="picSno">
+                PIC_SNO = #picSno:VARCHAR#
+            </isNotEmpty>            
+            <isNotEmpty prepend="AND" property="picYmd">
+                PIC_YMD = #picYmd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="picUserNm">
+                PIC_USER_NM LIKE #picUserNm:VARCHAR#
+            </isNotEmpty>
+        </dynamic> 
+	</select>
+	<select id="findMfPagedList" parameterClass="rms.presv.media.domain.BkrmMfBean" resultMap="findMfPagedList-result">
+		SELECT C.record_center_id
+			  ,lpad(C.pic_sno, 6, '0') as pic_sno
+		      ,C.edit_user_nm
+		      ,C.pic_user_nm
+		      ,C.pic_ymd
+		      ,C.tot_copy_cnt
+		      ,C.mf_stakrm_id
+		      ,C.mf_booksf_id
+		      ,C.booksf_shelf_cno
+		      ,C.booksf_shelf_rno
+		      ,C.shelf_r_sno
+		      ,DECODE(C.mf_stakrm_id, '','',C.mf_stakrm_id||'-'||C.mf_booksf_id||'-'||LPAD(C.booksf_shelf_cno, '3', '0')||'-'||LPAD(C.booksf_shelf_rno, '3', '0')||'-'||LPAD(C.shelf_r_sno, '3', '0')) AS batch_info
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,A.*
+		        FROM (
+		            SELECT *
+		            FROM TB_SRMFPIC
+		            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic>        
+		                <isNotEmpty prepend="AND" property="picSno">
+		                    PIC_SNO = #picSno:VARCHAR#
+		                </isNotEmpty>            
+		                <isNotEmpty prepend="AND" property="picYmd">
+		                    PIC_YMD = #picYmd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="picUserNm">
+		                    PIC_USER_NM LIKE #picUserNm:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>    
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+
+</sqlMap>

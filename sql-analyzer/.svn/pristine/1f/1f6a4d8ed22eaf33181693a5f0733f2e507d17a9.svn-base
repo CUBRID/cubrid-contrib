@@ -1,0 +1,953 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.recordmng">
+
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findReadRangeMngFolderPagedList-result" class="rms.sys.recordmng.domain.ReadRangeMngFolder">
+		<result property = "orgCd" 			    	column = "org_cd"				/>
+		<result property = "folderId" 		    	column = "folder_id"			/>
+		<result property = "clssNm" 		    	column = "clss_nm"				/>
+		<result property = "title" 			    	column = "title"				/>
+		<result property = "creatYyyy"		    	column = "creat_yyyy"			/>
+		<result property = "orgNm" 			    	column = "org_nm"				/>
+		<result property = "orgAbbrNm" 		    	column = "org_abbr_nm"			/>
+		<result property = "presvTermNm" 	    	column = "presv_term_nm"		/>
+		<result property = "creatSysNm" 	    	column = "creat_sys_nm"			/>
+		<result property = "erecordFlagNm" 	    	column = "erecord_flag_nm"		/>
+		<result property = "agentNm" 		    	column = "agent_nm"				/>
+		<result property = "folderKeepStateNm" 		column = "folder_keep_state_nm"	/>
+		<result property = "creatSysCd" 	    	column = "creat_sys_cd"			/>
+		<result property = "operReadRangeCd"    	column = "oper_read_range_cd"	/>
+		<result property = "operReadRangeNm"    	column = "oper_read_range_nm"	/>
+		<result property = "readRangeMngFinFlag"    column = "read_range_mng_fin_flag"	/>
+		<result property = "readRangeMngFinFlagNm"  column = "read_range_mng_fin_flag_nm" />
+		<result property = "neoTransState"  		column = "neo_trans_state" />
+		<result property = "neoTransStateNm"  		column = "neo_trans_state_nm" />
+		<result property = "readRangCnt"  			column = "read_rang_cnt" />
+	</resultMap>
+	<select id="countReadRangeMngFolderPagedList" parameterClass="rms.sys.recordmng.domain.ReadRangeMngFolder" resultClass="java.lang.Long">
+		SELECT /*+ index(A, TB_RDFOLDER_IX12) */ COUNT(1)
+        FROM  TB_RDFOLDER A
+        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+        <dynamic>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.org_cd = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isEmpty property="orgCd">
+                <isNotEmpty prepend="AND" property="orgNm">
+                    A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+                </isNotEmpty>
+            </isEmpty>
+            <isNotEmpty prepend="AND" property="creatSysCd">
+                A.creat_sys_cd = #creatSysCd:VARCHAR#
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="creatFromYyyy">
+                (A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR#
+                <isNotEmpty prepend="AND" property="creatToYyyy">
+                    #creatToYyyy:VARCHAR#)
+                </isNotEmpty>
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="clssId">
+                <isEqual property="clssDivCd" compareValue="1">
+                    (A.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+                </isEqual>
+                <isEqual property="clssDivCd" compareValue="2">
+                    A.clss_id = #clssId:VARCHAR#
+                </isEqual>
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="title">
+                A.title LIKE #title:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="folderTypeDivCd">
+                A.folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="presvTermCd">
+                A.presv_term_cd = #presvTermCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="keywd">
+                A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERKEYWD WHERE record_center_id=#recordCenterId:VARCHAR# AND keywd LIKE #keywd:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="agentNm">
+                A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERCREAT WHERE record_center_id=#recordCenterId:VARCHAR# AND agent_nm LIKE #agentNm:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="erecordFlag">
+                A.erecord_flag = #erecordFlag:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="scanProgStateCd">
+                <isEqual property="scanProgStateCd" compareValue="5">
+                    A.scan_prog_state_cd = #scanProgStateCd:VARCHAR#
+                </isEqual>
+                <isEqual property="scanProgStateCd" compareValue="1">
+                    (A.scan_prog_state_cd IS NULL or A.scan_prog_state_cd IN ('', '1', '2', '3', '4'))
+                </isEqual>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="takeYyyy">
+                A.take_yyyy = #takeYyyy:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="folderKeepStateCd">
+                <isEqual property="folderKeepStateCd" compareValue="01">
+                    A.folder_keep_state_cd IN (#folderKeepStateCd:VARCHAR#, '04')
+                </isEqual>
+                <isEqual property="folderKeepStateCd" compareValue="02">
+                    A.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+                </isEqual>
+                <isEqual property="folderKeepStateCd" compareValue="03">
+                    A.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+                </isEqual>
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="operReadRangeCd">
+                A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="readRangeMngFinFlag">
+                <isEqual property="readRangeMngFinFlag" compareValue="0">
+                    A.read_range_mng_fin_flag IS NULL
+                </isEqual>
+                <isEqual property="readRangeMngFinFlag" compareValue="1">
+                    A.read_range_mng_fin_flag = '1'
+                </isEqual>
+            </isNotEmpty>
+        </dynamic>
+        AND NVL(A.read_range_mng_fin_flag, '0') != '1'
+	</select>
+	<select id="findReadRangeMngFolderPagedList" parameterClass="rms.sys.recordmng.domain.ReadRangeMngFolder" resultMap="findReadRangeMngFolderPagedList-result">
+		SELECT E.org_cd
+		      ,E.folder_id
+		      <dynamic>
+		      	<isEmpty prepend="" property="clssId">
+		      		, DECODE(E.clss_div_cd,'1',clss_nm,'2',DECODE(E.new_clss_id,NULL,E.clss_nm, E.new_clss_nm)) AS clss_nm
+		        </isEmpty>
+		        <isNotEmpty prepend="" property="clssId">
+			        <isEqual property="clssDivCd" compareValue="1">
+			        	, DECODE(E.clss_div_cd,'1',E.clss_nm, '2',E.new_clss_nm) clss_nm
+			        </isEqual>
+			        <isEqual property="clssDivCd" compareValue="2">
+			        	, E.clss_nm
+			        </isEqual>
+		        </isNotEmpty>
+		      </dynamic>
+		      ,E.title
+		      ,E.creat_yyyy
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) org_abbr_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) presv_term_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) creat_sys_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) erecord_flag_nm
+		      ,(SELECT Z.agent_nm FROM TB_RDFOLDERCREAT Z WHERE Z.record_center_id=E.record_center_id AND   Z.folder_id=E.folder_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDFOLDERCREAT Y WHERE Y.record_center_id=E.record_center_id AND Y.folder_id=E.folder_id)) agent_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) folder_keep_state_nm
+		      ,E.creat_sys_cd
+		      ,E.oper_read_range_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) oper_read_range_nm
+		      ,NVL(E.read_range_mng_fin_flag,'0') read_range_mng_fin_flag
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ZZ23' AND Z.com_cd=NVL(E.read_range_mng_fin_flag,'0')) read_range_mng_fin_flag_nm
+		      ,NVL(E.neo_trans_state,'0') neo_trans_state
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST02' AND Z.com_cd = NVL(E.neo_trans_state,'0')) AS neo_trans_state_nm
+		      ,(SELECT count(z.folder_id) FROM TB_RDFOLDERREADRANG Z WHERE Z.record_center_id = E.record_center_id AND  Z.folder_id = E.folder_id AND Z.handl_fin_ymd IS NULL) AS read_rang_cnt
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT /*+ index(A, TB_RDFOLDER_IX12) */
+		                    A.record_center_id, A.folder_id, A.creat_sys_cd, A.org_cd, A.clss_div_cd
+		                   ,A.clss_id,A.clss_nm,A.new_clss_id,A.new_clss_nm,A.creat_yyyy
+		                   ,A.title,A.presv_term_cd,A.erecord_flag,A.folder_keep_state_cd,A.oper_read_range_cd
+		                   ,A.read_range_mng_fin_flag, A.neo_trans_state
+		            FROM  TB_RDFOLDER A
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		            <dynamic>
+	                    <isNotEmpty prepend="AND" property="orgCd">
+	                        A.org_cd = #orgCd:VARCHAR#
+	                    </isNotEmpty>
+	                    <isEmpty property="orgCd">
+	                        <isNotEmpty prepend="AND" property="orgNm">
+	                            A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+	                        </isNotEmpty>
+	                    </isEmpty>
+	                    <isNotEmpty prepend="AND" property="creatSysCd">
+	                        A.creat_sys_cd = #creatSysCd:VARCHAR#
+	                    </isNotEmpty>    
+	                    <isNotEmpty prepend="AND" property="creatFromYyyy">
+	                        (A.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR#
+	                        <isNotEmpty prepend="AND" property="creatToYyyy">
+	                            #creatToYyyy:VARCHAR#)
+	                        </isNotEmpty>
+	                    </isNotEmpty>    
+	                    <isNotEmpty prepend="AND" property="clssId">
+	                        <isEqual property="clssDivCd" compareValue="1">
+	                            (A.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+	                        </isEqual>
+	                        <isEqual property="clssDivCd" compareValue="2">
+	                            A.clss_id = #clssId:VARCHAR#
+	                        </isEqual>
+	                    </isNotEmpty>    
+	                    <isNotEmpty prepend="AND" property="title">
+	                        A.title LIKE #title:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="folderTypeDivCd">
+	                        A.folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="presvTermCd">
+	                        A.presv_term_cd = #presvTermCd:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="keywd">
+	                        A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERKEYWD WHERE record_center_id=#recordCenterId:VARCHAR# AND keywd LIKE #keywd:VARCHAR#)
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="agentNm">
+	                        A.folder_id IN (SELECT folder_id FROM TB_RDFOLDERCREAT WHERE record_center_id=#recordCenterId:VARCHAR# AND agent_nm LIKE #agentNm:VARCHAR#)
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="erecordFlag">
+	                        A.erecord_flag = #erecordFlag:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="scanProgStateCd">
+	                        <isEqual property="scanProgStateCd" compareValue="5">
+	                            A.scan_prog_state_cd = #scanProgStateCd:VARCHAR#
+	                        </isEqual>
+	                        <isEqual property="scanProgStateCd" compareValue="1">
+	                            (A.scan_prog_state_cd IS NULL or A.scan_prog_state_cd IN ('', '1', '2', '3', '4'))
+	                        </isEqual>
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="takeYyyy">
+	                        A.take_yyyy = #takeYyyy:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="folderKeepStateCd">
+	                        <isEqual property="folderKeepStateCd" compareValue="01">
+	                            A.folder_keep_state_cd IN (#folderKeepStateCd:VARCHAR#, '04')
+	                        </isEqual>
+	                        <isEqual property="folderKeepStateCd" compareValue="02">
+	                            A.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+	                        </isEqual>
+	                        <isEqual property="folderKeepStateCd" compareValue="03">
+	                            A.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+	                        </isEqual>
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="operReadRangeCd">
+	                        A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="readRangeMngFinFlag">
+	                        <isEqual property="readRangeMngFinFlag" compareValue="0">
+	                            A.read_range_mng_fin_flag IS NULL
+	                        </isEqual>
+	                        <isEqual property="readRangeMngFinFlag" compareValue="1">
+	                            A.read_range_mng_fin_flag = '1'
+	                        </isEqual>
+	                    </isNotEmpty>
+	                </dynamic>
+		            AND NVL(A.read_range_mng_fin_flag, '0') != '1'
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    )D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 등록 (기록물철 지정_하위건포함시) 
+	 -->
+	<insert id="createReadRangeMngFolderInc" parameterClass="rms.sys.recordmng.domain.RdFolderReadRang">
+		INSERT INTO TB_RDRECORDREADRANG (
+			record_center_id, record_id, chng_hist_no, handl_org_cd, choice_ymd, handl_org_opin, opin_reg_ymd, oper_read_range_bef, oper_read_range_aft, handl_fin_ymd
+		) (		  
+			SELECT 	  A.record_center_id
+				    , A.record_id
+				    , A.chng_hist_no
+					, #handlOrgCd:VARCHAR# 
+				  	, #handlFinYmd:VARCHAR# 
+				    , #handlOrgOpin:VARCHAR#
+			  	    , #handlFinYmd:VARCHAR#
+					, A.oper_read_range_cd
+					, #operReadRangeAft:VARCHAR#
+					, #handlFinYmd:VARCHAR#
+			FROM (
+					SELECT	A.record_center_id
+						   ,A.record_id
+						   ,NVL(B.chng_hist_no,0)+1 chng_hist_no
+						   ,NVL(B.handl_fin_yn,'0') handl_fin_yn
+						   ,A.oper_read_range_cd  
+					FROM TB_RDRECORD A, (SELECT B.record_center_id
+												  ,B.record_id
+												  ,MAX(chng_hist_no) chng_hist_no
+												  ,SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn
+											FROM 	TB_RDRECORDREADRANG B
+											WHERE 	B.record_center_id = #recordCenterId:VARCHAR#
+											GROUP BY B.record_center_id, B.record_id) B
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					AND A.folder_id = #folderId:VARCHAR#
+					AND (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')	
+					AND A.read_range_mng_fin_flag IS NULL 
+					AND A.record_center_id = B.record_center_id(+)
+					AND A.record_id = B.record_id(+)
+					) A	
+			WHERE A.handl_fin_yn = '0'
+		)
+	</insert>	
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 기록물건 접근범위 정보갱신(기록물철 지정_하위건 포함시)
+	 -->
+	<update id="updateReadRangeMngFolderInc" parameterClass="rms.sys.recordmng.domain.RdFolderReadRang">
+		UPDATE TB_RDRECORD Z
+	  	SET oper_read_range_cd = #operReadRangeAft:VARCHAR#
+	  	   ,read_range_mng_fin_flag = '1'
+	    <!--cubrid WHERE (record_center_id, record_id)
+		IN (  
+			SELECT A.record_center_id
+				  ,A.record_id-->
+            WHERE 
+		EXISTS (  
+			SELECT 1
+		 	FROM (SELECT A.record_center_id
+						,A.record_id
+						,NVL(B.handl_fin_yn,'0') handl_fin_yn
+				  FROM TB_RDRECORD A, (SELECT B.record_center_id
+				  							 ,B.record_id
+				  							 ,SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn
+					         		   FROM TB_RDRECORDREADRANG B
+					         		   WHERE B.record_center_id = #recordCenterId:VARCHAR#
+					         		   GROUP BY B.record_center_id, B.record_id) B
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					AND A.folder_id = #folderId:VARCHAR#
+					AND A.read_range_mng_fin_flag IS NULL
+					AND (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')
+					AND A.record_center_id = B.record_center_id(+)
+					AND A.record_id = B.record_id(+)
+			) A
+			WHERE A.handl_fin_yn = '0'
+                        <!--cubrid-->
+                        AND A.record_center_id = Z.record_center_id
+                        AND A.record_id = Z.record_id
+		)
+	</update>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 등록
+	 -->
+	<insert id="createReadRangeMngFolder" parameterClass="rms.sys.recordmng.domain.RdFolderReadRang">
+		INSERT INTO TB_RDFOLDERREADRANG (
+			record_center_id, folder_id, chng_hist_no,handl_org_cd, choice_ymd, handl_org_opin,opin_reg_ymd, oper_read_range_bef, oper_read_range_aft,handl_fin_ymd
+	  	) (
+			  SELECT A.record_center_id
+					 , A.folder_id
+					 , (SELECT NVL(MAX(chng_hist_no),0)+1 
+						FROM 	TB_RDFOLDERREADRANG B
+						WHERE B.record_center_id = A.record_center_id
+						AND   B.folder_id = A.folder_id)
+					 , #handlOrgCd:VARCHAR# 
+				  	 , #handlFinYmd:VARCHAR# 
+				     , #handlOrgOpin:VARCHAR#
+					 , #handlFinYmd:VARCHAR#
+					 , A.oper_read_range_cd
+					 , #operReadRangeAft:VARCHAR#
+					 , #handlFinYmd:VARCHAR#
+				FROM  TB_RDFOLDER A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND	  A.folder_id = #folderId:VARCHAR#
+				AND	  (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')	
+				AND	  A.read_range_mng_fin_flag IS NULL
+		)
+	</insert>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 기록물철 접근범위정보 갱신
+	 -->
+	<update id="updateReadRangeMngFolder" parameterClass="rms.sys.recordmng.domain.RdFolderReadRang">
+		UPDATE 	TB_RDFOLDER
+	  	SET     oper_read_range_cd = #operReadRangeAft:VARCHAR#
+	  	      , read_range_mng_fin_flag = '1'
+	    WHERE 	record_center_id = #recordCenterId:VARCHAR#
+  	  	AND    	folder_id = #folderId:VARCHAR#
+  	  	AND	   (neo_trans_state IS NULL OR neo_trans_state = '0')	
+		AND	    read_range_mng_fin_flag IS NULL
+	</update>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 기록물철별 건목록 엑셀저장데이터를 조회한다. 
+	 -->
+	<resultMap id="findExcelReadRangeMngFolderRecordList-result" class="rms.sys.recordmng.domain.ReadRangeMngRecord">
+		<result property="orgNm" 				column="org_nm"/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"/>
+		<result property="orgCd" 				column="org_cd"/>
+		<result property="clssNm" 				column="clss_nm"/>
+		<result property="folderTitle" 			column="folder_title"/>
+		<result property="creatYyyy" 			column="creat_yyyy"/>
+		<result property="presvTermCd" 			column="presv_term_cd"/>
+		<result property="presvTermNm" 			column="presv_term_nm"/>
+		<result property="title" 				column="record_title"/>
+		<result property="recordDetlTypeCd" 	column="record_detl_type_cd"/>
+		<result property="recordDetlTypeNm" 	column="record_detl_type_nm"/>
+		<result property="creatRegDtime" 		column="creat_reg_dtime"/>
+		<result property="creatRegNo" 			column="creat_reg_no"/>
+		<result property="openDivCd" 			column="open_div_cd"/>
+		<result property="openDivNm" 			column="open_div_nm"/>
+		<result property="operReadRangeCd" 		column="oper_read_range_cd"/>
+		<result property="operReadRangeNm" 		column="oper_read_range_nm"/>
+		<result property="recordCenterId" 		column="record_center_id"/>
+		<result property="folderClssNo" 		column="folder_clss_no"/>
+		<result property="recordRegNo"			column="record_reg_no"/>
+		<result property="folderKeepStateCd" 	column="folder_keep_state_cd"/>
+		<result property="folderKeepStateNm" 	column="folder_keep_state_nm"/>
+		<result property="hoNo"					column="ho_no"/>
+		<result property="hoNoCnt"				column="ho_no_cnt"/>
+	</resultMap>
+	<select id="findExcelReadRangeMngFolderRecordList" parameterClass="rms.sys.recordmng.domain.ReadRangeMngFolder" resultMap="findExcelReadRangeMngFolderRecordList-result">
+		SELECT    (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_nm
+		        , (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) org_abbr_nm
+		        , (CASE WHEN (SELECT Z.close_flag FROM tb_storg Z WHERE Z.record_center_id = B.record_center_id AND Z.org_cd = B.org_cd) = '0' THEN B.org_cd
+                        ELSE ''
+                   END) org_cd 
+		        , (CASE WHEN B.clss_div_cd = '1' THEN (SELECT Z.bis_clss_nm FROM tb_zzbisclss Z WHERE Z.bis_clss_id = B.clss_id)
+		                WHEN B.clss_div_cd = '2' THEN (SELECT Z.unit_nm FROM tb_zzunit Z WHERE Z.record_center_id = B.record_center_id AND Z.unit_cd = B.clss_id)
+		           END) clss_nm
+		        , B.title folder_title
+		        , B.creat_yyyy
+		        , B.presv_term_cd
+		        , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'RD07' AND Z.com_cd = B.presv_term_cd) presv_term_nm
+		        , A.title record_title
+		        , A.record_detl_type_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD03' AND Z.com_cd = A.record_detl_type_cd) record_detl_type_nm
+		        , SUBSTR(A.creat_reg_dtime, 1, 8) creat_reg_dtime
+		        , A.creat_reg_no
+		        , A.open_div_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD05' AND Z.com_cd = A.open_div_cd) open_div_nm
+		        , A.oper_read_range_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD53' AND Z.com_cd = A.oper_read_range_cd) oper_read_range_nm
+		        , A.record_center_id
+		        , B.creat_sys_cd||'-'||B.org_cd||'-'||B.clss_Id||'-'||B.creat_yyyy||'-'||B.folder_reg_seq||'-'||B.ho_no folder_clss_no
+		        , B.ho_no
+		        , A.creat_sys_cd||'-'||A.org_cd||'-'||A.creat_yyyy||'-'||A.creat_reg_no||'-'||A.dtch_reg_no record_reg_no
+		        , B.folder_keep_state_cd
+		        , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD32' AND Z.com_cd = B.folder_keep_state_cd) folder_keep_state_nm
+		        , (SELECT COUNT (*)
+           		  FROM TB_RDFOLDER
+          		  WHERE CREAT_SYS_CD = B.CREAT_SYS_CD
+                  AND ORG_CD = B.ORG_CD
+                  AND CLSS_ID = B.CLSS_ID
+                  AND CREAT_YYYY = B.CREAT_YYYY
+                  AND FOLDER_REG_SEQ = B.FOLDER_REG_SEQ) ho_no_cnt
+		FROM tb_rdrecord A, tb_rdfolder B
+		WHERE   A.record_center_id = #recordCenterId:VARCHAR#
+		AND     A.record_center_id = B.record_center_id 
+		AND     A.folder_id = B.folder_id
+		AND        NVL(A.read_range_mng_fin_flag, '0') != '1'
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				B.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="orgCd">
+				<isNotEmpty prepend="AND" property="orgNm">
+					B.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				B.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="creatFromYyyy">
+				(B.creat_yyyy BETWEEN #creatFromYyyy:VARCHAR#
+				<isNotEmpty prepend="AND" property="creatToYyyy">
+					#creatToYyyy:VARCHAR#)
+				</isNotEmpty>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="clssId">
+			    <isEqual property="clssDivCd" compareValue="1">
+					(B.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+				</isEqual>
+				<isEqual property="clssDivCd" compareValue="2">
+			    	B.clss_id = #clssId:VARCHAR#
+			    </isEqual>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="title">
+				B.title LIKE #title:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderTypeDivCd">
+				B.folder_type_div_cd = #folderTypeDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="presvTermCd">
+				B.presv_term_cd = #presvTermCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keywd">
+				B.folder_id IN (SELECT folder_id FROM TB_RDFOLDERKEYWD WHERE record_center_id=#recordCenterId:VARCHAR# AND keywd LIKE #keywd:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="agentNm">
+				B.folder_id IN (SELECT folder_id FROM TB_RDFOLDERCREAT WHERE record_center_id=#recordCenterId:VARCHAR# AND agent_nm LIKE #agentNm:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="erecordFlag">
+				B.erecord_flag = #erecordFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="scanProgStateCd">
+				<isEqual property="scanProgStateCd" compareValue="5">
+					B.scan_prog_state_cd = #scanProgStateCd:VARCHAR#
+				</isEqual>
+				<isEqual property="scanProgStateCd" compareValue="1">
+			    	B.scan_prog_state_cd IN ('', '1', '2', '3', '4')
+			    </isEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="takeYyyy">
+				B.take_yyyy = #takeYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderKeepStateCd">
+				<isEqual property="folderKeepStateCd" compareValue="01">
+					B.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+				</isEqual>
+				<isEqual property="folderKeepStateCd" compareValue="02">
+			    	B.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+			    </isEqual>
+			    <isEqual property="folderKeepStateCd" compareValue="03">
+			    	B.folder_keep_state_cd = #folderKeepStateCd:VARCHAR#
+			    </isEqual>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="operReadRangeCd">
+				B.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="readRangeMngFinFlag">
+				<isEqual property="readRangeMngFinFlag" compareValue="0">
+					B.read_range_mng_fin_flag IS NULL
+				</isEqual>
+				<isEqual property="readRangeMngFinFlag" compareValue="1">
+					B.read_range_mng_fin_flag = '1'
+				</isEqual>
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY B.record_center_id, B.org_cd, folder_clss_no, record_reg_no
+	</select>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 기록물건 목록을 조회한다.
+	 -->
+	<resultMap id="findReadRangeMngRecordPagedList-result" class="rms.sys.recordmng.domain.ReadRangeMngRecord">
+		<result property="recordCenterId" 	column="record_center_id"/>
+		<result property="recordOrgCd" 		column="record_org_cd"/>
+		<result property="folderId" 		column="folder_id"/>
+		<result property="recordId" 		column="record_id"/>
+		<result property="title" 			column="title"/>
+		<result property="orgNm" 			column="org_nm"/>
+		<result property="orgAbbrNm" 		column="org_abbr_nm"/>
+		<result property="creatRegDtime" 	column="creat_reg_dtime"/>
+		<result property="operReadRangeCd" 	column="oper_read_range_cd"/>
+		<result property="operReadRangeNm" 	column="oper_read_range_nm"/>
+		<result property="erecordFlag" 		column="erecord_flag"/>
+		<result property="erecordFlagNm" 	column="erecord_flag_nm"/>
+		<result property="openDivCd" 		column="open_div_cd"/>
+		<result property="openDivNm" 		column="open_div_nm"/>
+		<result property="readRangeMngFinFlag" 	column="read_range_mng_fin_flag"/>
+		<result property="readRangeMngFinFlagNm" column="read_range_mng_fin_flag_nm"/>
+		<result property="neoTransState" 	column="neo_trans_state"/>
+		<result property="neoTransStateNm" 	column="neo_trans_state_nm"/>
+		<result property="readRangCnt" 		column="read_rang_cnt"/>
+	</resultMap>
+	<select id="countReadRangeMngRecordPagedList" parameterClass="rms.sys.recordmng.domain.ReadRangeMngRecord" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+	    FROM TB_RDRECORD A
+	    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.folder_id = #folderId:VARCHAR#
+         <dynamic>
+             <isNotEmpty prepend="AND" property="openDivCd">
+                 A.open_div_cd = #openDivCd:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="orgCd">
+                 A.org_cd = #orgCd:VARCHAR#
+             </isNotEmpty>
+             <isEmpty property="orgCd">
+                 <isNotEmpty prepend="AND" property="orgNm">
+                     A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+                 </isNotEmpty>
+             </isEmpty>
+             <isNotEmpty prepend="AND" property="creatRegDtimeStart">
+                 A.creat_reg_dtime <![CDATA[>=]]> #creatRegDtimeStart:VARCHAR#||'000000'
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="creatRegDtimeEnd">
+                 A.creat_reg_dtime <![CDATA[<=]]> #creatRegDtimeEnd:VARCHAR#||'240000'
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="erecordFlag">
+                 A.erecord_flag = #erecordFlag:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="title">
+                 A.title LIKE #title:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="oldRecordDocno">
+                 (A.doc_no LIKE #oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #oldRecordDocno:VARCHAR#)
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="operReadRangeCd">
+                 A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="readRangeMngFinFlag">
+                 <isEqual property="readRangeMngFinFlag" compareValue="0">
+                     A.read_range_mng_fin_flag IS NULL
+                 </isEqual>
+                 <isEqual property="readRangeMngFinFlag" compareValue="1">
+                     A.read_range_mng_fin_flag = '1'
+                 </isEqual>
+             </isNotEmpty>
+         </dynamic>
+	</select>
+	<select id="findReadRangeMngRecordPagedList" parameterClass="rms.sys.recordmng.domain.ReadRangeMngRecord" resultMap="findReadRangeMngRecordPagedList-result">
+		SELECT E.record_center_id
+		      ,E.record_org_cd
+		      ,E.folder_id
+		      ,E.record_id
+		      ,E.title
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.record_org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.record_org_cd) AS org_abbr_nm
+		      ,SUBSTR(E.creat_reg_dtime,0,8) AS creat_reg_dtime
+		      ,E.oper_read_range_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm
+		      ,E.erecord_flag
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm
+		      ,E.open_div_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=E.open_div_cd) open_div_nm
+		      ,NVL(E.read_range_mng_fin_flag,'0') AS read_range_mng_fin_flag
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ZZ23' AND Z.com_cd=NVL(E.read_range_mng_fin_flag,'0')) AS read_range_mng_fin_flag_nm
+		      ,NVL(E.neo_trans_state,'0') neo_trans_state
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'ST02' AND Z.com_cd = NVL(E.neo_trans_state,'0')) AS neo_trans_state_nm
+		      ,(SELECT count(z.record_id) FROM TB_RDRECORDREADRANG Z WHERE Z.record_center_id = E.record_center_id AND Z.record_id = E.record_id AND Z.handl_fin_ymd IS NULL) AS read_rang_cnt
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		    FROM (
+		        SELECT A.record_center_id, A.org_cd AS record_org_cd, A.folder_id, A.record_id, A.title
+		              ,A.creat_reg_dtime, A.oper_read_range_cd, A.erecord_flag, A.open_div_cd, A.read_range_mng_fin_flag
+		              ,A.neo_trans_state
+                FROM TB_RDRECORD A
+                WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND A.folder_id = #folderId:VARCHAR#
+                <dynamic>
+                    <isNotEmpty prepend="AND" property="openDivCd">
+                        A.open_div_cd = #openDivCd:VARCHAR#
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="orgCd">
+                        A.org_cd = #orgCd:VARCHAR#
+                    </isNotEmpty>
+                    <isEmpty property="orgCd">
+                        <isNotEmpty prepend="AND" property="orgNm">
+                            A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+                        </isNotEmpty>
+                    </isEmpty>
+                    <isNotEmpty prepend="AND" property="creatRegDtimeStart">
+                        A.creat_reg_dtime <![CDATA[>=]]> #creatRegDtimeStart:VARCHAR#||'000000'
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="creatRegDtimeEnd">
+                        A.creat_reg_dtime <![CDATA[<=]]> #creatRegDtimeEnd:VARCHAR#||'240000'
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="erecordFlag">
+                        A.erecord_flag = #erecordFlag:VARCHAR#
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="title">
+                        A.title LIKE #title:VARCHAR#
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="oldRecordDocno">
+                        (A.doc_no LIKE #oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #oldRecordDocno:VARCHAR#)
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="operReadRangeCd">
+                        A.oper_read_range_cd = #operReadRangeCd:VARCHAR#
+                    </isNotEmpty>
+                    <isNotEmpty prepend="AND" property="readRangeMngFinFlag">
+                        <isEqual property="readRangeMngFinFlag" compareValue="0">
+                            A.read_range_mng_fin_flag IS NULL
+                        </isEqual>
+                        <isEqual property="readRangeMngFinFlag" compareValue="1">
+                            A.read_range_mng_fin_flag = '1'
+                        </isEqual>
+                    </isNotEmpty>
+                </dynamic>
+                ORDER BY A.record_center_id, A.title
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#    
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 등록
+	 -->
+	<insert id="createReadRangeMngRecord" parameterClass="rms.sys.recordmng.domain.RdRecordReadRang">
+		INSERT INTO TB_RDRECORDREADRANG (
+			record_center_id, record_id, chng_hist_no, handl_org_cd, choice_ymd, handl_org_opin, opin_reg_ymd, oper_read_range_bef, oper_read_range_aft, handl_fin_ymd
+		) (		  
+			SELECT  A.record_center_id
+				   ,A.record_id
+				   ,(SELECT NVL(MAX(chng_hist_no),0)+1 FROM TB_RDRECORDREADRANG B WHERE B.record_center_id = A.record_center_id AND B.record_id = A.record_id)
+				   ,#handlOrgCd:VARCHAR# 
+				   ,#handlFinYmd:VARCHAR# 
+				   ,#handlOrgOpin:VARCHAR#
+			  	   ,#handlFinYmd:VARCHAR#
+				   ,A.oper_read_range_cd
+				   ,#operReadRangeAft:VARCHAR#
+				   ,#handlFinYmd:VARCHAR#
+			FROM TB_RDRECORD A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND	  A.record_id = #recordId:VARCHAR#
+			AND	 (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')	
+			AND	 A.read_range_mng_fin_flag IS NULL  
+			)
+	</insert>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 기록물건 접근범위 갱신
+	 -->
+	<update id="updateReadRangeMngRecord" parameterClass="rms.sys.recordmng.domain.RdRecordReadRang">
+		UPDATE 	TB_RDRECORD
+	  	SET     oper_read_range_cd = #operReadRangeAft:VARCHAR#
+	  	      , read_range_mng_fin_flag = '1'
+	    WHERE 	record_center_id = #recordCenterId:VARCHAR#
+  	  	AND    	record_id = #recordId:VARCHAR#
+  	  	AND	   (neo_trans_state IS NULL OR neo_trans_state = '0')	
+		AND	    read_range_mng_fin_flag IS NULL  
+	</update>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 등록(일괄) 시 처리대상 수량조회
+	 -->
+	<select id="findOpenMngNonFinCount" parameterClass="rms.sys.recordmng.domain.RdRecordReadRang" resultClass="java.lang.String">
+		SELECT COUNT(1) FROM TB_RDRECORD A
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND FOLDER_ID = #folderId:VARCHAR#
+		AND (neo_trans_state IS NULL OR neo_trans_state = '0')
+		AND READ_RANGE_MNG_FIN_FLAG IS NULL
+		<dynamic>
+			<isNotEmpty prepend="AND" property="cond_operReadRangeCd">
+				A.oper_read_range_cd = #cond_operReadRangeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cond_openDivCd">
+				A.open_div_cd = #cond_openDivCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cond_orgCd">
+				A.org_cd = #cond_orgCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty property="cond_orgCd">
+				<isNotEmpty prepend="AND" property="cond_orgNm">
+					A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #cond_orgNm:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="cond_creatRegDtimeStart">
+	       		A.creat_reg_dtime <![CDATA[>=]]> #cond_creatRegDtimeStart:VARCHAR#||'000000'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cond_creatRegDtimeEnd">
+				A.creat_reg_dtime <![CDATA[<=]]> #cond_creatRegDtimeEnd:VARCHAR#||'240000'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cond_erecordFlag">
+				A.erecord_flag = #cond_erecordFlag:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cond_title">
+				A.title LIKE #cond_title:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cond_oldRecordDocno">
+				(A.doc_no LIKE #cond_oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #cond_oldRecordDocno:VARCHAR#)
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 접근범위관리 등록 (일괄)
+	 -->
+	<insert id="createBatchReadRangeMngRecord" parameterClass="rms.sys.recordmng.domain.RdRecordReadRang">
+		INSERT INTO TB_RDRECORDREADRANG (
+			record_center_id, record_id, chng_hist_no, handl_org_cd, choice_ymd, handl_org_opin, opin_reg_ymd, oper_read_range_bef, oper_read_range_aft, handl_fin_ymd
+	    ) (
+			SELECT	  A.record_center_id
+					, A.record_id
+					, A.chng_hist_no
+					, #handlOrgCd:VARCHAR# 
+		  			, #handlFinYmd:VARCHAR# 
+		 			, #handlOrgOpin:VARCHAR#
+	  	  			, #handlFinYmd:VARCHAR#
+				    , A.oper_read_range_cd
+				    , #operReadRangeAft:VARCHAR#
+		 		    , #handlFinYmd:VARCHAR#
+		 	FROM (	    
+				 	SELECT	  A.record_center_id
+							, A.record_id
+							, NVL(B.chng_hist_no,0)+1 chng_hist_no
+							, NVL(B.handl_fin_yn,'0') handl_fin_yn
+							, A.oper_read_range_cd    
+					FROM 	TB_RDRECORD A,
+							(SELECT B.record_center_id, B.record_id, 
+									MAX(chng_hist_no) chng_hist_no,
+									SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn
+					         FROM 	TB_RDRECORDREADRANG B
+					         WHERE 	B.record_center_id = #recordCenterId:VARCHAR#
+					         GROUP BY B.record_center_id, B.record_id) B
+					WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+					AND	  	A.folder_id = #folderId:VARCHAR#
+					AND		A.read_range_mng_fin_flag IS NULL
+					AND	   (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')
+					AND	   A.record_center_id = B.record_center_id(+)
+					AND	   A.record_id = B.record_id(+)
+						<dynamic>
+							<isNotEmpty prepend="AND" property="cond_operReadRangeCd">
+								A.oper_read_range_cd = #cond_operReadRangeCd:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="cond_openDivCd">
+								A.open_div_cd = #cond_openDivCd:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="cond_orgCd">
+								A.org_cd = #cond_orgCd:VARCHAR#
+							</isNotEmpty>
+							<isEmpty property="cond_orgCd">
+								<isNotEmpty prepend="AND" property="cond_orgNm">
+									A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #cond_orgNm:VARCHAR#)
+								</isNotEmpty>
+							</isEmpty>
+							<isNotEmpty prepend="AND" property="cond_creatRegDtimeStart">
+				        		A.creat_reg_dtime <![CDATA[>=]]> #cond_creatRegDtimeStart:VARCHAR#||'000000'
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="cond_creatRegDtimeEnd">
+								A.creat_reg_dtime <![CDATA[<=]]> #cond_creatRegDtimeEnd:VARCHAR#||'240000'
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="cond_erecordFlag">
+								A.erecord_flag = #cond_erecordFlag:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="cond_title">
+								A.title LIKE #cond_title:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="cond_oldRecordDocno">
+								(A.doc_no LIKE #cond_oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #cond_oldRecordDocno:VARCHAR#)
+							</isNotEmpty>
+						</dynamic>
+				) A
+			WHERE A.handl_fin_yn = '0'
+		)
+	</insert>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 기록물건 접근범위 갱신 (일괄)
+	 -->
+	<update id="updateBatchReadRangeMngRecord" parameterClass="rms.sys.recordmng.domain.RdRecordReadRang">
+		UPDATE 	TB_RDRECORD Z
+	  	SET     oper_read_range_cd = #operReadRangeAft:VARCHAR#
+	  	      , read_range_mng_fin_flag = '1'
+	    <!--cubrid WHERE (record_center_id, record_id)
+		IN (  
+		SELECT	  A.record_center_id
+				, A.record_id-->
+            WHERE 
+		EXISTS (  
+		SELECT	  1
+	 	FROM (	    
+			 	SELECT	  A.record_center_id
+						, A.record_id
+						, NVL(B.handl_fin_yn,'0') handl_fin_yn
+				FROM 	TB_RDRECORD A,
+						(SELECT B.record_center_id, B.record_id,
+								SUM(DECODE(HANDL_FIN_YMD,null,1,'',1,0)) handl_fin_yn
+				         FROM 	TB_RDRECORDREADRANG B
+				         WHERE 	B.record_center_id = #recordCenterId:VARCHAR#
+				         GROUP BY B.record_center_id, B.record_id) B
+				WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+				AND	  	A.folder_id = #folderId:VARCHAR#
+				AND		A.read_range_mng_fin_flag IS NULL
+				AND	   (A.neo_trans_state IS NULL OR A.neo_trans_state = '0')
+				AND	   A.record_center_id = B.record_center_id(+)
+				AND	   A.record_id = B.record_id(+)
+					<dynamic>
+						<isNotEmpty prepend="AND" property="cond_operReadRangeCd">
+							A.oper_read_range_cd = #cond_operReadRangeCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_openDivCd">
+							A.open_div_cd = #cond_openDivCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_orgCd">
+							A.org_cd = #cond_orgCd:VARCHAR#
+						</isNotEmpty>
+						<isEmpty property="cond_orgCd">
+							<isNotEmpty prepend="AND" property="cond_orgNm">
+								A.org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #cond_orgNm:VARCHAR#)
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="cond_creatRegDtimeStart">
+			        		A.creat_reg_dtime <![CDATA[>=]]> #cond_creatRegDtimeStart:VARCHAR#||'000000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_creatRegDtimeEnd">
+							A.creat_reg_dtime <![CDATA[<=]]> #cond_creatRegDtimeEnd:VARCHAR#||'240000'
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_erecordFlag">
+							A.erecord_flag = #cond_erecordFlag:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_title">
+							A.title LIKE #cond_title:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="cond_oldRecordDocno">
+							(A.doc_no LIKE #cond_oldRecordDocno:VARCHAR# OR A.old_record_docno LIKE #cond_oldRecordDocno:VARCHAR#)
+						</isNotEmpty>
+					</dynamic>
+			) A
+			WHERE A.handl_fin_yn = '0'
+                        <!--cubrid-->
+                        AND A.record_center_id = Z.record_center_id
+                        AND A.record_id = Z.record_id
+		)
+	</update>
+		
+	<!-- 
+		기록물관리_접근범위관리
+		: 일괄등록시 이미 처리된 건인지 확한다.
+	 -->
+	<select id="findReadRangeMngRecordFinFlag" parameterClass="rms.sys.recordmng.domain.RdRecordReadRang" resultClass="string">
+		SELECT	read_range_mng_fin_flag
+		FROM 	tb_rdrecord
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_id		 = #recordId:VARCHAR#
+	</select>	
+		
+	<!-- 
+		기록물관리_접근범위관리
+		: 일괄등록시 기록물철 식별자를 이용하여 기록물철 ID 를 조회한다.
+	 -->
+	<select id="findReadRangeMngFolderId" parameterClass="rms.sys.recordmng.domain.ReadRangeMngFolder" resultClass="string">
+		SELECT 	folder_id
+		FROM 	tb_rdfolder
+		WHERE 	record_center_id = #recordCenterId:VARCHAR#
+		AND 	creat_sys_cd 	 = #creatSysCd:VARCHAR#
+		AND 	org_cd			 = #orgCd:VARCHAR#
+		AND 	clss_id			 = #clssId:VARCHAR#
+		AND		creat_yyyy		 = #creatYyyy:VARCHAR#
+		AND		folder_reg_seq	 = #folderRegSeq:VARCHAR#
+		AND		ho_no			 = #hoNo:VARCHAR#
+	</select>
+	
+	<!-- 
+		기록물관리_접근범위관리
+		: 일괄등록시 기록물건 식별자를 이용하여 기록물건 ID를 조회한다.
+	 -->
+	<select id="findReadRangeMngRecordId" parameterClass="rms.sys.recordmng.domain.ReadRangeMngRecord" resultClass="string">
+		SELECT	record_id
+		FROM 	tb_rdrecord
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		creat_sys_cd 	 = #creatSysCd:VARCHAr#
+		AND		org_cd			 = #orgCd:VARCHAR#
+		AND		creat_yyyy		 = #creatYyyy:VARCHAR#
+		AND		creat_reg_no	 = #creatRegNo:VARCHAR#
+		AND		dtch_reg_no		 = #dtchRegNo:VARCHAR#
+	</select>
+
+
+	<!-- 
+		기록물관리_접근범위관리
+		: 일괄등록진행중 발생한오류내역 엑셀파일을 조회한다.
+	 -->
+	<resultMap id="findReadRangeMngBatchRegErrorXls-result" class="java.util.HashMap">
+		<result property="fileNm" 			column="file_nm"/>
+		<result property="fileKey" 			column="file_key"/>
+	</resultMap>
+	<select id="findReadRangeMngBatchRegErrorXls" parameterClass="rms.sys.recordmng.domain.ReadRangeMngRecord" resultMap="findReadRangeMngBatchRegErrorXls-result">
+		SELECT file_nm, file_key FROM TB_ZZREQEXCELLIST WHERE REQ_USER_ID = #reqUserId:VARCHAR# AND REQ_MENU_ID = #menuId:VARCHAR# AND REQ_INDEX = #reqIndex:VARCHAR#
+	</select>
+</sqlMap>

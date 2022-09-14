@@ -1,0 +1,1492 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.adjst">
+	
+	<!-- 
+		바이러스검사_검사현황
+		: 생산년도, 보존기간별 검사현황 목록을 조회한다.
+	 -->
+	<resultMap id="findVirusCheckStatusList-result" class="rms.presv.adjst.domain.VirusChkStatus">
+		<result property="rowIdx"                column="ROW_IDX" />
+		<result property="rowCnt"                column="ROW_CNT" />
+		<result property="recordCenterId"        column="RECORD_CENTER_ID" />
+		<result property="creatYyyy"             column="CREAT_YYYY" />
+		<result property="presvTermCd"           column="PRESV_TERM_CD" />
+		<result property="presvTermNm"           column="PRESV_TERM_NM" />
+		<result property="folderCnt"             column="FOLDER_CNT" />
+		<result property="folderInfectCnt"       column="FOLDER_INFECT_CNT" />
+		<result property="folderUninfectCnt"     column="FOLDER_UNINFECT_CNT" />
+		<result property="recordCnt"             column="RECORD_CNT" />
+		<result property="recordInfectCnt"       column="RECORD_INFECT_CNT" />
+		<result property="recordUninfectCnt"     column="RECORD_UNINFECT_CNT" />
+		<result property="fileCnt"               column="FILE_CNT" />
+		<result property="fileInfectCnt"         column="FILE_INFECT_CNT" />
+		<result property="fileUninfectCnt"       column="FILE_UNINFECT_CNT" />
+		<result property="pdfFileCnt"            column="PDF_FILE_CNT" />
+		<result property="pdfFileInfectCnt"      column="PDF_FILE_INFECT_CNT" />
+		<result property="pdfFileUninfectCnt"    column="PDF_FILE_UNINFECT_CNT" />
+	</resultMap>
+	<select id="findVirusCheckStatusList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultMap="findVirusCheckStatusList-result">
+		SELECT ROW_NUMBER() OVER(PARTITION BY Z.RECORD_CENTER_ID, Z.CREAT_YYYY ORDER BY Z.RECORD_CENTER_ID, Z.CREAT_YYYY, Z.PRESV_TERM_CD) AS ROW_IDX
+		      ,(COUNT(*) OVER(PARTITION BY Z.RECORD_CENTER_ID, Z.CREAT_YYYY))  AS ROW_CNT
+		      ,Z.RECORD_CENTER_ID
+		      ,Z.CREAT_YYYY
+		      ,Z.PRESV_TERM_CD
+		      ,(SELECT X.COM_CD_NM FROM   TB_ZZCOMCD X WHERE  X.COM_TYPE_CD = 'RD07' AND    X.COM_CD = Z.PRESV_TERM_CD) AS PRESV_TERM_NM
+		      ,SUM(FOLDER_CNT) AS FOLDER_CNT
+		      ,SUM(FOLDER_INFECT_CNT) AS FOLDER_INFECT_CNT
+		      ,SUM(FOLDER_UNINFECT_CNT) AS FOLDER_UNINFECT_CNT
+		      ,SUM(RECORD_CNT) AS RECORD_CNT
+		      ,SUM(RECORD_INFECT_CNT) AS RECORD_INFECT_CNT
+		      ,SUM(RECORD_UNINFECT_CNT) AS RECORD_UNINFECT_CNT
+		      ,SUM(FILE_CNT) AS FILE_CNT
+		      ,SUM(FILE_INFECT_CNT) AS FILE_INFECT_CNT
+		      ,SUM(FILE_UNINFECT_CNT) AS FILE_UNINFECT_CNT
+		      ,SUM(PDF_FILE_CNT) AS PDF_FILE_CNT
+		      ,SUM(PDF_FILE_INFECT_CNT) AS PDF_FILE_INFECT_CNT
+		      ,SUM(PDF_FILE_UNINFECT_CNT) AS PDF_FILE_UNINFECT_CNT
+		FROM (SELECT A.RECORD_CENTER_ID
+		            ,A.CREAT_YYYY
+		            ,DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) PRESV_TERM_CD
+		            ,COUNT(1) AS FOLDER_CNT
+		            ,SUM(DECODE(A.VIRUS_FLAG, '1', 1, 0)) AS FOLDER_INFECT_CNT
+		            ,SUM(DECODE(A.VIRUS_FLAG, '1', 0, 1)) AS FOLDER_UNINFECT_CNT
+		            ,0 AS RECORD_CNT
+		            ,0 AS RECORD_INFECT_CNT
+		            ,0 AS RECORD_UNINFECT_CNT
+		            ,0 AS FILE_CNT
+		            ,0 AS FILE_INFECT_CNT
+		            ,0 AS FILE_UNINFECT_CNT
+		            ,0 AS PDF_FILE_CNT
+		            ,0 AS PDF_FILE_INFECT_CNT
+		            ,0 AS PDF_FILE_UNINFECT_CNT
+		      FROM   TB_RDFOLDER A
+		      WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      <isNotEmpty property="creatYyyyF">
+		      	  <isNotEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		          </isNotEmpty>
+		          <isEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		          </isEmpty>
+		      </isNotEmpty>
+		      <isEmpty property="creatYyyyF">
+		          <isNotEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		          </isNotEmpty>
+		      </isEmpty>
+		      <isNotEmpty property="presvTermCd">
+				  <isEqual property="presvTermCheck" compareValue="1">
+					  <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd <![CDATA[>=]]> '20'
+		          </isEqual>
+					  <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+					  </isNotEqual> 					 
+				  </isEqual>
+				  <isNotEqual property="presvTermCheck" compareValue="1">
+					  <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd IN ('20','25') 
+					  </isEqual>
+					  <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd = #presvTermCd:VARCHAR# 
+					  </isNotEqual>
+		          </isNotEqual>
+		      </isNotEmpty>
+		      AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		      AND A.ERECORD_FLAG IN ('1', '3')
+		      GROUP  BY A.RECORD_CENTER_ID, A.CREAT_YYYY, PRESV_TERM_CD
+		      UNION ALL
+		      SELECT Z.RECORD_CENTER_ID
+		            ,Z.CREAT_YYYY
+		            ,DECODE(Z.PRESV_TERM_CD, '20', '25',Z.PRESV_TERM_CD) PRESV_TERM_CD
+		            ,0 AS FOLDER_CNT
+		            ,0 AS FOLDER_INFECT_CNT
+		            ,0 AS FOLDER_UNINFECT_CNT
+		            ,SUM(Z.RECORD_CNT) AS RECORD_CNT
+		            ,SUM(Z.RECORD_INFECT_CNT) AS  RECORD_INFECT_CNT
+		            ,SUM(Z.RECORD_UNINFECT_CNT) AS RECORD_UNINFECT_CNT
+		            ,0 AS FILE_CNT
+		            ,0 AS FILE_INFECT_CNT
+		            ,0 AS FILE_UNINFECT_CNT
+		            ,0 AS PDF_FILE_CNT
+		            ,0 AS PDF_FILE_INFECT_CNT
+		            ,0 AS PDF_FILE_UNINFECT_CNT		      
+		        FROM (SELECT A.RECORD_CENTER_ID		      
+		            ,A.CREAT_YYYY
+		            ,A.PRESV_TERM_CD
+		            ,0 AS FOLDER_CNT
+		            ,0 AS FOLDER_INFECT_CNT
+		            ,0 AS FOLDER_UNINFECT_CNT
+		            ,COUNT(1) AS RECORD_CNT
+		            ,SUM(DECODE(Y.VIRUS_FLAG, 1, 1, 0)) AS RECORD_INFECT_CNT
+		            ,COUNT(1) - SUM(DECODE(Y.VIRUS_FLAG, 1, 1, 0)) AS RECORD_UNINFECT_CNT
+		            ,0 AS FILE_CNT
+		            ,0 AS FILE_INFECT_CNT
+		            ,0 AS FILE_UNINFECT_CNT
+		            ,0 AS PDF_FILE_CNT
+		            ,0 AS PDF_FILE_INFECT_CNT
+		            ,0 AS PDF_FILE_UNINFECT_CNT
+		      FROM   TB_RDFOLDER A, TB_RDRECORD B,(SELECT AA.RECORD_CENTER_ID
+		                                                 ,AA.CREAT_YYYY
+		                                                 ,AA.PRESV_TERM_CD
+		                                                 ,AB.RECORD_ID
+		                                                 ,DECODE(COUNT(1), 0, 0, 1) AS VIRUS_FLAG
+		                                           FROM TB_RDFOLDER AA, TB_RDRECORD AB, TB_STORIGNFILE AC
+		                                           WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+		                                           AND AA.FOLDER_ID = AB.FOLDER_ID
+		                                           AND AB.RECORD_CENTER_ID = AC.RECORD_CENTER_ID
+		                                           AND    AB.ORIGN_ID = AC.ORIGN_ID
+		                                           AND    AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                                           <isNotEmpty property="creatYyyyF">
+		                                               <isNotEmpty prepend="AND" property="creatYyyyT">
+		                                          	       AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                                               </isNotEmpty>
+		                                               <isEmpty prepend="AND" property="creatYyyyT">
+		                                                   AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                                               </isEmpty>
+	                                               </isNotEmpty>
+		                                           <isEmpty property="creatYyyyF">
+		                                               <isNotEmpty prepend="AND" property="creatYyyyT">
+		                                                   AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                                               </isNotEmpty>
+		                                           </isEmpty>
+		                                           <isNotEmpty property="presvTermCd">
+															   <isEqual property="presvTermCheck" compareValue="1">
+																   <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd <![CDATA[>=]]> '20'
+		                                               </isEqual>
+																   <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+																   </isNotEqual> 					 
+															   </isEqual>
+															   <isNotEqual property="presvTermCheck" compareValue="1">
+																   <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd IN ('20','25') 
+																   </isEqual>
+																   <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd = #presvTermCd:VARCHAR# 
+																   </isNotEqual>
+			                                           </isNotEqual>
+		                                           </isNotEmpty>
+		                                           AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                                           AND AA.ERECORD_FLAG IN ('1', '3')
+		                                           AND AB.ERECORD_FLAG = '1'
+		                                           AND AC.VIRUS_FLAG = '1'
+		                                           GROUP  BY AA.RECORD_CENTER_ID, AA.CREAT_YYYY, AA.PRESV_TERM_CD, AB.RECORD_ID
+		                                           UNION 
+		                                           SELECT AA.RECORD_CENTER_ID
+		                                                 ,AA.CREAT_YYYY
+		                                                 ,AA.PRESV_TERM_CD
+		                                                 ,AB.RECORD_ID
+		                                                 ,DECODE(COUNT(1), 0, 0, 1) AS VIRUS_FLAG
+		                                           FROM TB_RDFOLDER AA, TB_RDRECORD AB, TB_STORIGNPDFA1FILE AD
+		                                           WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+		                                           AND AA.FOLDER_ID = AB.FOLDER_ID
+		                                           AND AB.RECORD_CENTER_ID = AD.RECORD_CENTER_ID
+		                                           AND AB.ORIGN_ID = AD.ORIGN_ID
+		                                           AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                                           <isNotEmpty property="creatYyyyF">
+		                                               <isNotEmpty prepend="AND" property="creatYyyyT">
+		                                           		   AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                                               </isNotEmpty>
+		                                           	   <isEmpty prepend="AND" property="creatYyyyT">
+		                                                   AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                                               </isEmpty>
+		                                           </isNotEmpty>
+		                                           <isEmpty property="creatYyyyF">
+		                                           	   <isNotEmpty prepend="AND" property="creatYyyyT">
+		                                                   AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                                               </isNotEmpty>
+		                                           </isEmpty>
+		                                           <isNotEmpty property="presvTermCd">
+															   <isEqual property="presvTermCheck" compareValue="1">
+																   <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd <![CDATA[>=]]> '20'
+		                                               </isEqual>
+																   <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+																   </isNotEqual> 					 
+															   </isEqual>
+															   <isNotEqual property="presvTermCheck" compareValue="1">
+																   <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd IN ('20','25') 
+																   </isEqual>
+																   <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+																	   AA.presv_term_cd = #presvTermCd:VARCHAR# 
+																   </isNotEqual>
+		                                               </isNotEqual>
+		                                           </isNotEmpty>
+		                                           AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                                           AND AA.ERECORD_FLAG IN ('1', '3')
+		                                           AND AB.ERECORD_FLAG = '1'
+		                                           AND AD.VIRUS_FLAG = '1'
+		                                           GROUP  BY AA.RECORD_CENTER_ID, AA.CREAT_YYYY, AA.PRESV_TERM_CD, AB.RECORD_ID) Y
+		      WHERE  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.RECORD_CENTER_ID = Y.RECORD_CENTER_ID(+)
+		      AND B.RECORD_ID = Y.RECORD_ID(+)
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		      AND A.ERECORD_FLAG IN ('1', '3')
+		      AND B.ERECORD_FLAG = '1'
+		      AND A.PRESV_TERM_CD = Y.PRESV_TERM_CD
+		      AND A.CREAT_YYYY = Y.CREAT_YYYY
+				      GROUP  BY A.RECORD_CENTER_ID, A.CREAT_YYYY, A.PRESV_TERM_CD ) Z
+		      GROUP BY Z.RECORD_CENTER_ID, Z.CREAT_YYYY, Z.PRESV_TERM_CD     			      
+		      UNION ALL 
+		      SELECT A.RECORD_CENTER_ID
+		            ,A.CREAT_YYYY
+		            ,DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) PRESV_TERM_CD
+		            ,0 AS FOLDER_CNT
+		            ,0 AS FOLDER_INFECT_CNT
+		            ,0 AS FOLDER_UNINFECT_CNT
+		            ,0 AS RECORD_CNT
+		            ,0 AS RECORD_INFECT_CNT
+		            ,0 AS RECORD_UNINFECT_CNT
+		            ,COUNT(1) AS FILE_CNT
+		            ,SUM(DECODE(C.VIRUS_FLAG, 1, 1, 0)) AS FILE_INFECT_CNT
+		            ,SUM(DECODE(C.VIRUS_FLAG, 1, 0, 1)) AS FILE_UNINFECT_CNT
+		            ,0 AS PDF_FILE_CNT
+		            ,0 AS PDF_FILE_INFECT_CNT
+		            ,0 AS PDF_FILE_UNINFECT_CNT
+		      FROM   TB_RDFOLDER A,TB_RDRECORD B, TB_STORIGNFILE C
+		      WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		      AND B.ORIGN_ID = C.ORIGN_ID
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      <isNotEmpty property="creatYyyyF">
+		          <isNotEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		          </isNotEmpty>
+		          <isEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		          </isEmpty>
+		      </isNotEmpty>
+		      <isEmpty property="creatYyyyF">
+		          <isNotEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		          </isNotEmpty>
+		      </isEmpty>
+		      <isNotEmpty property="presvTermCd">
+				  <isEqual property="presvTermCheck" compareValue="1">
+					  <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd <![CDATA[>=]]> '20'
+		          </isEqual>
+					  <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+					  </isNotEqual> 					 
+				  </isEqual>
+				  <isNotEqual property="presvTermCheck" compareValue="1">
+					  <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd IN ('20','25') 
+					  </isEqual>
+					  <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd = #presvTermCd:VARCHAR# 
+					  </isNotEqual>
+		          </isNotEqual>
+		      </isNotEmpty>
+		      AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		      AND A.ERECORD_FLAG IN ('1', '3')
+		      AND B.ERECORD_FLAG = '1'
+		      GROUP  BY A.RECORD_CENTER_ID, A.CREAT_YYYY, PRESV_TERM_CD
+		      UNION ALL
+		      SELECT A.RECORD_CENTER_ID
+		            ,A.CREAT_YYYY
+		            ,DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) PRESV_TERM_CD
+		            ,0 AS FOLDER_CNT
+		            ,0 AS FOLDER_INFECT_CNT
+		            ,0 AS FOLDER_UNINFECT_CNT
+		            ,0 AS RECORD_CNT
+		            ,0 AS RECORD_INFECT_CNT
+		            ,0 AS RECORD_UNINFECT_CNT
+		            ,0 AS FILE_CNT
+		            ,0 AS FILE_INFECT_CNT
+		            ,0 AS FILE_UNINFECT_CNT
+		            ,COUNT(1) AS PDF_FILE_CNT
+		            ,SUM(DECODE(D.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+		            ,SUM(DECODE(D.VIRUS_FLAG, 1, 0, 1)) AS PDF_FILE_UNINFECT_CNT
+		      FROM TB_RDFOLDER A,TB_RDRECORD B, TB_STORIGNPDFA1FILE D
+		      WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		      AND A.FOLDER_ID = B.FOLDER_ID
+		      AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		      AND B.ORIGN_ID = D.ORIGN_ID
+		      AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		      <isNotEmpty property="creatYyyyF">
+		          <isNotEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		          </isNotEmpty>
+		          <isEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		          </isEmpty>
+		      </isNotEmpty>
+		      <isEmpty property="creatYyyyF">
+		          <isNotEmpty prepend="AND" property="creatYyyyT">
+		              A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		          </isNotEmpty>
+		      </isEmpty>
+		      <isNotEmpty property="presvTermCd">
+				  <isEqual property="presvTermCheck" compareValue="1">
+					  <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd <![CDATA[>=]]> '20'
+		          </isEqual>
+					  <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+					  </isNotEqual> 					 
+				  </isEqual>
+				  <isNotEqual property="presvTermCheck" compareValue="1">
+					  <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd IN ('20','25') 
+					  </isEqual>
+					  <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						  A.presv_term_cd = #presvTermCd:VARCHAR# 
+					  </isNotEqual>
+		          </isNotEqual>
+		      </isNotEmpty>
+		      AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		      AND A.ERECORD_FLAG IN ('1', '3')
+		      AND B.ERECORD_FLAG = '1'
+		      GROUP BY A.RECORD_CENTER_ID, A.CREAT_YYYY, PRESV_TERM_CD) Z
+		GROUP BY Z.RECORD_CENTER_ID, Z.CREAT_YYYY, Z.PRESV_TERM_CD
+		ORDER  BY Z.RECORD_CENTER_ID, Z.CREAT_YYYY, Z.PRESV_TERM_CD
+	</select>
+	
+	<!-- 
+		바이러스검사_검사현황
+		: 생산년도, 보존기간별 검사현황 목록을 조회한다.
+	 -->
+	<resultMap id="findVirusChkFolderPagedList-result" class="rms.presv.adjst.domain.VirusChkStatus">
+		<result property="recordCenterId"            column="RECORD_CENTER_ID" />
+		<result property="folderId"                  column="FOLDER_ID" />
+		<result property="folderTitle"               column="FOLDER_TITLE" />
+		<result property="clssId"                    column="CLSS_ID" />
+		<result property="clssNm"                    column="CLSS_NM" />
+		<result property="creatYyyy"                 column="CREAT_YYYY" />
+		<result property="presvTermCd"               column="PRESV_TERM_CD" />
+		<result property="presvTermNm"               column="PRESV_TERM_NM" />
+		<result property="qultyTestStateFlagNm"      column="QULTY_TEST_STATE_FLAG_NM" />
+		<result property="fileCnt"                   column="FILE_CNT" />
+		<result property="fileInfectCnt"             column="FILE_INFECT_CNT" />
+		<result property="fileVirusCleanCnt"         column="FILE_VIRUS_CLEAN_CNT" />
+		<result property="fileVirusCleanFailCnt"     column="FILE_VIRUS_CLEAN_FAIL_CNT" />
+		<result property="pdfFileCnt"                column="PDF_FILE_CNT" />
+		<result property="pdfFileInfectCnt"          column="PDF_FILE_INFECT_CNT" />
+		<result property="pdfFileVirusCleanCnt"      column="PDF_FILE_VIRUS_CLEAN_CNT" />
+		<result property="pdfFileVirusCleanFailCnt"  column="PDF_FILE_VIRUS_CLEAN_FAIL_CNT" />
+	</resultMap>
+	<select id="countVirusChkFolderPagedList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT A.RECORD_CENTER_ID
+                  ,A.FOLDER_ID
+                  ,B.TITLE AS FOLDER_TITLE
+                  ,B.CLSS_ID
+                  ,B.CLSS_NM
+                  ,B.CREAT_YYYY
+                  ,B.PRESV_TERM_CD
+                  ,B.QULTY_TEST_STATE_FLAG
+                  ,MAX(A.FILE_CNT) AS FILE_CNT
+                  ,MAX(A.FILE_INFECT_CNT) AS FILE_INFECT_CNT
+                  ,MAX(A.FILE_VIRUS_CLEAN_CNT) AS FILE_VIRUS_CLEAN_CNT
+                  ,MAX(A.FILE_VIRUS_CLEAN_FAIL_CNT) AS FILE_VIRUS_CLEAN_FAIL_CNT
+                  ,MAX(A.PDF_FILE_CNT) AS PDF_FILE_CNT
+                  ,MAX(A.PDF_FILE_INFECT_CNT) AS PDF_FILE_INFECT_CNT
+                  ,MAX(A.PDF_FILE_VIRUS_CLEAN_CNT) AS PDF_FILE_VIRUS_CLEAN_CNT
+                  ,MAX(A.PDF_FILE_VIRUS_CLEAN_FAIL_CNT) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+            FROM   (
+                SELECT AA.RECORD_CENTER_ID
+                      ,AA.FOLDER_ID
+                      ,COUNT(1) AS FILE_CNT
+                      ,SUM(DECODE(AC.VIRUS_FLAG, 1, 1, 0)) AS FILE_INFECT_CNT
+                      ,SUM(DECODE(AC.VIRUS_CLEAN_FLAG, 1, DECODE(AC.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS FILE_VIRUS_CLEAN_CNT
+                      ,SUM(DECODE(AC.VIRUS_CLEAN_FLAG, 2, 1, DECODE(AC.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,0 AS PDF_FILE_CNT
+                      ,0 AS PDF_FILE_INFECT_CNT
+                      ,0 AS PDF_FILE_VIRUS_CLEAN_CNT
+                      ,0 AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+                FROM TB_RDFOLDER    AA, TB_RDRECORD    AB, TB_STORIGNFILE AC
+                WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+                AND AA.FOLDER_ID = AB.FOLDER_ID
+                AND AB.RECORD_CENTER_ID = AC.RECORD_CENTER_ID
+                AND AB.ORIGN_ID = AC.ORIGN_ID 
+                AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                <isNotEmpty prepend="AND" property="orgCd">
+                    AA.ORG_CD = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="folderInfectFlag">
+                    AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                    <isEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+                    </isEmpty>
+                </isNotEmpty>
+                <isEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                </isEmpty>
+                <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+                    AA.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="presvTermCd">
+                    <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+                        AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+                    </isEqual>
+                    <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+                        AA.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+                    </isNotEqual>
+                </isNotEmpty>
+                AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+                AND AA.ERECORD_FLAG IN ('1', '3')
+                AND AB.ERECORD_FLAG = '1'
+                GROUP  BY AA.RECORD_CENTER_ID, AA.FOLDER_ID
+                UNION
+                SELECT AA.RECORD_CENTER_ID
+                      ,AA.FOLDER_ID
+                      ,0 AS FILE_CNT
+                      ,0 AS FILE_INFECT_CNT
+                      ,0 AS FILE_VIRUS_CLEAN_CNT
+                      ,0 AS FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,COUNT(1) AS PDF_FILE_CNT
+                      ,SUM(DECODE(AD.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS PDF_FILE_VIRUS_CLEAN_CNT
+                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 2, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+                FROM TB_RDFOLDER AA, TB_RDRECORD AB, TB_STORIGNPDFA1FILE AD
+                WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+                AND AA.FOLDER_ID = AB.FOLDER_ID
+                AND AB.RECORD_CENTER_ID = AD.RECORD_CENTER_ID
+                AND AB.ORIGN_ID = AD.ORIGN_ID
+                AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                <isNotEmpty prepend="AND" property="orgCd">
+                    AA.ORG_CD = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="folderInfectFlag">
+                    AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                    <isEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+                    </isEmpty>
+                </isNotEmpty>
+                <isEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                </isEmpty>
+                   <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+                       AA.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+                   </isNotEmpty>
+                   <isNotEmpty property="presvTermCd">
+                       <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+                            AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+                       </isEqual>
+                    <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+                        AA.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+                    </isNotEqual>
+                </isNotEmpty>
+                AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+                AND AA.ERECORD_FLAG IN ('1', '3')
+                AND AB.ERECORD_FLAG = '1'
+                GROUP BY AA.RECORD_CENTER_ID, AA.FOLDER_ID
+<!--                 UNION
+                SELECT AA.RECORD_CENTER_ID
+                      ,AA.FOLDER_ID
+                      ,0 AS FILE_CNT
+                      ,0 AS FILE_INFECT_CNT
+                      ,0 AS FILE_VIRUS_CLEAN_CNT
+                      ,0 AS FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,COUNT(1) AS PDF_FILE_CNT
+                      ,SUM(DECODE(AD.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS PDF_FILE_VIRUS_CLEAN_CNT
+                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 2, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+                FROM TB_RDFOLDER AA, TB_RDRECORD AB, TB_STORIGNFILE AD
+                WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+                AND AA.FOLDER_ID = AB.FOLDER_ID
+                AND AB.RECORD_CENTER_ID = AD.RECORD_CENTER_ID
+                AND AB.ORIGN_ID = AD.ORIGN_ID
+                AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                <isNotEmpty prepend="AND" property="orgCd">
+                    AA.ORG_CD = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="folderInfectFlag">
+                	<isEqual prepend="AND" property="folderInfectFlag" compareValue="0">
+                    	AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+                    </isEqual>
+                	<isEqual prepend="AND" property="folderInfectFlag" compareValue="1">
+                    	AD.VIRUS_DTIME IS NULL
+                    </isEqual>                                         	
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                    <isEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+                    </isEmpty>
+                </isNotEmpty>
+                <isEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                </isEmpty>
+                   <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+                       AA.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+                   </isNotEmpty>
+                   <isNotEmpty property="presvTermCd">
+                       <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+                            AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+                       </isEqual>
+                    <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+                        AA.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+                    </isNotEqual>
+                </isNotEmpty>
+                AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+                AND AA.ERECORD_FLAG IN ('1', '3')
+                AND AB.ERECORD_FLAG = '1'
+                GROUP BY AA.RECORD_CENTER_ID, AA.FOLDER_ID -->) A, TB_RDFOLDER B
+            WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+            AND A.FOLDER_ID = B.FOLDER_ID
+            GROUP BY A.RECORD_CENTER_ID, A.FOLDER_ID, B.TITLE, B.CLSS_ID, B.CLSS_NM, B.CREAT_YYYY, B.PRESV_TERM_CD, B.QULTY_TEST_STATE_FLAG
+            ORDER BY B.TITLE, A.FOLDER_ID
+        )
+	</select>
+	<select id="findVirusChkFolderPagedList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultMap="findVirusChkFolderPagedList-result">
+		SELECT E.record_center_id
+		      ,E.folder_id
+		      ,E.folder_title
+		      ,E.clss_id
+		      ,E.clss_nm
+		      ,E.creat_yyyy
+		      ,E.presv_term_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = E.presv_term_cd) AS presv_term_nm
+		      ,DECODE(NVL(E.qulty_test_state_flag, '0'), '0', '', '1', '검사중', '2', '검사완료', '') AS qulty_test_state_flag_nm
+		      ,E.file_cnt
+		      ,E.file_infect_cnt
+		      ,E.file_virus_clean_cnt
+		      ,E.file_virus_clean_fail_cnt
+		      ,E.pdf_file_cnt
+		      ,E.pdf_file_infect_cnt
+		      ,E.pdf_file_virus_clean_cnt
+		      ,E.pdf_file_virus_clean_fail_cnt
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID
+		                  ,A.FOLDER_ID
+		                  ,B.TITLE AS FOLDER_TITLE
+		                  ,B.CLSS_ID
+		                  ,B.CLSS_NM
+		                  ,B.CREAT_YYYY
+		                  ,DECODE(B.PRESV_TERM_CD, '20', '25', B.PRESV_TERM_CD) PRESV_TERM_CD
+		                  ,B.QULTY_TEST_STATE_FLAG
+		                  ,MAX(A.FILE_CNT) AS FILE_CNT
+		                  ,MAX(A.FILE_INFECT_CNT) AS FILE_INFECT_CNT
+		                  ,MAX(A.FILE_VIRUS_CLEAN_CNT) AS FILE_VIRUS_CLEAN_CNT
+		                  ,MAX(A.FILE_VIRUS_CLEAN_FAIL_CNT) AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                  ,MAX(A.PDF_FILE_CNT) AS PDF_FILE_CNT
+		                  ,MAX(A.PDF_FILE_INFECT_CNT) AS PDF_FILE_INFECT_CNT
+		                  ,MAX(A.PDF_FILE_VIRUS_CLEAN_CNT) AS PDF_FILE_VIRUS_CLEAN_CNT
+		                  ,MAX(A.PDF_FILE_VIRUS_CLEAN_FAIL_CNT) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		            FROM   (
+		                SELECT AA.RECORD_CENTER_ID
+		                      ,AA.FOLDER_ID
+		                      ,COUNT(1) AS FILE_CNT
+		                      ,SUM(DECODE(AC.VIRUS_FLAG, 1, 1, 0)) AS FILE_INFECT_CNT
+		                      ,SUM(DECODE(AC.VIRUS_CLEAN_FLAG, 1, DECODE(AC.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS FILE_VIRUS_CLEAN_CNT
+		                      ,SUM(DECODE(AC.VIRUS_CLEAN_FLAG, 2, 1, DECODE(AC.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,0 AS PDF_FILE_CNT
+		                      ,0 AS PDF_FILE_INFECT_CNT
+		                      ,0 AS PDF_FILE_VIRUS_CLEAN_CNT
+		                      ,0 AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		                FROM TB_RDFOLDER    AA, TB_RDRECORD    AB, TB_STORIGNFILE AC
+		                WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+		                AND AA.FOLDER_ID = AB.FOLDER_ID
+		                AND AB.RECORD_CENTER_ID = AC.RECORD_CENTER_ID
+		                AND AB.ORIGN_ID = AC.ORIGN_ID 
+		                AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    AA.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="folderInfectFlag">
+		                    AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                    <isEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                    </isEmpty>
+		                </isNotEmpty>
+		                <isEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+		                    AA.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="presvTermCd">
+							<isEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									AA.PRESV_TERM_CD <![CDATA[>=]]> '20'
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                        AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+								</isNotEqual> 					 
+		                    </isEqual>
+							<isNotEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									AA.PRESV_TERM_CD IN ('20','25') 
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                        AA.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                    </isNotEqual>
+							</isNotEqual>
+		                </isNotEmpty>
+		                AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                AND AA.ERECORD_FLAG IN ('1', '3')
+		                AND AB.ERECORD_FLAG = '1'
+		                GROUP  BY AA.RECORD_CENTER_ID, AA.FOLDER_ID
+		                UNION
+		                SELECT AA.RECORD_CENTER_ID
+		                      ,AA.FOLDER_ID
+		                      ,0 AS FILE_CNT
+		                      ,0 AS FILE_INFECT_CNT
+		                      ,0 AS FILE_VIRUS_CLEAN_CNT
+		                      ,0 AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,COUNT(1) AS PDF_FILE_CNT
+		                      ,SUM(DECODE(AD.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+		                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS PDF_FILE_VIRUS_CLEAN_CNT
+		                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 2, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		                FROM TB_RDFOLDER AA, TB_RDRECORD AB, TB_STORIGNPDFA1FILE AD
+		                WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+		                AND AA.FOLDER_ID = AB.FOLDER_ID
+		                AND AB.RECORD_CENTER_ID = AD.RECORD_CENTER_ID
+		                AND AB.ORIGN_ID = AD.ORIGN_ID
+		                AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    AA.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="folderInfectFlag">
+		                    AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                    <isEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                    </isEmpty>
+		                </isNotEmpty>
+		                <isEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                </isEmpty>
+	                    <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+	                        AA.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty property="presvTermCd">
+							<isEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									AA.PRESV_TERM_CD <![CDATA[>=]]> '20'
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+									AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+								</isNotEqual> 					 
+							</isEqual>
+							<isNotEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									AA.PRESV_TERM_CD IN ('20','25') 
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+									AA.PRESV_TERM_CD = #presvTermCd:VARCHAR# 
+								</isNotEqual>
+							</isNotEqual>
+						</isNotEmpty>			                
+		                AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                AND AA.ERECORD_FLAG IN ('1', '3')
+		                AND AB.ERECORD_FLAG = '1'
+		                GROUP BY AA.RECORD_CENTER_ID, AA.FOLDER_ID
+<!-- 		                UNION
+		                SELECT AA.RECORD_CENTER_ID
+		                      ,AA.FOLDER_ID
+		                      ,0 AS FILE_CNT
+		                      ,0 AS FILE_INFECT_CNT
+		                      ,0 AS FILE_VIRUS_CLEAN_CNT
+		                      ,0 AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,COUNT(1) AS PDF_FILE_CNT
+		                      ,SUM(DECODE(AD.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+		                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS PDF_FILE_VIRUS_CLEAN_CNT
+		                      ,SUM(DECODE(AD.VIRUS_CLEAN_FLAG, 2, 1, DECODE(AD.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		                FROM TB_RDFOLDER AA, TB_RDRECORD AB, TB_STORIGNFILE AD
+		                WHERE AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+		                AND AA.FOLDER_ID = AB.FOLDER_ID
+		                AND AB.RECORD_CENTER_ID = AD.RECORD_CENTER_ID
+		                AND AB.ORIGN_ID = AD.ORIGN_ID
+		                AND AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    AA.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="folderInfectFlag">
+		                	<isEqual prepend="AND" property="folderInfectFlag" compareValue="0">
+		                    	AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		                    </isEqual>
+		                	<isEqual prepend="AND" property="folderInfectFlag" compareValue="1">
+		                    	AD.VIRUS_DTIME IS NULL
+		                    </isEqual>                                         	
+		                </isNotEmpty>
+		                <isNotEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                    <isEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                    </isEmpty>
+		                </isNotEmpty>
+		                <isEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                </isEmpty>
+	                    <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+	                        AA.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty property="presvTermCd">
+	                        <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		                            AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+	                        </isEqual>
+		                    <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		                        AA.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                    </isNotEqual>
+		                </isNotEmpty>
+		                AND AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                AND AA.ERECORD_FLAG IN ('1', '3')
+		                AND AB.ERECORD_FLAG = '1'
+		                GROUP BY AA.RECORD_CENTER_ID, AA.FOLDER_ID -->) A, TB_RDFOLDER B
+		            WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		            AND A.FOLDER_ID = B.FOLDER_ID
+		            GROUP BY A.RECORD_CENTER_ID, A.FOLDER_ID, B.TITLE, B.CLSS_ID, B.CLSS_NM, B.CREAT_YYYY, PRESV_TERM_CD, B.QULTY_TEST_STATE_FLAG
+		            ORDER BY B.TITLE, A.FOLDER_ID
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물철 목록에 바이러스 검사중 상태로 갱신
+	-->
+	<update id="updateVirusChkFolderQultyTest" parameterClass="rms.presv.adjst.domain.VirusChkStatus">
+		UPDATE TB_RDFOLDER A
+		SET    A.QULTY_TEST_STATE_FLAG = '1'
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    A.FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물건 목록에 바이러스 검사중 상태로 갱신
+	 -->
+	<update id="updateVirusChkRecordQultyTestByFolderList" parameterClass="rms.presv.adjst.domain.VirusChkStatus">
+		UPDATE TB_RDRECORD A
+		SET    A.QULTY_TEST_STATE_FLAG = '1'
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    A.FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물철 목록에 바이러스 검사중 상태로 갱신 (일괄검사)	
+	 -->
+	<update id="updateVirusChkFolderQultyTestBatch" parameterClass="rms.presv.adjst.domain.VirusChkStatus">
+		UPDATE TB_RDFOLDER A
+		SET    A.QULTY_TEST_STATE_FLAG = '1'
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="orgCd">
+		       A.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="folderInfectFlag">
+		       A.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="creatYyyyF">
+		    <isNotEmpty prepend="AND" property="creatYyyyT">
+		       A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		    </isNotEmpty>
+		    <isEmpty prepend="AND" property="creatYyyyT">
+		       A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		    </isEmpty>
+		</isNotEmpty>
+		<isEmpty property="creatYyyyF">
+		    <isNotEmpty prepend="AND" property="creatYyyyT">
+		       A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		    </isNotEmpty>
+		</isEmpty>
+		<isNotEmpty property="presvTermCd">
+		    <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		       A.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+		    </isEqual>
+		    <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		       A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		    </isNotEqual>
+		</isNotEmpty>
+		AND    A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		AND    A.ERECORD_FLAG IN ('1', '3')
+	</update>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물건 목록에 바이러스 검사중 상태로 갱신 (일괄검사)
+	 -->
+	<update id="updateVirusChkRecordQultyTestBatchByFolderList" parameterClass="rms.presv.adjst.domain.VirusChkStatus">
+		UPDATE TB_RDRECORD A
+		SET    A.QULTY_TEST_STATE_FLAG = '1'
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    A.FOLDER_ID IN (SELECT AA.FOLDER_ID
+		                       FROM   TB_RDFOLDER AA
+		                       WHERE  AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                       <isNotEmpty prepend="AND" property="orgCd">
+		                              AA.ORG_CD = #orgCd:VARCHAR#
+		                       </isNotEmpty>
+		                       <isNotEmpty prepend="AND" property="folderInfectFlag">
+		                              AA.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		                       </isNotEmpty>
+		                       <isNotEmpty property="creatYyyyF">
+		                           <isNotEmpty prepend="AND" property="creatYyyyT">
+		                              AA.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                           </isNotEmpty>
+		                           <isEmpty prepend="AND" property="creatYyyyT">
+		                              AA.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                           </isEmpty>
+		                       </isNotEmpty>
+		                       <isEmpty property="creatYyyyF">
+		                           <isNotEmpty prepend="AND" property="creatYyyyT">
+		                              AA.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                           </isNotEmpty>
+		                       </isEmpty>
+		                       <isNotEmpty property="presvTermCd">
+		                           <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		                              AA.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+		                           </isEqual>
+		                           <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		                              AA.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                           </isNotEqual>
+		                       </isNotEmpty>
+		                       AND    AA.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                       AND    AA.ERECORD_FLAG IN ('1', '3')
+		                       )
+	</update>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 일괄검사시 검사대상 기록물철 목록을 조회한다.
+	 -->
+	<select id="findVirusChkFolderQultyTestList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultClass="java.lang.String">
+		SELECT A.FOLDER_ID
+		FROM   TB_RDFOLDER A
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="orgCd">
+		       A.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="folderInfectFlag">
+		       A.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="creatYyyyF">
+		    <isNotEmpty prepend="AND" property="creatYyyyT">
+		       A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		    </isNotEmpty>
+		    <isEmpty prepend="AND" property="creatYyyyT">
+		       A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		    </isEmpty>
+		</isNotEmpty>
+		<isEmpty property="creatYyyyF">
+		    <isNotEmpty prepend="AND" property="creatYyyyT">
+		       A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		    </isNotEmpty>
+		</isEmpty>
+		<isNotEmpty property="presvTermCd">
+		    <isEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		       A.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+		    </isEqual>
+		    <isNotEqual prepend="AND" property="presvTermCheck" compareValue="1">
+		       A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		    </isNotEqual>
+		</isNotEmpty>
+		AND    A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		AND    A.ERECORD_FLAG IN ('1', '3')
+		ORDER  BY A.TITLE
+		         ,A.FOLDER_ID
+	</select>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물건 목록을 조회한다.
+	 -->
+	<resultMap id="findVirusChkRecordPagedList-result" class="rms.presv.adjst.domain.VirusChkStatus">
+		<result property="recordCenterId"            column="RECORD_CENTER_ID" />
+		<result property="recordId"                  column="RECORD_ID" />
+		<result property="recordTitle"               column="RECORD_TITLE" />
+		<result property="creatYyyy"                 column="CREAT_YYYY" />
+		<result property="presvTermCd"               column="PRESV_TERM_CD" />
+		<result property="presvTermNm"               column="PRESV_TERM_NM" />
+		<result property="qultyTestStateFlagNm"      column="QULTY_TEST_STATE_FLAG_NM" />
+		<result property="fileCnt"                   column="FILE_CNT" />
+		<result property="fileInfectCnt"             column="FILE_INFECT_CNT" />
+		<result property="fileVirusCleanCnt"         column="FILE_VIRUS_CLEAN_CNT" />
+		<result property="fileVirusCleanFailCnt"     column="FILE_VIRUS_CLEAN_FAIL_CNT" />
+		<result property="pdfFileCnt"                column="PDF_FILE_CNT" />
+		<result property="pdfFileInfectCnt"          column="PDF_FILE_INFECT_CNT" />
+		<result property="pdfFileVirusCleanCnt"      column="PDF_FILE_VIRUS_CLEAN_CNT" />
+		<result property="pdfFileVirusCleanFailCnt"  column="PDF_FILE_VIRUS_CLEAN_FAIL_CNT" />
+	</resultMap>
+	<select id="countVirusChkRecordPagedList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT Z.RECORD_CENTER_ID
+                  ,Z.RECORD_ID
+                  ,MAX(Z.RECORD_TITLE) AS RECORD_TITLE
+                  ,MAX(Z.QULTY_TEST_STATE_FLAG_NM) AS QULTY_TEST_STATE_FLAG_NM
+                  ,MAX(Z.CREAT_YYYY) AS CREAT_YYYY
+                  ,MAX(Z.PRESV_TERM_CD) AS PRESV_TERM_CD
+                  ,MAX(Z.PRESV_TERM_NM) AS PRESV_TERM_NM
+                  ,MAX(Z.FILE_CNT) AS FILE_CNT
+                  ,MAX(Z.FILE_INFECT_CNT) AS FILE_INFECT_CNT
+                  ,MAX(Z.FILE_VIRUS_CLEAN_CNT) AS FILE_VIRUS_CLEAN_CNT
+                  ,MAX(Z.FILE_VIRUS_CLEAN_FAIL_CNT) AS FILE_VIRUS_CLEAN_FAIL_CNT
+                  ,MAX(Z.PDF_FILE_CNT) AS PDF_FILE_CNT
+                  ,MAX(Z.PDF_FILE_INFECT_CNT) AS PDF_FILE_INFECT_CNT
+                  ,MAX(Z.PDF_FILE_VIRUS_CLEAN_CNT) AS PDF_FILE_VIRUS_CLEAN_CNT
+                  ,MAX(Z.PDF_FILE_VIRUS_CLEAN_FAIL_CNT) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+            FROM   (
+                SELECT A.RECORD_CENTER_ID
+                      ,B.RECORD_ID
+                      ,B.TITLE  AS RECORD_TITLE
+                      ,DECODE(NVL(MAX(B.QULTY_TEST_STATE_FLAG), '0'), '0', '', '1', '검사중', '2', '검사완료', '') AS QULTY_TEST_STATE_FLAG_NM
+                      ,A.CREAT_YYYY
+                      ,A.PRESV_TERM_CD
+                      ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.PRESV_TERM_CD) AS PRESV_TERM_NM
+                      ,SUM(DECODE(C.ORIGN_FILE_ID, NULL, 0, 1)) AS FILE_CNT
+                      ,SUM(DECODE(C.VIRUS_FLAG, 1, 1, 0)) AS FILE_INFECT_CNT
+                      ,SUM(DECODE(C.VIRUS_CLEAN_FLAG, 1, DECODE(C.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS FILE_VIRUS_CLEAN_CNT
+                      ,SUM(DECODE(C.VIRUS_CLEAN_FLAG, 2, 1, DECODE(C.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,0 AS PDF_FILE_CNT
+                      ,0 AS PDF_FILE_INFECT_CNT
+                      ,0 AS PDF_FILE_VIRUS_CLEAN_CNT
+                      ,0 AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,MAX(B.CREAT_REG_DTIME) AS CREAT_REG_DTIME
+                      ,MAX(B.CREAT_REG_NO) AS CREAT_REG_NO
+                FROM TB_RDFOLDER A, TB_RDRECORD B, TB_STORIGNFILE C
+                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+                AND A.FOLDER_ID = B.FOLDER_ID
+                AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)
+                AND B.ORIGN_ID = C.ORIGN_ID(+)
+                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                AND A.FOLDER_ID = #folderId:VARCHAR#
+                <isNotEmpty prepend="AND" property="orgCd">
+                    A.ORG_CD = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="folderInfectFlag">
+                    A.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                    <isEmpty prepend="AND" property="creatYyyyT">
+                        A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+                    </isEmpty>
+                </isNotEmpty>
+                <isEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                </isEmpty>
+                <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+                    A.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="recordQultyTestStateFlag">
+                    B.QULTY_TEST_STATE_FLAG = #recordQultyTestStateFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="presvTermCd">
+					<isEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.PRESV_TERM_CD <![CDATA[>=]]> '20'
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                        A.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+						</isNotEqual> 					 
+                    </isEqual>
+					<isNotEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.PRESV_TERM_CD IN ('20','25') 
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                        A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+                    </isNotEqual>
+					</isNotEqual>
+                </isNotEmpty>
+                AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+                AND A.ERECORD_FLAG IN ('1', '3')
+                AND B.ERECORD_FLAG = '1'
+                GROUP BY A.RECORD_CENTER_ID, B.RECORD_ID, B.TITLE, A.CREAT_YYYY, A.PRESV_TERM_CD
+                UNION 
+                SELECT A.RECORD_CENTER_ID
+                      ,B.RECORD_ID
+                      ,B.TITLE  AS RECORD_TITLE
+                      ,DECODE(NVL(MAX(B.QULTY_TEST_STATE_FLAG), '0'), '0', '', '1', '검사중', '2', '검사완료', '') AS QULTY_TEST_STATE_FLAG_NM
+                      ,A.CREAT_YYYY
+                      ,A.PRESV_TERM_CD
+                      ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.PRESV_TERM_CD) AS PRESV_TERM_NM
+                      ,0 AS FILE_CNT
+                      ,0 AS FILE_INFECT_CNT
+                      ,0 AS FILE_VIRUS_CLEAN_CNT
+                      ,0 AS FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,SUM(DECODE(D.PDF_A1_FILE_ID, NULL, 0, 1)) AS PDF_FILE_CNT
+                      ,SUM(DECODE(D.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+                      ,SUM(DECODE(D.VIRUS_CLEAN_FLAG, 1, DECODE(D.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS PDF_FILE_VIRUS_CLEAN_CNT
+                      ,SUM(DECODE(D.VIRUS_CLEAN_FLAG, 2, 1, DECODE(D.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+                      ,MAX(B.CREAT_REG_DTIME) AS CREAT_REG_DTIME
+                      ,MAX(B.CREAT_REG_NO) AS CREAT_REG_NO
+                FROM TB_RDFOLDER A, TB_RDRECORD B, TB_STORIGNPDFA1FILE D
+                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+                AND A.FOLDER_ID = B.FOLDER_ID
+                AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID(+)
+                AND B.ORIGN_ID = D.ORIGN_ID(+)
+                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                AND A.FOLDER_ID = #folderId:VARCHAR#
+                <isNotEmpty prepend="AND" property="orgCd">
+                    A.ORG_CD = #orgCd:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="folderInfectFlag">
+                    A.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                    <isEmpty prepend="AND" property="creatYyyyT">
+                        A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+                    </isEmpty>
+                </isNotEmpty>
+                <isEmpty property="creatYyyyF">
+                    <isNotEmpty prepend="AND" property="creatYyyyT">
+                        A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+                    </isNotEmpty>
+                </isEmpty>
+                <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+                    A.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty prepend="AND" property="recordQultyTestStateFlag">
+                    B.QULTY_TEST_STATE_FLAG = #recordQultyTestStateFlag:VARCHAR#
+                </isNotEmpty>
+                <isNotEmpty property="presvTermCd">
+					<isEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.PRESV_TERM_CD <![CDATA[>=]]> '20'
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                        A.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+						</isNotEqual> 					 
+                    </isEqual>
+					<isNotEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							A.PRESV_TERM_CD IN ('20','25') 
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                        A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+                    </isNotEqual>
+					</isNotEqual>
+                </isNotEmpty>
+                AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+                AND A.ERECORD_FLAG IN ('1', '3')
+                AND B.ERECORD_FLAG = '1'
+                GROUP BY A.RECORD_CENTER_ID, B.RECORD_ID, B.TITLE, A.CREAT_YYYY, A.PRESV_TERM_CD) Z
+            <isNotEmpty prepend="WHERE" property="recordInfectFlag">
+                <isEqual property="recordInfectFlag" compareValue="1">
+                    Z.FILE_INFECT_CNT <![CDATA[>]]> 0
+                </isEqual>
+                <isEqual property="recordInfectFlag" compareValue="0">
+                    Z.FILE_INFECT_CNT = 0
+                </isEqual>
+            </isNotEmpty>
+            GROUP BY Z.RECORD_CENTER_ID, Z.RECORD_ID, Z.CREAT_REG_DTIME, Z.CREAT_REG_NO
+            ORDER BY Z.RECORD_CENTER_ID, Z.CREAT_REG_DTIME, Z.CREAT_REG_NO
+        ) A
+	</select>
+	<select id="findVirusChkRecordPagedList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultMap="findVirusChkRecordPagedList-result">
+		SELECT C.record_center_id
+		      ,C.record_id
+		      ,C.record_title
+		      ,C.qulty_test_state_flag_nm
+		      ,C.creat_yyyy
+		      ,C.presv_term_cd
+		      ,C.presv_term_nm
+		      ,C.file_cnt
+		      ,C.file_infect_cnt
+		      ,C.file_virus_clean_cnt
+		      ,C.file_virus_clean_fail_cnt
+		      ,C.pdf_file_cnt
+		      ,C.pdf_file_infect_cnt
+		      ,C.pdf_file_virus_clean_cnt
+		      ,C.pdf_file_virus_clean_fail_cnt
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT Z.RECORD_CENTER_ID
+		                  ,Z.RECORD_ID
+		                  ,MAX(Z.RECORD_TITLE) AS RECORD_TITLE
+		                  ,MAX(Z.QULTY_TEST_STATE_FLAG_NM) AS QULTY_TEST_STATE_FLAG_NM
+		                  ,MAX(Z.CREAT_YYYY) AS CREAT_YYYY
+		                  ,MAX(Z.PRESV_TERM_CD) AS PRESV_TERM_CD
+		                  ,MAX(Z.PRESV_TERM_NM) AS PRESV_TERM_NM
+		                  ,MAX(Z.FILE_CNT) AS FILE_CNT
+		                  ,MAX(Z.FILE_INFECT_CNT) AS FILE_INFECT_CNT
+		                  ,MAX(Z.FILE_VIRUS_CLEAN_CNT) AS FILE_VIRUS_CLEAN_CNT
+		                  ,MAX(Z.FILE_VIRUS_CLEAN_FAIL_CNT) AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                  ,MAX(Z.PDF_FILE_CNT) AS PDF_FILE_CNT
+		                  ,MAX(Z.PDF_FILE_INFECT_CNT) AS PDF_FILE_INFECT_CNT
+		                  ,MAX(Z.PDF_FILE_VIRUS_CLEAN_CNT) AS PDF_FILE_VIRUS_CLEAN_CNT
+		                  ,MAX(Z.PDF_FILE_VIRUS_CLEAN_FAIL_CNT) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		            FROM   (
+		                SELECT A.RECORD_CENTER_ID
+		                      ,B.RECORD_ID
+		                      ,B.TITLE  AS RECORD_TITLE
+		                      ,DECODE(NVL(MAX(B.QULTY_TEST_STATE_FLAG), '0'), '0', '', '1', '검사중', '2', '검사완료', '') AS QULTY_TEST_STATE_FLAG_NM
+		                      ,A.CREAT_YYYY
+		                      ,A.PRESV_TERM_CD
+		                      ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.PRESV_TERM_CD) AS PRESV_TERM_NM
+		                      ,SUM(DECODE(C.ORIGN_FILE_ID, NULL, 0, 1)) AS FILE_CNT
+		                      ,SUM(DECODE(C.VIRUS_FLAG, 1, 1, 0)) AS FILE_INFECT_CNT
+		                      ,SUM(DECODE(C.VIRUS_CLEAN_FLAG, 1, DECODE(C.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS FILE_VIRUS_CLEAN_CNT
+		                      ,SUM(DECODE(C.VIRUS_CLEAN_FLAG, 2, 1, DECODE(C.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,0 AS PDF_FILE_CNT
+		                      ,0 AS PDF_FILE_INFECT_CNT
+		                      ,0 AS PDF_FILE_VIRUS_CLEAN_CNT
+		                      ,0 AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,MAX(B.CREAT_REG_DTIME) AS CREAT_REG_DTIME
+		                      ,MAX(B.CREAT_REG_NO) AS CREAT_REG_NO
+		                FROM TB_RDFOLDER A, TB_RDRECORD B, TB_STORIGNFILE C
+		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		                AND A.FOLDER_ID = B.FOLDER_ID
+		                AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)
+		                AND B.ORIGN_ID = C.ORIGN_ID(+)
+		                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                AND A.FOLDER_ID = #folderId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="folderInfectFlag">
+		                    A.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                    <isEmpty prepend="AND" property="creatYyyyT">
+		                        A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                    </isEmpty>
+		                </isNotEmpty>
+		                <isEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+		                    A.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordQultyTestStateFlag">
+		                    B.QULTY_TEST_STATE_FLAG = #recordQultyTestStateFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="presvTermCd">
+							<isEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									A.PRESV_TERM_CD <![CDATA[>=]]> '20'
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                        A.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+								</isNotEqual> 					 
+		                    </isEqual>
+							<isNotEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									A.PRESV_TERM_CD IN ('20','25') 
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                        A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                    </isNotEqual>
+							</isNotEqual>
+		                </isNotEmpty>
+		                AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                AND A.ERECORD_FLAG IN ('1', '3')
+		                AND B.ERECORD_FLAG = '1'
+		                GROUP BY A.RECORD_CENTER_ID, B.RECORD_ID, B.TITLE, A.CREAT_YYYY, A.PRESV_TERM_CD
+		                UNION 
+		                SELECT A.RECORD_CENTER_ID
+		                      ,B.RECORD_ID
+		                      ,B.TITLE  AS RECORD_TITLE
+		                      ,DECODE(NVL(MAX(B.QULTY_TEST_STATE_FLAG), '0'), '0', '', '1', '검사중', '2', '검사완료', '') AS QULTY_TEST_STATE_FLAG_NM
+		                      ,A.CREAT_YYYY
+		                      ,A.PRESV_TERM_CD
+		                      ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = A.PRESV_TERM_CD) AS PRESV_TERM_NM
+		                      ,0 AS FILE_CNT
+		                      ,0 AS FILE_INFECT_CNT
+		                      ,0 AS FILE_VIRUS_CLEAN_CNT
+		                      ,0 AS FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,SUM(DECODE(D.PDF_A1_FILE_ID, NULL, 0, 1)) AS PDF_FILE_CNT
+		                      ,SUM(DECODE(D.VIRUS_FLAG, 1, 1, 0)) AS PDF_FILE_INFECT_CNT
+		                      ,SUM(DECODE(D.VIRUS_CLEAN_FLAG, 1, DECODE(D.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 0, 1), 0)) AS PDF_FILE_VIRUS_CLEAN_CNT
+		                      ,SUM(DECODE(D.VIRUS_CLEAN_FLAG, 2, 1, DECODE(D.VIRUS_CLEAN_APPLY_FLAG, 1, 0, 2, 1, 0))) AS PDF_FILE_VIRUS_CLEAN_FAIL_CNT
+		                      ,MAX(B.CREAT_REG_DTIME) AS CREAT_REG_DTIME
+		                      ,MAX(B.CREAT_REG_NO) AS CREAT_REG_NO
+		                FROM TB_RDFOLDER A, TB_RDRECORD B, TB_STORIGNPDFA1FILE D
+		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		                AND A.FOLDER_ID = B.FOLDER_ID
+		                AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID(+)
+		                AND B.ORIGN_ID = D.ORIGN_ID(+)
+		                AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                AND A.FOLDER_ID = #folderId:VARCHAR#
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="folderInfectFlag">
+		                    A.VIRUS_FLAG = #folderInfectFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                    <isEmpty prepend="AND" property="creatYyyyT">
+		                        A.CREAT_YYYY <![CDATA[>=]]> #creatYyyyF:VARCHAR#
+		                    </isEmpty>
+		                </isNotEmpty>
+		                <isEmpty property="creatYyyyF">
+		                    <isNotEmpty prepend="AND" property="creatYyyyT">
+		                        A.CREAT_YYYY <![CDATA[<=]]> #creatYyyyT:VARCHAR#
+		                    </isNotEmpty>
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="folderQultyTestStateFlag">
+		                    A.QULTY_TEST_STATE_FLAG = #folderQultyTestStateFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="recordQultyTestStateFlag">
+		                    B.QULTY_TEST_STATE_FLAG = #recordQultyTestStateFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty property="presvTermCd">
+							<isEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									A.PRESV_TERM_CD <![CDATA[>=]]> '20'
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                        A.PRESV_TERM_CD <![CDATA[>=]]> #presvTermCd:VARCHAR#
+								</isNotEqual> 					 
+		                    </isEqual>
+							<isNotEqual property="presvTermCheck" compareValue="1">
+								<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+									A.PRESV_TERM_CD IN ('20','25') 
+								</isEqual>
+								<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                        A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                    </isNotEqual>
+							</isNotEqual>
+		                </isNotEmpty>
+		                AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                AND A.ERECORD_FLAG IN ('1', '3')
+		                AND B.ERECORD_FLAG = '1'
+		                GROUP BY A.RECORD_CENTER_ID, B.RECORD_ID, B.TITLE, A.CREAT_YYYY, A.PRESV_TERM_CD) Z
+		            <isNotEmpty prepend="WHERE" property="recordInfectFlag">
+		                <isEqual property="recordInfectFlag" compareValue="1">
+		                    Z.FILE_INFECT_CNT <![CDATA[>]]> 0
+		                </isEqual>
+		                <isEqual property="recordInfectFlag" compareValue="0">
+		                    Z.FILE_INFECT_CNT = 0
+		                </isEqual>
+		            </isNotEmpty>
+		            GROUP BY Z.RECORD_CENTER_ID, Z.RECORD_ID, Z.CREAT_REG_DTIME, Z.CREAT_REG_NO
+		            ORDER BY Z.RECORD_CENTER_ID, Z.CREAT_REG_DTIME, Z.CREAT_REG_NO
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물건 품질검사중 상태로 갱신
+	 -->
+	<update id="updateVirusChkRecordQultyTest" parameterClass="rms.presv.adjst.domain.VirusChkStatus">
+		UPDATE TB_RDRECORD A
+		SET    A.QULTY_TEST_STATE_FLAG = '1'
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    A.FOLDER_ID = #folderId:VARCHAR#
+		AND    A.RECORD_ID = #recordId:VARCHAR#
+	</update>
+	
+	<update id="updateVirusChkRecordQultyTestByFolder" parameterClass="rms.presv.adjst.domain.VirusChkStatus">
+		UPDATE TB_RDRECORD A
+		SET    A.QULTY_TEST_STATE_FLAG = '1'
+		WHERE  A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    A.FOLDER_ID = #folderId:VARCHAR#
+		<isNotEmpty property="folderInfectFlag">
+		    <isEqual prepend="AND" property="recordInfectFlag" compareValue="1">
+		       (SELECT COUNT(*) FROM TB_STORIGNFILE Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORIGN_ID = A.ORIGN_ID) <![CDATA[>]]> 0
+		    </isEqual>
+		    <isEqual prepend="AND" property="recordInfectFlag" compareValue="0">
+		       (SELECT COUNT(*) FROM TB_STORIGNFILE Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORIGN_ID = A.ORIGN_ID) = 0
+		    </isEqual>
+		</isNotEmpty>
+	</update>
+	
+	<!-- 
+		바이러스검사_기록물철별검사
+		: 기록물건 검사대상 목록을 조회한다.
+	 -->
+	<select id="findVirusChkRecordQultyTestList" parameterClass="rms.presv.adjst.domain.VirusChkStatus" resultClass="java.lang.String">
+		SELECT A.RECORD_ID
+		FROM   (SELECT AA.RECORD_ID
+		              ,(SELECT COUNT(*) FROM TB_STORIGNFILE Z WHERE Z.RECORD_CENTER_ID = AA.RECORD_CENTER_ID AND Z.ORIGN_ID = AA.ORIGN_ID) AS INFECT_CNT
+		              ,AA.RECORD_CENTER_ID
+		              ,AA.CREAT_REG_DTIME
+		              ,AA.CREAT_REG_NO
+		        FROM   TB_RDRECORD AA
+		        WHERE  AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		        AND    AA.FOLDER_ID = #folderId:VARCHAR#) A
+		<isNotEmpty prepend="WHERE" property="folderInfectFlag">
+		    <isEqual property="recordInfectFlag" compareValue="1">
+		       INFECT_CNT <![CDATA[>]]> 0
+		    </isEqual>
+		    <isEqual property="recordInfectFlag" compareValue="0">
+		       INFECT_CNT = 0
+		    </isEqual>
+		</isNotEmpty>
+		ORDER BY A.RECORD_CENTER_ID
+		        ,A.CREAT_REG_DTIME
+		        ,A.CREAT_REG_NO
+	</select>
+	
+	<!-- 
+		바이러스검사_검사현황
+		: 생산년도, 보존기간별 검사현황 목록을 조회한다.
+	 -->
+	<resultMap id="findVirusWorkHistPagedList-result" class="rms.presv.adjst.domain.VirusChkStatus">
+		<result property="virusCheckDtime" 			column="virus_check_dtime" />
+		<result property="fileCnt" 					column="file_cnt" />
+		<result property="virusCheckCnt" 			column="virus_check_cnt" />
+		<result property="virusInfectionCnt" 		column="virus_infection_cnt" />
+		<result property="virusCleanApplyCnt" 		column="virus_clean_apply_cnt" />
+	</resultMap>
+	<select id="countVirusWorkHistPagedList" parameterClass="rms.presv.adjst.domain.VirusWorkHist" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+			select U.virus_check_dtime
+		    from (
+		        (
+		        select substr(virus_check_dtime,1,8) virus_check_dtime
+		        from tb_storignviruschk A, tb_storignfile B
+		        where A.file_id = B.orign_file_id
+		        and B.record_center_id = #recordCenterId:VARCHAR#
+		        <isNotEmpty prepend="AND" property="virusCheckDtimeStart">
+	        		(A.virus_check_dtime BETWEEN #virusCheckDtimeStart:VARCHAR# AND #virusCheckDtimeEnd:VARCHAR#)
+				</isNotEmpty>
+		        ) union all (
+		        select substr(virus_check_dtime,1,8) virus_check_dtime
+		        from tb_storignviruschk A, tb_storignpdfa1file B
+		        where A.file_id = B.pdf_a1_file_id
+		        and B.record_center_id = #recordCenterId:VARCHAR#
+		        <isNotEmpty prepend="AND" property="virusCheckDtimeStart">
+	        		(A.virus_check_dtime BETWEEN #virusCheckDtimeStart:VARCHAR# AND #virusCheckDtimeEnd:VARCHAR#)
+				</isNotEmpty>
+		        )
+		    ) U
+		    group by U.virus_check_dtime
+        )
+	</select>
+	<select id="findVirusWorkHistPagedList" parameterClass="rms.presv.adjst.domain.VirusWorkHist" resultMap="findVirusWorkHistPagedList-result">
+		SELECT H.virus_check_dtime
+		      ,H.file_cnt
+		      ,H.virus_check_cnt
+		      ,H.virus_infection_cnt
+		      ,H.virus_clean_apply_cnt
+		FROM (
+		    SELECT G.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,F.*
+		        FROM (
+		           select C.virus_check_dtime,
+		    count(C.file_id) file_cnt,
+		    count(C.virus_check_flag) virus_check_cnt,
+		    count(C.virus_infection_flag) virus_infection_cnt,
+		    count(C.virus_clean_apply_flag) virus_clean_apply_cnt
+		from (
+				    select U.virus_check_dtime,
+				        U.file_id,
+				        (select E.file_id
+				        from tb_storignviruschk E
+				        where	E.file_id = U.file_id
+				        and   	E.virus_check_flag = 1
+				        and		E.virus_hist_seq = U.virus_hist_seq) virus_check_flag,
+				        (select E.file_id
+				        from tb_storignviruschk E
+				        where 	E.file_id = U.file_id
+				        and   	E.virus_infection_flag = 1
+				        and 	E.virus_hist_seq = U.virus_hist_seq) virus_infection_flag,
+				        (select E.file_id
+				        from tb_storignviruschk E
+				        where 	E.file_id = U.file_id
+				        and   	E.virus_clean_apply_flag = 1
+				        and 	E.virus_hist_seq = U.virus_hist_seq) virus_clean_apply_flag
+				    from (
+				        (
+				        select virus_hist_seq, substr(virus_check_dtime,1,8) virus_check_dtime, file_id
+				        from tb_storignviruschk A, tb_storignfile B
+				        where A.file_id = B.orign_file_id
+				        and B.record_center_id = #recordCenterId:VARCHAR#
+				        <isNotEmpty prepend="AND" property="virusCheckDtimeStart">
+			        		(A.virus_check_dtime BETWEEN #virusCheckDtimeStart:VARCHAR# AND #virusCheckDtimeEnd:VARCHAR#)
+						</isNotEmpty>
+				        ) union all (
+				        select virus_hist_seq, substr(virus_check_dtime,1,8) virus_check_dtime, file_id
+				        from tb_storignviruschk A, tb_storignpdfa1file B
+				        where A.file_id = B.pdf_a1_file_id
+				        and B.record_center_id = #recordCenterId:VARCHAR#
+				        <isNotEmpty prepend="AND" property="virusCheckDtimeStart">
+			        		(A.virus_check_dtime BETWEEN #virusCheckDtimeStart:VARCHAR# AND #virusCheckDtimeEnd:VARCHAR#)
+						</isNotEmpty>
+				        )
+					    ) U
+					) C
+					group by C.virus_check_dtime
+					order by C.virus_check_dtime desc
+		        ) F
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) G
+		    WHERE G.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) H
+		ORDER BY H.rnum
+	</select>
+
+
+
+	
+</sqlMap>
+
+

@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : select
+-- Query Id : countMenuGrantGroupPagedList
+
+		SELECT COUNT(1)		FROM  TB_STMENUGRANTGRP		WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : select
+-- Query Id : findMenuGrantGroupPagedList
+
+		SELECT E.MENU_GRANT_GRP_CD			, E.MENU_GRANT_GRP_NM			, E.MENU_GRANT_GRP_DESCR			, E.USE_FLAG			, E.DEFAULT_GRANT_DIV		    , (SELECT COUNT(1) FROM TB_STUSER B WHERE B.RECORD_CENTER_ID = E.RECORD_CENTER_ID AND B.MENU_GRANT_GRP_CD  = E.MENU_GRANT_GRP_CD) AS MENU_GRANT_GRP_CD_CNT		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.MENU_GRANT_GRP_CD						, A.MENU_GRANT_GRP_NM						, A.MENU_GRANT_GRP_DESCR						, A.USE_FLAG						, A.DEFAULT_GRANT_DIV					    , A.RECORD_CENTER_ID					FROM  TB_STMENUGRANTGRP A					 WHERE 						A.RECORD_CENTER_ID = '1'					 					ORDER BY A.RECORD_CENTER_ID, A.MENU_GRANT_GRP_CD				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : select
+-- Query Id : findDefaultGrantGrpCount
+
+		SELECT NVL(COUNT(1),0) AS CNT FROM  TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID = '1' AND   DEFAULT_GRANT_DIV = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : update
+-- Query Id : updateMenuGrantGroupDefaultClear
+
+		UPDATE TB_STMENUGRANTGRP SET DEFAULT_GRANT_DIV = '' WHERE RECORD_CENTER_ID = '1' AND DEFAULT_GRANT_DIV = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : insert
+-- Query Id : createMenuGrantGroup
+
+		INSERT INTO TB_STMENUGRANTGRP (			RECORD_CENTER_ID, MENU_GRANT_GRP_CD, MENU_GRANT_GRP_NM, MENU_GRANT_GRP_DESCR, USE_FLAG, WORK_USER_ID, WORK_DTIME, DEFAULT_GRANT_DIV		) VALUES(			 '1'			,(SELECT LPAD(NVL(MAX(MENU_GRANT_GRP_CD),0)+1, 3, '0') FROM TB_STMENUGRANTGRP WHERE record_center_id = '1')			,'1'			,'1'			,'1'			,'1'						,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			,'1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : update
+-- Query Id : updateMenuGrantGroup
+
+		UPDATE TB_STMENUGRANTGRP		SET   MENU_GRANT_GRP_NM    = '1',			  MENU_GRANT_GRP_DESCR = '1',	  	      USE_FLAG             = '1',	  	      WORK_USER_ID         = '1',	  	      DEFAULT_GRANT_DIV    = '1'	  	WHERE RECORD_CENTER_ID  = '1'		AND   MENU_GRANT_GRP_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : select
+-- Query Id : findMenuGrantUserCount
+
+		SELECT NVL(COUNT(1),0) AS CNT FROM  TB_STUSER WHERE RECORD_CENTER_ID = '1' AND   MENU_GRANT_GRP_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : delete
+-- Query Id : deleteMenuGrantLink
+
+		DELETE FROM TB_STMENUGRANTLINK WHERE RECORD_CENTER_ID  = '1' AND   MENU_GRANT_GRP_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : delete
+-- Query Id : deleteMenuGrantGroup
+
+		DELETE FROM TB_STMENUGRANTGRP WHERE RECORD_CENTER_ID  = '1' AND   MENU_GRANT_GRP_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : select
+-- Query Id : findGrantInfo
+
+		SELECT C.menu_id user_id				, C.menu_id				, C.menu_nm				, C.use_flag				, C.menu_sort_sno				, C.upper_menu_id				, C.menu_div_cd				, (SELECT COUNT(B.menu_id) FROM TB_STMENUGRANTLINK B WHERE B.menu_id = C.menu_id AND B.record_center_id = C.record_center_id AND B.menu_grant_grp_cd= '1') G		FROM (			SELECT A.menu_id user_id			, A.menu_id			, A.menu_nm				, A.use_flag				, A.menu_sort_sno				, A.upper_menu_id				, A.menu_div_cd				, A.record_center_id		FROM (			SELECT * 			FROM TB_STMENU				WHERE record_center_id = '1'		) A			CONNECT BY PRIOR A.menu_id = A.upper_menu_id START WITH A.upper_menu_id IS NULL		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml
+-- Query    : insert
+-- Query Id : createMenuGrantLink
+
+		INSERT INTO TB_STMENUGRANTLINK (			RECORD_CENTER_ID, MENU_ID, MENU_GRANT_GRP_CD, WORK_DTIME		) (SELECT A.RECORD_CENTER_ID			     ,B.MENU_ID			     ,A.MENU_GRANT_GRP_CD			     			     ,TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		   FROM TB_STMENUGRANTGRP A, TB_STMENU B		   WHERE A.RECORD_CENTER_ID  = B.RECORD_CENTER_ID		   AND   A.RECORD_CENTER_ID  = '1'		   AND   A.MENU_GRANT_GRP_CD = '1'		   AND   B.MENU_ID			 = '1'		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\sys\MenuGrantGroup.xml

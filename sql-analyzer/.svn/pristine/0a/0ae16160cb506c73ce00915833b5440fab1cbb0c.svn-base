@@ -1,0 +1,44 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+
+createBooksf
+The constraint of the foreign key 'tb_srbooksf_fk01' is invalid, due to value '{'1', '1'}'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksf
+
+		INSERT INTO TB_SRBOOKSF (			RECORD_CENTER_ID, BOOKSF_ID, BOOKSF_NM,  STAKRM_ID, STAKRM_SNO		   ,SHELF_C_CNT, SHELF_R_CNT, MAX_PRESV_BOX_CNT, REMK		) VALUES (			'1', '1', '1', '1', (SELECT (COUNT(BOOKSF_ID)+1) AS STAKRMSEQ FROM TB_SRBOOKSF WHERE STAKRM_ID='1')		   ,'1', '1', '1', '1');
+
+createBooksfArng
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_srbooksfarng_record_center_id_booksf_arng_id(B+tree: 4|298|1530) ON CLASS tb_srbooksfarng(CLASS_OID: 0|488|27). key: {'1', '1'}(OID: 3|590|65).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksfArng
+
+		INSERT INTO TB_SRBOOKSFARNG (			RECORD_CENTER_ID, BOOKSF_ARNG_ID, ARNG_YYYY, SNO, WORK_USER_ID, WORK_DTIME, PLAN_YMD, FIN_FLAG		) VALUES (						'1', '1', '1', '1', '1', (Select to_char(sys_datetime,'YYYYMMDDHHMMSS') from dual), '1', '0'		);
+
+createBooksfArngDetl
+The constraint of the foreign key 'tb_srbooksfarngdetl_fk02' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksfArngDetl
+
+		INSERT INTO TB_SRBOOKSFARNGDETL (			RECORD_CENTER_ID, BOOKSF_ARNG_ID, FOLDER_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_SHELF_CNO, BOOKSF_SHELF_RNO		) VALUES (			'1', '1', '1', '1', '1', '1', '1'		)	;
+
+createPresvBox
+The constraint of the foreign key 'tb_srpresvbox_fk01' is invalid, due to value '{'1', '1', '1'}'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createPresvBox
+
+ 		  	INSERT INTO TB_SRPRESVBOX (		  		RECORD_CENTER_ID		  	   ,PRESV_BOX_ID		  	   ,STAKRM_ID		  	   ,BOOKSF_ID		  	   ,BOOKSF_SHELF_CNO		  	   ,BOOKSF_SHELF_RNO		  	   ,PRESV_BOX_SNO		  	   ,ARNG_FOLDER_CNT		  	   ,USE_FLAG		  	   ,PRESV_BOX_ID_RULE		  	   ,WORK_USER_ID			) VALUES (				'1'		  	   ,(SELECT '1'||'1'||'1'||TRIM(TO_CHAR(NVL(MAX(PRESV_BOX_SNO),0) + 1,'000000'))	 		 	 FROM TB_SRPRESVBOX	             WHERE SUBSTR(PRESV_BOX_ID, 1, 7) = '1'			     AND SUBSTR(PRESV_BOX_ID, 8, 2) = '1'			   	 AND SUBSTR(PRESV_BOX_ID, 10, 4) = '1'			   	 AND RECORD_CENTER_ID = '1'			   	 AND PRESV_BOX_ID_RULE = '1')		  	   ,'1'		  	   ,'1'		  	   ,'1'		  	   ,'1'		  	   ,(SELECT NVL(MAX(PRESV_BOX_SNO),0) + 1	 			 FROM TB_SRPRESVBOX	             WHERE SUBSTR(PRESV_BOX_ID, 1, 7) = '1'			     AND SUBSTR(PRESV_BOX_ID, 8, 2) = '1'			   	 AND SUBSTR(PRESV_BOX_ID, 10, 4) = '1'			   	 AND RECORD_CENTER_ID = '1'			   	 AND PRESV_BOX_ID_RULE = '1')		  	   ,0		  	   ,'0'		  	   ,'1'		  	   ,'1'			)	  	 ;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml

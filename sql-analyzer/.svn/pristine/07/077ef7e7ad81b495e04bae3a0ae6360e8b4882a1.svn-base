@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : countRfidNomlTagPubPagedList
+
+		SELECT  COUNT(1)		FROM TB_RDFOLDER A, TB_RFTABPUB B		WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		AND A.FOLDER_ID        = B.FOLDER_ID(+)		AND A.ERECORD_FLAG     != '1'		AND A.STAKRM_MNG_NO IS NOT NULL		AND A.RECORD_CENTER_ID = '1'		 AND 		    A.ORG_CD = '1'		  AND 		    A.CREAT_YYYY BETWEEN '1' AND '1'		  AND 		    A.TITLE LIKE '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : findRfidNomlTagPubPagedList
+
+	 	SELECT E.title		      ,E.creat_yyyy		      ,E.folder_id		      ,E.record_center_id		      ,E.org_cd		      ,(SELECT org_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_nm		      ,(SELECT org_abbr_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_abbr_nm  		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_cd = E.folder_type_div_cd AND com_type_cd = 'RD01') AS FOLDER_TYPE_DIV_CD		      ,(SELECT com_cd_nm FROM TB_ZZCOMCD WHERE com_cd = E.presv_term_cd AND COM_TYPE_CD = 'RD07') AS presv_term_cd		      ,NVL(E.tag_issue_org_cd || E.tag_issue_user_cd || E.tag_pub_user_cd || E.tag_ver || LPAD(E.tag_seq,5,'0'), '') AS tag_id		      ,NVL((SELECT com_cd_NM FROM TB_ZZCOMCD WHERE com_cd = E.tag_pub_state AND com_type_cd = 'RF08'), '¹Ì¹ßÇà') AS tag_pub_state		      ,E.stakrm_mng_no		      ,E.rnum		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		            , C.*		        FROM (		            SELECT  A.title		                    ,A.creat_yyyy		                    ,A.folder_id		                    ,A.record_center_id		                    ,A.folder_type_div_cd 		                    ,A.presv_term_cd		                    ,A.org_cd		                    ,B.tag_issue_org_cd		                    ,B.tag_issue_user_cd		                    ,B.tag_pub_user_cd		                    ,B.tag_ver		                    ,B.tag_seq		                    ,B.tag_pub_state		                    ,ROWNUM       		                    ,A.stakrm_mng_no 		            FROM TB_RDFOLDER A, TB_RFTABPUB B		            WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		            AND A.FOLDER_ID        = B.FOLDER_ID(+)		            AND A.ERECORD_FLAG     != '1'		            AND A.STAKRM_MNG_NO IS NOT NULL		            AND A.RECORD_CENTER_ID = '1' AND 		                A.ORG_CD = '1'		              AND 		                A.CREAT_YYYY BETWEEN '1' AND '1'		              AND 		                A.TITLE LIKE '1'		              						ORDER BY A.STAKRM_MNG_NO DESC					 							            		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : countRfidTagpubStatePagedList
+
+  	            SELECT COUNT(1)	            FROM (	            	SELECT U.folder_type_div_cd		            FROM (		              (		              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID		              FROM TB_RDFOLDER A, TB_RFTABPUB B		              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		            AND A.FOLDER_ID = B.FOLDER_ID(+)		                AND A.RECORD_CENTER_ID = '1' AND 		                  B.REG_DTIME = '1'		                 		              ) UNION ALL (		              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID		              FROM TB_NKFOLDER A, TB_RFTABPUB B		              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		            AND A.FOLDER_ID = B.FOLDER_ID(+)		                AND A.RECORD_CENTER_ID = '1' AND 		                  B.REG_DTIME = '1'		                 		              )		            ) U		            GROUP BY U.FOLDER_TYPE_DIV_CD, U.PRESV_TERM_CD		            ORDER BY U.FOLDER_TYPE_DIV_CD ASC, U.PRESV_TERM_CD DESC	            )			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : findRfidTagpubStatePagedList
+
+  				SELECT E.first_tab, E.second_tab, E.totalcnt, e.pubcnt, e.rtncnt				FROM (				    SELECT D.*				    FROM (				        SELECT ROWNUM AS rnum				                    , C.*				        FROM (				            SELECT   (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = U.FOLDER_TYPE_DIV_CD AND COM_TYPE_CD = 'RD01') AS FIRST_TAB				                  ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = U.PRESV_TERM_CD      AND COM_TYPE_CD = 'RD07') AS SECOND_TAB				                  ,COUNT(U.FOLDER_ID) AS TOTALCNT				                  ,COUNT(U.TAG_ID) AS PUBCNT 				                  ,(COUNT(U.FOLDER_ID) - COUNT(U.TAG_ID)) AS RTNCNT				            FROM (				              (				              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID				              FROM TB_RDFOLDER A, TB_RFTABPUB B				              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				            AND A.FOLDER_ID = B.FOLDER_ID(+)				                AND A.RECORD_CENTER_ID = '1' AND 				                  B.REG_DTIME = '1'				                 				              ) UNION ALL (				              SELECT A.FOLDER_ID, A.FOLDER_TYPE_DIV_CD, A.PRESV_TERM_CD, B.TAG_ID				              FROM TB_NKFOLDER A, TB_RFTABPUB B				              WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				            AND A.FOLDER_ID = B.FOLDER_ID(+)				                AND A.RECORD_CENTER_ID = '1' AND 				                  B.REG_DTIME = '1'				                 				              )				            ) U				            GROUP BY U.FOLDER_TYPE_DIV_CD, U.PRESV_TERM_CD				            ORDER BY U.FOLDER_TYPE_DIV_CD ASC, U.PRESV_TERM_CD DESC				        ) C				        WHERE ROWNUM <= '1'				    ) D				    WHERE D.rnum >= '1'				) E				ORDER BY E.rnum			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : countTagPubHistList
+
+		SELECT COUNT(*)			FROM				(					SELECT RECORD_CENTER_ID						,TAG_ID 						,TAG_PUB_USER_CD					FROM TB_RFTABPUB					 WHERE  							TAG_ISSUE_ORG_CD = '1'						  AND 							TAG_ISSUE_ORG_CD = '1'						  AND 							TAG_ISSUE_USER_CD = '1'						  AND 							TAG_PUB_USER_CD = '1'						  AND 							TAG_VER = '1'						  AND 							TAG_SEQ = LPAD('1', 5, '0')						  				) A, TB_RFTABPUBHIST B			WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 				AND A.TAG_ID = B.TAG_ID    			ORDER BY B.PUB_DT DESC     ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : findTagPubHistList
+
+    SELECT D.*    FROM (        SELECT ROWNUM AS rnum                    , C.*        FROM (			SELECT ROWNUM			,	PUB_DT			,	PUB_DEPT_NM			,	PUB_RSN			,	TAG_PUB_USER_CD			FROM (				SELECT B.PUB_DT					,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = A.TAG_PUB_USER_CD AND COM_TYPE_CD = 'RF15') AS TAG_PUB_USER_CD					,B.PUB_DEPT_NM					,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD = B.PUB_RSN AND COM_TYPE_CD = 'RF09') AS PUB_RSN				FROM					(						SELECT RECORD_CENTER_ID							,TAG_ID 							,TAG_PUB_USER_CD						FROM TB_RFTABPUB						 WHERE  								TAG_ISSUE_ORG_CD = '1'							  AND 								TAG_ISSUE_ORG_CD = '1'							  AND 								TAG_ISSUE_USER_CD = '1'							  AND 								TAG_PUB_USER_CD = '1'							  AND 								TAG_VER = '1'							  AND 								TAG_SEQ = LPAD('1', 5, '0')							  					) A, TB_RFTABPUBHIST B				WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 					AND A.TAG_ID = B.TAG_ID    				ORDER BY B.PUB_DT DESC				) AA        ) C        WHERE ROWNUM <= '1'    ) D    WHERE D.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : countTagFolderId
+
+		SELECT	COUNT(1)		FROM TB_RFTABPUB		WHERE FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : findTagSeqMax
+
+	  SELECT	TB_RFTABPUB_SQ01.NEXTVAL AS TAG_SEQ	  , (SELECT KKR_ORG_CD FROM TB_RFRECORDCENTER WHERE RECORD_CENTER_ID = '1') AS TAG_ISSUE_USER_CD	    FROM DUAL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : insert
+-- Query Id : createTagPubHist
+
+		INSERT INTO TB_RFTABPUBHIST		(			RECORD_CENTER_ID, TAG_ID, PUB_SNO, TAGPRINT_ID, PUB_DT, TAG_PUB_USER_CD, PUB_DEPT_CD, PUB_DEPT_NM, PUB_RSN, REG_DTIME		)		VALUES 		(			'1'		    , '1'		    ,(SELECT NVL(MAX(PUB_SNO)+1,1) FROM TB_RFTABPUBHIST WHERE TAG_ID = '1') 		    ,'1'		    ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		    ,'1'		    ,'1'		    ,'1'		    ,'1'		    		    ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : insert
+-- Query Id : createTagPub
+
+		INSERT INTO TB_RFTABPUB		(			TAG_ID ,TAG_ISSUE_ORG_CD ,TAG_ISSUE_USER_CD ,TAG_PUB_USER_CD ,TAG_VER ,TAG_SEQ ,TAG_PUB_STATE ,TAG_ISSUE_TYPE 			,REG_DTIME ,RECORD_CENTER_ID,FOLDER_ID 		)		VALUES 		(			'1' ,'1' ,'1' ,'1' ,'1' ,'1' ,'1' ,'1' 			,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS') ,'1','1'   		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml
+-- Query    : select
+-- Query Id : findTagId
+
+		SELECT  A.TAG_ID		    , A.TAG_ISSUE_ORG_CD		    , A.TAG_ISSUE_USER_CD		    , A.TAG_PUB_USER_CD		    , A.TAG_VER		    , A.TAG_SEQ           		    , (SELECT (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD) 		                                ||','|| CREAT_YYYY 		                                ||','|| (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND COM_CD = AA.PRESV_TERM_CD) 		                                ||','|| STAKRM_MNG_NO 		                          FROM TB_RDFOLDER AA WHERE FOLDER_ID = A.FOLDER_ID) AS DTSDATA		    , B.STAKRM_MNG_NO AS STAKRM_MNG_NO		    , (SELECT ORG_ABBR_NM FROM TB_STORG BB WHERE BB.ORG_CD = B.ORG_CD) AS ORG_NM		    , B.CREAT_YYYY AS CREAT_YYYY		    , (SELECT COM_CD_NM FROM TB_ZZCOMCD BB WHERE BB.COM_TYPE_CD= 'RD07' AND BB.COM_CD = B.PRESV_TERM_CD) AS PRESV_TERM_NM		    , B.RECORD_CENTER_ID AS RECORD_CENTER_ID		    , (SELECT RECORD_CENTER_NM FROM  TB_STRECORDCENTER BB WHERE BB.RECORD_CENTER_ID = B.RECORD_CENTER_ID) AS RECORD_CENTER_NM		FROM TB_RFTABPUB A, TB_RDFOLDER B		WHERE A.FOLDER_ID = B.FOLDER_ID		    AND A.TAG_VER = '1' AND 			A.TAG_ID = '1'		  AND 			A.TAG_ISSUE_ORG_CD = '1'		  AND 			A.TAG_ISSUE_USER_CD = '1'		  AND 			A.TAG_PUB_USER_CD = '1'		  AND 			A.TAG_SEQ = '1'		 ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\rfid\RfidTagPublication.xml

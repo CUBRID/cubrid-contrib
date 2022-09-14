@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.unitMng">
+<!-- 단위배포조회 -->
+	<resultMap id="findUnitDistrList-result" class="rms.stnd.unitMng.domain.UnitInq" >
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="orgCd" 				column="ORG_CD"/>
+		<result property="orgNm" 				column="ORG_NM"/>
+		<result property="unitCd" 				column="UNIT_CD"/>
+		<result property="unitNm" 				column="UNIT_NM"/>
+		<result property="applyStndYmd" 		column="APPLY_STND_YMD"/>
+		<result property="sendDtime" 			column="SEND_DTIME"/>
+		<result property="workDtime" 			column="WORK_DTIME"/>
+		<result property="workTypeCd" 			column="WORK_TYPE_CD"/>
+		<result property="unitSendFlag" 		column="UNIT_SEND_FLAG"/>
+	</resultMap>
+	<resultMap id="findUnitOfflineDistr-result"	class="rms.stnd.unitMng.domain.UnitInq" >
+		<result property="narsHandlDtme" 		column="NARS_HANDL_DTIME"/>
+		<result property="applyStndYmd" 		column="APPLY_STND_YMD"/>
+		<result property="orgCd" 				column="ORG_CD"/>
+		<result property="orgNm" 				column="ORG_NM"/>
+		<result property="tempUnitCd" 			column="TEMP_UNIT_CD"/>
+		<result property="lrgCd" 				column="LRG_CD"/>
+		<result property="lrgNm"              	column="LRG_NM"/>
+		<result property="midCd"              	column="MID_CD"/>
+		<result property="midNm"             	column="MID_NM"/>
+		<result property="smlCd"              	column="SML_CD"/>
+		<result property="smlNm"              	column="SML_NM"/>
+		<result property="unitCd"        		column="UNIT_CD"/>
+		<result property="unitNm" 				column="UNIT_NM"/>
+		<result property="unitDescr"      		column="UNIT_DESCR"/>
+		<result property="presvTermCd"		   	column="PRESV_TERM_CD"/>
+		<result property="presvTermFixRsn"   	column="PRESV_TERM_FIX_RSN"/>
+		<result property="presvMethodCd"     	column="PRESV_METHOD_CD"/>
+		<result property="presvAreaCd"       	column="PRESV_AREA_CD"/>
+		<result property="funshRecordFlag"		column="FUNSH_RECORD_FLAG"/>
+		<result property="funshRecordTransfYmd"	column="FUNSH_RECORD_TRANSF_YMD"/>
+		<result property="transfReadExptCnt"   	column="TRANSF_READ_EXPT_CNT"/>
+		<result property="mainReadUsg"  		column="MAIN_READ_USG"/>
+		<result property="spclListLoc"			column="SPCL_LIST_LOC"/>
+		<result property="spclList1"           	column="SPCL_LIST1"/>
+		<result property="spclList2"          	column="SPCL_LIST2"/>
+		<result property="spclList3"			column="SPCL_LIST3"/>
+		<result property="stateCd"            	column="STATE_CD"/>
+		<result property="workTypeCd"          	column="WORK_TYPE_CD"/>
+			
+	</resultMap>	
+		<!--SELECT 파일생성정보 select-->
+	<resultMap id="classfyInfrmInfo-result" class="rms.stnd.unitMng.domain.UnitInq">
+		<result property="recvIp"            column="recv_ip"/>
+		<result property="recvPort"          column="recv_port"/>
+		<result property="className"         column="class_name"/>
+		<result property="grLanguage"        column="gr_language"/>
+		<result property="grUserId"        	column="gr_user_id"/>
+		<result property="grPwd"        	column="gr_pwd"/>
+	</resultMap>
+	
+	
+	<!-- 온/오프라인배포용 조회 -->
+	<select id="findUnitOfflineDistr1" parameterClass="rms.stnd.unitMng.domain.UnitInq" resultMap="findUnitOfflineDistr-result">
+		Select 	NVL(B.NARS_HANDL_DTIME,'') NARS_HANDL_DTIME
+				,NVL(A.APPLY_STND_YMD,'') APPLY_STND_YMD
+				,A.ORG_CD
+				,A.WORK_TYPE_CD
+				,NVL((SELECT C.ORG_NM FROM TB_STORG C WHERE C.ORG_CD=A.ORG_CD AND C.RECORD_CENTER_ID=A.RECORD_CENTER_ID),'') ORG_NM
+				,NVL(B.TEMP_UNIT_CD,'') TEMP_UNIT_CD
+				,NVL(B.LRG_CD,'') LRG_CD
+				,NVL(B.LRG_NM,'') LRG_NM
+				,NVL(B.MID_CD,'') MID_CD
+				,NVL(B.MID_NM,'') MID_NM
+				,NVL(B.SML_CD,'') SML_CD
+				,NVL(B.SML_NM,'') SML_NM
+				,A.UNIT_CD
+				,B.UNIT_NM
+				,NVL(B.UNIT_DESCR,'') UNIT_DESCR
+				,NVL(B.PRESV_TERM_CD,'') PRESV_TERM_CD
+				,NVL(B.PRESV_TERM_FIX_RSN,'') PRESV_TERM_FIX_RSN
+				,NVL(B.PRESV_METHOD_CD,'') PRESV_METHOD_CD
+				,NVL(B.PRESV_AREA_CD,'') PRESV_AREA_CD
+				,NVL(B.FUNSH_RECORD_FLAG,'') FUNSH_RECORD_FLAG
+				,NVL(B.FUNSH_RECORD_TRANSF_YMD,'') FUNSH_RECORD_TRANSF_YMD
+				,NVL(B.TRANSF_READ_EXPT_CNT,'') TRANSF_READ_EXPT_CNT
+				,NVL(B.MAIN_READ_USG,'') MAIN_READ_USG
+				,NVL(B.SPCL_LIST_LOC,'') SPCL_LIST_LOC
+				,NVL(B.SPCL_LIST1,'') SPCL_LIST1
+				,NVL(B.SPCL_LIST2,'') SPCL_LIST2
+				,NVL(B.SPCL_LIST3,'') SPCL_LIST3
+				,NVL(B.STATE_CD,'') STATE_CD
+		FROM 	TB_ZZORGUNITWORKHIST A, TB_ZZUNIT B
+		WHERE 	A.UNIT_SEND_FLAG= '0'
+		AND 	A.RECORD_CENTER_ID= #recordCenterId:VARCHAR#
+		AND 	A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		AND 	A.UNIT_CD=B.UNIT_CD
+  		AND 	A.WORK_TYPE_CD IN('1','3','4')
+	</select>
+	
+	
+	<!-- 온/오프라인배포용 조회 단위업무 신설신청 결과통보 , 단위업무 일부 항목의 내용수정에 다른 결과 통보-->
+	<select id="findUnitOfflineDistr2" parameterClass="rms.stnd.unitMng.domain.UnitInq" resultMap="findUnitOfflineDistr-result">
+		SELECT 	NVL(B.NARS_HANDL_DTIME,'') NARS_HANDL_DTIME
+				,NVL(A.APPLY_STND_YMD,'') APPLY_STND_YMD
+				,A.ORG_CD
+				,A.WORK_TYPE_CD
+				,NVL((SELECT C.ORG_NM FROM TB_STORG C WHERE C.ORG_CD=A.ORG_CD AND C.RECORD_CENTER_ID=A.RECORD_CENTER_ID),' ')ORG_NM
+				,NVL(B.TEMP_UNIT_CD,'') TEMP_UNIT_CD
+				,NVL(B.LRG_CD,'') LRG_CD
+				,NVL(B.LRG_NM,'') LRG_NM
+				,NVL(B.MID_CD,'') MID_CD
+				,NVL(B.MID_NM,'') MID_NM
+				,NVL(B.SML_CD,'') SML_CD
+				,NVL(B.SML_NM,'') SML_NM
+				,A.UNIT_CD
+				,B.UNIT_NM
+				,NVL(B.UNIT_DESCR,'') UNIT_DESCR
+				,NVL(B.PRESV_TERM_CD,'') PRESV_TERM_CD
+				,NVL(B.PRESV_TERM_FIX_RSN,'') PRESV_TERM_FIX_RSN
+				,NVL(B.PRESV_METHOD_CD,'') PRESV_METHOD_CD
+				,NVL(B.PRESV_AREA_CD,'') PRESV_AREA_CD
+				,NVL(B.FUNSH_RECORD_FLAG,'') FUNSH_RECORD_FLAG
+				,NVL(B.FUNSH_RECORD_TRANSF_YMD,'') FUNSH_RECORD_TRANSF_YMD
+				,NVL(B.TRANSF_READ_EXPT_CNT,'') TRANSF_READ_EXPT_CNT
+				,NVL(B.MAIN_READ_USG,'') MAIN_READ_USG
+				,NVL(B.SPCL_LIST_LOC,'') SPCL_LIST_LOC
+				,NVL(B.SPCL_LIST1,'') SPCL_LIST1
+				,NVL(B.SPCL_LIST2,'') SPCL_LIST2
+				,NVL(B.SPCL_LIST3,'') SPCL_LIST3
+				,NVL(B.STATE_CD,'') STATE_CD	 	
+		FROM 	TB_ZZORGUNITWORKHIST A, TB_ZZUNIT B
+		WHERE 	A.UNIT_SEND_FLAG= '0'
+		AND 	A.RECORD_CENTER_ID= #recordCenterId:VARCHAR#
+		AND 	A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		AND 	A.UNIT_CD=B.UNIT_CD
+  		AND 	A.WORK_TYPE_CD IN('0','2')
+	</select>
+	
+	
+	<!-- 
+		단위업무배포 파일생성 정보 
+	 -->
+	<select id="findClassfyInfrmInfo" parameterClass="rms.stnd.unitMng.domain.UnitInq" resultMap="classfyInfrmInfo-result">
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,
+				b.link_class AS class_name, link_lang AS gr_language,
+				b.link_user_id AS gr_user_id,  b.link_pwd AS gr_pwd
+		FROM  	TB_STORG A, 
+				(SELECT 	* 
+		       	FROM 	TB_STLINKTRGT 
+		       	WHERE 	creat_sys_cd = #creatSysCd:VARCHAR#) B 
+		WHERE 	A.record_center_id = #recordCenterId:VARCHAR#
+		AND   	A.org_cd = #orgCd:VARCHAR#
+		AND   	A.link_trgt_id = B.link_trgt_id(+)
+	</select>
+
+
+	<!-- 단위업무배포 메인화면용 조회 -->
+	<select id="findUnitDistrPagedList" parameterClass="rms.stnd.unitMng.domain.UnitInq" resultMap="findUnitDistrList-result">
+	SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+		SELECT	SUBSTR(A.SEND_DTIME,1,8) SEND_DTIME,
+		   		SUBSTR(A.WORK_DTIME,1,8) WORK_DTIME,
+		   		A.APPLY_STND_YMD,
+		   		A.ORG_CD,
+		   		A.UNIT_CD,
+		   		A.RECORD_CENTER_ID, 
+		   		(SELECT E.COM_CD_NM FROM TB_ZZCOMCD E WHERE E.COM_TYPE_CD='ZZ29' AND E.COM_CD=A.WORK_TYPE_CD)WORK_TYPE_CD,
+		   		(SELECT F.COM_CD_NM FROM TB_ZZCOMCD F WHERE F.COM_TYPE_CD='ZZ31' AND F.COM_CD=A.UNIT_SEND_FLAG)UNIT_SEND_FLAG,
+		   		(SELECT B.ORG_NM 
+		   		FROM 	TB_STORG B 
+		   		WHERE 	B.RECORD_CENTER_ID=A.RECORD_CENTER_ID
+				AND 	B.ORG_CD=A.ORG_CD) ORG_NM,
+				(SELECT C.UNIT_NM 
+				FROM 	TB_ZZUNIT C 
+				WHERE 	C.RECORD_CENTER_ID=A.RECORD_CENTER_ID
+				AND 	C.UNIT_CD=A.UNIT_CD ) UNIT_NM
+		FROM 	TB_ZZORGUNITWORKHIST A
+		WHERE 	UNIT_CD IS NOT NULL
+		<dynamic>
+			<isNotEmpty prepend="AND" property="recordCenterId">
+			   	A.RECORD_CENTER_ID= #recordCenterId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+			  	A.ORG_CD= #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="unitCd">
+			   	A.UNIT_CD= #unitCd:VARCHAR#
+	   		</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="unitSendFlag">
+				A.UNIT_SEND_FLAG= #unitSendFlag:VARCHAR#
+	   		</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="creatStndYmd1">
+				SUBSTR(A.SEND_DTIME,1,8) between to_char(to_date(#creatStndYmd1:VARCHAR#,'yyyy-mm-dd'),'yyyymmdd')  and to_char(to_date(#creatStndYmd2:VARCHAR#,'yyyy-mm-dd'),'yyyymmdd')
+	 		</isNotEmpty>
+		</dynamic>	
+		ORDER BY A.RECORD_CENTER_ID, A.ORG_CD, A.UNIT_CD
+		) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+
+	<!-- 단위조회(신청된것들) 총갯수  -->				
+	<select id="countUnitDistrList" parameterClass="rms.stnd.unitMng.domain.UnitInq" resultClass="long">		
+		SELECT 	count(1)
+		FROM 	TB_ZZORGUNITWORKHIST A
+		WHERE 	UNIT_CD IS NOT NULL
+	   	<dynamic>
+	   		<isNotEmpty prepend="AND" property="recordCenterId">
+				A.RECORD_CENTER_ID= #recordCenterId:VARCHAR#
+		    </isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+			   A.ORG_CD= #orgCd:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="unitCd">
+			   A.UNIT_CD= #creatStndYmd1:VARCHAR#
+   			</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="unitSendFlag">
+			   A.UNIT_SEND_FLAG= #unitSendFlag:VARCHAR#
+   			</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="creatStndYmd1">
+			   SUBSTR(A.SEND_DTIME,1,8) between to_char(to_date(#creatStndYmd1:VARCHAR#,'yyyy-mm-dd'),'yyyymmdd')  and to_char(to_date(#creatStndYmd2:VARCHAR#,'yyyy-mm-dd'),'yyyymmdd')
+ 			</isNotEmpty>
+		</dynamic>	
+	</select>
+	
+	<update id="updateClassifyInfrmOffSend" parameterClass="rms.stnd.unitMng.domain.UnitInq">
+		UPDATE	TB_ZZORGUNITWORKHIST
+		<!--cubrid SET		WORK_DTIME=to_char(SYSDATE,'YYYYMMDDHH24MISS')-->
+		SET		WORK_DTIME=to_char(sys_datetime,'YYYYMMDDHH24MISS')
+				,UNIT_SEND_FLAG='1'
+		WHERE 	UNIT_SEND_FLAG='0'
+   		<dynamic>
+   			<isNotEmpty prepend="AND" property="recordCenterId">
+				record_center_id = #recordCenterId:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+		AND 	UNIT_CD IN(SELECT UNIT_CD FROM TB_ZZUNIT)
+		AND 	RECORD_CENTER_ID IN(SELECT RECORD_CENTER_ID FROM TB_ZZUNIT)
+	</update>
+	
+	
+	<!--기록관에서 전자문서시스템과의 연동모듈  정보 조회(02/20) resultMap -->
+ 	<resultMap id="findUnitGrAllInfo-result" class="rms.stnd.unitMng.domain.StConfig" >
+		<result property="linkServerIp" 				column="link_server_ip"/>
+		<result property="linkServerPort" 				column="link_server_port"/>
+		<result property="linkServerUserId" 			column="link_server_user_id"/>
+		<result property="linkServerPwd" 				column="link_server_pwd"/>
+		<result property="linkServerClass" 				column="link_server_class"/>
+		<result property="linkServerLang" 				column="link_server_lang"/>
+		<result property="linkServerPath" 				column="link_server_path"/>
+		<result property="linkServerOneplatformyn" 		column="link_server_oneplatformyn"/>
+	</resultMap>
+	
+	<!--기록관에서 전자문서시스템과의 연동모듈  정보 조회(02) SELECT -->
+	<select id="findUnitGrAllInfo02" parameterClass="rms.stnd.unitMng.domain.StConfig" resultMap="findUnitGrAllInfo-result">
+		SELECT 	link_server_ip, 	link_server_port, 			link_server_user_id, 
+        		link_server_pwd, 	link_server_class, 			link_server_lang, 
+        		link_server_path, 	link_server_oneplatformyn 
+		FROM   	TB_STCONFIG
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+	</select>
+
+
+</sqlMap>

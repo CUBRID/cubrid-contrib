@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.stat">
+
+	<!--
+		공개현황 공개구분
+	-->
+	<resultMap id="findOpenCurStateOpenDivList-result" class="rms.srch.stat.domain.OpenCurState">
+	    <result property="orgCd" 		column="org_cd"    		/>
+	    <result property="orgNm"		column="org_nm"			/>
+	    <result property="orgAbbrNm"	column="org_abbr_nm"	/>
+	    <result property="total" 		column="total"     		/>
+	    <result property="sumOpen" 		column="sum_open"  		/>
+	    <result property="sumClose" 	column="sum_close" 		/>
+	    <result property="sumHalf" 		column="sum_half"  		/>
+	    <result property="sumA"  		column="sum_a"   		/>
+	    <result property="sumB"  		column="sum_b"  		/>
+	    <result property="sumC"  		column="sum_c"   		/>
+	    <result property="sumD"  		column="sum_d"   		/>
+	    <result property="sumE"  		column="sum_e"   		/>
+	    <result property="sumF"  		column="sum_f"   		/>
+	    <result property="sumG"  		column="sum_g"   		/>
+	    <result property="sumH"  		column="sum_h"   		/>
+	</resultMap>
+	<select id="findOpenCurStateOpenDivTotal" parameterClass="rms.srch.stat.domain.OpenCurState" resultMap="findOpenCurStateOpenDivList-result">
+		SELECT '' AS org_cd
+			, '총계' AS org_nm
+			, '총계' AS org_abbr_nm
+			, NVL(SUM((CASE WHEN A.open_div_cd IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+			, NVL(SUM((CASE WHEN A.open_div_cd='1' THEN 1 ELSE 0 END)),0) AS sum_open
+			, NVL(SUM((CASE WHEN A.open_div_cd='2' THEN 1 ELSE 0 END)),0) AS sum_half
+			, NVL(SUM((CASE WHEN A.open_div_cd='3' THEN 1 ELSE 0 END)),0) AS sum_close
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,1,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_a
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,2,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_b
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,3,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_c
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,4,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_d
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,5,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_e
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,6,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_f
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,7,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_g
+			, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,8,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_h
+		FROM  TB_RDRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyy">
+				A.creat_yyyy = #creatYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findOpenCurStateOpenDivList" parameterClass="rms.srch.stat.domain.OpenCurState" resultMap="findOpenCurStateOpenDivList-result">
+		SELECT B.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=B.record_center_id AND Z.org_cd=B.org_cd) AS org_abbr_nm
+			, B.total
+			, B.sum_open
+			, B.sum_half
+			, B.sum_close
+			, B.sum_a
+			, B.sum_b
+			, B.sum_c
+			, B.sum_d
+			, B.sum_e
+			, B.sum_f
+			, B.sum_g
+			, B.sum_h
+		FROM (
+			SELECT A.record_center_id
+				, A.org_cd
+				, NVL(SUM((CASE WHEN A.open_div_cd IN ('1','2','3') THEN 1 ELSE 0 END)),0) AS total
+				, NVL(SUM((CASE WHEN A.open_div_cd='1' THEN 1 ELSE 0 END)),0) AS sum_open
+				, NVL(SUM((CASE WHEN A.open_div_cd='2' THEN 1 ELSE 0 END)),0) AS sum_half
+				, NVL(SUM((CASE WHEN A.open_div_cd='3' THEN 1 ELSE 0 END)),0) AS sum_close
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,1,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_a
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,2,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_b
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,3,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_c
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,4,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_d
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,5,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_e
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,6,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_f
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,7,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_g
+				, NVL(SUM((CASE WHEN SUBSTR(A.open_grade,8,1)='Y' THEN 1 ELSE 0 END)),0) AS sum_h
+			FROM  TB_RDRECORD A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<dynamic>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyy">
+					A.creat_yyyy = #creatYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+			GROUP BY A.record_center_id, A.org_cd
+		) B
+		ORDER BY org_nm
+	</select>
+
+</sqlMap>

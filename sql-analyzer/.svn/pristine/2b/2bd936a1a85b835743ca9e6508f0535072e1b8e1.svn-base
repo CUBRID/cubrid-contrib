@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.layout">
+
+	<resultMap id="findTopMenuLvl1-result" class="rms.common.layout.domain.Menu">
+		<result property="menuId" 			column="menu_id" />
+		<result property="menuNm" 			column="menu_nm" />
+		<result property="upperMenuId" 		column="upper_menu_id" />
+		<result property="linkImgTopOn" 	column="link_img_top_on" />
+		<result property="linkImgTopOff" 	column="link_img_top_off" />
+	</resultMap>
+	<select id="findTopMenuLvl1" parameterClass="rms.common.layout.domain.Menu" resultMap="findTopMenuLvl1-result">
+		SELECT menu_id
+		     , menu_nm
+		     , upper_menu_id
+		     , NVL(B.link_img_top_on,'inc/top/menu_over_00.gif') link_img_top_on
+		     , NVL(B.link_img_top_off,'inc/top/menu_00.gif') link_img_top_off
+		FROM
+			(SELECT DISTINCT
+			         A.menu_id
+			        ,A.menu_nm
+			        ,A.upper_menu_id
+			        ,A.menu_sort_sno
+			        ,A.menu_link_sno
+			FROM    TB_STMENU A
+			WHERE   A.record_center_id = #recordCenterId:VARCHAR#
+			AND     A.use_flag = '1'
+			AND     A.menu_div_cd = '1'
+			<!--cubrid worklist Num 24
+			START WITH A.menu_id IN ( SELECT C.menu_id FROM TB_STMENUGRANTLINK C
+					                    WHERE C.menu_grant_grp_cd in ( SELECT D.menu_grant_grp_cd from TB_STUSER D
+					                                                   WHERE D.user_id = #userId:VARCHAR#
+					                                                   AND   D.record_center_id = #recordCenterId:VARCHAR#
+					                   										  )
+					                    AND   C.record_center_id = #recordCenterId:VARCHAR#
+					                  )
+				  AND  A.record_center_id = #recordCenterId:VARCHAR#
+			CONNECT BY PRIOR A.upper_menu_id = A.menu_id 
+			cubrid-->
+				       AND   A.record_center_id = #recordCenterId:VARCHAR#
+			) A
+			, TB_STMENULINK B
+		WHERE A.menu_link_sno = B.menu_link_sno(+)
+		ORDER BY upper_menu_id, menu_sort_sno
+	</select>
+
+	<resultMap id="findTopMenuLvl2-result" class="rms.common.layout.domain.Menu">
+		<result property="menuId" 			column="menu_id" />
+		<result property="menuNm" 			column="menu_nm" />
+		<result property="upperMenuId" 		column="upper_menu_id" />
+		<result property="rowIdx" 			column="row_idx" />
+		<result property="rowNum" 			column="row_num" />
+	</resultMap>
+	<select id="findTopMenuLvl2" parameterClass="rms.common.layout.domain.Menu" resultMap="findTopMenuLvl2-result">
+		SELECT menu_id
+		     , menu_nm
+		     , upper_menu_id
+		     , row_idx
+		     , ROWNUM row_num
+		FROM(
+			SELECT menu_id
+			     , menu_nm
+				 , upper_menu_id
+				 , ROW_NUMBER() OVER (PARTITION BY upper_menu_id ORDER BY menu_sort_sno) row_idx
+			FROM (
+				SELECT  DISTINCT
+				         A.menu_id
+				        ,A.menu_nm
+				        ,A.upper_menu_id
+				        ,A.menu_sort_sno
+				FROM    TB_STMENU A
+				WHERE   A.record_center_id = #recordCenterId:VARCHAR#
+				AND     A.use_flag = '1'
+				AND     A.menu_div_cd = '2'
+				<isNotEmpty prepend="AND" property="multi">
+					<isNotEqual property="multi" compareValue="1">
+						A.menu_id != '40'
+					</isNotEqual>
+				</isNotEmpty>
+				START WITH A.menu_id IN ( SELECT C.menu_id FROM TB_STMENUGRANTLINK C
+						                    WHERE C.menu_grant_grp_cd in ( SELECT D.menu_grant_grp_cd from TB_STUSER D
+						                                                   WHERE D.user_id = #userId:VARCHAR#
+						                                                   AND   D.record_center_id = #recordCenterId:VARCHAR#
+						                   										  )
+						                    AND   C.record_center_id = #recordCenterId:VARCHAR#
+						                  )
+					  AND  A.record_center_id = #recordCenterId:VARCHAR#
+				CONNECT BY PRIOR A.upper_menu_id = A.menu_id 
+				           AND   A.record_center_id = #recordCenterId:VARCHAR#
+				)
+			ORDER BY upper_menu_id, menu_sort_sno
+		)
+	</select>
+
+	<resultMap id="findLeftMenuObject-result" class="rms.common.layout.domain.Menu">
+		<result property="menuId" 			column="menu_id"></result>
+		<result property="menuNm" 			column="menu_nm"></result>
+		<result property="linkCss" 			column="link_css"></result>
+		<result property="linkImgLeft" 		column="link_img_left"></result>
+	</resultMap>
+	<select id="findLeftMenuObject" parameterClass="rms.common.layout.domain.Menu" resultMap="findLeftMenuObject-result">
+		SELECT A.menu_id, A.menu_nm
+			, LOWER(NVL(B.link_css,'SYS.css')) AS link_css
+			, NVL(B.link_img_left,'inc/top/menu_00.gif') AS link_img_left
+		FROM TB_STMENU A
+		   , TB_STMENULINK B
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.menu_id = #menuId:VARCHAR#
+		AND   A.menu_link_sno = B.menu_link_sno(+)
+	</select>
+	
+	<resultMap id="findLeftMenuList-result" class="rms.common.layout.domain.Menu">
+		<result property="menuId"			column="menu_id"			javaType="java.lang.String" />
+		<result property="menuNm"			column="menu_nm"			javaType="java.lang.String" />
+		<result property="upperMenuId" 		column="upper_menu_id"		javaType="java.lang.String" />
+		<result property="menuDivCd" 		column="menu_div_cd"		javaType="java.lang.String" />
+		<result property="linkUrl" 			column="link_url"			javaType="java.lang.String" />
+		<result property="rowIdx" 			column="row_idx"			javaType="java.lang.Integer" />
+		<result property="rowNum" 			column="row_num"			javaType="java.lang.Integer" />
+		<result property="lowerCnt" 		column="lower_cnt"			javaType="java.lang.Integer" />
+	</resultMap>
+	<select id="findLeftMenuList" parameterClass="rms.common.layout.domain.Menu"  resultMap="findLeftMenuList-result">
+		SELECT E.menu_id, E.menu_nm, E.upper_menu_id, E.menu_div_cd, E.menu_sort_sno
+		     , ROW_NUMBER() OVER (PARTITION BY upper_menu_id ORDER BY menu_sort_sno) row_idx
+		     , E.link_url, E.row_num, E.lower_cnt
+		FROM
+		(
+		    SELECT  A.menu_id, A.menu_nm, A.upper_menu_id, A.menu_div_cd, A.menu_sort_sno, B.link_url
+		          , ROWNUM row_num
+		          , (SELECT COUNT(1)
+		             FROM TB_STMENU D, (SELECT G.user_id, G.record_center_id, H.menu_id 
+		                                FROM TB_STUSER G, TB_STMENUGRANTLINK H
+		                                WHERE G.record_center_id = H.record_center_id
+		                                AND   G.menu_grant_grp_cd = H.menu_grant_grp_cd
+		                                AND   G.record_center_id = #recordCenterId:VARCHAR#
+		                                AND   G.user_id          = #userId:VARCHAR#) E
+		             WHERE D.record_center_id = #recordCenterId:VARCHAR#
+		             AND   D.upper_menu_id    = A.menu_id
+			         AND   D.menu_id          = E.menu_id
+			         <isNotEmpty prepend="AND" property="multi">
+						<isNotEqual property="multi" compareValue="1">
+							D.menu_id NOT IN ('174', '175', '176')
+						</isNotEqual>
+					 </isNotEmpty>
+					 AND   E.record_center_id = #recordCenterId:VARCHAR#
+					 AND   E.user_id          = #userId:VARCHAR#) lower_cnt
+		    FROM (
+		           SELECT A.record_center_id, A.menu_id, A.menu_nm, A.upper_menu_id, A.menu_div_cd, A.menu_sort_sno, A.menu_link_sno
+		           FROM   TB_STMENU A
+		           WHERE  A.menu_id in ( SELECT C.menu_id FROM TB_STMENUGRANTLINK C
+													WHERE C.menu_grant_grp_cd in ( SELECT F.menu_grant_grp_cd from TB_STUSER F
+													                               WHERE F.user_id = #userId:VARCHAR#
+													                               AND   F.record_center_id = #recordCenterId:VARCHAR#)
+													AND   C.record_center_id = #recordCenterId:VARCHAR# )
+					 <isNotEmpty prepend="AND" property="multi">
+						<isNotEqual property="multi" compareValue="1">
+							A.menu_id NOT IN ('174', '175', '176')
+						</isNotEqual>
+					 </isNotEmpty>
+		           AND    A.upper_menu_id IN ( SELECT menu_id FROM TB_STMENU
+		                                       WHERE record_center_id = #recordCenterId:VARCHAR#
+		                                       AND   upper_menu_id = #menuId:VARCHAR# )
+		           AND    A.record_center_id = #recordCenterId:VARCHAR#
+		           AND    A.use_flag = '1'
+		           UNION ALL
+		           SELECT A.record_center_id, A.menu_id, A.menu_nm, A.upper_menu_id, A.menu_div_cd, A.menu_sort_sno, A.menu_link_sno
+		           FROM   TB_STMENU A
+		           WHERE  A.upper_menu_id = #menuId:VARCHAR#
+		           AND    A.record_center_id = #recordCenterId:VARCHAR#
+		           AND    A.menu_id IN ( SELECT DISTINCT upper_menu_id FROM TB_STMENU
+		                                 WHERE menu_id IN (SELECT C.menu_id FROM TB_STMENUGRANTLINK C
+																			WHERE C.menu_grant_grp_cd in ( SELECT D.menu_grant_grp_cd from TB_STUSER D
+																			                               WHERE D.user_id = #userId:VARCHAR#
+																			                               AND   D.record_center_id = #recordCenterId:VARCHAR#)
+																			AND   C.record_center_id = #recordCenterId:VARCHAR#)
+		                                 AND   record_center_id = #recordCenterId:VARCHAR#
+		                                 AND   use_flag = '1'
+		                                )
+					<isNotEmpty prepend="AND" property="multi">
+						<isNotEqual property="multi" compareValue="1">
+							A.menu_id NOT IN ('174', '175', '176')
+						</isNotEqual>
+					 </isNotEmpty>
+		           AND    A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		           AND    A.use_flag = '1'
+		    ) A , TB_STMENULINK B
+		    WHERE A.menu_link_sno = B.menu_link_sno(+)
+		    START WITH A.upper_menu_id = #menuId:VARCHAR#
+		          AND  A.record_center_id = #recordCenterId:VARCHAR#
+		    CONNECT BY PRIOR A.menu_id = A.upper_menu_id
+		          AND  A.record_center_id = #recordCenterId:VARCHAR#
+		    ORDER SIBLINGS BY A.menu_div_cd, A.menu_sort_sno
+		)E
+		ORDER BY row_num
+	</select>
+	
+	<resultMap id="find-MultiAdminId" class="rms.sys.sys.domain.MultiAdmin">
+		<result property="multiAdminId" 			column="multi_admin_id" />
+		<result property="recordCenterId" 			column="record_center_id" />
+	</resultMap>
+	
+	<select id="findMultiAdminId" parameterClass="rms.sys.sys.domain.MultiAdmin" resultClass="String">
+	    SELECT multi_admin_id
+		FROM TB_STCENTERADMIN
+		WHERE record_center_id = #recordCenterId:VARCHAR# 
+		AND	user_id = #userId:VARCHAR#
+	</select>
+</sqlMap>

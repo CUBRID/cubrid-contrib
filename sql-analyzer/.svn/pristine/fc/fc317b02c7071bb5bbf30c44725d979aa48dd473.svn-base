@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="EUC-KR" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="RmsUserSync">
+
+	<!-- 사용자동기화 정보 존재여부 -->
+	<select id="CountUserSync" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		SELECT COUNT(1)
+		FROM  TB_STUSER_SYNC
+		WHERE LINK_USER_ID = #LINK_USER_ID:VARCHAR#
+	</select>
+	
+	<!-- 사용자동기화 정보 추가 -->
+	<insert id="InsertUserSync" parameterClass="java.util.HashMap">
+		INSERT INTO TB_STUSER_SYNC (
+			LOGIN_USER_ID, LINK_USER_ID, DEPT_CD, USER_DIV, USER_NM
+			, USER_PWD, POS, RANK, TEL_NO, BIRTH_NO
+			, ADDR, WORK_FLAG, USE_FLAG, PKI_UID, PKI_REG_DTIME
+			, PKI_LEFT_DTIME, PKI_TYPE, REG_COMP_YN, UPD_DTIME, LINK_DTIME
+			, UPD_COLUMN
+		) VALUES (
+			#LOGIN_USER_ID:VARCHAR#, #LINK_USER_ID:VARCHAR#, #DEPT_CD:VARCHAR#, #USER_DIV:VARCHAR#, #USER_NM:VARCHAR#
+			, #USER_PWD:VARCHAR#, #POS:VARCHAR#, #RANK:VARCHAR#, #TEL_NO:VARCHAR#, #BIRTH_NO:VARCHAR#
+			, #ADDR:VARCHAR#, #WORK_FLAG:VARCHAR#, #USE_FLAG:VARCHAR#, #PKI_UID:VARCHAR#, #PKI_REG_DTIME:VARCHAR#
+			, #PKI_LEFT_DTIME:VARCHAR#, #PKI_TYPE:VARCHAR#, #REG_COMP_YN:VARCHAR#, #UPD_DTIME:VARCHAR#, #LINK_DTIME:VARCHAR#
+			, #UPD_COLUMN:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 사용자동기화 정보 수정 -->
+	<update id="UpdateUserSync" parameterClass="java.util.HashMap">
+		UPDATE TB_STUSER_SYNC
+		SET   LOGIN_USER_ID  = #LOGIN_USER_ID:VARCHAR#
+			, DEPT_CD        = #DEPT_CD:VARCHAR#
+			, USER_NM        = #USER_NM:VARCHAR#
+			, USER_PWD       = #USER_PWD:VARCHAR#
+			, POS            = #POS:VARCHAR#
+			, RANK           = #RANK:VARCHAR#
+			, TEL_NO         = #TEL_NO:VARCHAR#
+			, BIRTH_NO       = #BIRTH_NO:VARCHAR#
+			, ADDR           = #ADDR:VARCHAR#
+			, WORK_FLAG      = #WORK_FLAG:VARCHAR#
+			, USE_FLAG       = #USE_FLAG:VARCHAR#
+			, PKI_UID        = #PKI_UID:VARCHAR#
+			, PKI_REG_DTIME  = #PKI_REG_DTIME:VARCHAR#
+			, PKI_LEFT_DTIME = #PKI_LEFT_DTIME:VARCHAR#
+			, PKI_TYPE       = #PKI_TYPE:VARCHAR#
+			, REG_COMP_YN    = #REG_COMP_YN:VARCHAR#
+			, UPD_DTIME      = #UPD_DTIME:VARCHAR#
+			, LINK_DTIME     = #LINK_DTIME:VARCHAR#
+			, UPD_COLUMN     = #UPD_COLUMN:VARCHAR#
+		WHERE LINK_USER_ID   = #LINK_USER_ID:VARCHAR#
+	</update>
+	
+</sqlMap>

@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="sys.recordmng">
+
+	
+	<!-- 
+		기록물관리_처리부서관리
+		: 처리부서관리 화면의 처리부서 목록을조회한다.	
+	 -->
+	<resultMap id="findCurKeepOrgMngPagedList-result" class="rms.sys.recordmng.domain.CurKeepOrgMng">
+		<result property = "recordCenterId" column = "record_center_id"/>
+		<result property = "curKeepOrgCd" 	column = "cur_keep_org_cd"/>
+		<result property = "curKeepOrgNm" 	column = "cur_keep_org_nm"/>
+		<result property = "clssCnt" 		column = "clss_cnt"/>
+	</resultMap>
+	<select id="countCurKeepOrgMngPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgMng" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM ( SELECT record_center_id, cur_keep_org_cd, cur_keep_org_nm, count(DISTINCT clss_id) as clss_cnt
+			 FROM (
+						SELECT A.record_center_id,
+						       A.cur_keep_org_cd,
+						       (SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm,
+						       A.clss_id
+						FROM TB_RDFOLDER A
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						<dynamic>
+							<isNotEmpty prepend="AND" property="orgCd">
+								A.cur_keep_org_cd = #orgCd:VARCHAR#
+							</isNotEmpty>
+							<isNotEmpty prepend="AND" property="delOrgGubun">
+								A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND close_flag = #delOrgGubun:VARCHAR#)
+							</isNotEmpty>
+							<isEmpty property="orgCd">
+								<isNotEmpty prepend="AND" property="orgNm">
+									A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+								</isNotEmpty>
+							</isEmpty>
+						</dynamic>
+					)
+			 GROUP BY record_center_id, cur_keep_org_cd, cur_keep_org_nm
+		   )
+	</select>
+	<select id="findCurKeepOrgMngPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgMng" resultMap="findCurKeepOrgMngPagedList-result">
+		SELECT E.*
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM as rnum
+		            ,C.*
+		        FROM (
+		           SELECT record_center_id, cur_keep_org_cd, cur_keep_org_nm, count(DISTINCT clss_id) as clss_cnt
+		           FROM (
+		                    SELECT   A.record_center_id
+		                    		,A.cur_keep_org_cd
+		                    		,(SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm
+		                    		,A.clss_id
+		                    FROM TB_RDFOLDER A
+		                    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		                    <dynamic>
+		                        <isNotEmpty prepend="AND" property="orgCd">
+		                            A.cur_keep_org_cd = #orgCd:VARCHAR#
+		                        </isNotEmpty>
+		                        <isNotEmpty prepend="AND" property="delOrgGubun">
+		                            A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND close_flag = #delOrgGubun:VARCHAR#)
+		                        </isNotEmpty>
+		                        <isEmpty property="orgCd">
+		                            <isNotEmpty prepend="AND" property="orgNm">
+		                                A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+		                            </isNotEmpty>
+		                        </isEmpty>
+		                    </dynamic>
+		                    )
+		            GROUP BY record_center_id, cur_keep_org_cd, cur_keep_org_nm
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물관리_처리부서관리 
+		: 엑셀저장 데이터를 조회한다.
+	 -->
+	<resultMap id="findExcelCurKeepOrgMngPagedList-result" class="rms.sys.recordmng.domain.CurKeepOrgMng">
+		<result property = "recordCenterId"		column = "record_center_id"/>
+		<result property = "curKeepOrgCd"		column = "cur_keep_org_cd"/>
+		<result property = "curKeepOrgNm"		column = "cur_keep_org_nm"/>
+		<result property = "befKeepOrgCd"		column = "bef_keep_org_cd"/>
+		<result property = "befKeepOrgNm"		column = "bef_keep_org_nm"/>
+		<result property = "orgCd"				column = "org_cd"/>
+		<result property = "orgNm"				column = "org_nm"/>
+		<result property = "folderCnt"			column = "folder_cnt"/>
+	</resultMap>
+	<select id="findExcelCurKeepOrgMngPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgMng" resultMap="findExcelCurKeepOrgMngPagedList-result">
+		SELECT 	A.record_center_id,
+				A.cur_keep_org_cd,
+				(SELECT org_abbr_nm FROM tb_storg B WHERE A.record_center_id = B.record_center_id AND B.org_cd = A.cur_keep_org_cd) cur_keep_org_nm,
+				A.bef_keep_org_cd,
+				(SELECT org_abbr_nm FROM tb_storg B WHERE A.record_center_id = B.record_center_id AND B.org_cd = A.bef_keep_org_cd) bef_keep_org_nm,
+				A.org_cd,
+				(SELECT org_abbr_nm FROM tb_storg B WHERE A.record_center_id = B.record_center_id AND B.org_cd = A.org_cd) org_nm,
+				COUNT(1) folder_cnt
+		FROM	tb_rdfolder A
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.cur_keep_org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="delOrgGubun">
+				A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND close_flag = #delOrgGubun:VARCHAR#)
+			</isNotEmpty>
+			<isEmpty property="orgCd">
+				<isNotEmpty prepend="AND" property="orgNm">
+					A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+				</isNotEmpty>
+			</isEmpty>
+		</dynamic>
+		GROUP BY record_center_id, cur_keep_org_cd, bef_Keep_org_cd, org_cd
+		ORDER BY cur_keep_org_cd
+	</select>
+	
+	<!-- 
+		기록물관리_처리부서관리
+		: 처리부서관리 화면의 단위과제(업무) 목록을조회한다.	
+	 -->
+	<resultMap id="findCurKeepOrgMngClssPagedList-result" class="rms.sys.recordmng.domain.CurKeepOrgMng">
+		<result property = "recordCenterId" column = "record_center_id"/>
+		<result property = "curKeepOrgCd" 	column = "cur_keep_org_cd"/>
+		<result property = "curKeepOrgNm" 	column = "cur_keep_org_nm"/>
+		<result property = "clssId"			column = "clss_id" />
+		<result property = "clssNm"			column = "clss_nm" />
+		<result property = "folderCnt" 		column = "folder_cnt"/>
+	</resultMap>
+	<select id="countCurKeepOrgMngClssPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgMng" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT record_center_id
+	        FROM (
+	                SELECT A.record_center_id,
+	                       A.cur_keep_org_cd,
+	                       (SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm,
+	                       A.clss_id
+	                FROM TB_RDFOLDER A
+	                WHERE A.record_center_id = #recordCenterId:VARCHAR#
+	                <dynamic>
+	                    <isNotEmpty prepend="AND" property="curKeepOrgCd">
+	                        A.cur_keep_org_cd = #curKeepOrgCd:VARCHAR#
+	                    </isNotEmpty>
+	                    <isNotEmpty prepend="AND" property="delOrgGubun">
+	                        A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND close_flag = #delOrgGubun:VARCHAR#)
+	                    </isNotEmpty>
+	                    <isEmpty property="curKeepOrgCd">
+	                        <isNotEmpty prepend="AND" property="orgNm">
+	                            A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+	                        </isNotEmpty>
+	                    </isEmpty>
+	                    <isNotEmpty prepend="AND" property="clssId">
+	                        <isEqual property="clssDivCd" compareValue="1">
+	                            (A.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+	                        </isEqual>
+	                        <isEqual property="clssDivCd" compareValue="2">
+	                            A.clss_id = #clssId:VARCHAR#
+	                        </isEqual>
+	                    </isNotEmpty>
+	                </dynamic>
+	                GROUP BY record_center_id, cur_keep_org_cd, clss_id 
+               )
+		)
+	</select>
+	<select id="findCurKeepOrgMngClssPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgMng" resultMap="findCurKeepOrgMngClssPagedList-result">
+		SELECT E.*
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM as rnum
+		            ,C.*
+		        FROM (
+		           SELECT record_center_id, cur_keep_org_cd, cur_keep_org_nm, clss_id, clss_nm, count(1) as folder_cnt
+		            FROM (
+		                    SELECT A.record_center_id,
+		                           A.cur_keep_org_cd,
+		                           (SELECT org_nm FROM TB_STORG WHERE record_center_id = A.record_center_id AND org_cd = A.cur_keep_org_cd) as cur_keep_org_nm,
+		                           A.clss_id,
+		                           DECODE (
+		                                   A.clss_div_cd, '1',
+		                                   (SELECT bis_clss_nm FROM TB_ZZBISCLSS Z WHERE Z.bis_clss_id = A.clss_id), '2',
+		                                   (SELECT unit_nm FROM TB_ZZUNIT Y WHERE Y.record_center_id = A.record_center_id AND Y.unit_cd = A.clss_id) , '3', '기타'
+		                           ) as clss_nm
+		                    FROM TB_RDFOLDER A
+		                    WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		                    <dynamic>
+		                        <isNotEmpty prepend="AND" property="curKeepOrgCd">
+		                            A.cur_keep_org_cd = #curKeepOrgCd:VARCHAR#
+		                        </isNotEmpty>
+		                        <isNotEmpty prepend="AND" property="delOrgGubun">
+		                            A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND close_flag = #delOrgGubun:VARCHAR#)
+		                        </isNotEmpty>
+		                        <isEmpty property="curKeepOrgCd">
+		                            <isNotEmpty prepend="AND" property="orgNm">
+		                                A.cur_keep_org_cd IN (SELECT org_cd FROM TB_STORG WHERE record_center_id=#recordCenterId:VARCHAR# AND org_nm LIKE #orgNm:VARCHAR#)
+		                            </isNotEmpty>
+		                        </isEmpty>
+		                        <isNotEmpty prepend="AND" property="clssId">
+		                            <isEqual property="clssDivCd" compareValue="1">
+		                                (A.clss_id = #clssId:VARCHAR# OR A.new_clss_id = #clssId:VARCHAR#)
+		                            </isEqual>
+		                            <isEqual property="clssDivCd" compareValue="2">
+		                                A.clss_id = #clssId:VARCHAR#
+		                            </isEqual>
+		                        </isNotEmpty>
+		                    </dynamic>
+		                    )
+		            GROUP BY record_center_id, cur_keep_org_cd, cur_keep_org_nm, clss_id, clss_nm
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물관리_처리부서관리
+		: 처리부서관리 화면의 기록물철 목록을조회한다.	
+	 -->
+	<resultMap id="findCurKeepOrgMngClssFolderPagedList-result" class="rms.sys.recordmng.domain.CurKeepOrgFolderMng">
+		<result property = "recordCenterId"	 column = "record_center_id"/>
+		<result property = "folderId" 	 	 column = "folder_id"/>
+		<result property = "creatSysCd" 	 column = "creat_sys_cd"/>
+		<result property = "creatSysNm" 	 column = "creat_sys_nm"/>
+		<result property = "title" 			 column = "title"/>
+		<result property = "curKeepOrgCd" 	 column = "cur_keep_org_cd"/>
+		<result property = "curKeepOrgNm" 	 column = "cur_keep_org_nm"/>
+		<result property = "orgCd" 			 column = "org_cd"/>
+		<result property = "orgNm"		   	 column = "org_nm"/>
+		<result property = "orgAbbrNm"		 column = "org_abbr_nm"/>
+		<result property = "clssId"			 column = "clss_id" />
+		<result property = "clssNm"		  	 column = "clss_nm"/>
+		<result property = "creatYyyy"		 column = "creat_yyyy"/>
+	</resultMap>
+	<select id="countCurKeepOrgMngClssFolderPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgFolderMng" resultClass="java.lang.Long">
+		 SELECT COUNT(1)
+         FROM TB_RDFOLDER A
+         WHERE A.record_center_id = #recordCenterId:VARCHAR#
+         <dynamic>
+             <isNotEmpty prepend="AND" property="curKeepOrgCd">
+                 A.cur_keep_org_cd = #curKeepOrgCd:VARCHAR#
+             </isNotEmpty>
+             <isEmpty prepend="AND" property="curKeepOrgCd">
+                 A.cur_keep_org_cd is null
+             </isEmpty>
+             <isNotEmpty prepend="AND" property="title">
+                 A.title LIKE #title:VARCHAR#
+             </isNotEmpty>
+             <isNotEmpty prepend="AND" property="clssId">
+                 A.clss_id = #clssId:VARCHAR#
+             </isNotEmpty>
+         </dynamic>
+	</select>
+	<select id="findCurKeepOrgMngClssFolderPagedList" parameterClass="rms.sys.recordmng.domain.CurKeepOrgFolderMng" resultMap="findCurKeepOrgMngClssFolderPagedList-result">
+		SELECT E.record_center_id
+		      ,E.folder_id
+		      ,E.creat_sys_cd
+		      ,(select com_cd_nm from tb_zzcomcd where com_type_cd = 'RD17' and com_cd = E.creat_sys_cd) AS creat_sys_nm
+		      ,E.title
+		      ,E.cur_keep_org_cd
+		      ,(SELECT org_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.cur_keep_org_cd) AS cur_keep_org_nm
+		      ,E.org_cd
+		      ,(SELECT org_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_nm
+		      ,(SELECT org_abbr_nm FROM TB_STORG WHERE record_center_id = E.record_center_id AND org_cd = E.org_cd) AS org_abbr_nm
+		      ,E.clss_nm
+		      ,E.clss_id
+		      ,E.creat_yyyy
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.record_center_id, A.folder_id, A.creat_sys_cd, A.title, A.cur_keep_org_cd
+		                  ,A.org_cd, A.clss_nm, A.clss_id, A.creat_yyyy
+		            FROM TB_RDFOLDER A
+		            WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		            <dynamic>
+		                <isNotEmpty prepend="AND" property="curKeepOrgCd">
+		                    A.cur_keep_org_cd = #curKeepOrgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isEmpty prepend="AND" property="curKeepOrgCd">
+		                    A.cur_keep_org_cd is null
+		                </isEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    A.title LIKE #title:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    A.clss_id = #clssId:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY A.record_center_id, A.cur_keep_org_cd
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		기록물관리_처리부서관리
+		: 처리부서 지정처리를 한다. (처리부서별, 단위과제(업무)별, 기록물철별)
+	 -->
+	<update id="updateCurKeepOrgCd" parameterClass="rms.sys.recordmng.domain.CurKeepOrgMng">
+		UPDATE TB_RDFOLDER 
+		SET  BEF_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+			,CUR_KEEP_ORG_CD = #chngCurKeepOrgCd:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="folderId">
+			FOLDER_ID = #folderId:VARCHAR#
+		</isNotEmpty>
+		AND CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+		<isNotEmpty prepend="AND" property="clssId">
+			CLSS_ID = #clssId:VARCHAR#
+		</isNotEmpty>
+	</update>
+	
+</sqlMap>

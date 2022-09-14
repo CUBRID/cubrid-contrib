@@ -1,0 +1,1757 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="transf.transf">
+
+
+	<!-- 이관 이관목록 작성 이관대상선정 목록을 조회한다. -->
+	<resultMap id="transfFolderChoicePagedList-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="collDivCd" 				column="coll_div_cd"/>
+		<result property="collDivNm" 				column="coll_div_nm"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="orgAbbrNm" 				column="org_abbr_nm"/>
+		<result property="clssNm" 					column="clss_nm"/>
+		<result property="folderId" 				column="folder_id"/>
+		<result property="folderTitle" 				column="title"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="transfHandlDivCd" 		column="status_cd"/>
+		<result property="transfHandlDivNm" 		column="status_nm"/>
+		<result property="transfHopeYyyy" 			column="transf_hope_yyyy"/>
+		<result property="transfDelayRsn" 			column="transf_rsn"/>
+		<result property="remk"			 			column="remk"/>
+		<result property="recvTransfDivCd"			column="recv_transf_div_cd"/>
+		<result property="transfListId"				column="transf_list_id"/>
+		<result property="folderKey" 				column="folder_key"/>
+		<result property="hoNo" 				    column="ho_no"/>
+		<result property="hoNoCnt" 					column="ho_no_cnt"/>
+	</resultMap>
+	<!-- 
+		이관 이관목록 작성 이관대상선정 목록을 조회한다.
+		1. 1차 네오변환 안된 철은 목록에 나오지 않도록 조건 추가
+	 -->
+	<select id="findTransfChoicePagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfFolderChoicePagedList-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+				SELECT coll_div_cd
+					, coll_div_nm
+					, org_cd
+					, org_nm
+					, org_abbr_nm
+					, clss_div_cd
+					, clss_id
+					, clss_nm
+					, folder_id
+					, title
+					, creat_yyyy
+					, status_cd
+					, status_nm
+					, transf_hope_yyyy
+					, transf_rsn
+					, remk
+					, recv_transf_div_cd
+					, transf_list_id
+					, folder_key
+					, ho_no
+					, ho_no_cnt
+				FROM (
+					SELECT '3' AS coll_div_cd
+						, 'RMS철' AS coll_div_nm
+						, a.org_cd
+						, c.org_nm
+						, c.org_abbr_nm
+						, a.clss_div_cd
+						, a.clss_id
+						, a.clss_nm
+						, a.folder_id
+						, a.title
+						, a.creat_yyyy
+						, NVL(b.transf_div_cd,'2') AS status_cd
+						, NVL((SELECT c.com_cd_nm FROM tb_zzcomcd c WHERE c.com_type_cd = 'DF04' AND c.com_cd = b.transf_div_cd),'정기이관') AS status_nm
+						, b.transf_hope_yyyy
+						, b.transf_rsn, b.remk
+						, b.recv_transf_div_cd
+						, b.transf_list_id
+						, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key
+						, A.ho_no
+						,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt
+					FROM    TB_RDFOLDER a, TB_DFRECVTRANSFLIST b, TB_STORG c
+					WHERE  	a.folder_id = b.folder_id(+)
+					AND		a.record_center_id = b.record_center_id(+)
+					AND		a.org_cd = c.org_cd
+					AND		a.record_center_id = c.record_center_id
+					AND		a.record_center_id = #recordCenterId:VARCHAR#
+					AND		a.transf_state_cd IS NULL
+					AND	    a.folder_keep_state_cd NOT IN ('02','03','05')
+					AND 	a.NEO_TRANS_STATE = '4'
+					AND 	NVL(b.recv_transf_div_cd,'0') <![CDATA[<>]]> '5'
+					AND 	(a.expt_transf_yyyy <![CDATA[<=]]> #transfYyyy:VARCHAR# 
+					AND 	TO_NUMBER(a.presv_term_cd) <![CDATA[>=]]> 20)
+					<isNotEmpty property="presvTermCd">
+						<isEqual property="presvTermCheck" compareValue="1">
+							<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+								a.presv_term_cd <![CDATA[>=]]> '20'
+							</isEqual>
+							<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+							</isNotEqual> 					 
+						</isEqual>
+						<isNotEqual property="presvTermCheck" compareValue="1">
+							<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+								a.presv_term_cd IN ('20','25') 
+						</isEqual>
+							<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd=#presvTermCd:VARCHAR#
+						</isNotEqual>
+						</isNotEqual>
+					</isNotEmpty>
+					<!-- 조회조건에 생산시스템 추가 2015.02.25 이재용 -->
+					<isNotEmpty prepend="AND" property="creatSysCd">
+						a.creat_sys_cd = #creatSysCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="creatFromYyyy">
+						a.creat_yyyy BETWEEN  #creatFromYyyy:VARCHAR# AND  #creatToYyyy:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="folderTitle">
+						(a.title LIKE #folderTitle:VARCHAR# OR a.sub_title LIKE #folderTitle:VARCHAR# OR a.corct_title LIKE #folderTitle:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="status">
+						<isEqual property="status" compareValue="2">
+							b.transf_div_cd IS NULL
+						</isEqual>
+						<isNotEqual property="status" compareValue="2">
+							b.transf_div_cd = #status:VARCHAR#
+						</isNotEqual>
+					</isNotEmpty>
+					UNION ALL
+					SELECT	a.coll_div_cd
+						, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF08' AND c.com_cd = a.coll_div_cd) AS coll_div_nm
+						, a.org_cd
+						, c.org_nm
+						, c.org_abbr_nm
+						, a.clss_div_cd
+						, a.clss_id
+						, (SELECT c.bis_clss_nm FROM TB_ZZBISCLSS c WHERE c.bis_clss_id = a.clss_id) AS clss_nm
+						, a.transf_list_id AS folder_id
+						, a.title
+						, a.creat_yyyy
+						, a.transf_div_cd AS status_cd
+						, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF04' AND c.com_cd = a.transf_div_cd) AS status_nm
+						, a.transf_hope_yyyy
+						, a.transf_rsn
+						, a.remk
+						, a.recv_transf_div_cd
+						, a.transf_list_id
+						, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key
+						,A.ho_no
+						,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt
+					FROM   	TB_DFRECVTRANSFLIST a, TB_STORG c
+					WHERE	a.org_cd = c.org_cd
+					AND  	a.record_center_id = c.record_center_id
+					AND    	a.record_center_id = #recordCenterId:VARCHAR#
+					AND    	a.transf_yyyy = #transfYyyy:VARCHAR#
+					AND 	a.recv_transf_div_cd = '5'
+					AND    	a.transf_grp_sno IN (SELECT transf_grp_sno 
+												 FROM TB_DFTRANSFWORK WHERE record_center_id = #recordCenterId:VARCHAR#
+												 AND		transf_yyyy = #transfYyyy:VARCHAR#
+												 AND		transf_handl_state = '1'
+												 AND    	transf_list_choice_fin_ymd IS NULL)
+					<isNotEmpty prepend="AND" property="folderTitle">
+						a.title LIKE #folderTitle:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="status">
+						a.transf_div_cd = #status:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty property="presvTermCd">
+						<isEqual property="presvTermCheck" compareValue="1">
+							<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+								a.presv_term_cd <![CDATA[>=]]> '20'
+							</isEqual>
+							<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+							</isNotEqual> 					 
+						</isEqual>
+						<isNotEqual property="presvTermCheck" compareValue="1">
+							<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+								a.presv_term_cd IN ('20','25') 
+						</isEqual>
+							<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd=#presvTermCd:VARCHAR#
+						</isNotEqual>
+						</isNotEqual>
+					</isNotEmpty>
+					<!-- 조회조건에 생산시스템 추가 2015.02.25 이재용 -->
+					<isNotEmpty prepend="AND" property="creatSysCd">
+						a.creat_sys_cd = #creatSysCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="creatFromYyyy">
+					    a.creat_yyyy BETWEEN  #creatFromYyyy:VARCHAR# AND  #creatToYyyy:VARCHAR#
+					</isNotEmpty>
+				)
+				<dynamic prepend="WHERE">
+					<isNotEmpty prepend="AND" property="orgCd">
+						org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="clssId">
+						(clss_div_cd = #clssDivCd:VARCHAR# AND clss_id = #clssId:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="collDivCd">
+						coll_div_cd = #collDivCd:VARCHAR#
+					</isNotEmpty>
+				</dynamic>
+				<isEmpty property="sortDiv">
+					ORDER BY title
+				</isEmpty>
+				<isEqual property="sortDiv" compareValue="1">
+					ORDER BY org_nm
+				</isEqual>
+				<isEqual property="sortDiv" compareValue="2">
+					ORDER BY creat_yyyy
+				</isEqual>
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!--
+		이관 > 연기목록 작성 >> 이관연기목록 선정목록(COUNT)
+		1. 1차 네오변환 안된 철은 목록에 나오지 않도록 조건 추가
+	-->
+	<select id="countTransfChoicePagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.Long">
+ 		SELECT COUNT(1)
+		FROM (
+			SELECT coll_div_cd
+				, coll_div_nm
+				, org_cd
+				, org_nm
+				, org_abbr_nm
+				, clss_div_cd
+				, clss_id
+				, clss_nm
+				, folder_id
+				, title
+				, creat_yyyy
+				, status_cd
+				, status_nm
+				, transf_hope_yyyy
+				, transf_rsn
+				, remk
+				, recv_transf_div_cd
+				, transf_list_id
+				, folder_key
+				, ho_no
+				, ho_no_cnt
+			FROM (
+				SELECT '3' AS coll_div_cd
+					, 'RMS철' AS coll_div_nm
+					, a.org_cd
+					, c.org_nm
+					, c.org_abbr_nm
+					, a.clss_div_cd
+					, a.clss_id
+					, a.clss_nm
+					, a.folder_id
+					, a.title
+					, a.creat_yyyy
+					, NVL(b.transf_div_cd,'2') AS status_cd
+					, NVL((SELECT c.com_cd_nm FROM tb_zzcomcd c WHERE c.com_type_cd = 'DF04' AND c.com_cd = b.transf_div_cd),'정기이관') AS status_nm
+					, b.transf_hope_yyyy
+					, b.transf_rsn, b.remk
+					, b.recv_transf_div_cd
+					, b.transf_list_id
+					, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key
+					, A.ho_no
+					,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt
+				FROM    TB_RDFOLDER a, TB_DFRECVTRANSFLIST b, TB_STORG c
+				WHERE  	a.folder_id = b.folder_id(+)
+				AND		a.record_center_id = b.record_center_id(+)
+				AND		a.org_cd = c.org_cd
+				AND		a.record_center_id = c.record_center_id
+				AND		a.record_center_id = #recordCenterId:VARCHAR#
+				AND		a.transf_state_cd IS NULL
+				AND	    a.folder_keep_state_cd NOT IN ('02','03','05')
+				AND     a.NEO_TRANS_STATE = '4'
+				AND 	NVL(b.recv_transf_div_cd,'0') <![CDATA[<>]]> '5'
+			  	AND 	(a.expt_transf_yyyy <![CDATA[<=]]> #transfYyyy:VARCHAR# 
+			  	AND 	TO_NUMBER(a.presv_term_cd) <![CDATA[>=]]> 20)
+				<isNotEmpty property="presvTermCd">
+					<isEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd <![CDATA[>=]]> '20'
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						a.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+						</isNotEqual> 					 
+					</isEqual>
+					<isNotEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd IN ('20','25') 
+					</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						a.presv_term_cd=#presvTermCd:VARCHAR#
+					</isNotEqual>
+					</isNotEqual>
+				</isNotEmpty>
+				<!-- 조회조건에 생산시스템 추가 2015.02.25 이재용 -->
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					a.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatFromYyyy">
+					a.creat_yyyy BETWEEN  #creatFromYyyy:VARCHAR# AND  #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					(a.title LIKE #folderTitle:VARCHAR# OR a.sub_title LIKE #folderTitle:VARCHAR# OR a.corct_title LIKE #folderTitle:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="status">
+					<isEqual property="status" compareValue="2">
+						b.transf_div_cd IS NULL
+					</isEqual>
+					<isNotEqual property="status" compareValue="2">
+						b.transf_div_cd = #status:VARCHAR#
+					</isNotEqual>
+				</isNotEmpty>
+				UNION ALL
+				SELECT	a.coll_div_cd
+					, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF08' AND c.com_cd = a.coll_div_cd) AS coll_div_nm
+					, a.org_cd
+					, c.org_nm
+					, c.org_abbr_nm
+					, a.clss_div_cd
+					, a.clss_id
+					, (SELECT c.bis_clss_nm FROM TB_ZZBISCLSS c WHERE c.bis_clss_id = a.clss_id) AS clss_nm
+					, a.transf_list_id AS folder_id
+					, a.title
+					, a.creat_yyyy
+					, a.transf_div_cd AS status_cd
+					, (SELECT c.com_cd_nm FROM TB_ZZCOMCD c WHERE c.com_type_cd = 'DF04' AND c.com_cd = a.transf_div_cd) AS status_nm
+					, a.transf_hope_yyyy
+					, a.transf_rsn
+					, a.remk
+					, a.recv_transf_div_cd
+					, a.transf_list_id
+					, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key
+					, A.ho_no
+					,(SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = a.CREAT_SYS_CD AND ORG_CD = a.ORG_CD AND CLSS_ID = a.CLSS_ID AND CREAT_YYYY = a.CREAT_YYYY AND FOLDER_REG_SEQ = a.FOLDER_REG_SEQ) ho_no_cnt
+				FROM   	TB_DFRECVTRANSFLIST a, TB_STORG c
+				WHERE	a.org_cd = c.org_cd
+				AND  	a.record_center_id = c.record_center_id
+				AND    	a.record_center_id = #recordCenterId:VARCHAR#
+				AND    	a.transf_yyyy = #transfYyyy:VARCHAR#
+				AND 	a.recv_transf_div_cd = '5'
+				AND    	a.transf_grp_sno IN (SELECT transf_grp_sno 
+											 FROM TB_DFTRANSFWORK WHERE record_center_id = #recordCenterId:VARCHAR#
+											 AND		transf_yyyy = #transfYyyy:VARCHAR#
+											 AND		transf_handl_state = '1'
+											 AND    	transf_list_choice_fin_ymd IS NULL)
+				<isNotEmpty prepend="AND" property="folderTitle">
+					a.title LIKE #folderTitle:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="status">
+					a.transf_div_cd = #status:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="presvTermCd">
+					<isEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd <![CDATA[>=]]> '20'
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						a.presv_term_cd <![CDATA[>=]]> #presvTermCd:VARCHAR#
+						</isNotEqual> 					 
+					</isEqual>
+					<isNotEqual property="presvTermCheck" compareValue="1">
+						<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+							a.presv_term_cd IN ('20','25') 
+						</isEqual>
+						<isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+						a.presv_term_cd=#presvTermCd:VARCHAR#
+					</isNotEqual>
+					</isNotEqual>
+				</isNotEmpty>
+				<!-- 조회조건에 생산시스템 추가 2015.02.25 이재용 -->
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					a.creat_sys_cd = #creatSysCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatFromYyyy">
+				    a.creat_yyyy BETWEEN  #creatFromYyyy:VARCHAR# AND  #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+			)
+			<dynamic prepend="WHERE">
+				<isNotEmpty prepend="AND" property="orgCd">
+					org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(clss_div_cd = #clssDivCd:VARCHAR# AND clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="collDivCd">
+					coll_div_cd = #collDivCd:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+		)
+	</select>
+	
+	<!-- 이관 이관목록작성 조기이관대상선정 목록을 조회한다. -->
+	<resultMap id="transfEarly-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="folderId" 				column="FOLDER_ID"/>
+		<result property="folderTitle" 				column="TITLE"/>
+		<result property="orgNm" 					column="ORG_NM"/>
+		<result property="orgAbbrNm" 				column="ORG_ABBR_NM"/>
+		<result property="clssNm" 					column="CLSS_NM"/>	
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="recordRegCnt" 			column="RECORD_REG_CNT"/>
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>
+		<result property="bisTermNm" 				column="BIS_TERM_NM"/>
+		<result property="collDivCd" 				column="COLL_DIV_CD"/>
+		<result property="transfDivNm" 				column="TRANSF_DIV_NM"/>
+		<result property="transfHopeYyyy" 			column="TRANSF_HOPE_YYYY"/>		
+		<result property="transfDelayRsn" 			column="TRANSF_RSN"/>
+		<result property="folderKey" 				column="folder_key"/>
+		<result property="hoNo" 					column="ho_no"/>
+		<result property="hoNoCnt" 					column="ho_no_cnt"/>
+	</resultMap>
+	<!-- 
+		이관 이관목록작성 조기이관대상선정 목록을 조회한다.
+	 -->
+	<select id="findTransfEarlyPagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfEarly-result">
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+				SELECT	A.FOLDER_ID
+					, A.TITLE
+					, C.ORG_NM
+					, C.ORG_ABBR_NM
+					, A.CLSS_NM
+					, A.CREAT_YYYY
+					, A.RECORD_REG_CNT
+					, A.PRESV_TERM_CD
+					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) PRESV_TERM_NM
+					, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM
+					, B.COLL_DIV_CD
+					, DECODE(B.TRANSF_DIV_CD,'3','선정','미선정') AS TRANSF_DIV_NM
+					, B.TRANSF_HOPE_YYYY
+					, B.TRANSF_RSN
+					, (A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS folder_key
+					, A.ho_no
+					, (SELECT COUNT(HO_NO) FROM TB_RDFOLDER WHERE CREAT_SYS_CD = A.CREAT_SYS_CD AND ORG_CD = A.ORG_CD AND CLSS_ID = A.CLSS_ID AND CREAT_YYYY = A.CREAT_YYYY AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) ho_no_cnt
+				FROM  	TB_RDFOLDER A, TB_DFRECVTRANSFLIST B, TB_STORG C
+				WHERE 	A.FOLDER_ID = B.FOLDER_ID(+)
+				AND	  	A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)	
+				AND   	A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+				AND   	A.ORG_CD = C.ORG_CD
+				AND	  	A.TRANSF_STATE_CD IS NULL
+				AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')
+				AND   	(
+					(A.EXPT_TRANSF_YYYY <![CDATA[ > ]]> #transfYyyy:VARCHAR# AND TO_NUMBER(A.PRESV_TERM_CD) <![CDATA[ >= ]]> 20)
+					OR (A.DAMG_HANDL_CD = '2')
+					<isNotEmpty prepend="OR" property="limitPresvTerm">
+						<isEqual property="limitPresvTerm" compareValue="1">
+							(TO_NUMBER(A.PRESV_TERM_CD) <![CDATA[ < ]]> 20)
+						</isEqual>
+					</isNotEmpty>
+				)
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					(A.TITLE LIKE #folderTitle:VARCHAR# OR A.SUB_TITLE LIKE #folderTitle:VARCHAR# OR A.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+				</isNotEmpty>
+		        <isNotEmpty property="presvTermCd">
+			        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD IN ('20','25')
+		            </isEqual>
+			        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+					A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		            </isNotEqual>		            
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatFromYyyy">
+					A.CREAT_YYYY BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="status">
+					<isEqual property="status" compareValue="0">
+						B.TRANSF_DIV_CD IS NULL
+					</isEqual>
+					<isEqual property="status" compareValue="1">
+						B.TRANSF_DIV_CD = '3'
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="damgHandlCd">
+					<isEqual property="damgHandlCd" compareValue="0">
+						A.DAMG_HANDL_CD = '2'
+					</isEqual>
+					<isEqual property="damgHandlCd" compareValue="1">
+						(A.DAMG_HANDL_CD IS NULL OR A.DAMG_HANDL_CD <![CDATA[ <> ]]> '2')
+					</isEqual>
+				</isNotEmpty>
+				ORDER BY A.title, A.folder_id
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 이관목록작성 조기이관대상선정 목록을 조회한다.
+	 -->
+	 <select id="countTransfEarlyPagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.Long">
+		SELECT	COUNT(1)
+		FROM  	TB_RDFOLDER A, TB_DFRECVTRANSFLIST B, TB_STORG C
+		WHERE 	A.FOLDER_ID = B.FOLDER_ID(+)
+		AND	  	A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)	
+		AND   	A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		AND   	A.ORG_CD = C.ORG_CD
+		AND	  	A.TRANSF_STATE_CD IS NULL
+		AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')
+		AND   	(
+			(A.EXPT_TRANSF_YYYY <![CDATA[ > ]]> #transfYyyy:VARCHAR# AND TO_NUMBER(A.PRESV_TERM_CD) <![CDATA[ >= ]]> 20)
+			OR (A.DAMG_HANDL_CD = '2')
+			<isNotEmpty prepend="OR" property="limitPresvTerm">
+				<isEqual property="limitPresvTerm" compareValue="1">
+					(TO_NUMBER(A.PRESV_TERM_CD) <![CDATA[ < ]]> 25)
+				</isEqual>
+			</isNotEmpty>
+		)
+		<isNotEmpty prepend="AND" property="orgCd">
+			A.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+			(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="folderTitle">
+			(A.TITLE LIKE #folderTitle:VARCHAR# OR A.SUB_TITLE LIKE #folderTitle:VARCHAR# OR A.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty property="presvTermCd">
+	        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            A.PRESV_TERM_CD IN ('20','25')
+            </isEqual>
+	        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+			A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEqual>		            
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="creatFromYyyy">
+			A.CREAT_YYYY BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="status">
+			<isEqual property="status" compareValue="0">
+				B.TRANSF_DIV_CD IS NULL
+			</isEqual>
+			<isEqual property="status" compareValue="1">
+				B.TRANSF_DIV_CD = '3'
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="damgHandlCd">
+			<isEqual property="damgHandlCd" compareValue="0">
+				A.DAMG_HANDL_CD = '2'
+			</isEqual>
+			<isEqual property="damgHandlCd" compareValue="1">
+				(A.DAMG_HANDL_CD IS NULL OR A.DAMG_HANDL_CD <![CDATA[ <> ]]> '2')
+			</isEqual>
+		</isNotEmpty>
+	</select>
+	
+	<!-- 이관 이관목록작성 반려기록물이관대상선정 목록을 조회한다. -->
+	<resultMap id="transfRjct-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="folderId" 				column="FOLDER_ID"/>
+		<result property="transfListId" 			column="TRANSF_LIST_ID"/>		
+		<result property="folderTitle" 				column="TITLE"/>
+		<result property="orgNm" 					column="ORG_NM"/>
+		<result property="orgAbbrNm" 				column="ORG_ABBR_NM"/>
+		<result property="clssNm" 					column="CLSS_NM"/>	
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="recordRegCnt" 			column="RECORD_REG_CNT"/>
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>
+		<result property="bisTermNm" 				column="BIS_TERM_NM"/>
+		<result property="folderKey" 				column="folder_key"/>
+		<result property="hoNo" 					column="ho_no"/>
+		<result property="hoNoCnt" 					column="ho_no_cnt"/>
+		<result property="transfDivNm" 				column="TRANSF_DIV_NM"/>
+		<result property="collDivCd" 				column="COLL_DIV_CD"/>	
+		<result property="transfDivCd" 				column="TRANSF_DIV_CD"/>
+		<result property="keepFlag" 				column="KEEP_FLAG"/>		
+		<result property="recvTransfDivCd" 			column="RECV_TRANSF_DIV_CD"/>				
+		<result property="lstTranfState" 	    	column="LST_TRANF_STATE"/>
+		<result property="lstTranfYyyy" 			column="LST_TRANF_YYYY"/>		
+		<result property="lstTranfGrpSno" 			column="LST_TRANF_GRP_SNO"/>
+	</resultMap>
+	<!-- 
+		이관 이관목록작성 반려기록물이관대상선정 목록을 조회한다.
+	 -->
+	<select id="findTransfRjctPagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfRjct-result">
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+			   SELECT A.FOLDER_ID
+					,(SELECT MAX(TRANSF_LIST_ID) 
+                      FROM TB_DFRECVTRANSFLIST 
+                      WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID 
+                      AND FOLDER_ID = A.FOLDER_ID) AS TRANSF_LIST_ID				
+					, A.TITLE
+					, C.ORG_NM
+					, C.ORG_ABBR_NM
+					, A.CLSS_NM
+					, A.CREAT_YYYY
+					, A.RECORD_REG_CNT
+					, A.PRESV_TERM_CD
+					,(SELECT C.COM_CD_NM 
+					  FROM TB_ZZCOMCD C 
+					  WHERE C.COM_TYPE_CD = 'RD07' 
+					  AND C.COM_CD = DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD)) AS PRESV_TERM_NM
+					,(SELECT D.COM_CD_NM 
+					  FROM TB_ZZBISCLSS C, TB_ZZCOMCD D 
+					  WHERE D.COM_TYPE_CD = 'RD07' 
+					  AND D.COM_CD = DECODE(C.PRESV_TERM_CD, '20', '25', C.PRESV_TERM_CD)  
+					  AND C.BIS_CLSS_ID = A.CLSS_ID) AS BIS_TERM_NM
+					,(A.creat_sys_cd||'-'||A.org_cd||'-'||A.clss_id||'-'||A.creat_yyyy||'-'||A.folder_reg_seq||'-'||A.ho_no) AS FOLDER_KEY
+					, A.HO_NO
+					,(SELECT COUNT(HO_NO) 
+					  FROM TB_RDFOLDER 
+					  WHERE CREAT_SYS_CD = A.CREAT_SYS_CD 
+					  AND ORG_CD = A.ORG_CD 
+					  AND CLSS_ID = A.CLSS_ID 
+					  AND CREAT_YYYY = A.CREAT_YYYY 
+					  AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS HO_NO_CNT
+                    ,(SELECT DECODE(CONFM_TRANSF_DIV_CD, '', '선정', '미선정') 
+                      FROM TB_DFRECVTRANSFLIST 
+                      WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID 
+                      AND FOLDER_ID = A.FOLDER_ID 
+                      AND TRANSF_LIST_ID =   
+                     (SELECT MAX(TRANSF_LIST_ID) 
+                      FROM TB_DFRECVTRANSFLIST
+                      WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                      AND FOLDER_ID = A.FOLDER_ID) ) AS TRANSF_DIV_NM
+                    ,(SELECT COLL_DIV_CD
+                          FROM TB_DFRECVTRANSFLIST
+                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                           AND TRANSF_YYYY = A.LST_TRANF_YYYY
+                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO
+                           AND FOLDER_ID = A.FOLDER_ID) AS COLL_DIV_CD
+                    ,(SELECT TRANSF_DIV_CD
+                          FROM TB_DFRECVTRANSFLIST
+                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                           AND TRANSF_YYYY = A.LST_TRANF_YYYY
+                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO
+                           AND FOLDER_ID = A.FOLDER_ID) AS TRANSF_DIV_CD                           
+                    ,(SELECT KEEP_FLAG
+                          FROM TB_DFRECVTRANSFLIST
+                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                           AND TRANSF_YYYY = A.LST_TRANF_YYYY
+                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO
+                           AND FOLDER_ID = A.FOLDER_ID) AS KEEP_FLAG 
+                    ,(SELECT RECV_TRANSF_DIV_CD
+                          FROM TB_DFRECVTRANSFLIST
+                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                           AND TRANSF_YYYY = A.LST_TRANF_YYYY
+                           AND TRANSF_GRP_SNO = A.LST_TRANF_GRP_SNO
+                           AND FOLDER_ID = A.FOLDER_ID) AS RECV_TRANSF_DIV_CD  
+					, A.LST_TRANF_STATE
+					, A.LST_TRANF_YYYY
+					, A.LST_TRANF_GRP_SNO
+				FROM  	TB_RDFOLDER A, TB_STORG C
+				WHERE 	A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+				AND   	A.ORG_CD = C.ORG_CD
+				AND	  	A.TRANSF_STATE_CD = '4'
+				AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')
+   				AND 	A.LST_TRANF_STATE = '02'
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					(A.TITLE LIKE #folderTitle:VARCHAR# OR A.SUB_TITLE LIKE #folderTitle:VARCHAR# OR A.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+				</isNotEmpty>
+		        <isNotEmpty property="presvTermCd">
+			        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD IN ('20','25')
+		            </isEqual>
+			        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+			            A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		            </isNotEqual>		            
+		        </isNotEmpty>				
+				<isNotEmpty prepend="AND" property="creatFromYyyy">
+					A.CREAT_YYYY BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="status">
+					<isEqual property="status" compareValue="0">
+						(SELECT CONFM_TRANSF_DIV_CD
+                         FROM TB_DFRECVTRANSFLIST
+                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                         AND FOLDER_ID = A.FOLDER_ID
+                         AND TRANSF_LIST_ID =
+                               (SELECT MAX(TRANSF_LIST_ID)
+                                  FROM TB_DFRECVTRANSFLIST
+                                 WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                                   AND FOLDER_ID = A.FOLDER_ID)) IS NOT NULL					
+					</isEqual>
+					<isEqual property="status" compareValue="1">
+						(SELECT CONFM_TRANSF_DIV_CD
+                         FROM TB_DFRECVTRANSFLIST
+                         WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                         AND FOLDER_ID = A.FOLDER_ID
+                         AND TRANSF_LIST_ID =
+                               (SELECT MAX(TRANSF_LIST_ID)
+                                  FROM TB_DFRECVTRANSFLIST
+                                 WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                                   AND FOLDER_ID = A.FOLDER_ID)) IS NULL					
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="damgHandlCd">
+					<isEqual property="damgHandlCd" compareValue="0">
+						A.DAMG_HANDL_CD = '2'
+					</isEqual>
+					<isEqual property="damgHandlCd" compareValue="1">
+						(A.DAMG_HANDL_CD IS NULL OR A.DAMG_HANDL_CD <![CDATA[ <> ]]> '2')
+					</isEqual>
+				</isNotEmpty>
+				ORDER BY A.title, A.folder_id
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 이관목록작성 반려기록물이관대상선정 목록을 조회한다.
+	 -->
+	 <select id="countTransfRjctPagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.Long">
+		SELECT	COUNT(1)
+		FROM  	TB_RDFOLDER A, TB_STORG C
+		WHERE 	A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	  	A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		AND   	A.ORG_CD = C.ORG_CD
+		AND	  	A.TRANSF_STATE_CD = '4'
+		AND		A.FOLDER_KEEP_STATE_CD IN ('01','04')
+   		AND 	A.LST_TRANF_STATE = '02'
+		<isNotEmpty prepend="AND" property="orgCd">
+			A.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+			(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="folderTitle">
+			(A.TITLE LIKE #folderTitle:VARCHAR# OR A.SUB_TITLE LIKE #folderTitle:VARCHAR# OR A.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+		</isNotEmpty>
+        <isNotEmpty property="presvTermCd">
+	        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            A.PRESV_TERM_CD IN ('20','25')
+            </isEqual>
+	        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+	            A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEqual>		            
+        </isNotEmpty>			
+		<isNotEmpty prepend="AND" property="creatFromYyyy">
+			A.CREAT_YYYY BETWEEN #creatFromYyyy:VARCHAR# AND #creatToYyyy:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="status">
+			<isEqual property="status" compareValue="0">
+				(SELECT CONFM_TRANSF_DIV_CD
+                       FROM TB_DFRECVTRANSFLIST
+                       WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                       AND FOLDER_ID = A.FOLDER_ID
+                       AND TRANSF_LIST_ID =
+                             (SELECT MAX(TRANSF_LIST_ID)
+                                FROM TB_DFRECVTRANSFLIST
+                               WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                                 AND FOLDER_ID = A.FOLDER_ID)) IS NOT NULL                 
+			</isEqual>
+			<isEqual property="status" compareValue="1">
+				(SELECT CONFM_TRANSF_DIV_CD
+                       FROM TB_DFRECVTRANSFLIST
+                       WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                       AND FOLDER_ID = A.FOLDER_ID
+                       AND TRANSF_LIST_ID =
+                             (SELECT MAX(TRANSF_LIST_ID)
+                                FROM TB_DFRECVTRANSFLIST
+                               WHERE RECORD_CENTER_ID = A.RECORD_CENTER_ID
+                                 AND FOLDER_ID = A.FOLDER_ID)) IS NULL                 
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="damgHandlCd">
+			<isEqual property="damgHandlCd" compareValue="0">
+				A.DAMG_HANDL_CD = '2'
+			</isEqual>
+			<isEqual property="damgHandlCd" compareValue="1">
+				(A.DAMG_HANDL_CD IS NULL OR A.DAMG_HANDL_CD <![CDATA[ <> ]]> '2')
+			</isEqual>
+		</isNotEmpty>
+	</select>	
+	
+	<!-- 이관 이관목록작성 이관목록통보 목록을 조회한다. -->
+	<resultMap id="transfWrite-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="orgCd" 					column="org_cd"/>
+		<result property="orgNm" 					column="org_nm"/>
+		<result property="transfTotal" 				column="transf_total"/>
+		<result property="transfCnt1"	 			column="transf_cnt1"/>
+		<result property="transfCnt2" 				column="transf_cnt2"/>
+		<result property="transfCnt3" 				column="transf_cnt3"/>
+		<result property="transfCnt4" 				column="transf_cnt4"/>
+	</resultMap>
+	<!-- 
+		이관 이관목록작성 이관목록통보 조회(계)
+	 -->
+	<select id="findTransfWriteSum" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfWrite-result">
+		SELECT '' AS org_cd
+			, '계' AS org_nm
+			, COUNT(a.org_cd) AS transf_total
+			, NVL(SUM(DECODE(a.transf_div_cd,'1',1,'2',1,0)),0) AS transf_cnt1
+			, NVL(SUM(DECODE(a.transf_div_cd,'3',1,0)),0) AS transf_cnt2
+			, NVL(SUM(DECODE(a.transf_div_cd,'4',1,0)),0) AS transf_cnt3
+			, NVL(SUM(DECODE(a.transf_div_cd,'5',1,0)),0) AS transf_cnt4
+		FROM (
+			SELECT org_cd
+				, transf_div_cd
+			FROM TB_DFRECVTRANSFLIST
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND transf_yyyy = #transfYyyy:VARCHAR#
+			AND transf_grp_sno IN (SELECT transf_grp_sno
+								   FROM tb_dftransfwork
+								   WHERE record_center_id = #recordCenterId:VARCHAR#
+								   AND transf_yyyy = #transfYyyy:VARCHAR#
+								   AND transf_handl_state = '1'
+								   AND transf_list_choice_fin_ymd IS NULL)
+			<isNotEmpty prepend="AND" property="orgCd">
+				org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		) a, TB_STORG b
+		WHERE b.record_center_id = #recordCenterId:VARCHAR#
+		AND a.org_cd = b.org_cd
+	</select>
+	<!-- 
+		이관 이관목록작성 이관목록통보 목록을 조회한다.
+	 -->
+	<select id="findTransfWritePagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfWrite-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT a.org_cd
+					, MAX(b.org_nm) AS org_nm
+					, COUNT(a.org_cd) AS transf_total
+					, NVL(SUM(DECODE(a.transf_div_cd,'1',1,'2',1,0)),0) AS transf_cnt1
+					, NVL(SUM(DECODE(a.transf_div_cd,'3',1,0)),0) AS transf_cnt2
+					, NVL(SUM(DECODE(a.transf_div_cd,'4',1,0)),0) AS transf_cnt3
+					, NVL(SUM(DECODE(a.transf_div_cd,'5',1,0)),0) AS transf_cnt4
+				FROM (
+					SELECT org_cd
+						, transf_div_cd
+					FROM 	TB_DFRECVTRANSFLIST
+					WHERE 	record_center_id = #recordCenterId:VARCHAR#
+					AND 	transf_yyyy = #transfYyyy:VARCHAR#
+					AND		transf_grp_sno IN (SELECT transf_grp_sno
+											   FROM tb_dftransfwork
+											   WHERE record_center_id = #recordCenterId:VARCHAR#
+											   AND transf_yyyy = #transfYyyy:VARCHAR#
+											   AND transf_handl_state = '1'
+											   AND transf_list_choice_fin_ymd IS NULL)
+					<isNotEmpty prepend="AND" property="orgCd">
+						org_cd = #orgCd:VARCHAR#
+					</isNotEmpty>
+				) a, TB_STORG b
+				WHERE b.record_center_id = #recordCenterId:VARCHAR#
+				AND	  a.org_cd = b.org_cd
+				GROUP BY a.org_cd
+				ORDER BY a.org_cd
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 이관목록작성 이관목록통보 목록을 조회한다.
+	 -->
+	<select id="countTransfWritePagedList" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT a.org_cd
+			FROM (
+				SELECT org_cd
+					, transf_div_cd
+				FROM 	TB_DFRECVTRANSFLIST
+				WHERE 	record_center_id = #recordCenterId:VARCHAR#
+				AND 	transf_yyyy = #transfYyyy:VARCHAR#
+				AND		transf_grp_sno IN (SELECT transf_grp_sno
+										   FROM tb_dftransfwork
+										   WHERE record_center_id = #recordCenterId:VARCHAR#
+										   AND transf_yyyy = #transfYyyy:VARCHAR#
+										   AND transf_handl_state = '1'
+										   AND transf_list_choice_fin_ymd IS NULL)
+				<isNotEmpty prepend="AND" property="orgCd">
+						org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+			) a, TB_STORG b
+		WHERE b.record_center_id = #recordCenterId:VARCHAR#
+		AND	a.org_cd = b.org_cd
+		GROUP BY a.org_cd
+	)
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 이관목록통보(기록물철 목록) -->
+	<resultMap id="transfFileWrite-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="folderId" 				column="FOLDER_ID"/>
+		<result property="folderTitle" 				column="TITLE"/>
+		<result property="clssNm" 					column="CLSS_NM"/>		
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="recordRegCnt" 			column="RECORD_REG_CNT"/>
+		<result property="presvTermCd" 				column="PRESV_TERM_CD"/>
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>
+		<result property="bisTermNm" 				column="BIS_TERM_NM"/>
+		<result property="transfHandlDivCd" 		column="TRANSF_DIV_CD"/>
+		<result property="transfHandlDivNm" 		column="TRANSF_DIV_NM"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 이관목록통보(기록물철 목록)
+	 -->
+	<select id="findTransfFileWrite" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfFileWrite-result">
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+				SELECT FOLDER_ID
+					, TITLE
+					, CLSS_NM
+					, CREAT_YYYY
+					, RECORD_REG_CNT
+					, PRESV_TERM_CD
+					, PRESV_TERM_NM
+					, BIS_TERM_NM
+					, TRANSF_DIV_CD
+					, TRANSF_DIV_NM
+				FROM (
+					SELECT A.FOLDER_ID
+						, A.TITLE
+						, DECODE(A.CLSS_DIV_CD,'1',(SELECT C.BIS_CLSS_NM FROM TB_ZZBISCLSS C WHERE C.BIS_CLSS_ID = A.CLSS_ID),'2',(SELECT C.UNIT_NM FROM TB_ZZUNIT C WHERE C.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND C.UNIT_CD = A.CLSS_ID),'') CLSS_NM
+						, A.CREAT_YYYY, TO_CHAR(A.RECORD_CNT) RECORD_REG_CNT
+						, A.PRESV_TERM_CD
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM
+						, (SELECT D.COM_CD_NM FROM TB_ZZBISCLSS C, TB_ZZCOMCD D WHERE D.COM_TYPE_CD = 'RD07' AND D.COM_CD = C.PRESV_TERM_CD AND C.BIS_CLSS_ID = A.CLSS_ID) BIS_TERM_NM
+						, A.TRANSF_DIV_CD
+						, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'DF04' AND C.COM_CD = A.TRANSF_DIV_CD) TRANSF_DIV_NM
+					FROM TB_DFRECVTRANSFLIST A
+					WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+					AND	TRANSF_YYYY = #transfYyyy:VARCHAR#
+					AND TRANSF_GRP_SNO = (
+						SELECT TRANSF_GRP_SNO 
+						FROM TB_DFTRANSFWORK
+						WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+						AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+						AND TRANSF_HANDL_STATE = '1'
+						AND TRANSF_LIST_CHOICE_FIN_YMD IS NULL
+					)	
+					AND TRANSF_LIST_ID NOT IN (
+						SELECT TRANSF_LIST_ID 
+						FROM TB_DFRECVTRANSFLIST 
+						WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+						AND	TRANSF_YYYY = #transfYyyy:VARCHAR#
+						AND COLL_DIV_CD IN ('1', '2') AND KEEP_FLAG = '1'
+					)
+					AND ORG_CD = #orgCd:VARCHAR#
+					AND	TRANSF_DIV_CD <![CDATA[<>]]> '2'
+					<dynamic prepend="AND">
+						<isNotEmpty prepend="AND" property="clssId">
+							(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="folderTitle">
+							A.TITLE LIKE #folderTitle:VARCHAR# 
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="status">
+							A.TRANSF_DIV_CD = #status:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+				)
+				ORDER BY title, folder_id
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 이관목록작성 이관목록통보(기록물철 목록)
+	 -->
+	<select id="countTransfFileWrite" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.Long">
+		SELECT COUNT(*)
+		FROM ( 
+			SELECT A.FOLDER_ID
+			FROM TB_DFRECVTRANSFLIST A
+			WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+			AND	TRANSF_YYYY = #transfYyyy:VARCHAR#
+			AND TRANSF_GRP_SNO = (
+				SELECT TRANSF_GRP_SNO 
+				FROM TB_DFTRANSFWORK
+				WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+				AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+				AND TRANSF_HANDL_STATE = '1'
+				AND TRANSF_LIST_CHOICE_FIN_YMD IS NULL
+			)	
+			AND TRANSF_LIST_ID NOT IN (
+				SELECT TRANSF_LIST_ID 
+				FROM TB_DFRECVTRANSFLIST 
+				WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND	TRANSF_YYYY = #transfYyyy:VARCHAR#
+				AND COLL_DIV_CD IN ('1', '2') AND KEEP_FLAG = '1'
+			)
+			AND ORG_CD = #orgCd:VARCHAR#
+			AND	TRANSF_DIV_CD <![CDATA[<>]]> '2'
+			<dynamic prepend="AND">
+				<isNotEmpty prepend="AND" property="clssId">
+					(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					A.TITLE LIKE #folderTitle:VARCHAR# 
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="status">
+					A.TRANSF_DIV_CD = #status:VARCHAR#
+				</isNotEmpty>
+			</dynamic>
+		)
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 이관목록통보 통보파일조회 -->
+	<resultMap id="findTransfWriteInfrmFile-result" class="rms.transf.transf.domain.TransfFile" >
+		<result property="recordCenterId" 				column="record_center_id"/>
+		<result property="transfInfrmCreatYyyy" 		column="transf_infrm_creat_yyyy"/>
+		<result property="transfInfrmFileFullNm" 		column="transf_infrm_file_full_nm"/>
+		<result property="transfInfrmFileNm"	 		column="transf_infrm_file_nm"/>
+		<result property="transfInfrmEndFileFullNm"		column="transf_infrm_end_file_full_nm"/>
+		<result property="transfInfrmFlagNm" 			column="transf_infrm_flag_nm"/>
+		<result property="transfInfrmDtime" 			column="transf_infrm_dtime"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 이관목록통보 통보파일조회
+	 -->
+	<select id="findTransfWriteInfrmFile" parameterClass="rms.transf.transf.domain.TransfFile" resultMap="findTransfWriteInfrmFile-result">
+ 		SELECT record_center_id
+ 			, transf_infrm_creat_yyyy
+ 			, MAX(transf_infrm_file_nm) AS transf_infrm_file_full_nm
+ 			, MAX(transf_infrm_end_file_nm) AS transf_infrm_end_file_full_nm
+ 			<!--cubrid , SUBSTR(MAX(transf_infrm_file_nm),(INSTR(MAX(transf_infrm_file_nm),'/',-1,1))+1) AS transf_infrm_file_nm-->
+ 			, SUBSTR(MAX(transf_infrm_file_nm),(INSTR(MAX(transf_infrm_file_nm),'/',-1))+1) AS transf_infrm_file_nm
+ 			, DECODE(MAX(transf_infrm_flag),'1','통보(온라인)','2','통보(오프라인)','0','미통보') AS transf_infrm_flag_nm
+ 			, MAX(transf_infrm_dtime) AS transf_infrm_dtime				
+		FROM (
+			SELECT record_center_id
+				, transf_infrm_creat_yyyy
+				, DECODE(transf_infrm_file_type,'TRANS_PLAN_REQ',transf_infrm_file_nm) AS transf_infrm_file_nm
+				, DECODE(transf_infrm_file_type,'TRANS_PLAN_REQ_END',transf_infrm_file_nm) AS transf_infrm_end_file_nm
+				, transf_infrm_flag
+				, transf_infrm_dtime
+			FROM TB_DFTRANSFINFRMFILE
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND	transf_infrm_creat_yyyy = #transfYyyy:VARCHAR#
+			AND	transf_infrm_type = '1'
+			AND	transf_infrm_sno = 1
+			AND	transf_infrm_file_type Like 'TRANS_PLAN_REQ%'
+			AND transf_grp_sno = (
+				SELECT MAX(transf_grp_sno)
+				FROM TB_DFTRANSFINFRMFILE
+				WHERE record_center_id = #recordCenterId:VARCHAR#
+				AND	transf_infrm_creat_yyyy = #transfYyyy:VARCHAR#
+				AND	transf_infrm_type = '1'
+				AND	transf_infrm_sno = 1
+				AND	transf_infrm_file_type Like 'TRANS_PLAN_REQ%'
+			)
+		)
+		GROUP BY record_center_id, transf_infrm_creat_yyyy
+		ORDER BY record_center_id, transf_infrm_creat_yyyy
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 기록물철 목록검색(팝업) -->
+	<resultMap id="transfFolderSelect-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="orgNm" 					column="ORG_NM"/>
+		<result property="clssNm" 					column="CLSS_NM"/>	
+		<result property="folderId" 				column="FOLDER_ID"/>	
+		<result property="folderTitle" 				column="TITLE"/>
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 기록물철 목록검색(팝업)
+	 -->
+	<select id="findTransfFolder" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfFolderSelect-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT A.ORG_CD
+					, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND C.ORG_CD=A.ORG_CD) ORG_NM
+					, A.CLSS_ID
+					, A.CLSS_NM
+					, A.FOLDER_ID
+					, A.TITLE
+					, A.CREAT_YYYY
+					, (SELECT C.COM_CD_NM FROM TB_ZZCOMCD C WHERE C.COM_TYPE_CD = 'RD07' AND C.COM_CD=A.PRESV_TERM_CD) PRESV_TERM_NM
+				FROM TB_RDFOLDER A
+				WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+				AND A.TRANSF_STATE_CD IS NULL
+				AND (A.EXPT_TRANSF_YYYY <![CDATA[<=]]> #transfYyyy:VARCHAR#
+				AND TO_NUMBER(A.PRESV_TERM_CD) <![CDATA[>=]]> 20)
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="clssId">
+					(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderTitle">
+					(A.TITLE LIKE #folderTitle:VARCHAR# OR A.SUB_TITLE LIKE #folderTitle:VARCHAR# OR A.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+				</isNotEmpty>
+				ORDER BY A.title, A.folder_id
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 이관 이관목록작성 기록물철 목록검색(팝업)
+	 -->
+	<select id="countTransfFolder" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_RDFOLDER A
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND A.TRANSF_STATE_CD IS NULL
+		AND (A.EXPT_TRANSF_YYYY <![CDATA[<=]]> #transfYyyy:VARCHAR#
+		AND TO_NUMBER(A.PRESV_TERM_CD) <![CDATA[>=]]> 20)
+		<isNotEmpty prepend="AND" property="orgCd">
+			A.ORG_CD = #orgCd:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="clssId">
+			(A.CLSS_DIV_CD = #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		</isNotEmpty>
+		<isNotEmpty prepend="AND" property="folderTitle">
+			(A.TITLE LIKE #folderTitle:VARCHAR# OR A.SUB_TITLE LIKE #folderTitle:VARCHAR# OR A.CORCT_TITLE LIKE #folderTitle:VARCHAR#)
+		</isNotEmpty>
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 그룹 SNO 조회 -->
+	<resultMap id="transfGroupInfo-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID"/>
+		<result property="transfGrpSno" 		column="TRANSF_GRP_SNO"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 그룹 SNO 조회
+		2014.12.멀티이관처리:이관목록 미통보 조건 추가
+	 -->
+	<select id="findTransfGroupId" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfGroupInfo-result">
+		SELECT RECORD_CENTER_ID
+			, TRANSF_GRP_SNO
+		FROM TB_DFTRANSFWORK
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND	TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND TRANSF_HANDL_STATE = '1'
+		AND TRANSF_LIST_CHOICE_FIN_YMD IS NULL
+	</select>
+	
+	
+	<!-- 
+		SELECT - 이관 이관목록작성 이관대상선정 이관목록 ID 조회
+	 -->
+	<select id="findTransfFolderRmsInfo" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="java.lang.String">
+		SELECT TRANSF_LIST_ID
+		FROM TB_DFRECVTRANSFLIST 
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND	FOLDER_ID = #folderId:VARCHAR#
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 대상선정 기록물철 정보 조회 -->
+	<resultMap id="transfChoiceFolderInfo-result" class="rms.transf.transf.domain.TransfFolder" >
+		<result property="rmOrgCd" 					column="org_cd"/>
+		<result property="rmClssDivCd" 				column="clss_div_cd"/>
+		<result property="rmClssId" 				column="clss_id"/>
+		<result property="rmCreatYyyy" 				column="creat_yyyy"/>
+		<result property="rmFolderRegSeq" 			column="folder_reg_seq"/>
+		<result property="rmHoNo"			 		column="ho_no"/>
+		<result property="recordRegCnt"			 	column="record_reg_cnt"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 대상선정 기록물철 정보 조회
+	 -->
+	<select id="findTransfChoiceFolderInfo" parameterClass="rms.transf.transf.domain.TransfFolder" resultMap="transfChoiceFolderInfo-result">
+		SELECT org_cd
+			, clss_div_cd
+			, clss_id
+			, creat_yyyy
+			, folder_reg_seq
+			, ho_no
+			, record_reg_cnt
+		FROM TB_RDFOLDER
+		WHERE folder_id = #folderId:VARCHAR#
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 이관목록통보 이관승인요청파일목록 -->
+	<resultMap id="transPlanReqInfrmFolderList-result" class="rms.transf.transf.domain.TransPlanReqFile" >
+		<result property="folderId" 					column="folder_id"/>
+		<result property="afCreatSysCd" 			    column="af_creat_sys_cd"/>
+		<result property="afOrgCd" 						column="af_org_cd"/>
+		<result property="afClssId"	 					column="af_clss_id"/>
+		<result property="afCreatYyyy" 					column="af_creat_yyyy"/>
+		<result property="afFolderRegSeq" 		    	column="af_folder_reg_seq"/>
+		<result property="afHoNo" 						column="af_ho_no"/>
+		<result property="afHoNoCnt" 					column="af_ho_no_cnt"/>		
+		<result property="afTitle" 						column="af_title"/>
+		<result property="afFolderTypeDivCd" 	    	column="af_folder_type_div_cd"/>
+		<result property="afCloseYyyy"	 				column="af_close_yyyy"/>
+		<result property="afPresvTermCd" 		    	column="af_presv_term_cd"/>
+		<result property="afFolderSize" 			    column="af_folder_size"/>
+		<result property="transfDivCd" 					column="transf_div_cd"/>
+		<result property="transfRsn" 				    column="transf_rsn"/>
+		<result property="transfHopeYyyy"	 	    	column="transf_hope_yyyy"/>
+		<result property="bfCollDivCd" 					column="bf_coll_div_cd"/>
+		<result property="bfCreatSysCd" 				column="bf_creat_sys_cd"/>
+		<result property="bfOrgCd" 						column="bf_org_cd"/>
+		<result property="bfClssId" 					column="bf_clss_id"/>
+		<result property="bfCreatYyyy"	 				column="bf_creat_yyyy"/>
+		<result property="bfFolderRegSeq" 		   		column="bf_folder_reg_seq"/>
+		<result property="bfHoNo" 						column="bf_ho_no"/>  
+		<result property="bfHoNoCnt" 					column="bf_ho_no_cnt"/>		
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 이관목록통보 이관승인요청파일목록
+	 -->
+	<select id="findTransPlanReqInfrmFileList" parameterClass="rms.transf.transf.domain.TransfFile" resultMap="transPlanReqInfrmFolderList-result">
+		SELECT a.folder_id
+<!-- 			, (CASE WHEN b.CREAT_SYS_CD = '05' THEN (CASE  WHEN b.VRMS_FLAG = '1' THEN (CASE WHEN b.EXT_SYS_CD = '01' THEN '01'  -->
+<!-- 																							 WHEN b.EXT_SYS_CD = '02' THEN '02' -->
+<!-- 																							 ELSE '03' -->
+<!-- 																						END) -->
+<!-- 														   WHEN b.MIG_FLAG = '1' THEN '05' -->
+<!-- 														   ELSE '10' -->
+<!-- 													 END) -->
+<!-- 					ELSE b.CREAT_SYS_CD -->
+<!-- 			   END) AS af_creat_sys_cd -->
+			, b.creat_sys_cd AS af_creat_sys_cd
+			, b.org_cd AS af_org_cd
+			, b.clss_id AS af_clss_id
+			, b.creat_yyyy AS af_creat_yyyy
+			, b.folder_reg_seq AS af_folder_reg_seq
+<!-- 			, b.ho_no AS af_ho_no -->
+			, (CASE WHEN b.HO_NO != '001' THEN b.HO_NO
+			        WHEN (SELECT COUNT(1) FROM TB_RDFOLDER F WHERE F.RECORD_CENTER_ID=b.RECORD_CENTER_ID AND F.CREAT_SYS_CD=b.CREAT_SYS_CD AND F.ORG_CD=b.ORG_CD AND F.CLSS_ID=b.CLSS_ID AND F.CREAT_YYYY=b.CREAT_YYYY AND F.FOLDER_REG_SEQ=b.FOLDER_REG_SEQ) > 1 THEN b.HO_NO
+			   ELSE '' END) AS af_ho_no
+			, (SELECT count(ho_no) FROM TB_RDFOLDER WHERE creat_sys_cd=b.CREAT_SYS_CD AND org_cd=b.org_cd AND clss_id=b.clss_id AND creat_yyyy=b.creat_yyyy and folder_reg_seq=b.folder_reg_seq) af_ho_no_cnt
+			, b.title AS af_title
+			, b.folder_type_div_cd AS af_folder_type_div_cd
+			, substr(b.folder_close_dtime, 0, 4) AS af_close_yyyy
+			, b.presv_term_cd AS af_presv_term_cd
+			, LPAD(b.folder_size,13,'0') AS af_folder_size
+			, a.transf_div_cd
+			, a.transf_rsn
+			, a.transf_hope_yyyy
+			, a.coll_div_cd AS bf_coll_div_cd
+<!-- 			, (CASE WHEN a.CREAT_SYS_CD = '05' THEN (CASE WHEN b.VRMS_FLAG = '1' THEN (CASE WHEN b.EXT_SYS_CD = '01' THEN '01' -->
+<!-- 																							WHEN b.EXT_SYS_CD = '02' THEN '02' -->
+<!-- 																							ELSE '03' -->
+<!-- 																					   END) -->
+<!-- 														  WHEN b.MIG_FLAG = '1' THEN '05' -->
+<!-- 														  ELSE '10' END) -->
+<!-- 					ELSE a.CREAT_SYS_CD -->
+<!-- 			   END) AS bf_creat_sys_cd -->
+			, a.creat_sys_cd AS bf_creat_sys_cd
+			, a.org_cd AS bf_org_cd
+			, a.clss_id AS bf_clss_id
+			, a.creat_yyyy AS bf_creat_yyyy
+			, a.folder_reg_seq AS bf_folder_reg_seq
+<!-- 			, a.ho_no AS bf_ho_no -->
+			, (CASE WHEN a.HO_NO != '001' THEN a.HO_NO
+					WHEN (SELECT COUNT(1) FROM TB_RDFOLDER F WHERE F.RECORD_CENTER_ID=a.RECORD_CENTER_ID AND F.CREAT_SYS_CD=a.CREAT_SYS_CD AND F.ORG_CD=a.ORG_CD AND F.CLSS_ID=a.CLSS_ID AND F.CREAT_YYYY=a.CREAT_YYYY AND F.FOLDER_REG_SEQ=a.FOLDER_REG_SEQ) > 1 THEN A.HO_NO
+			   ELSE '' END) AS bf_ho_no
+			, (SELECT count(ho_no) FROM TB_DFRECVTRANSFLIST WHERE creat_sys_cd=a.CREAT_SYS_CD AND org_cd=a.org_cd AND clss_id=a.clss_id AND creat_yyyy=a.creat_yyyy and folder_reg_seq=a.folder_reg_seq) bf_ho_no_cnt 
+		FROM TB_DFRECVTRANSFLIST a
+			, TB_RDFOLDER b
+			, (
+				SELECT record_center_id
+					, transf_yyyy
+					, transf_grp_sno 
+				FROM TB_DFTRANSFWORK
+				WHERE record_center_id = #recordCenterId:VARCHAR# 
+				AND	transf_yyyy = #transfYyyy:VARCHAR#
+				AND	transf_handl_state = '1'
+				AND transf_list_choice_fin_ymd IS NULL
+			) c
+		WHERE a.folder_id = b.folder_id(+)
+		AND	a.record_center_id = #recordCenterId:VARCHAR# 
+		AND	a.transf_yyyy = #transfYyyy:VARCHAR#
+		AND	a.record_center_id = c.record_center_id
+		AND a.transf_yyyy = c.transf_yyyy
+		AND a.transf_grp_sno = c.transf_grp_sno	
+	</select>
+	
+	
+	<!-- 이관 이관목록작성 이관목록통보  SENDLIST xml 생성 시 이관통보파일목록 조회 -->
+	<resultMap id="findTransfInfrmFileList-result" class="rms.transf.transf.domain.TransfFile" >
+		<result property="transfInfrmFileNm" 	column="transf_infrm_file_nm"/>
+	</resultMap>
+	<!-- 
+		SELECT - 이관 이관목록작성 이관목록통보  SENDLIST xml 생성 시 이관통보파일목록 조회
+	 -->
+	<select id="findTransfInfrmFileList" parameterClass="rms.transf.transf.domain.TransfFile" resultMap="findTransfInfrmFileList-result">
+		SELECT transf_infrm_file_nm
+		FROM (
+			SELECT 1 AS gubun
+				, transf_infrm_file_nm
+			FROM TB_DFTRANSFINFRMFILE
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND	transf_infrm_creat_yyyy = #transfYyyy:VARCHAR#
+			AND transf_grp_sno = #transfGrpSno:NUMBER#
+			AND	transf_infrm_file_type LIKE 'TRANS_PLAN_REQ%'
+			AND	transf_infrm_file_nm NOT LIKE '%_END%'
+			UNION ALL
+			SELECT 2 AS gubun
+				, transf_infrm_file_nm
+			FROM TB_DFTRANSFINFRMFILE
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND	transf_infrm_creat_yyyy = #transfYyyy:VARCHAR#
+			AND transf_grp_sno = #transfGrpSno:NUMBER#
+			AND	transf_infrm_file_type LIKE 'TRANS_PLAN_REQ%'
+			AND	transf_infrm_file_nm LIKE '%_END%'
+		)
+		ORDER BY gubun
+	</select>
+	
+	
+	<!-- 
+		INSERT - 이관 이관목록작성 이관그룹등록
+	 -->
+	<insert id="createTransfGroup" parameterClass="rms.transf.transf.domain.TransfFolder">
+		INSERT INTO TB_DFTRANSFWORK (RECORD_CENTER_ID
+			, TRANSF_YYYY
+			, TRANSF_GRP_SNO
+			, TRANSF_HANDL_STATE
+			, TRANSF_LIST_RECV_YMD
+		) VALUES (#recordCenterId#
+			, #transfYyyy#
+			, (SELECT NVL(MAX(TRANSF_GRP_SNO), 0) + 1 MAX_SNO FROM TB_DFRECVTRANSFLIST WHERE RECORD_CENTER_ID = #recordCenterId# AND TRANSF_YYYY = #transfYyyy#)
+			, '1'
+			, to_char(sysdate, 'YYYYMMDD')
+		)
+	</insert>
+	<!-- 
+		UPDATE - 이관 이관목록작성 대상선정 이관목록선정
+	 -->
+	<update id="updateTransfChoiceList" parameterClass="rms.transf.transf.domain.TransfFolder">
+		UPDATE TB_DFRECVTRANSFLIST
+		SET TRANSF_DIV_CD = #transfDivCd:VARCHAR#
+			, TRANSF_RSN = #transfRsn:VARCHAR#
+			, TRANSF_HOPE_YYYY = #transfHopeYyyy:VARCHAR#
+			, RM_ORG_CD = #rmOrgCd:VARCHAR#
+			, RM_CLSS_DIV_CD = #rmClssDivCd:VARCHAR#
+			, RM_CLSS_ID = #rmClssId:VARCHAR#
+			, RM_CREAT_YYYY = #rmCreatYyyy:VARCHAR#
+			, RM_FOLDER_REG_SEQ = #rmFolderRegSeq:VARCHAR#
+			, RM_HO_NO = #rmHoNo:VARCHAR#
+			, FOLDER_ID = #folderId:VARCHAR#
+			, REMK = #remk:VARCHAR#
+			, keep_flag = #keepFlag:VARCHAR#
+			, record_cnt = #recordCnt#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND	TRANSF_LIST_ID = #transfListId:VARCHAR#
+	</update>
+	<!-- 
+		DELETE - 이관 이관목록 작성 대상선정 이관목록삭제
+	 -->
+	<delete id="deleteTransfDelayList" parameterClass="rms.transf.transf.domain.TransfFolder">
+	  DELETE FROM TB_DFRECVTRANSFLIST	  
+	  WHERE	RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+	  AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+	  AND FOLDER_ID = #folderId:VARCHAR#
+	  AND COLL_DIV_CD = '3'
+	</delete>
+	<!-- 
+		DELETE - 이관 이관목록작성 조기이관대상선정 선정취소
+	 -->
+	<delete id="deleteTransfEarlyList" parameterClass="rms.transf.transf.domain.TransfFolder">
+		DELETE FROM TB_DFRECVTRANSFLIST	  
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND	TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+		AND	FOLDER_ID = #folderId:VARCHAR#
+		AND	TRANSF_DIV_CD = '3'
+	</delete>
+	<!-- 
+		DELETE - 이관 이관목록 작성 대상선정 이관이력삭제
+	 -->
+	<delete id="deleteTransfEarlyHist" parameterClass="rms.transf.transf.domain.TransfFolder">
+	  DELETE FROM TB_DFTRANSFHIST	  
+	  WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+	  AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+	  AND FOLDER_ID = #folderId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		DELETE - 이관 이관목록작성 반려기록물이관대상선정 선정취소
+	 -->
+	<delete id="deleteTransfRjctList" parameterClass="rms.transf.transf.domain.TransfFolder">
+		DELETE FROM TB_DFRECVTRANSFLIST	  
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+		AND	TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+		AND	FOLDER_ID = #folderId:VARCHAR#
+		AND	TRANSF_LIST_ID = #transfListId:VARCHAR#  
+	</delete>
+	<!-- 
+		DELETE - 이관 이관목록 작성 대상선정 반려기록물이관이력삭제
+	 -->
+	<delete id="deleteTransfRjctHist" parameterClass="rms.transf.transf.domain.TransfFolder">
+	  DELETE FROM TB_DFTRANSFHIST	  
+	  WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+	  AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+	  AND FOLDER_ID = #folderId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		DELETE - 이관 이관목록작성 대상선정 선정취소
+	 -->
+	<delete id="deleteTransfList" parameterClass="rms.transf.transf.domain.TransfFolder">
+	  DELETE FROM TB_DFRECVTRANSFLIST	  
+	  WHERE	RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+	  AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+	  AND FOLDER_ID = #folderId:VARCHAR#
+	  AND COLL_DIV_CD = '3'
+	  AND TRANSF_DIV_CD IN ('1','4')
+	</delete>
+	<!-- 
+		DELETE - 이관 이관목록작성 대상선정 이관이력삭제
+	 -->
+	<delete id="deleteTransfHist" parameterClass="rms.transf.transf.domain.TransfFolder">
+	  DELETE FROM TB_DFTRANSFHIST	  
+	  WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	  AND TRANSF_YYYY = #transfYyyy:VARCHAR#
+	  AND TRANSF_GRP_SNO = #transfGrpSno:NUMBER#
+	  AND FOLDER_ID = #folderId:VARCHAR#
+	  AND TRANSF_DIV_CD IN ('1','4')
+	</delete>
+	
+	
+	<!-- 
+		INSERT - 이관 이관목록작성 대상선정 이관목록작성(정기이관)
+	 -->
+	<insert id="createTransfEarlyList" parameterClass="rms.transf.transf.domain.TransfFolder">
+		INSERT INTO	TB_DFRECVTRANSFLIST (record_center_id
+			, transf_yyyy
+			, transf_list_id
+			, transf_grp_sno
+			, coll_div_cd
+			, org_cd
+			, clss_div_cd
+			, clss_id
+			, creat_yyyy
+			, folder_reg_seq
+			, ho_no
+			, title
+			, presv_term_cd
+			, folder_type_div_cd
+			, record_cnt
+			, transf_div_cd
+			, transf_rsn
+			, transf_hope_yyyy
+			, folder_id
+			, keep_flag
+			, recv_transf_div_cd
+			, creat_sys_cd
+			, close_yyyy
+			, open_div_cd
+			, transf_start_ymd
+		) SELECT #recordCenterId:VARCHAR#
+			, #transfYyyy:VARCHAR#
+			, (SELECT LPAD(NVL(MAX(transf_list_id),0)+1,10,'0') max_id FROM TB_DFRECVTRANSFLIST WHERE record_center_id = #recordCenterId:VARCHAR# AND transf_yyyy = #transfYyyy:VARCHAR#)
+			, #transfGrpSno#
+			, #collDivCd:VARCHAR#
+			, org_cd
+			, clss_div_cd
+			, clss_id
+			, creat_yyyy
+			, folder_reg_seq
+			, ho_no, title
+			, presv_term_cd
+			, folder_type_div_cd
+			, record_reg_cnt
+			, #transfDivCd:VARCHAR#
+			, #transfDelayRsn:VARCHAR#
+			, #transfHopeYyyy:VARCHAR#
+			, #folderId:VARCHAR#
+			, #keepFlag:VARCHAR#
+			, #recvTransfDivCd:VARCHAR#
+			, creat_sys_cd
+			, close_yyyy
+			, open_div_cd
+			, TO_CHAR(SYSDATE, 'YYYYMMDD')
+		FROM (
+			SELECT org_cd
+				, clss_div_cd
+				, clss_id
+				, creat_yyyy
+				, folder_reg_seq
+				, ho_no
+				, title
+				, presv_term_cd
+				, folder_type_div_cd
+				, NVL(TO_NUMBER(record_reg_cnt),0) AS record_reg_cnt
+				, creat_sys_cd
+				, SUBSTR(folder_close_dtime, 0, 4) AS close_yyyy
+				, open_div_cd 
+			FROM TB_RDFOLDER
+		    WHERE record_center_id = #recordCenterId:VARCHAR#
+		    AND folder_id = #folderId:VARCHAR#
+		)
+	</insert>
+	<!-- 
+		INSERT - 이관 이관목록작성 대상선정 조기이관이력등록
+	 -->
+	<insert id="createTransfEarlyHist" parameterClass="rms.transf.transf.domain.TransfFolder">
+		INSERT INTO TB_DFTRANSFHIST (record_center_id
+			, folder_id
+			, transf_yyyy
+			, transf_grp_sno
+			, transf_div_cd
+			, transf_rsn
+			, transf_hope_yyyy
+			, work_user_id
+			, work_dtime
+		) VALUES (#recordCenterId:VARCHAR#
+			, #folderId:VARCHAR#
+			, #transfYyyy:VARCHAR#
+			, #transfGrpSno#
+			, #transfDivCd#
+			, #transfDelayRsn:VARCHAR#
+			, #transfHopeYyyy:VARCHAR#
+			, #userId:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		INSERT - 이관 이관목록작성 대상선정 이관목록작성(반려기록물이관)
+	 -->
+	<insert id="createTransfRjctList" parameterClass="rms.transf.transf.domain.TransfFolder">
+		INSERT INTO	TB_DFRECVTRANSFLIST (record_center_id
+			, transf_yyyy
+			, transf_list_id
+			, transf_grp_sno
+			, coll_div_cd
+			, org_cd
+			, clss_div_cd
+			, clss_id
+			, creat_yyyy
+			, folder_reg_seq
+			, ho_no
+			, title
+			, presv_term_cd
+			, folder_type_div_cd
+			, record_cnt
+			, transf_div_cd
+			, transf_rsn
+			, transf_hope_yyyy
+			, folder_id
+			, keep_flag
+			, recv_transf_div_cd
+			, creat_sys_cd
+			, close_yyyy
+			, open_div_cd
+			, transf_start_ymd
+		) SELECT #recordCenterId:VARCHAR#
+			, #transfYyyy:VARCHAR#
+			, (SELECT LPAD(NVL(MAX(transf_list_id),0)+1,10,'0') max_id FROM TB_DFRECVTRANSFLIST WHERE record_center_id = #recordCenterId:VARCHAR# AND transf_yyyy = #transfYyyy:VARCHAR#)
+			, #transfGrpSno#
+			, #collDivCd:VARCHAR#
+			, org_cd
+			, clss_div_cd
+			, clss_id
+			, creat_yyyy
+			, folder_reg_seq
+			, ho_no, title
+			, presv_term_cd
+			, folder_type_div_cd
+			, record_reg_cnt
+			, #transfDivCd:VARCHAR#
+			, #transfDelayRsn:VARCHAR#
+			, #transfHopeYyyy:VARCHAR#
+			, #folderId:VARCHAR#
+			, #keepFlag:VARCHAR#
+			, #recvTransfDivCd:VARCHAR#
+			, creat_sys_cd
+			, close_yyyy
+			, open_div_cd
+			<!--cubrid, TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+                        , TO_CHAR(sys_datetime, 'YYYYMMDD')
+		FROM (
+			SELECT org_cd
+				, clss_div_cd
+				, clss_id
+				, creat_yyyy
+				, folder_reg_seq
+				, ho_no
+				, title
+				, presv_term_cd
+				, folder_type_div_cd
+				, NVL(TO_NUMBER(record_reg_cnt),0) AS record_reg_cnt
+				, creat_sys_cd
+				, SUBSTR(folder_close_dtime, 0, 4) AS close_yyyy
+				, open_div_cd 
+			FROM TB_RDFOLDER
+		    WHERE record_center_id = #recordCenterId:VARCHAR#
+		    AND folder_id = #folderId:VARCHAR#
+		)
+	</insert>
+	<!-- 
+		INSERT - 이관 이관목록작성 대상선정 반려기록물이관이력등록
+	 -->
+	<insert id="createTransfRjctHist" parameterClass="rms.transf.transf.domain.TransfFolder">
+		INSERT INTO TB_DFTRANSFHIST (record_center_id
+			, folder_id
+			, transf_yyyy
+			, transf_grp_sno
+			, transf_div_cd
+			, transf_rsn
+			, transf_hope_yyyy
+			, work_user_id
+			, work_dtime
+		) VALUES (#recordCenterId:VARCHAR#
+			, #folderId:VARCHAR#
+			, #transfYyyy:VARCHAR#
+			, #transfGrpSno#
+			, #transfDivCd#
+			, #transfDelayRsn:VARCHAR#
+			, #transfHopeYyyy:VARCHAR#
+			, #userId:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') -->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>	
+	
+	<!-- 
+		DELETE - 이관 이관목록작성 이관목록통보 이전통보파일삭제
+	 -->
+	<delete id="deleteTransfInfrmFileInfo" parameterClass="rms.transf.transf.domain.TransfFile">
+		DELETE FROM TB_DFTRANSFINFRMFILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND	transf_infrm_creat_yyyy = #transfInfrmCreatYyyy:VARCHAR#
+<!-- 		AND	transf_grp_sno = #transfGrpSno:NUMBER# -->
+		AND	transf_grp_sno <![CDATA[<]]> #transfGrpSno:NUMBER#
+		AND TRANSF_INFRM_FLAG = '1'
+		AND	transf_infrm_file_type IN ('TRANS_PLAN_REQ', 'TRANS_PLAN_REQ_END')
+	</delete>
+	<!-- 
+		INSERT - 이관 이관목록작성 이관목록통보 통보파일정보 생성
+	 -->
+	<insert id="creatTransfInfrmFileInfo" parameterClass="rms.transf.transf.domain.TransfFile">
+		INSERT INTO TB_DFTRANSFINFRMFILE (record_center_id
+			, transf_infrm_creat_yyyy
+			, transf_infrm_sno
+			, transf_infrm_file_nm
+			, reg_dtime
+			, transf_infrm_file_type
+			, transf_infrm_dtime
+			, transf_infrm_flag
+			, transf_infrm_type
+			, transf_grp_sno
+		) VALUES (#recordCenterId:VARCHAR#
+			, #transfInfrmCreatYyyy:VARCHAR#
+			, #transfInfrmSno:NUMBER#
+			, #transfInfrmFileNm:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') -->
+			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+			, #transfInfrmFileType:VARCHAR#
+			, ''
+			, '0'
+			, '1'
+			, #transfGrpSno:NUMBER#
+		)
+	</insert>
+	
+	<!-- 
+		UPDATE - 이관 이관목록작성 이관목록통보 온/오프라이통보(기록물철 : transf_state_cd='2'("선정완료"))
+	 -->
+	<update id="updateTransfInfrmFolderEnd" parameterClass="rms.transf.transf.domain.TransfFile">
+		UPDATE TB_RDFOLDER
+		SET transf_state_cd = '2'
+		WHERE folder_id IN (
+			SELECT a.folder_id
+			FROM TB_DFRECVTRANSFLIST a, TB_RDFOLDER b
+			WHERE a.folder_id = b.folder_id
+			AND	a.record_center_id = #recordCenterId:VARCHAR# 
+			AND	a.transf_yyyy = #transfYyyy:VARCHAR#
+			AND a.transf_grp_sno IN (
+				SELECT transf_grp_sno 
+				FROM TB_DFTRANSFWORK
+				WHERE record_center_id = #recordCenterId:VARCHAR# 
+				AND	transf_yyyy = #transfYyyy:VARCHAR#
+				AND	transf_handl_state = '1'
+				AND transf_list_choice_fin_ymd IS NULL
+			)
+		)
+	</update>
+	<!-- 
+		UPDATE - 이관 이관목록작성 이관목록통보 온/오프라이통보(이관접수목록 : transf_aprov_req_infrm_flag='1'/'2'("온/오프라인"))
+	 -->
+	<update id="updateTransfInfrmFlagRecvList" parameterClass="rms.transf.transf.domain.TransfFile">
+		UPDATE TB_DFRECVTRANSFLIST 
+		SET transf_aprov_req_infrm_flag = #transfInfrmFlag:VARCHAR#
+			<!--cubrid , transf_aprov_req_infrm_dtime = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, transf_aprov_req_infrm_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR# 
+		AND	transf_yyyy = #transfYyyy:VARCHAR#
+		AND	transf_grp_sno IN (
+			SELECT transf_grp_sno 
+		  	FROM TB_DFTRANSFWORK
+			WHERE record_center_id = #recordCenterId:VARCHAR# 
+			AND	transf_yyyy = #transfYyyy:VARCHAR#
+			AND	transf_handl_state = '1'
+			AND transf_list_choice_fin_ymd IS NULL
+		)
+	</update>
+	<!-- 
+		UPDATE - 이관 이관목록작성 이관목록통보 온/오프라이통보(선정완료일자 : transf_list_choice_fin_ymd='SYSDATE')
+	 -->
+	<update id="updateTransfInfrmFlagWorkList" parameterClass="rms.transf.transf.domain.TransfFile">
+		UPDATE TB_DFTRANSFWORK
+		SET transf_list_choice_fin_ymd = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND transf_yyyy = #transfYyyy:VARCHAR#
+        AND transf_handl_state = '1'
+        AND transf_list_choice_fin_ymd IS NULL
+	</update>
+	<!-- 
+		UPDATE - 이관 이관목록작성 이관목록통보 온/오프라이통보(이관통보목록 : transf_aprov_req_infrm_flag='1'/'2'("온/오프라인"))
+	 -->
+	<update id="updateTransfInfrmFlagFileList" parameterClass="rms.transf.transf.domain.TransfFile">
+		UPDATE TB_DFTRANSFINFRMFILE 
+		SET transf_infrm_flag =  #transfInfrmFlag:VARCHAR#
+			<!--cubrid , transf_infrm_dtime = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			, transf_infrm_dtime = TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND	transf_infrm_creat_yyyy = #transfYyyy:VARCHAR#
+		AND transf_infrm_type = '1'
+		AND	transf_grp_sno = #transfGrpSno:NUMBER#
+		AND	transf_infrm_file_type LIKE 'TRANS_PLAN_REQ%'
+	</update>
+	
+	<!-- 
+		이관 이관목록통보 그룹순번 최대값 조회
+	 -->
+	<select id="findTransfGrpSnoMax" parameterClass="rms.transf.transf.domain.TransfFolder" resultClass="int">
+		SELECT NVL(MAX(transf_grp_sno),0)
+		FROM  TB_DFTRANSFWORK
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   transf_yyyy = #transfYyyy:VARCHAR#
+		AND   transf_list_choice_fin_ymd IS NOT NULL
+	</select>
+</sqlMap>

@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="open.open.curStat">
+
+	<!--
+		정보공개현황
+		: 통계 조회
+	-->
+	<resultMap id="findDiosCurStatPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="openDtime" 			column="open_dtime"				/>
+		<result property="listTypeCd" 			column="list_type_cd"			/>
+		<result property="listTypeNm" 			column="list_type_nm"			/>
+		<result property="listProvFlag" 		column="list_prov_flag"			/>
+		<result property="listProvDtime" 		column="list_prov_dtime"		/>
+		<result property="openCnt" 				column="open_cnt"				/>
+		<result property="confirmFlag" 			column="confirm_flag"			/>
+	</resultMap>
+	<select id="countDiosCurStatPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_OPOPENGROUP A
+        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+        AND   A.open_sys_cd = '01'
+		<isNotEmpty prepend="AND" property="openYyyy">
+			A.open_dtime LIKE #openYyyy:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findDiosCurStatPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatPagedList-result">
+		SELECT E.confirm_flag
+			, E.open_dtime
+			, E.list_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='OP02' AND Z.com_cd=E.list_type_cd) AS list_type_nm
+			, E.list_prov_flag
+			, E.list_prov_dtime
+			, NVL(E.open_cnt,0) AS open_cnt
+		FROM (
+			SELECT ROWNUM AS rnum
+				, D.*
+			FROM (
+		        SELECT '1' AS confirm_flag
+		        	, A.open_dtime
+		            , A.list_type_cd
+		            , A.list_prov_flag
+		        	, A.list_prov_dtime
+		        	, A.choice_cnt+A.append_cnt AS open_cnt
+		        FROM  TB_OPOPENGROUP A
+		        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		        AND   A.open_sys_cd = '01'
+				<isNotEmpty prepend="AND" property="openYyyy">
+					A.open_dtime LIKE #openYyyy:VARCHAR#
+				</isNotEmpty>
+		        ORDER BY A.record_center_id, A.open_sys_cd, A.open_dtime DESC
+			) D
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		ORDER BY E.rnum
+	</select>
+	
+	<!--
+		정보공개현황
+		: 생산부서 목록 조회 (신규목록)
+	-->
+	<resultMap id="findDiosCurStatOrgPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="orgCd" 				column="org_cd"					/>
+		<result property="orgNm" 				column="org_nm"					/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"			/>
+		<result property="openCnt" 				column="open_cnt"				/>
+	</resultMap>
+	<select id="countDiosCurStatOrgPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd
+			FROM  TB_OPOPENLIST A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_state = '4'
+			<isNotEmpty prepend="AND" property="openDtime">
+				A.open_dtime = #openDtime:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatOrgPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatOrgPagedList-result">
+		SELECT F.record_center_id
+			, F.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm
+			, COUNT(1) AS open_cnt
+		FROM (
+			SELECT E.record_center_id
+				, E.org_cd
+			FROM  TB_OPOPENLIST E
+			<!--cubrid WHERE (E.record_center_id, E.open_sys_cd, E.org_cd)
+			IN (
+				SELECT D.record_center_id, D.open_sys_cd, D.org_cd-->
+			WHERE
+			EXISTS (
+				SELECT 1
+				FROM (
+					SELECT ROWNUM AS rnum
+						, C.*
+					FROM (
+						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd
+						FROM  TB_OPOPENLIST A
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.open_sys_cd = '01'
+						AND   A.open_state = '4'
+						<isNotEmpty prepend="AND" property="openDtime">
+							A.open_dtime = #openDtime:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd
+					) C
+					WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				) D
+				WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				<!--cubrid-->
+				AND   D.record_center_id = E.record_center_id
+				AND   D.open_sys_cd = E.open_sys_cd
+				AND   D.org_cd = E.org_cd
+			)
+			AND   E.open_state = '4'
+			<isNotEmpty prepend="AND" property="openDtime">
+				E.open_dtime = #openDtime:VARCHAR#
+			</isNotEmpty>
+		) F
+		GROUP BY F.record_center_id, F.org_cd
+		ORDER BY F.record_center_id, F.org_cd
+	</select>
+	
+	<!--
+		정보공개현황
+		: 생산부서 목록 조회 (수정목록-건단위:02)
+	-->
+	<resultMap id="findDiosCurStatOrgChngRecordPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="orgCd" 				column="org_cd"					/>
+		<result property="orgNm" 				column="org_nm"					/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"			/>
+		<result property="openCnt" 				column="open_cnt"				/>
+	</resultMap>
+	<select id="countDiosCurStatOrgChngRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd
+			FROM  TB_OPOPENLISTCHNG A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			<isNotEmpty prepend="AND" property="openDtime">
+				A.open_dtime = #openDtime:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatOrgChngRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatOrgChngRecordPagedList-result">
+		SELECT F.record_center_id
+			, F.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm
+			, COUNT(1) AS open_cnt
+		FROM (
+			SELECT E.record_center_id
+				, E.org_cd
+			FROM  TB_OPOPENLISTCHNG E
+			<!--cubrdi WHERE (E.record_center_id, E.open_sys_cd, E.org_cd)
+			IN (
+				SELECT D.record_center_id, D.open_sys_cd, D.org_cd-->
+			WHERE
+			EXISTS (
+				SELECT 1
+				FROM (
+					SELECT ROWNUM AS rnum
+						, C.*
+					FROM (
+						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd
+						FROM  TB_OPOPENLISTCHNG A
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.open_sys_cd = '01'
+						<isNotEmpty prepend="AND" property="openDtime">
+							A.open_dtime = #openDtime:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd
+					) C
+					WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				) D
+				WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				<!--cubrid-->
+				AND   D.record_center_id = E.record_center_id
+				AND   D.open_sys_cd = E.open_sys_cd
+				AND   D.org_cd = E.org_cd
+			)
+			<isNotEmpty prepend="AND" property="openDtime">
+				E.open_dtime = #openDtime:VARCHAR#
+			</isNotEmpty>
+		) F
+		GROUP BY F.record_center_id, F.org_cd
+		ORDER BY F.record_center_id, F.org_cd
+	</select>
+	
+	<!--
+		정보공개현황
+		: 생산부서 목록 조회 (수정목록-철단위:03,04,05,06)
+	-->
+	<resultMap id="findDiosCurStatOrgChngFolderPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="orgCd" 				column="org_cd"					/>
+		<result property="orgNm" 				column="org_nm"					/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"			/>
+		<result property="openCnt" 				column="open_cnt"				/>
+	</resultMap>
+	<select id="countDiosCurStatOrgChngFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd
+			FROM  TB_OPOPENLISTCHNG A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			<isNotEmpty prepend="AND" property="openDtime">
+				A.open_dtime = #openDtime:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.org_cd = #orgCd:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatOrgChngFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatOrgChngFolderPagedList-result">
+		SELECT F.record_center_id
+			, F.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_abbr_nm
+			, COUNT(1) AS open_cnt
+		FROM (
+			SELECT E.record_center_id
+				, E.org_cd
+			FROM  TB_OPOPENLISTCHNG E
+				, TB_RDRECORD R
+			<!--cubrid WHERE (E.record_center_id, E.open_sys_cd, E.org_cd)
+			IN (
+				SELECT D.record_center_id, D.open_sys_cd, D.org_cd-->
+			WHERE 
+			EXISTS (
+				SELECT 1
+				FROM (
+					SELECT ROWNUM AS rnum
+						, C.*
+					FROM (
+						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd
+						FROM  TB_OPOPENLISTCHNG A
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.open_sys_cd = '01'
+						<isNotEmpty prepend="AND" property="openDtime">
+							A.open_dtime = #openDtime:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+						ORDER BY A.record_center_id, A.open_sys_cd, A.org_cd
+					) C
+					WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				) D
+				WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				<!--cubrid-->
+				AND   D.record_center_id = E.record_center_id
+				AND   D.open_sys_cd = E.open_sys_cd
+				AND   D.org_cd = E.org_cd
+			)
+			<isNotEmpty prepend="AND" property="openDtime">
+				E.open_dtime = #openDtime:VARCHAR#
+			</isNotEmpty>
+			AND   E.record_center_id = R.record_center_id
+			AND   E.folder_id = R.folder_id
+		) F
+		GROUP BY F.record_center_id, F.org_cd
+		ORDER BY F.record_center_id, F.org_cd
+	</select>
+	
+	<!--
+		정보공개현황
+		: 기록물철 목록 조회 (신규목록)
+	-->
+	<resultMap id="findDiosCurStatFolderPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="folderId" 			column="folder_id"				/>
+		<result property="folderTitle"			column="folder_title"			/>
+		<result property="openCnt" 				column="open_cnt"				/>
+	</resultMap>
+	<select id="countDiosCurStatFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id
+			FROM  TB_OPOPENLIST A
+				, TB_RDFOLDER B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_state = '4'
+			AND   A.open_dtime = #openDtime:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+			AND   B.record_center_id = A.record_center_id
+			AND   B.folder_id = A.folder_id
+			<isNotEmpty prepend="AND" property="folderTitle">
+				B.title LIKE #folderTitle:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatFolderPagedList-result">
+		SELECT G.record_center_id
+			, G.folder_id
+			, G.folder_title
+			, COUNT(1) AS open_cnt
+		FROM (
+			SELECT E.record_center_id
+				, E.folder_id
+				, F.title AS folder_title
+			FROM  TB_OPOPENLIST E
+				, TB_RDFOLDER F
+			<!--cubrid WHERE (E.record_center_id, E.open_sys_cd, E.org_cd, E.folder_id)
+			IN (
+				SELECT D.record_center_id, D.open_sys_cd, D.org_cd, D.folder_id-->
+			WHERE 
+			EXISTS (
+				SELECT 1
+				FROM (
+					SELECT ROWNUM AS rnum
+						, C.*
+					FROM (
+						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title
+						FROM  TB_OPOPENLIST A
+							, TB_RDFOLDER B
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.open_sys_cd = '01'
+						AND   A.open_state = '4'
+						AND   A.open_dtime = #openDtime:VARCHAR#
+						AND   A.org_cd = #orgCd:VARCHAR#
+						AND   B.record_center_id = A.record_center_id
+						AND   B.folder_id = A.folder_id
+						<isNotEmpty prepend="AND" property="folderTitle">
+							B.title LIKE #folderTitle:VARCHAR#
+						</isNotEmpty>
+						ORDER BY A.record_center_id, A.open_sys_cd, B.title
+					) C
+					WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				) D
+				WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				<!--cubrid-->
+				AND   D.record_center_id = E.record_center_id
+				AND   D.open_sys_cd = E.open_sys_cd
+				AND   D.org_cd = E.org_cd
+				AND   D.folder_id = E.folder_id
+			)
+			AND   E.open_state = '4'
+			AND   E.open_dtime = #openDtime:VARCHAR#
+			AND   F.record_center_id = E.record_center_id
+			AND   F.folder_id = E.folder_id
+			<isNotEmpty prepend="AND" property="folderTitle">
+				F.title LIKE #folderTitle:VARCHAR#
+			</isNotEmpty>
+		) G
+		GROUP BY G.record_center_id, G.folder_id, G.folder_title
+		ORDER BY G.record_center_id, G.folder_title
+	</select>
+	
+	<!--
+		정보공개현황
+		: 기록물철 목록 조회 (수정목록-건단위:02)
+	-->
+	<resultMap id="findDiosCurStatFolderChngRecordPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="folderId" 			column="folder_id"				/>
+		<result property="folderTitle"			column="folder_title"			/>
+		<result property="openCnt" 				column="open_cnt"				/>
+	</resultMap>
+	<select id="countDiosCurStatFolderChngRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id
+			FROM  TB_OPOPENLISTCHNG A
+				, TB_RDFOLDER B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_dtime = #openDtime:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+			AND   B.record_center_id = A.record_center_id
+			AND   B.folder_id = A.folder_id
+			<isNotEmpty prepend="AND" property="folderTitle">
+				B.title LIKE #folderTitle:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatFolderChngRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatFolderChngRecordPagedList-result">
+		SELECT G.record_center_id
+			, G.folder_id
+			, G.folder_title
+			, COUNT(1) AS open_cnt
+		FROM (
+			SELECT E.record_center_id
+				, E.folder_id
+				, F.title AS folder_title
+			FROM  TB_OPOPENLISTCHNG E
+				, TB_RDFOLDER F
+			<!--cubrid WHERE (E.record_center_id, E.open_sys_cd, E.org_cd, E.folder_id)
+			IN (
+				SELECT D.record_center_id, D.open_sys_cd, D.org_cd, D.folder_id-->
+			WHERE 
+			EXISTS (
+				SELECT 1
+				FROM (
+					SELECT ROWNUM AS rnum
+						, C.*
+					FROM (
+						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title
+						FROM  TB_OPOPENLISTCHNG A
+							, TB_RDFOLDER B
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.open_sys_cd = '01'
+						AND   A.open_dtime = #openDtime:VARCHAR#
+						AND   A.org_cd = #orgCd:VARCHAR#
+						AND   B.record_center_id = A.record_center_id
+						AND   B.folder_id = A.folder_id
+						<isNotEmpty prepend="AND" property="folderTitle">
+							B.title LIKE #folderTitle:VARCHAR#
+						</isNotEmpty>
+						ORDER BY A.record_center_id, A.open_sys_cd, B.title
+					) C
+					WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				) D
+				WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				<!--cubrid-->
+				AND   D.record_center_id = E.record_center_id
+				AND   D.open_sys_cd = E.open_sys_cd
+				AND   D.org_cd = E.org_cd
+				AND   D.folder_id = E.folder_id
+			)
+			AND   E.open_dtime = #openDtime:VARCHAR#
+			AND   F.record_center_id = E.record_center_id
+			AND   F.folder_id = E.folder_id
+			<isNotEmpty prepend="AND" property="folderTitle">
+				F.title LIKE #folderTitle:VARCHAR#
+			</isNotEmpty>
+		) G
+		GROUP BY G.record_center_id, G.folder_id, G.folder_title
+		ORDER BY G.record_center_id, G.folder_title
+	</select>
+	
+	<!--
+		정보공개현황
+		: 기록물철 목록 조회 (수정목록-철단위:03,04,05,06)
+	-->
+	<resultMap id="findDiosCurStatFolderChngFolderPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="folderId" 			column="folder_id"				/>
+		<result property="folderTitle"			column="folder_title"			/>
+		<result property="openCnt" 				column="open_cnt"				/>
+	</resultMap>
+	<select id="countDiosCurStatFolderChngFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.folder_id
+			FROM  TB_OPOPENLISTCHNG A
+				, TB_RDFOLDER B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_dtime = #openDtime:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+			AND   B.record_center_id = A.record_center_id
+			AND   B.folder_id = A.folder_id
+			<isNotEmpty prepend="AND" property="folderTitle">
+				B.title LIKE #folderTitle:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatFolderChngFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatFolderChngFolderPagedList-result">
+		SELECT G.record_center_id
+			, G.folder_id
+			, G.folder_title
+			, COUNT(1) AS open_cnt
+		FROM (
+			SELECT E.record_center_id
+				, E.folder_id
+				, F.title AS folder_title
+			FROM  TB_OPOPENLISTCHNG E
+				, TB_RDFOLDER F
+				, TB_RDRECORD R
+			<!--cubrid WHERE (E.record_center_id, E.open_sys_cd, E.org_cd, E.folder_id)
+			IN (
+				SELECT D.record_center_id, D.open_sys_cd, D.org_cd, D.folder_id-->
+			WHERE
+			EXISTS (
+				SELECT 1
+				FROM (
+					SELECT ROWNUM AS rnum
+						, C.*
+					FROM (
+						SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.org_cd, A.folder_id, B.title
+						FROM  TB_OPOPENLISTCHNG A
+							, TB_RDFOLDER B
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND   A.open_sys_cd = '01'
+						AND   A.open_dtime = #openDtime:VARCHAR#
+						AND   A.org_cd = #orgCd:VARCHAR#
+						AND   B.record_center_id = A.record_center_id
+						AND   B.folder_id = A.folder_id
+						<isNotEmpty prepend="AND" property="folderTitle">
+							B.title LIKE #folderTitle:VARCHAR#
+						</isNotEmpty>
+						ORDER BY A.record_center_id, A.open_sys_cd, B.title
+					) C
+					WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+				) D
+				WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+				<!--cubrid-->
+				AND   D.record_center_id = E.record_center_id
+				AND   D.open_sys_cd = E.open_sys_cd
+				AND   D.org_cd = E.org_cd
+				AND   D.folder_id = E.folder_id
+			)
+			AND   E.open_dtime = #openDtime:VARCHAR#
+			AND   F.record_center_id = E.record_center_id
+			AND   F.folder_id = E.folder_id
+			<isNotEmpty prepend="AND" property="folderTitle">
+				F.title LIKE #folderTitle:VARCHAR#
+			</isNotEmpty>
+			AND   F.record_center_id = R.record_center_id
+			AND   F.folder_id = R.folder_id
+		) G
+		GROUP BY G.record_center_id, G.folder_id, G.folder_title
+		ORDER BY G.record_center_id, G.folder_title
+	</select>
+	
+	<!--
+		정보공개현황
+		: 기록물건 목록 조회 (신규목록)
+	-->
+	<resultMap id="findDiosCurStatRecordPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="recordId" 			column="record_id"				/>
+		<result property="recordTitle"			column="record_title"			/>
+		<result property="creatRegDtime" 		column="creat_reg_dtime"		/>
+		<result property="recordRegDivCd" 		column="record_reg_div_cd"		/>
+		<result property="recordRegDivNm" 		column="record_reg_div_nm"		/>
+		<result property="recordDetlTypeCd" 	column="record_detl_type_cd"	/>
+		<result property="recordDetlTypeNm" 	column="record_detl_type_nm"	/>
+		<result property="openDivCd" 			column="open_div_cd"			/>
+		<result property="openDivNm" 			column="open_div_nm"			/>
+		<result property="openDtime" 			column="open_dtime"				/>
+	</resultMap>
+	<select id="countDiosCurStatRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id
+			FROM  TB_OPOPENLIST A
+				, TB_RDRECORD B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_state = '4'
+			AND   A.open_dtime = #openDtime:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+			AND   A.folder_id = #folderId:VARCHAR#
+			AND   B.record_center_id = A.record_center_id
+			AND   B.record_id = A.record_id
+			<isNotEmpty prepend="AND" property="recordTitle">
+				B.title LIKE #recordTitle:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatRecordPagedList-result">
+		SELECT D.record_center_id
+			, D.record_id
+			, D.record_title
+			, D.creat_reg_dtime
+			, D.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm
+			, D.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm
+			, D.open_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm
+			, D.open_dtime
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.record_center_id
+					, A.record_id
+					, B.title AS record_title
+					, B.creat_reg_dtime
+					, B.record_reg_div_cd
+					, B.record_detl_type_cd
+					, B.open_div_cd
+					, A.open_dtime
+				FROM  TB_OPOPENLIST A
+					, TB_RDRECORD B
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.open_sys_cd = '01'
+				AND   A.open_state = '4'
+				AND   A.open_dtime = #openDtime:VARCHAR#
+				AND   A.org_cd = #orgCd:VARCHAR#
+				AND   A.folder_id = #folderId:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.record_id = A.record_id
+				<isNotEmpty prepend="AND" property="recordTitle">
+					B.title LIKE #recordTitle:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.record_center_id, A.open_sys_cd, B.title
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		ORDER BY D.rnum
+	</select>
+	
+	<!--
+		정보공개현황
+		: 기록물건 목록 조회 (수정목록-건단위:02)
+	-->
+	<resultMap id="findDiosCurStatRecordChngRecordPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="recordId" 			column="record_id"				/>
+		<result property="recordTitle"			column="record_title"			/>
+		<result property="creatRegDtime" 		column="creat_reg_dtime"		/>
+		<result property="recordRegDivCd" 		column="record_reg_div_cd"		/>
+		<result property="recordRegDivNm" 		column="record_reg_div_nm"		/>
+		<result property="recordDetlTypeCd" 	column="record_detl_type_cd"	/>
+		<result property="recordDetlTypeNm" 	column="record_detl_type_nm"	/>
+		<result property="openDivCd" 			column="open_div_cd"			/>
+		<result property="openDivNm" 			column="open_div_nm"			/>
+		<result property="openDtime" 			column="open_dtime"				/>
+	</resultMap>
+	<select id="countDiosCurStatRecordChngRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, A.record_id
+			FROM  TB_OPOPENLISTCHNG A
+				, TB_RDRECORD B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_dtime = #openDtime:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+			AND   A.folder_id = #folderId:VARCHAR#
+			AND   B.record_center_id = A.record_center_id
+			AND   B.record_id = A.record_id
+			<isNotEmpty prepend="AND" property="recordTitle">
+				B.title LIKE #recordTitle:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatRecordChngRecordPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatRecordChngRecordPagedList-result">
+		SELECT D.record_center_id
+			, D.record_id
+			, D.record_title
+			, D.creat_reg_dtime
+			, D.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm
+			, D.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm
+			, D.open_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm
+			, D.open_dtime
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.record_center_id
+					, A.record_id
+					, B.title AS record_title
+					, B.creat_reg_dtime
+					, B.record_reg_div_cd
+					, B.record_detl_type_cd
+					, B.open_div_cd
+					, A.open_dtime
+				FROM  TB_OPOPENLISTCHNG A
+					, TB_RDRECORD B
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.open_sys_cd = '01'
+				AND   A.open_dtime = #openDtime:VARCHAR#
+				AND   A.org_cd = #orgCd:VARCHAR#
+				AND   A.folder_id = #folderId:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.record_id = A.record_id
+				<isNotEmpty prepend="AND" property="recordTitle">
+					B.title LIKE #recordTitle:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.record_center_id, A.open_sys_cd, B.title
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		ORDER BY D.rnum
+	</select>
+	
+	<!--
+		정보공개현황
+		: 기록물건 목록 조회 (수정목록-철단위:03,04,05,06)
+	-->
+	<resultMap id="findDiosCurStatRecordChngFolderPagedList-result" class="rms.open.open.domain.ResultOpen">
+		<result property="recordCenterId" 		column="record_center_id"		/>
+		<result property="recordId" 			column="record_id"				/>
+		<result property="recordTitle"			column="record_title"			/>
+		<result property="creatRegDtime" 		column="creat_reg_dtime"		/>
+		<result property="recordRegDivCd" 		column="record_reg_div_cd"		/>
+		<result property="recordRegDivNm" 		column="record_reg_div_nm"		/>
+		<result property="recordDetlTypeCd" 	column="record_detl_type_cd"	/>
+		<result property="recordDetlTypeNm" 	column="record_detl_type_nm"	/>
+		<result property="openDivCd" 			column="open_div_cd"			/>
+		<result property="openDivNm" 			column="open_div_nm"			/>
+		<result property="openDtime" 			column="open_dtime"				/>
+	</resultMap>
+	<select id="countDiosCurStatRecordChngFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT DISTINCT A.record_center_id, A.open_sys_cd, B.record_id
+			FROM  TB_OPOPENLISTCHNG A
+				, TB_RDRECORD B
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.open_sys_cd = '01'
+			AND   A.open_dtime = #openDtime:VARCHAR#
+			AND   A.org_cd = #orgCd:VARCHAR#
+			AND   A.folder_id = #folderId:VARCHAR#
+			AND   B.record_center_id = A.record_center_id
+			AND   B.folder_id = A.folder_id
+			<isNotEmpty prepend="AND" property="recordTitle">
+				B.title LIKE #recordTitle:VARCHAR#
+			</isNotEmpty>
+		)
+	</select>
+	<select id="findDiosCurStatRecordChngFolderPagedList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosCurStatRecordChngFolderPagedList-result">
+		SELECT D.record_center_id
+			, D.record_id
+			, D.record_title
+			, D.creat_reg_dtime
+			, D.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=D.record_reg_div_cd) record_reg_div_nm
+			, D.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=D.record_detl_type_cd) record_detl_type_nm
+			, D.open_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=D.open_div_cd) open_div_nm
+			, D.open_dtime
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT B.record_center_id
+					, B.record_id
+					, B.title AS record_title
+					, B.creat_reg_dtime
+					, B.record_reg_div_cd
+					, B.record_detl_type_cd
+					, B.open_div_cd
+					, A.open_dtime
+				FROM  TB_OPOPENLISTCHNG A
+					, TB_RDRECORD B
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.open_sys_cd = '01'
+				AND   A.open_dtime = #openDtime:VARCHAR#
+				AND   A.org_cd = #orgCd:VARCHAR#
+				AND   A.folder_id = #folderId:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.folder_id = A.folder_id
+				<isNotEmpty prepend="AND" property="recordTitle">
+					B.title LIKE #recordTitle:VARCHAR#
+				</isNotEmpty>
+				ORDER BY A.record_center_id, A.open_sys_cd, B.title
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		ORDER BY D.rnum
+	</select>
+	
+	<!-- 
+		정보공개목록 제공이력
+	 -->
+	<resultMap id="findDiosRecordOpenHistList-result" class="rms.open.open.domain.ResultOpenHist">
+		<result property="listGubun" 			column="list_gubun"				/>
+		<result property="listTypeCd" 			column="list_type_cd"			/>
+		<result property="listTypeNm" 			column="list_type_nm"			/>
+		<result property="listProvDtime" 		column="list_prov_dtime"		/>
+		<result property="openDtime" 			column="open_dtime"				/>
+	</resultMap>
+	<select id="findDiosRecordOpenHistList" parameterClass="rms.open.open.domain.FindOpen" resultMap="findDiosRecordOpenHistList-result">
+		SELECT C.list_gubun
+			, C.list_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='OP02' AND Z.com_cd=C.list_type_cd) AS list_type_nm
+			, C.list_prov_dtime
+			, C.open_dtime
+		FROM (
+		    (
+		        SELECT '1' AS list_gubun, B.list_type_cd, B.list_prov_dtime, B.open_dtime
+		        FROM  TB_OPOPENLIST A
+		            , TB_OPOPENGROUP B
+		        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		        AND   A.open_sys_cd = '01'
+				AND   A.org_cd = #orgCd:VARCHAR#
+				AND   A.folder_id = #folderId:VARCHAR#
+		        AND   A.record_id = #recordId:VARCHAR#
+		        AND   A.record_center_id = B.record_center_id
+		        AND   A.open_dtime = B.open_dtime
+		        AND   B.list_type_cd = '01'
+		    )
+		    UNION ALL
+		    (
+		        SELECT '2' AS list_gubun, B.list_type_cd, B.list_prov_dtime, B.open_dtime
+		        FROM  TB_OPOPENLISTCHNG A
+		            , TB_OPOPENGROUP B
+		        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		        AND   A.open_sys_cd = '01'
+				AND   A.folder_id = #folderId:VARCHAR#
+		        AND   A.record_id = #recordId:VARCHAR#
+		        AND   A.record_center_id = B.record_center_id
+		        AND   A.open_dtime = B.open_dtime
+		        AND   B.list_type_cd = '02'
+		    )
+		    UNION ALL
+		    (
+		        SELECT '2' AS list_gubun, B.list_type_cd, B.list_prov_dtime, B.open_dtime
+		        FROM  TB_OPOPENLISTCHNG A
+		            , TB_OPOPENGROUP B
+		        WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		        AND   A.open_sys_cd = '01'
+				AND   A.folder_id = #folderId:VARCHAR#
+		        AND   A.record_center_id = B.record_center_id
+		        AND   A.open_dtime = B.open_dtime
+		        AND   B.list_type_cd IN ('03','04','05','06')
+		    )
+		) C
+		ORDER BY C.open_dtime
+	</select>
+	
+</sqlMap>

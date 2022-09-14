@@ -1,0 +1,35 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+
+insertStorg
+The constraint of the foreign key 'tb_storg_fk01' is invalid, due to value ''1''.[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertStorg
+
+		INSERT INTO TB_STORG (			RECORD_CENTER_ID,ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD			,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD, LEVL		)		VALUES (			'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'				,'5'	  		);
+
+insertStdept
+The constraint of the foreign key 'tb_stdept_fk01' is invalid, due to value '{'1', '1'}'.[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertStdept
+
+		INSERT INTO TB_STDEPT (			DEPT_CD,RECORD_CENTER_ID,ORG_CD,DEPT_NM,DEPT_ABBR_NM,HUPPER_DEPT_CD,UPPER_DEPT_CD			,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD, LEVL		)		VALUES (			'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'					,'5'		);
+
+insertZzOrgUnit
+Semantic: before ' )			AND   C.org_cd NOT IN (SELECT record_center_cd FROM TB_ST...'
+Only one column can be specified in the select list when the subquery is not introduced with EXISTS. insert into TB_ZZORGUNIT TB_ZZORGUNIT (TB_ZZORGUNIT.record_c...[CAS INFO-127.0.0.1:54330,1,14011],[SESSION-54],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertZzOrgUnit
+
+		INSERT INTO TB_ZZORGUNIT		      (record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag,COM_UNIT_FLAG)		(			SELECT *			FROM 			(				SELECT DISTINCT A.record_center_id, B.org_cd, A.unit_cd, '0', A.reg_dtime, DECODE(A.state_cd,'2','0','1'),'1'				FROM TB_ZZUNIT A				   , TB_STORG B				WHERE A.record_center_id = B.record_center_id				AND   (A.unit_cd LIKE 'ZZ%' OR A.COM_UNIT_FLAG='1') 			) C			WHERE (C.record_center_id, C.org_cd, C.unit_cd)			            NOT IN (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZORGUNIT)			AND   C.org_cd NOT IN (SELECT record_center_cd FROM TB_STRECORDCENTER)		);
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.help">
+
+	<!-- 
+		메뉴트리 조회
+	 -->
+	<select id="findMenuTree" parameterClass="rms.common.tree.domain.Tree" resultClass="rms.common.tree.domain.Tree">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.MENU_DIV_CD = '4' THEN '2' ELSE '1' END) AS treeType
+				, A.MENU_ID AS id
+				, A.MENU_NM AS text
+				, A.MENU_DIV_CD AS levl
+                , (CASE WHEN EXISTS (SELECT 1 FROM TB_STMENU B WHERE B.UPPER_MENU_ID = A.MENU_ID) THEN 'closed'
+                        ELSE 'open'
+                    END) AS state 
+				, (CASE WHEN A.MENU_DIV_CD = '4' THEN (CASE WHEN A.USE_FLAG = '0' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)
+						ELSE (CASE WHEN A.USE_FLAG = '0' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)
+					END) AS iconCls
+			FROM  TB_STMENU A
+			<dynamic prepend="WHERE">
+				<isEmpty prepend="AND" property="id">
+					A.MENU_DIV_CD = 1
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="id">
+					<isEqual property="id" compareValue="ROOT">
+						A.MENU_DIV_CD = 1
+					</isEqual>
+					<isNotEqual property="id" compareValue="ROOT">
+						A.UPPER_MENU_ID = #id:VARCHAR#
+					</isNotEqual>
+				</isNotEmpty>
+			</dynamic>
+			AND A.record_center_id = #recordCenterId:VARCHAR#
+			AND A.use_flag = '1'
+			ORDER BY A.MENU_DIV_CD, A.MENU_SORT_SNO
+		) B
+	</select>	
+</sqlMap>

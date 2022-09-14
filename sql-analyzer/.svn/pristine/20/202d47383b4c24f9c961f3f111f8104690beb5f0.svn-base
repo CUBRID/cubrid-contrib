@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="common.schedule">
+
+	<!-- 
+		공통_스케쥴
+		: 스케쥴 목록을 조회한다.
+	 -->
+	<resultMap id="findScheduleList-result" class="rms.common.schedule.domain.Schedule">
+		<result property="seq" 				column="SEQ"/>
+		<result property="jobType" 			column="JOB_TYPE"/>
+		<result property="jobState" 		column="JOB_STATE"/>
+		<result property="jobStartDtime"	column="JOB_START_DTIME"/>
+		<result property="jobResult" 		column="JOB_RESULT"/>
+		<result property="jobReqDtime" 		column="JOB_REQ_DTIME"/>
+		<result property="jobParam" 		column="JOB_PARAM"/>
+		<result property="jobEndDtime"		column="JOB_END_DTIME"/>
+	</resultMap>
+	<select id="countScheduleList" parameterClass="rms.common.schedule.domain.Schedule" resultClass="java.lang.Long">
+		SELECT	COUNT(*)	
+		FROM	tb_stschedule
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		job_type = #jobType:VARCHAR#
+		<isNotEmpty property="jobParam" prepend="AND">
+			job_param like #jobParam:VARCHAR#
+		</isNotEmpty>
+	</select>
+	<select id="findScheduleList" parameterClass="rms.common.schedule.domain.Schedule" resultMap="findScheduleList-result">
+		SELECT E.seq
+	           ,E.job_type
+	           ,E.job_state
+	           ,E.job_start_dtime
+	           ,E.job_result
+	           ,E.job_req_dtime
+	           ,E.job_param
+	           ,E.job_end_dtime
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                , C.*
+		        FROM (
+		            SELECT    *     
+		            FROM    tb_stschedule
+		            WHERE    record_center_id =#recordCenterId:VARCHAR#
+		            AND        job_type = #jobType:VARCHAR#
+		            <isNotEmpty property="jobParam" prepend="AND">
+		                job_param like #jobParam:VARCHAR#
+		            </isNotEmpty>
+		            <isNotEmpty property="seq">
+		                <isNotEqual property="seq" prepend="AND" compareValue="0">
+		                    seq = #seq#
+		                </isNotEqual>
+		            </isNotEmpty>
+		            ORDER BY seq DESC
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		공통_스케쥴
+		: 스케쥴 목록을 조회한다.
+	 -->
+	<resultMap id="findScheduleInList-result" class="rms.common.schedule.domain.Schedule">
+		<result property="seq" 				column="SEQ"/>
+		<result property="recordCenterId"	column="RECORD_CENTER_ID"/>
+		<result property="jobType" 			column="JOB_TYPE"/>
+		<result property="jobState" 		column="JOB_STATE"/>
+		<result property="jobStartDtime"	column="JOB_START_DTIME"/>
+		<result property="jobResult" 		column="JOB_RESULT"/>
+		<result property="jobReqDtime" 		column="JOB_REQ_DTIME"/>
+		<result property="jobParam" 		column="JOB_PARAM"/>
+		<result property="jobEndDtime"		column="JOB_END_DTIME"/>
+	</resultMap>
+	<select id="countScheduleInList" parameterClass="rms.common.schedule.domain.Schedule" resultClass="java.lang.Long">
+		SELECT	COUNT(1)	
+		FROM	tb_stschedule
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		job_type = #jobType:VARCHAR#
+		<iterate property="scheduleSeq"  conjunction="," open="AND seq in (" close=")">
+			#scheduleSeq[]#
+		</iterate>
+	</select>
+	<select id="findScheduleInList" parameterClass="rms.common.schedule.domain.Schedule" resultMap="findScheduleInList-result">
+		SELECT seq
+        	  ,record_center_id
+		      ,job_type
+		      ,job_state
+		      ,job_start_dtime
+		      ,job_result
+		      ,job_req_dtime
+		      ,job_param
+		     ,job_end_dtime	
+		FROM	tb_stschedule
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		job_type = #jobType:VARCHAR#
+		<iterate property="scheduleSeq"  conjunction="," open="AND seq in (" close=")">
+			#scheduleSeq[]#
+		</iterate>
+		ORDER	BY seq ASC
+	</select>
+	
+	<!-- 
+		공통_스케쥴
+		: 스케쥴을 등록한다.
+	 -->
+	<insert id="createSchedule" parameterClass="rms.common.schedule.domain.Schedule">
+		INSERT	INTO tb_stschedule(seq
+								  ,record_center_id
+								  ,job_type
+								  ,job_state
+								  ,job_start_dtime
+								  ,job_result
+								  ,job_req_dtime
+								  ,job_param
+								  ,job_end_dtime)
+		VALUES	(tb_stschedule_sq01.nextval
+				,#recordCenterId:VARCHAR#
+				,#jobType:VARCHAR#
+				,'0'
+				,#jobStartDtime:VARCHAR#
+				,#jobResult:VARCHAR#
+				,#jobReqDtime:VARCHAR#
+				,#jobParam:VARCHAR#
+				,#jobEndDtime:VARCHAR#)
+	</insert>
+	
+	<!-- 
+		공통_스케쥴
+		: 스케쥴을 삭제한다.
+	 -->
+	<delete id="deleteSchedule" parameterClass="rms.common.schedule.domain.Schedule">
+		DELETE	FROM tb_stschedule
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		<isNotEmpty property="seq" prepend="AND">
+			seq = #seq#
+		</isNotEmpty>
+	</delete>
+	
+	<delete id="deleteResortData" parameterClass="rms.common.schedule.domain.Schedule">
+		DELETE	FROM TB_RDOPENRESORTOPIN
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		RESORT_YYYY = #delResortYyyy:VARCHAR#
+		AND	    RESORT_CASE = '1'
+		AND     RESORT_PROG_STATE_CD = '1'
+		AND		SCHEDULE_SEQ = #seq#
+	</delete>
+	
+	<delete id="deleteDisuseData" parameterClass="rms.common.schedule.domain.Schedule">
+		DELETE	FROM TB_DFDISUSEOPIN
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		DISCU_YYYY = #delResortYyyy:VARCHAR#
+		AND     DISCU_PROG_STATE_CD = '01'
+		AND		SCHEDULE_SEQ = #seq#
+	</delete>
+	
+	<!-- 
+		공통_스케쥴
+		: 스케쥴을 갱신한다.
+	 -->
+	<update id="updateSchedule" parameterClass="rms.common.schedule.domain.Schedule">
+		UPDATE	tb_stschedule
+		SET		job_req_dtime = #jobReqDtime:VARCHAR#,
+				job_start_dtime = #jobStartDtime:VARCHAR#,
+				job_end_dtime = #jobEndDtime:VARCHAR#,
+				job_result = #jobResult:VARCHAR#,
+				job_state = #jobState:VARCHAR#
+				<isNotEmpty property="jobParam" open=" , ">
+					job_param = #jobParam:VARCHAR#
+				</isNotEmpty>
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		seq = #seq#				
+	</update>
+	
+</sqlMap>

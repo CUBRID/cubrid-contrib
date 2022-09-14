@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : findRcTakovrHandlPagedList
+
+		SELECT C.takovr_rep_cd||'-'||C.takovr_yyyy||'-'||LPAD(C.takovr_sno, 6, '0') takovr_mng_no		     , C.takovr_rep_cd		     , C.takovr_rep_nm		     , C.take_rep_cd		     , C.take_rep_nm		     , (SELECT COUNT(1) FROM TB_DFTAKOVRFOLDERLIST Z WHERE Z.takovr_rep_cd = C.takovr_rep_cd AND Z.takovr_yyyy = C.takovr_yyyy AND Z.takovr_sno = C.takovr_sno) folder_cnt		     , (SELECT NVL(SUM(Z.record_reg_cnt), '0') FROM TB_RDFOLDER Z, TB_DFTAKOVRFOLDERLIST X WHERE X.takovr_rep_cd = C.takovr_rep_cd AND X.takovr_yyyy = C.takovr_yyyy AND X.takovr_sno = C.takovr_sno AND Z.record_center_id = X.record_center_id AND Z.folder_id = X.folder_id) record_cnt		     , C.takovr_prog_state_cd		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF06' AND Z.com_cd = C.takovr_prog_state_cd) takovr_prog_state_nm		     , C.takovr_file_state_cd		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF11' AND Z.com_cd = C.takovr_file_state_cd) takovr_file_state_nm		FROM (	    	SELECT ROWNUM AS rnum		        , B.*		    FROM (		    	SELECT A.*				FROM  TB_DFTAKOVRPLAN A				WHERE A.record_center_id = '1'				AND   A.takovr_yyyy = '1'								ORDER BY A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno		    ) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'		ORDER BY C.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : countRcTakovrHandlPagedList
+
+		SELECT COUNT(1)		FROM  TB_DFTAKOVRPLAN A		WHERE A.record_center_id = '1'		AND   A.takovr_yyyy = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : update
+-- Query Id : updateRcTakovrHandlState
+
+		UPDATE TB_DFTAKOVRPLAN		   SET takovr_prog_state_cd = '1'		 WHERE takovr_rep_cd = '1'		   AND takovr_yyyy = '1'		   AND takovr_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : update
+-- Query Id : updateRcTakovrFileState
+
+		UPDATE TB_DFTAKOVRFOLDERLIST		   SET creat_error_flag = ''		 WHERE takovr_rep_cd = '1'		   AND takovr_yyyy = '1'		   AND takovr_sno = '1'		   ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : insert
+-- Query Id : createRcTakovrHandlFileCreateSchedule
+
+		INSERT INTO tb_stschedule (			seq, record_center_id, job_type, job_state, job_req_dtime, job_param		) 		VALUES (			TB_STSCHEDULE_SQ01.NEXTVAL, '1', '1', '0', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : update
+-- Query Id : updateRcFolderFolderKeepState
+
+		UPDATE TB_RDFOLDER A 		SET folder_keep_state_cd = '1' 		WHERE EXISTS (		    SELECT 1		    FROM TB_DFTAKOVRFOLDERLIST B		    WHERE B.takovr_rep_cd   = '1'		    AND B.takovr_yyyy       = '1'		    AND B.takovr_sno        = '1'		    AND EXISTS (		        SELECT 1 FROM TB_RDFOLDER C		        WHERE C.record_center_id = B.record_center_id		        AND   C.folder_id = B.folder_id		        AND   C.folder_keep_state_cd IN ('01','04') 		    )		    AND B.record_center_id = A.record_center_id		    AND B.folder_id = A.folder_id		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : findRcTakovrHandlFolderList
+
+		SELECT B.folder_id		FROM  TB_DFTAKOVRPLAN A		    , TB_DFTAKOVRFOLDERLIST B		    , TB_RDFOLDER C		WHERE A.takovr_rep_cd = '1'		AND   A.takovr_yyyy = '1'		AND   A.takovr_sno = '1'		AND   B.takovr_rep_cd = A.takovr_rep_cd		AND   B.takovr_yyyy = A.takovr_yyyy		AND   B.takovr_sno = A.takovr_sno		AND   C.record_center_id = B.record_center_id		AND   C.folder_id = B.folder_id		ORDER BY B.folder_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : findRcTakovrHandlFolderPagedList
+
+	 	SELECT E.takovr_rep_cd||'-'||E.takovr_yyyy||'-'||LPAD(E.takovr_sno, 6, '0') AS takovr_mng_no		     , E.creat_yyyy		     , E.org_cd		     , E.folder_id		     , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id AND Z.org_cd = E.org_cd) AS org_nm		     , E.title		     , E.takovr_prog_state_cd		     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'DF06' AND Z.com_cd = E.takovr_prog_state_cd) AS takovr_prog_state_nm		     , E.takovr_file_state_cd		     , (case when E.creat_error_flag is null then '2' else E.creat_error_flag end) AS creat_error_flag		     , (case when E.creat_error_flag = '1' then '积己坷幅' when E.creat_error_flag = '0' then '积己肯丰' else '固积己' end) AS creat_error_flag_nm		     , E.creat_error_cont		FROM (	    	SELECT ROWNUM AS rnum		        , D.*		    FROM (		    	SELECT A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno, A.takovr_prog_state_cd, A.takovr_file_state_cd		    		, C.record_center_id, C.folder_id, C.creat_yyyy, C.org_cd, C.title		    		, B.creat_error_flag, B.creat_error_cont				FROM  TB_DFTAKOVRPLAN A				    , TB_DFTAKOVRFOLDERLIST B				    , TB_RDFOLDER C				WHERE A.takovr_rep_cd = '1'				AND   A.takovr_yyyy = '1'				AND   A.takovr_sno = '1'								AND   B.takovr_rep_cd = A.takovr_rep_cd				AND   B.takovr_yyyy = A.takovr_yyyy				AND   B.takovr_sno = A.takovr_sno				AND   C.record_center_id = B.record_center_id				AND   C.folder_id = B.folder_id				ORDER BY C.record_center_id, C.title			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'		ORDER BY E.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : countRcTakovrHandlFolderPagedList
+
+	 	SELECT COUNT(1)		FROM  TB_DFTAKOVRPLAN A		    , TB_DFTAKOVRFOLDERLIST B		WHERE A.takovr_rep_cd = '1'		AND   A.takovr_yyyy = '1'		AND   A.takovr_sno = '1'		AND   B.takovr_rep_cd = A.takovr_rep_cd		AND   B.takovr_yyyy = A.takovr_yyyy		AND   B.takovr_sno = A.takovr_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : findRcTakovrPlanInf
+
+	 	SELECT takovr_rep_cd||'-'||takovr_yyyy||'-'||LPAD(takovr_sno, 6, '0') takovr_mng_no	 		 , takovr_rep_cd	 		 , takovr_rep_nm	 		 , take_rep_cd	 		 , take_rep_nm	 		 , takovr_yyyy	 		 , takovr_sno	 		 , takovr_rsn	 	FROM  TB_DFTAKOVRPLAN	 	WHERE takovr_rep_cd = '1'	 	AND   takovr_yyyy = '1'	 	AND   takovr_sno = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml
+-- Query    : select
+-- Query Id : findRcTakovrHandlFolderTraceList
+
+	 	SELECT (SELECT Z.ORG_CD FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS ORG_CD		      ,B.FOLDER_ID		      ,A.TAKOVR_REP_CD		      ,A.TAKOVR_REP_NM		      ,A.TAKE_REP_CD		      ,A.TAKE_REP_NM		      ,(SELECT Z.CREAT_SYS_CD||'-'||Z.ORG_CD||'-'||Z.CREAT_YYYY||'-'||Z.FOLDER_REG_SEQ||'-'||Z.HO_NO FROM TB_RDFOLDER Z WHERE Z.RECORD_CENTER_ID = B.RECORD_CENTER_ID AND Z.FOLDER_ID = B.FOLDER_ID) AS FOLDER_KEY		FROM TB_DFTAKOVRPLAN A, TB_DFTAKOVRFOLDERLIST B		WHERE A.takovr_rep_cd = '1'		AND A.takovr_yyyy = '1'		AND A.takovr_sno = '1'		AND A.TAKOVR_REP_CD = B.TAKOVR_REP_CD		AND A.TAKOVR_YYYY = B.TAKOVR_YYYY		AND A.TAKOVR_SNO = B.TAKOVR_SNO;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrHandl.xml

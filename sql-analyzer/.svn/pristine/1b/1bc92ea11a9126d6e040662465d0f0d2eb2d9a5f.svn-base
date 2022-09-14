@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.excel">
+
+	<delete id="deletePreFileList" parameterClass="rms.common.excel.domain.WriteExcelParameter">
+		DELETE FROM TB_ZZREQEXCELLIST
+		WHERE 	REQ_USER_ID = #reqUserId:VARCHAR#
+		AND		REQ_MENU_ID	= #menuId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="reqIndex">
+				REQ_INDEX = #reqIndex:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</delete>
+	
+	<insert id="insertExcelFileCreat" parameterClass="rms.common.excel.domain.WriteExcelParameter">
+		INSERT INTO TB_ZZREQEXCELLIST (REQ_USER_ID, REQ_MENU_ID, REQ_INDEX, FILE_KEY, FILE_NM, FIN_FLAG, REG_DTIME)
+		<!--cubrid VALUES(#reqUserId:VARCHAR#, #menuId:VARCHAR#, NVL(#reqIndex:VARCHAR#, '1'), #fileKey:VARCHAR#, #fileNm:VARCHAR#, #finFlag:VARCHAR#, to_char(sysdate, 'YYYYMMDDHH24MISS'))-->
+		VALUES(#reqUserId:VARCHAR#, #menuId:VARCHAR#, NVL(#reqIndex:VARCHAR#, '1'), #fileKey:VARCHAR#, #fileNm:VARCHAR#, #finFlag:VARCHAR#, to_char(sys_datetime, 'YYYYMMDDHH24MISS'))
+	</insert>
+	
+	<update id="updateExcelFileCreat" parameterClass="rms.common.excel.domain.WriteExcelParameter">
+		UPDATE TB_ZZREQEXCELLIST
+		SET   fin_flag = #finFlag:VARCHAR#
+			, file_key = #fileKey:VARCHAR#
+		WHERE req_user_id = #reqUserId:VARCHAR#
+		AND   req_menu_id = #menuId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="fileNm">
+				file_nm = #fileNm:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</update>
+	
+	<select id="findMenuNm" parameterClass="java.lang.String" resultClass="java.lang.String">
+		SELECT DISTINCT MENU_NM FROM TB_STMENU WHERE MENU_ID = #value:VARCHAR#
+	</select>
+	
+	<select id="isComplete" parameterClass="rms.common.excel.domain.WriteExcelParameter" resultClass="string">
+		SELECT MAX(fin_flag) FROM tb_zzreqexcellist 
+		WHERE req_user_id = #reqUserId:VARCHAR# 
+		AND req_menu_id = #menuId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="reqIndex">
+				REQ_INDEX = #reqIndex:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>
+
+	<resultMap id="findExcelList-resultNew" class="rms.common.excel.domain.WriteExcelParameter">
+		<result property="reqUserId"		column="REQ_USER_ID"/>
+		<result property="menuId"			column="REQ_MENU_ID"/>
+		<result property="menuNm"			column="REQ_MENU_NM"/>
+		<result property="reqIndex"			column="REQ_INDEX"/>
+		<result property="fileKey"			column="FILE_KEY"/>
+		<result property="fileNm"			column="FILE_NM"/>
+		<result property="finFlag"			column="FIN_FLAG"/>
+		<result property="regDtime"			column="REG_DTIME"/>
+		<result property="filePath"			column="FILE_PATH"/>
+	</resultMap>
+
+	<select id="findExcelListNew" parameterClass="rms.common.excel.domain.WriteExcelParameter" resultMap="findExcelList-resultNew">
+		SELECT A.req_user_id
+			, A.req_menu_id
+			, A.req_index
+			, (SELECT M.menu_nm FROM TB_STMENU M WHERE M.record_center_id=(SELECT U.record_center_id FROM TB_STUSER U WHERE U.user_id=A.req_user_id) AND M.menu_id = A.req_menu_id) AS req_menu_nm
+			, A.file_key
+			, A.file_nm
+			, A.fin_flag
+			, A.reg_dtime
+			, B.file_path
+		FROM  TB_ZZREQEXCELLIST A LEFT OUTER JOIN TB_STFILEMNG B ON A.file_key = B.file_key
+		WHERE A.req_user_id = #reqUserId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="menuId">
+				A.req_menu_id = #menuId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="reqIndex">
+				A.req_index = #reqIndex:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+		ORDER BY A.reg_dtime DESC
+	</select>
+	
+	<select id="findExcelPagedListNew" parameterClass="rms.common.excel.domain.WriteExcelParameter" resultMap="findExcelList-resultNew">
+		SELECT C.req_user_id
+			, C.req_menu_id
+			, C.req_menu_nm
+			, C.req_index
+			, C.file_key
+			, C.file_nm
+			, C.fin_flag
+			, C.reg_dtime
+			, C.file_path
+		FROM (
+			SELECT ROWNUM AS rnum
+				, B.*
+			FROM (
+				SELECT A.req_user_id
+					, A.req_menu_id
+					, (SELECT M.menu_nm FROM TB_STMENU M WHERE M.record_center_id=(SELECT U.record_center_id FROM TB_STUSER U WHERE U.user_id=A.req_user_id) AND M.menu_id = A.req_menu_id) AS req_menu_nm
+					, A.req_index
+					, A.file_key
+					, A.file_nm
+					, A.fin_flag
+					, A.reg_dtime
+					, B.file_path
+				FROM  TB_ZZREQEXCELLIST A LEFT OUTER JOIN TB_STFILEMNG B ON A.file_key = B.file_key
+				WHERE A.req_user_id = #reqUserId:VARCHAR#
+				<dynamic>
+					<isNotEmpty prepend="AND" property="menuId">
+						A.req_menu_id = #menuId:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="reqIndex">
+						A.req_index = #reqIndex:VARCHAR#
+					</isNotEmpty>
+				</dynamic>	
+				ORDER BY A.file_nm
+			) B
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) C
+		WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<select id="countExcelFileCreat" parameterClass="rms.common.excel.domain.WriteExcelParameter" resultClass="int">
+		SELECT COUNT(1) 
+		FROM TB_ZZREQEXCELLIST
+		WHERE 	REQ_USER_ID = #reqUserId:VARCHAR#
+		AND		REQ_MENU_ID	= #menuId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="reqIndex">
+				REQ_INDEX = #reqIndex:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</select>
+	
+	<select id="countExcelPagedListNew" parameterClass="rms.common.excel.domain.WriteExcelParameter" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM	TB_ZZREQEXCELLIST A
+		WHERE	REQ_USER_ID = #reqUserId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="menuId">
+				REQ_MENU_ID = #menuId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="reqIndex">
+				REQ_INDEX = #reqIndex:VARCHAR#
+			</isNotEmpty>
+		</dynamic>		
+	</select>
+	
+	<delete id="deleteExcelDownload" parameterClass="rms.common.excel.domain.WriteExcelParameter">
+		DELETE FROM TB_ZZREQEXCELLIST
+		WHERE REQ_USER_ID = #reqUserId:VARCHAR#
+		AND   FILE_KEY = #fileKey:VARCHAR#
+	</delete>
+	
+	<delete id="deleteExcel" parameterClass="rms.common.excel.domain.WriteExcelParameter">
+		DELETE FROM TB_ZZREQEXCELLIST
+		WHERE REQ_USER_ID = #reqUserId:VARCHAR#
+		AND   REQ_MENU_ID = #menuId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="reqIndex">
+				REQ_INDEX = #reqIndex:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="fileKey">
+				FILE_KEY = #fileKey:VARCHAR#
+			</isNotEmpty>
+		</dynamic>	
+	</delete>
+	
+</sqlMap>

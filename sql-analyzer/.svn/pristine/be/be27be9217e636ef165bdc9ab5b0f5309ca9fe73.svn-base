@@ -1,0 +1,831 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.clssmng">
+
+
+	<!-- 기록관리기준표 보존기간관리 기록관설정 -->
+	<resultMap id="stnd-task-result" class="rms.stnd.stndinfo.domain.Task" >
+		<result property="bisClssId"				  column="BIS_CLSS_ID"/>
+		<result property="bisClssNm"				  column="BIS_CLSS_NM"/>
+		<result property="bisClssPathNm" 			  column="BIS_CLSS_PATH_NM"/>
+		<result property="startDtime" 				  column="START_DTIME"/>	
+		<result property="presvTermNm" 				  column="PRESV_TERM_NM"/>
+		<result property="presvTermHandlStateNm"	  column="PRESV_TERM_HANDL_STATE_NM"/>
+		<result property="recordCenterPresvTermCdNm"  column="RECORD_CENTER_PRESV_TERM_NM"/>
+		<result property="recordCenterCheckYmd"       column="RECORD_CENTER_CHECK_YMD"/>
+		<result property="recordCenterOpin" 		  column="RECORD_CENTER_OPIN"/>
+		<result property="delFlagNm"		          column="DEL_FLAG_NM"/>
+		<result property="bisTypeNm"                  column="BIS_TYPE_NM"/>
+		<result property="writeFlagNm" 				  column="WRITE_FLAG_NM"/>
+		<result property="creatOrgOpin" 			  column="CREAT_ORG_OPIN"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기록관리기준표 보존기간관리 기록관설정 목록을 조회한다.
+	 -->
+	<select id="findTaskPagedList" parameterClass="rms.stnd.stndinfo.domain.Task" resultMap="stnd-task-result">
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+				SELECT D.BIS_CLSS_ID
+			    	, D.BIS_CLSS_NM
+			        , D.BIS_CLSS_PATH_NM
+			        , D.BIS_TYPE_NM
+			        , D.START_DTIME
+			        , D.PRESV_TERM_NM
+			        , D.PRESV_TERM_HANDL_STATE_NM
+			        , D.RECORD_CENTER_PRESV_TERM_NM
+			        , D.RECORD_CENTER_CHECK_YMD
+			        , D.RECORD_CENTER_OPIN
+			        , D.DEL_FLAG_NM
+			        , D.WRITE_FLAG_NM
+			        , D.DEL_FLAG
+			        , D.BIS_TYPE
+			        , D.CREAT_ORG_OPIN
+				 FROM (
+				 	SELECT C.BIS_CLSS_ID
+				        , C.BIS_CLSS_NM
+				        , C.BIS_CLSS_PATH_NM
+				        , NVL((SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ03' AND use_flag = '1' AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm
+				        , C.START_DTIME
+				        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = C.presv_term_cd)  PRESV_TERM_NM
+				        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ11' AND use_flag = '1' AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM
+				        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM
+				        , B.RECORD_CENTER_CHECK_YMD
+				        , B.RECORD_CENTER_OPIN
+				        , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD='ZZ19' AND USE_FLAG='0' AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM
+				        , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ01' AND USE_FLAG = '1' AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM
+			            , C.DEL_FLAG
+			            , C.WRITE_FLAG
+			            , REPLACE(C.BIS_TYPE,'B','') bis_type
+			            , C.PRESV_TERM_STATE
+			            , B.CREAT_ORG_OPIN
+					FROM (
+						SELECT A.BIS_CLSS_ID, A.bis_clss_nm
+			           		, SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 
+					        , A.BIS_TYPE
+				            , A.START_DTIME
+				            , A.PRESV_TERM_CD
+					        , A.PRESV_TERM_STATE
+					        , A.DEL_FLAG
+						    , A.WRITE_FLAG
+					    FROM tb_zzbisclss A 
+						WHERE A.levl='6' and A.presv_term_state in (1,2)
+			            START WITH A.bis_clss_id ='00000000000000000000000000000000000'
+			      		CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id
+			      	) C,TB_ZZPRESVTERMHIST B
+			      	WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID
+				) D
+			    <dynamic prepend="WHERE">
+			    	<isNotEmpty prepend="AND" property="bisClssPathNm">
+				  		D.BIS_CLSS_PATH_NM LIKE #bisClssPathNm:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="bisClssId">
+					    D.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="chrgOrgCd">	
+						D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="presvTermCd">
+						D.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+					</isNotEmpty>						
+					<isNotEmpty prepend="AND" property="writeFlag">
+						D.WRITE_FLAG = #writeFlag:VARCHAR#
+					</isNotEmpty>			
+					<isNotEmpty prepend="AND" property="bisType">
+						D.BIS_TYPE = #bisType:VARCHAR#
+					</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="presvTermState">
+						D.PRESV_TERM_STATE = #presvTermState:VARCHAR#
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="delFlag">
+						D.DEL_FLAG = #delFlag:VARCHAR#
+					</isNotEmpty>
+				</dynamic>	 
+			  	<isEqual property="order" compareValue="1">
+					ORDER BY START_DTIME
+				</isEqual>
+				<isEqual property="order" compareValue="2">
+					ORDER BY START_DTIME DESC
+				</isEqual>
+				<isEqual  property="order" compareValue="0">
+					 ORDER BY BIS_TYPE,BIS_CLSS_NM
+				</isEqual>
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 기록관리기준표 보존기간관리 기록관설정 목록을 조회한다.
+	 -->
+	<select id="countTaskPagedList" parameterClass="rms.stnd.stndinfo.domain.Task" resultClass="java.lang.Long">
+		SELECT count(1)
+		FROM (
+			SELECT C.BIS_CLSS_ID
+		        , C.BIS_CLSS_NM
+		        , C.BIS_CLSS_PATH_NM
+		        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ03' AND use_flag = '1' AND com_cd = REPLACE(C.BIS_TYPE,'B','')) bis_type_nm
+		        , C.START_DTIME
+		        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = C.presv_term_cd)  PRESV_TERM_NM
+		        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ11' AND use_flag = '1' AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM
+		        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM
+		        , B.RECORD_CENTER_CHECK_YMD
+		        , B.RECORD_CENTER_OPIN
+		        , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD='ZZ19' AND USE_FLAG='0' AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM
+		        , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ01' AND USE_FLAG = '1' AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM
+	            , C.DEL_FLAG
+	            , C.WRITE_FLAG
+	            , REPLACE(C.BIS_TYPE,'B','') bis_type
+	            , C.PRESV_TERM_STATE
+	            , B.CREAT_ORG_OPIN
+		  	FROM (
+		  		SELECT A.BIS_CLSS_ID
+		  			, A.bis_clss_nm
+	           		, SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 
+		        	, A.BIS_TYPE
+	           		, A.START_DTIME
+	           		, A.PRESV_TERM_CD
+		       		, A.PRESV_TERM_STATE
+		       		, A.DEL_FLAG
+			   		, A.WRITE_FLAG
+			    FROM tb_zzbisclss A 
+	      		WHERE A.levl='6' and A.presv_term_state in (1,2)
+	           	START WITH A.bis_clss_id ='00000000000000000000000000000000000'
+	      		CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id
+	      	) C,TB_ZZPRESVTERMHIST B
+	      	WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID
+	    ) D
+	    <dynamic prepend="WHERE">
+	    	<isNotEmpty prepend="AND" property="bisClssPathNm">
+		  	    D.BIS_CLSS_PATH_NM LIKE #bisClssPathNm:VARCHAR#
+		    </isNotEmpty>
+		    <isNotEmpty prepend="AND" property="bisClssId">
+			    D.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="chrgOrgCd">	
+				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="presvTermCd">
+				D.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+			</isNotEmpty>						
+			<isNotEmpty prepend="AND" property="writeFlag">
+				D.WRITE_FLAG = #writeFlag:VARCHAR#
+			</isNotEmpty>			
+			<isNotEmpty prepend="AND" property="bisType">
+				D.BIS_TYPE = #bisType:VARCHAR#
+			</isNotEmpty>
+		    <isNotEmpty prepend="AND" property="presvTermState">
+				D.PRESV_TERM_STATE = #presvTermState:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="delFlag">
+				D.DEL_FLAG = #delFlag:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 기록관리기준표 보존기간관리 기록원신청 -->
+	<resultMap id="stnd-task-narsreq-result" class="rms.stnd.stndinfo.domain.Task" >
+		<result property="bisClssId"				  column="BIS_CLSS_ID"/>
+		<result property="bisClssNm"				  column="BIS_CLSS_NM"/>
+		<result property="bisClssPathNm" 			  column="BIS_CLSS_PATH_NM"/>
+		<result property="startDtime" 				  column="START_DTIME"/>	
+		<result property="presvTermNm" 				  column="PRESV_TERM_NM"/>
+		<result property="recordCenterPresvTermCdNm"  column="RECORD_CENTER_PRESV_TERM_NM"/>
+		<result property="recordCenterCheckYmd"       column="RECORD_CENTER_CHECK_YMD"/>
+		<result property="recordCenterOpin" 		  column="RECORD_CENTER_OPIN"/>
+		<result property="delFlagNm"		          column="DEL_FLAG_NM"/>
+		<result property="resubmitFlag"		          column="RESUBMIT_FLAG"/>
+		<result property="bisTypeNm"                  column="BIS_TYPE_NM"/>
+		<result property="taskDescr" 				  column="TASK_DESCR"/>	
+	</resultMap>
+	<!-- 
+		SELECT - 기록관리기준표 보존기간관리 기록원 신청 목록을 조회한다.
+	 -->
+	<select id="findNarsReqBisClssPagedList" parameterClass="rms.stnd.stndinfo.domain.Task" resultMap="stnd-task-narsreq-result">
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+				SELECT D.BIS_CLSS_ID
+			        , D.BIS_CLSS_NM
+			        , D.BIS_CLSS_PATH_NM
+			        , D.BIS_TYPE_NM
+			        , D.START_DTIME
+			        , D.PRESV_TERM_NM
+			        , D.RECORD_CENTER_PRESV_TERM_NM
+			        , D.RECORD_CENTER_CHECK_YMD
+			        , D.RECORD_CENTER_OPIN
+			        , D.DEL_FLAG_NM
+			        , D.DEL_FLAG
+			        , D.BIS_TYPE
+			        , D.TASK_DESCR,D.RESUBMIT_FLAG
+				 FROM (
+				 	SELECT C.BIS_CLSS_ID
+				        , C.BIS_CLSS_NM
+				        , C.BIS_CLSS_PATH_NM
+				        , NVL((SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ03' AND use_flag = '1' AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm
+				        , C.START_DTIME
+				        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = C.presv_term_cd)  PRESV_TERM_NM
+				        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ11' AND use_flag = '1' AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM
+				        , (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM
+				        , B.RECORD_CENTER_CHECK_YMD
+				        , B.RECORD_CENTER_OPIN
+				        , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD='ZZ19' AND USE_FLAG='0' AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM
+				        , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ01' AND USE_FLAG = '1' AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM
+			            , C.DEL_FLAG
+			            , C.WRITE_FLAG
+			            , C.TASK_DESCR
+			            , REPLACE(C.BIS_TYPE,'B','') bis_type
+			            , C.PRESV_TERM_STATE,C.RESUBMIT_FLAG
+				  	FROM (
+				  		SELECT A.BIS_CLSS_ID
+				  			, A.bis_clss_nm
+			           		, SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 
+				       		, A.BIS_TYPE
+			           		, A.START_DTIME
+			           		, A.PRESV_TERM_CD
+				       		, A.PRESV_TERM_STATE
+				       		, A.DEL_FLAG
+					   		, A.WRITE_FLAG
+					   		, A.TASK_DESCR,DECODE(A.RESUBMIT_FLAG,1,'Y','N') RESUBMIT_FLAG
+					   	FROM tb_zzbisclss A 
+			      		WHERE A.levl='6' 
+			      		<dynamic>
+							<isNotEmpty property="hwakjongFlag">	
+								<isEqual prepend="AND" property="hwakjongFlag" compareValue="1">
+									A.PRESV_TERM_STATE=4
+								</isEqual>
+								<isEqual prepend="AND" property="hwakjongFlag" compareValue="0">			
+									A.PRESV_TERM_STATE IN (2,3)
+								</isEqual>				
+							</isNotEmpty>
+			        	</dynamic>
+			           	START WITH A.bis_clss_id ='00000000000000000000000000000000000'
+			      		CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id
+					) C,TB_ZZPRESVTERMHIST B
+			   	 	WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID
+				) D
+			    <dynamic prepend="WHERE">
+			    	<isNotEmpty prepend="AND" property="bisClssPathNm">
+				  	    D.BIS_CLSS_PATH_NM LIKE #bisClssPathNm:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="AND" property="bisClssId">
+					    D.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="chrgOrgCd">	
+						D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+					</isNotEmpty>
+					<isNotEmpty prepend="AND" property="presvTermCd">
+						D.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+					</isNotEmpty>						
+					<isNotEmpty prepend="AND" property="bisType">
+						D.BIS_TYPE = #bisType:VARCHAR#
+					</isNotEmpty>
+				    <isNotEmpty prepend="AND" property="delFlag">
+						D.DEL_FLAG = #delFlag:VARCHAR#
+					</isNotEmpty>
+					<!-- 조회조건에 등록일 추가 2014.09.23 김도형 추가 -->
+					<isNotEmpty prepend="AND" property="startDtime">
+					    SUBSTR(D.START_DTIME,0,4) = #startDtime:VARCHAR# 
+					</isNotEmpty>
+				</dynamic>
+				<isEqual property="order" compareValue="1">
+					ORDER BY START_DTIME
+				</isEqual>
+				<isEqual property="order" compareValue="2">
+				    ORDER BY START_DTIME DESC
+				</isEqual>
+				<isEqual  property="order" compareValue="0">
+				    ORDER BY BIS_TYPE,BIS_CLSS_NM
+				</isEqual>
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 기록관리기준표 보존기간관리 기록원 신청 목록을 조회한다.
+	 -->
+	<select id="countNarsReqBisClssPagedList" parameterClass="rms.stnd.stndinfo.domain.Task" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+	 	FROM (
+	 		SELECT C.BIS_CLSS_ID
+	       		, C.BIS_CLSS_NM
+	       		, C.BIS_CLSS_PATH_NM
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ03' AND use_flag = '1' AND com_cd = REPLACE(C.BIS_TYPE,'B','')) bis_type_nm
+	       		, C.START_DTIME
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = C.presv_term_cd)  PRESV_TERM_NM
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ11' AND use_flag = '1' AND com_cd =C.presv_term_state) PRESV_TERM_HANDL_STATE_NM
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM
+	       		, B.RECORD_CENTER_CHECK_YMD
+	       		, B.RECORD_CENTER_OPIN
+	       		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD='ZZ19' AND USE_FLAG='0' AND COM_CD=C.DEL_FLAG)DEL_FLAG_NM
+	       		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ01' AND USE_FLAG = '1' AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM
+           		, C.DEL_FLAG
+           	 	, C.WRITE_FLAG
+           		, REPLACE(C.BIS_TYPE,'B','') bis_type
+           		, C.PRESV_TERM_STATE
+	  		FROM (
+	  			SELECT A.BIS_CLSS_ID
+	  				, A.bis_clss_nm
+           			, SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 
+	       			, A.BIS_TYPE
+           			, A.START_DTIME
+           			, A.PRESV_TERM_CD
+	       			, A.PRESV_TERM_STATE
+	       			, A.DEL_FLAG
+		   			, A.WRITE_FLAG
+		   		FROM tb_zzbisclss A 
+      			WHERE A.levl='6' 
+		      	<dynamic>
+					<isNotEmpty property="hwakjongFlag">	
+						<isEqual prepend="AND" property="hwakjongFlag" compareValue="1">
+							A.PRESV_TERM_STATE=4
+						</isEqual>
+						<isEqual prepend="AND" property="hwakjongFlag" compareValue="0">			
+							A.PRESV_TERM_STATE IN (2,3)
+						</isEqual>				
+					</isNotEmpty>
+		        </dynamic>
+		        START WITH A.bis_clss_id ='00000000000000000000000000000000000'
+		      	CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id
+		   	) C,TB_ZZPRESVTERMHIST B
+		    WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID
+		) D
+		<dynamic prepend="WHERE">
+		    <isNotEmpty prepend="AND" property="bisClssPathNm">
+				D.BIS_CLSS_PATH_NM LIKE #bisClssPathNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="bisClssId">
+				D.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="chrgOrgCd">	
+				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="presvTermCd">
+				D.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+			</isNotEmpty>						
+			<isNotEmpty prepend="AND" property="bisType">
+				D.BIS_TYPE = #bisType:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="delFlag">
+				D.DEL_FLAG = #delFlag:VARCHAR#
+			</isNotEmpty>
+			<!-- 조회조건에 등록일 추가 2014.09.23 김도형 추가 -->
+			<isNotEmpty prepend="AND" property="startDtime">
+				SUBSTR(D.START_DTIME,0,4) = #startDtime:VARCHAR# 
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 기록관리기준표 보존기간관리 단위과제현황 -->
+	<resultMap id="stnd-task-remedi-result" class="rms.stnd.stndinfo.domain.Task" >
+		<result property="bisClssId"				  column="BIS_CLSS_ID"/>
+		<result property="bisClssNm"				  column="BIS_CLSS_NM"/>
+		<result property="bisClssPathNm" 			  column="BIS_CLSS_PATH_NM"/>
+		<result property="startDtime" 				  column="START_DTIME"/>	
+		<result property="presvTermNm" 				  column="PRESV_TERM_NM"/>
+		<result property="presvTermHandlStateNm"	  column="PRESV_TERM_HANDL_STATE_NM"/>
+		<result property="narsPresvTermCdNm"          column="NARS_PRESV_TERM_NM"/>
+		<result property="narsCheckYmd"               column="NARS_CHECK_YMD"/>
+		<result property="narsOpin" 		          column="NARS_OPIN"/>
+		<result property="delFlagNm"		          column="DEL_FLAG_NM"/>
+		<result property="bisTypeNm"                  column="BIS_TYPE_NM"/>
+		<result property="presvTermState"             column="PRESV_TERM_STATE"/>
+		<result property="resubmitFlag"		          column="RESUBMIT_FLAG"/>
+		<result property="presvTermFileCreatState"    column="PRESV_TERM_FILE_CREAT_STATE"/>
+		<result property="taskDescr"                  column="TASK_DESCR"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기록관리기준표 보존기간관리 단위과제현황 목록을 조회한다.(기록원 확정 조회)
+	-->
+	<select id="findTaskReMediPagedList" parameterClass="rms.stnd.stndinfo.domain.Task" resultMap="stnd-task-remedi-result">
+<!--cubrid
+		SELECT F.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, E.*
+			FROM (
+-->
+				SELECT D.BIS_CLSS_ID
+			        , D.BIS_CLSS_NM
+			        , D.BIS_CLSS_PATH_NM
+			        , D.BIS_TYPE_NM
+			        , D.START_DTIME
+			        , D.PRESV_TERM_NM
+			        , D.PRESV_TERM_HANDL_STATE_NM
+			        , D.NARS_PRESV_TERM_NM
+			        , D.NARS_CHECK_YMD
+			        , D.NARS_OPIN
+			        , D.DEL_FLAG_NM
+			        , D.DEL_FLAG
+			        , D.TASK_DESCR
+			        , D.PRESV_TERM_STATE
+				    , D.PRESV_TERM_FILE_CREAT_STATE,D.RESUBMIT_FLAG
+			 	FROM (
+			 		SELECT C.BIS_CLSS_ID
+			       		, C.BIS_CLSS_NM
+			       		, C.BIS_CLSS_PATH_NM
+			       		, NVL((SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ03' AND use_flag = '1' AND com_cd = REPLACE(C.BIS_TYPE,'B','')),REPLACE(C.BIS_TYPE,'B','')) bis_type_nm
+		 	       		, C.START_DTIME
+			       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = C.presv_term_cd)  PRESV_TERM_NM            
+			       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ11' AND use_flag = '1' AND com_cd = c.presv_term_state) AS presv_term_handl_state_nm
+			       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = B.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM
+			       		, B.NARS_CHECK_YMD
+			       		, B.NARS_OPIN
+			       		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ19' AND USE_FLAG = '0' AND COM_CD=C.DEL_FLAG) DEL_FLAG_NM
+			       		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ01' AND USE_FLAG = '1' AND COM_CD=C.WRITE_FLAG) WRITE_FLAG_NM
+		           		, C.DEL_FLAG
+		           		, C.WRITE_FLAG
+		           		, REPLACE(C.BIS_TYPE,'B','') bis_type
+		           		, C.TASK_DESCR
+		           		, C.PRESV_TERM_STATE
+		           		, C.PRESV_TERM_FILE_CREAT_STATE,C.RESUBMIT_FLAG
+			  		FROM (
+			  			SELECT A.BIS_CLSS_ID
+			  				, A.bis_clss_nm
+		           			, SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 
+			       	  		, A.BIS_TYPE
+		           			, A.START_DTIME
+		           			, A.PRESV_TERM_CD
+			       			, A.PRESV_TERM_STATE
+			       			, A.DEL_FLAG
+				   			, A.WRITE_FLAG
+				   			, A.TASK_DESCR
+				   			, A.PRESV_TERM_FILE_CREAT_STATE,DECODE(A.RESUBMIT_FLAG,1,'Y','N') RESUBMIT_FLAG
+				   		FROM tb_zzbisclss A 
+		      			WHERE A.levl='6' 
+<!--cubrid start-->
+                  <isNotEmpty prepend="AND" property="bisClssId">
+				    	A.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+				  	</isNotEmpty>
+				  	<isNotEmpty prepend="AND" property="chrgOrgCd">	
+						A.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+				  	</isNotEmpty>
+				  	<isNotEmpty prepend="AND" property="presvTermCd">
+						A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				  	</isNotEmpty>						
+				  	<isNotEmpty prepend="AND" property="writeFlag">
+						A.WRITE_FLAG = #writeFlag:VARCHAR#
+				  	</isNotEmpty>			
+				  	<isNotEmpty prepend="AND" property="bisType">
+						A.BIS_TYPE = #bisType:VARCHAR#
+				  	</isNotEmpty>
+				  	<isNotEmpty prepend="AND" property="presvTermState">
+				    	A.PRESV_TERM_STATE = #presvTermState:VARCHAR#
+			      	</isNotEmpty>
+			      	<isNotEmpty prepend="AND" property="startDTimeF">
+			      		<isNotEmpty property="startDTimeT">
+				      		(A.START_DTIME BETWEEN #startDTimeF:VARCHAR#||'000000' AND #startDTimeT:VARCHAR#||'240000')
+			      		</isNotEmpty>
+						<isEmpty property="startDTimeT">
+							A.START_DTIME <![CDATA[>=]]> #startDTimeF:VARCHAR#||'000000'
+						</isEmpty>
+				  	</isNotEmpty>
+				  	<isEmpty prepend="AND" property="startDTimeF">
+				  		<isNotEmpty property="startDTimeT">
+				  			A.START_DTIME <![CDATA[<=]]> #startDTimeT:VARCHAR#||'240000'
+				  		</isNotEmpty>
+				  	</isEmpty>
+				  	<isNotEmpty prepend="AND" property="delFlag">
+						A.DEL_FLAG = #delFlag:VARCHAR#
+				  	</isNotEmpty>
+				  	
+				  	<isEmpty property="bisClssPathNm">
+			  	    	<isEmpty  prepend="AND" property="order">
+      			        ROWNUM BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEmpty>
+			  	  </isEmpty>
+				  	
+<!--cubrid end-->
+
+		           		START WITH A.bis_clss_id ='00000000000000000000000000000000000'
+		      			CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id
+		      			
+		      	<isEmpty property="bisClssPathNm">
+			  	    	<isEqual property="order" compareValue="1">
+      			    	ORDER BY START_DTIME FOR ORDERBY_NUM() BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEqual>
+      			    <isEqual property="order" compareValue="2">
+      			        ORDER BY START_DTIME DESC FOR ORDERBY_NUM() BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEqual>
+      			    <isEqual  property="order" compareValue="0">
+      			        ORDER BY BIS_TYPE,BIS_CLSS_NM FOR ORDERBY_NUM() BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEqual>
+			      </isEmpty>
+		      			
+		      		) C, TB_ZZPRESVTERMHIST B
+		      		WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID
+		      	) D
+		      	<dynamic prepend="WHERE">
+			    	<isNotEmpty property="bisClssPathNm">
+			  	    	D.BIS_CLSS_PATH_NM LIKE #bisClssPathNm:VARCHAR#
+			  	    	<isEmpty  prepend="AND" property="order">
+      			        ROWNUM BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEmpty>
+			  	    	<isEqual property="order" compareValue="1">
+      			    	ORDER BY START_DTIME FOR ORDERBY_NUM() BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEqual>
+      			    <isEqual property="order" compareValue="2">
+      			        ORDER BY START_DTIME DESC FOR ORDERBY_NUM() BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEqual>
+      			    <isEqual  property="order" compareValue="0">
+      			        ORDER BY BIS_TYPE,BIS_CLSS_NM FOR ORDERBY_NUM() BETWEEN #pagedStart:NUMBER# AND #pagedEnd:NUMBER#
+      			    </isEqual>
+			      </isNotEmpty>
+			      
+			      
+<!--cubrid
+			      <isNotEmpty prepend="AND" property="bisClssId">
+				    	D.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+				  	</isNotEmpty>
+				  	<isNotEmpty prepend="AND" property="chrgOrgCd">	
+						D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+				  	</isNotEmpty>
+				  	<isNotEmpty prepend="AND" property="presvTermCd">
+						D.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				  	</isNotEmpty>						
+				  	<isNotEmpty prepend="AND" property="writeFlag">
+						D.WRITE_FLAG = #writeFlag:VARCHAR#
+				  	</isNotEmpty>			
+				  	<isNotEmpty prepend="AND" property="bisType">
+						D.BIS_TYPE = #bisType:VARCHAR#
+				  	</isNotEmpty>
+				  	<isNotEmpty prepend="AND" property="presvTermState">
+				    	D.PRESV_TERM_STATE = #presvTermState:VARCHAR#
+			      	</isNotEmpty>
+			      	<isNotEmpty prepend="AND" property="startDTimeF">
+			      		<isNotEmpty property="startDTimeT">
+				      		(D.START_DTIME BETWEEN #startDTimeF:VARCHAR#||'000000' AND #startDTimeT:VARCHAR#||'240000')
+			      		</isNotEmpty>
+						<isEmpty property="startDTimeT">
+							D.START_DTIME <![CDATA[>=]]> #startDTimeF:VARCHAR#||'000000'
+						</isEmpty>
+				  	</isNotEmpty>
+				  	<isEmpty prepend="AND" property="startDTimeF">
+				  		<isNotEmpty property="startDTimeT">
+				  			D.START_DTIME <![CDATA[<=]]> #startDTimeT:VARCHAR#||'240000'
+				  		</isNotEmpty>
+				  	</isEmpty>
+				  	<isNotEmpty prepend="AND" property="delFlag">
+						D.DEL_FLAG = #delFlag:VARCHAR#
+				  	</isNotEmpty>
+-->
+				  	
+			    </dynamic>
+			    
+<!--cubrid			    
+		      <isEqual property="order" compareValue="1">
+			    	ORDER BY START_DTIME
+			    </isEqual>
+			    <isEqual property="order" compareValue="2">
+			        ORDER BY START_DTIME DESC
+			    </isEqual>
+			    <isEqual  property="order" compareValue="0">
+			        ORDER BY BIS_TYPE,BIS_CLSS_NM
+			    </isEqual>
+			    
+			    
+			) E
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) F
+		WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+-->
+	</select>
+	<!-- 
+		COUNT - 기록관리기준표 보존기간관리 단위과제현황 목록을 조회한다.(기록원 확정 조회)
+	-->
+	<select id="countTaskReMediPagedList" parameterClass="rms.stnd.stndinfo.domain.Task" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+	 		SELECT C.BIS_CLSS_ID
+	       		, C.BIS_CLSS_NM
+	       		, C.BIS_CLSS_PATH_NM
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ03' AND use_flag = '1' AND com_cd = REPLACE(C.BIS_TYPE,'B','')) bis_type_nm
+ 	       		, C.START_DTIME
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = C.presv_term_cd)  PRESV_TERM_NM            
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'ZZ11' AND use_flag = '1' AND com_cd = c.presv_term_state) AS presv_term_handl_state_nm
+	       		, (SELECT com_cd_nm FROM tb_zzcomcd WHERE com_type_cd = 'RD07' AND use_flag = '1' AND com_cd = B.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM
+	       		, B.NARS_CHECK_YMD
+	       		, B.NARS_OPIN
+	       		, (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ19' AND USE_FLAG = '0' AND COM_CD=C.DEL_FLAG) DEL_FLAG_NM
+	       		, C.DEL_FLAG
+           		, REPLACE(C.BIS_TYPE,'B','') bis_type
+           		, C.TASK_DESCR
+           		, C.PRESV_TERM_STATE
+           		, C.PRESV_TERM_FILE_CREAT_STATE,C.RESUBMIT_FLAG
+	  		FROM (
+	  			SELECT A.BIS_CLSS_ID, A.bis_clss_nm
+		           ,SYS_CONNECT_BY_PATH(A.bis_clss_nm,'>') bis_clss_path_nm 
+			       ,A.BIS_TYPE
+		           ,A.START_DTIME
+		           ,A.PRESV_TERM_CD
+			       ,A.PRESV_TERM_STATE
+			       ,A.DEL_FLAG
+				   ,A.TASK_DESCR
+				   ,A.PRESV_TERM_FILE_CREAT_STATE,DECODE(A.RESUBMIT_FLAG,1,'Y','N') RESUBMIT_FLAG
+		   		FROM tb_zzbisclss A 
+      			WHERE A.levl='6' 
+           		START WITH A.bis_clss_id ='00000000000000000000000000000000000'
+      			CONNECT BY PRIOR A.bis_clss_id = A.upper_bis_clss_id
+      		) C,TB_ZZPRESVTERMHIST B
+      		WHERE C.BIS_CLSS_ID = B.BIS_CLSS_ID
+      	) D
+      	<dynamic prepend="WHERE">
+	    	<isNotEmpty prepend="AND" property="bisClssPathNm">
+	  	    	D.BIS_CLSS_PATH_NM LIKE #bisClssPathNm:VARCHAR#
+	      	</isNotEmpty>
+	      	<isNotEmpty prepend="AND" property="bisClssId">
+		    	D.BIS_CLSS_ID = #bisClssId:VARCHAR# 
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="chrgOrgCd">	
+				D.BIS_CLSS_ID IN (SELECT BIS_CLSS_ID FROM TB_ZZBISORG WHERE ORG_CD= #chrgOrgCd:VARCHAR#)
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="presvTermCd">
+				D.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		  	</isNotEmpty>						
+		  	<isNotEmpty prepend="AND" property="bisType">
+				D.BIS_TYPE = #bisType:VARCHAR#
+		  	</isNotEmpty>
+		  	<isNotEmpty prepend="AND" property="presvTermState">
+		    	D.PRESV_TERM_STATE = #presvTermState:VARCHAR#
+	      	</isNotEmpty>
+	      	<isNotEmpty prepend="AND" property="startDTimeF">
+	      		<isNotEmpty property="startDTimeT">
+		      		(D.START_DTIME BETWEEN #startDTimeF:VARCHAR#||'000000' AND #startDTimeT:VARCHAR#||'240000')
+	      		</isNotEmpty>
+				<isEmpty property="startDTimeT">
+					D.START_DTIME <![CDATA[>=]]> #startDTimeF:VARCHAR#||'000000'
+				</isEmpty>
+		  	</isNotEmpty>
+		  	<isEmpty prepend="AND" property="startDTimeF">
+		  		<isNotEmpty property="startDTimeT">
+		  			D.START_DTIME <![CDATA[<=]]> #startDTimeT:VARCHAR#||'240000'
+		  		</isNotEmpty>
+		  	</isEmpty>
+		  	<isNotEmpty prepend="AND" property="delFlag">
+				D.DEL_FLAG = #delFlag:VARCHAR#
+		  	</isNotEmpty>
+	    </dynamic>
+	</select>
+	
+	
+	<!-- 기록관리기준표 보존기간관리 CAMS연계오류 -->
+	<resultMap id="stnd-presvtermrecvlist-result" class="rms.stnd.clssmng.domain.PresvTermHist">
+		<result property="presvTermMediReqYyyy"		column="PRESV_TERM_MEDI_REQ_YYYY"/>
+		<result property="repOrgCd"		            column="REP_ORG_CD"/>
+		<result property="listLineNo" 			    column="LIST_LINE_NO"/>
+		<result property="presvTermRecvErrorCont" 	column="PRESV_TERM_RECV_ERROR_CONT"/>
+	</resultMap>
+	<!-- 
+		SELECT - 기록관리기준표 보존기간관리 CAMS연계오류 목록을 조회한다.
+	 -->
+	<select id="findPresvTermReqRecvRsltPagedList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultMap="stnd-presvtermrecvlist-result">
+		SELECT Z.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, Y.*
+			FROM (
+				SELECT A.PRESV_TERM_MEDI_REQ_YYYY, 
+					   A.SEND_FILE_DATA_DIV,		       
+					   A.REP_ORG_CD, 		       
+					   A.LIST_LINE_NO, 		       
+		               A.PRESV_TERM_RECV_ERROR_CONT 		
+		        FROM  TB_ZZPRESVRECVRSLT A 		
+		        <dynamic prepend="WHERE">			
+					<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+						A.PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+					</isNotEmpty>
+				</dynamic>
+			) Y
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) Z
+		WHERE Z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#	
+	</select>
+	<!-- 
+		COUNT - 기록관리기준표 보존기간관리 CAMS연계오류 목록을 조회한다.
+	 -->
+	<select id="countPresvTermReqRecvRsltPagedList" parameterClass="rms.stnd.clssmng.domain.PresvTermHist" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM  TB_ZZPRESVRECVRSLT A
+       <dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="presvTermMediReqYyyy">
+				A.PRESV_TERM_MEDI_REQ_YYYY = #presvTermMediReqYyyy:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 공통업무참조 Result
+	<resultMap id="stnd-orgcomstnd-result" class="rms.stnd.stndinfo.domain.OrgComStnd" >
+		<result property="stndMngTypeCd"	column="STND_MNG_TYPE_CD"/>
+		<result property="ver"			 	column="VER"/>
+		<result property="midNm"			column="BRM_MID_NM"/>
+		<result property="smlNm" 			column="BRM_SML_NM"/>
+		<result property="taskNm" 			column="TASK_NM"/>
+		<result property="presvTermCd"		column="PRESV_TERM_CD"/>
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>	
+		<result property="taskDescr" 		column="TASK_DESCR"/>				
+	</resultMap>
+	
+		COUNT - 공통업무참조 목록조회
+	
+	<select id="countOrgComStnd" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_ZZORGCOMSTND A 		
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		<isNotEmpty prepend="AND" property="smlNm">
+			A.BRM_SML_NM = #smlNm:VARCHAR#
+		</isNotEmpty>
+		<isEmpty prepend="AND" property="smlNm">
+			A.BRM_SML_NM = (SELECT MIN(BRM_SML_NM) FROM TB_ZZORGCOMSTND WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# )
+		</isEmpty>
+	</select>
+	
+		SELECT - 공통업무참조 목록조회
+		
+	<select id="findOrgComStnd" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd" resultMap="stnd-orgcomstnd-result">
+		SELECT D.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT A.STND_MNG_TYPE_CD
+					, A.VER
+					, A.BRM_MID_NM
+					, A.BRM_SML_NM
+					, A.PRESV_TERM_CD
+					, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG='1' AND COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM
+					, A.TASK_DESCR
+					, A.TASK_NM
+				FROM TB_ZZORGCOMSTND A 		
+				WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+				<isNotEmpty prepend="AND" property="smlNm">
+					A.BRM_SML_NM = #smlNm:VARCHAR#
+				</isNotEmpty>
+				<isEmpty prepend="AND" property="smlNm">
+					A.BRM_SML_NM = (SELECT MIN(BRM_SML_NM) FROM TB_ZZORGCOMSTND WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR# )
+				</isEmpty>
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+		SELECT - 공통업무참조 소기능(combobox) 목록 조회
+	
+	<select id="findMidNm" parameterClass="rms.stnd.stndinfo.domain.OrgComStnd" resultMap="stnd-orgcomstnd-result">
+		SELECT DISTINCT A.BRM_SML_NM
+			, '' STND_MNG_TYPE_CD
+			, '' VER
+			, '' BRM_MID_NM
+			, '' PRESV_TERM_CD
+			, '' PRESV_TERM_NM
+			, '' TASK_DESCR
+			, '' TASK_NM
+		FROM TB_ZZORGCOMSTND A 		
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		ORDER BY A.BRM_SML_NM
+	</select> -->
+	
+	
+	<!-- 준칙참조 -->
+	<resultMap id="stnd-presvtermrule-result" class="rms.stnd.stndinfo.domain.PresvTermRule" >
+		<result property="presvTermNm"		column="PRESV_TERM_NM"/>
+		<result property="stndRule" 		column="STND_RULE"	jdbcType="CLOB"	javaType="java.lang.String"/>		
+		<result property="ver"			 	column="VER"/>		
+		<result property="recvDtime"		column="RECV_DTIME"/>
+		<result property="userNm"			column="USER_NM"/>
+	</resultMap>
+	<!-- 
+		SELECT - 준칙참조
+	 -->
+	<select id="findPresvTermRule" parameterClass="rms.stnd.stndinfo.domain.PresvTermRule" resultMap="stnd-presvtermrule-result">
+		SELECT (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD07' AND USE_FLAG = '1' AND COM_CD = A.PRESV_TERM_CD ) PRESV_TERM_NM
+			, A.STND_RULE
+			, B.VER
+			, B.RECV_DTIME
+			, (SELECT USER_NM FROM TB_STUSER WHERE USER_ID = B.WORK_USER_ID AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) USER_NM 
+		FROM TB_ZZPRESVTERMRULE A, TB_ZZSTNDMNG B
+		WHERE A.STND_MNG_TYPE_CD = B.STND_MNG_TYPE_CD 
+		AND A.VER = B.VER
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		ORDER BY A.PRESV_TERM_CD DESC
+	</select>
+	
+		<!-- 
+		보존기간 조회
+	 -->
+	<select id="countPresvTerm" parameterClass="string" resultClass="int">
+	    SELECT count(1)
+	    FROM TB_ZZCOMCD
+	    WHERE COM_TYPE_CD='RD07'
+	    AND (COM_CD = #value#
+	    OR COM_CD_NM = #value#)
+	</select>
+</sqlMap>

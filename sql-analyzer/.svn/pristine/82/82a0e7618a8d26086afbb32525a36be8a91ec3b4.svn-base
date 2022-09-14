@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace">
+	
+	
+	<!-- 감사추적 기록물별추적 기록물철 -->
+	<resultMap id="accs-foldertrace-result" class="rms.accs.trace.domain.FolderTrace" >
+		<result property="folderId" 	column="FOLDER_ID"/>
+		<result property="userId" 		column="USER_ID"/>
+		<result property="userNm" 		column="USER_NM"/>
+		<result property="deptNm" 		column="DEPT_NM"/>
+		<result property="workTypeCd" 	column="WORK_TYPE_CD"/>
+		<result property="workDtime" 	column="WORK_DTIME"/>
+		<result property="connIp" 		column="CONN_IP"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm" 	column="ORG_ABBR_NM"/>
+		<result property="rank" 		column="RANK"/>
+		<result property="userDivNm"	column="USER_DIV_NM"/>
+		<result property="creatYyyy"	column="CREAT_YYYY"/>
+		<result property="presvTermNm"	column="PRESV_TERM_NM"/>
+		<result property="creatSysNm"	column="CREAT_SYS_NM"/>
+		<result property="folderTypeDivNm"	column="FOLDER_TYPE_DIV_NM"/>
+	</resultMap>
+	<!-- 
+		감사추적 기록물별 추적 기록물철 목록을 조회한다.
+	 -->
+	<select id="findFolderTrace" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="accs-foldertrace-result">
+		SELECT AA.FOLDER_ID
+			, '' USER_ID
+			, AA.USER_NM
+			, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = AA.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+			, AA.WORK_DTIME
+			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = AA.WORK_TYPE_CD ) WORK_TYPE_CD 
+			, '' CONN_IP
+			, AA.TITLE
+			, '' RANK
+			, '' USER_DIV_NM
+			, AA.CREAT_YYYY
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD07' AND Z.COM_CD = AA.PRESV_TERM_CD) AS PRESV_TERM_NM
+         	, (SELECT Z.ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND Z.ORG_CD = AA.ORG_CD) AS ORG_NM
+         	, (SELECT Z.ORG_ABBR_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = #recordCenterId:VARCHAR# AND Z.ORG_CD = AA.ORG_CD) AS ORG_ABBR_NM
+         	, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD17' AND Z.COM_CD = AA.CREAT_SYS_CD) AS CREAT_SYS_NM
+         	, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD01' AND Z.COM_CD = AA.FOLDER_TYPE_DIV_CD) AS FOLDER_TYPE_DIV_NM
+		FROM (
+			SELECT Z.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, Y.*
+				FROM (
+					SELECT A.TRGT_ID AS FOLDER_ID
+						, B.USER_NM
+						, B.DEPT_CD
+						, A.WORK_DTIME
+						, A.WORK_TYPE_CD 
+						, C.TITLE
+						, C.CREAT_YYYY
+						, C.PRESV_TERM_CD
+                        , C.ORG_CD
+                        , C.CREAT_SYS_CD
+                        , C.FOLDER_TYPE_DIV_CD
+					FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C
+					WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'
+					AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					<dynamic>			
+						<isNotEmpty prepend="AND" property="title">
+							(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyyStart">
+							<![CDATA[
+								C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyyEnd">
+							<![CDATA[
+								C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="workDtimeStart">
+							<![CDATA[
+								A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="workDtimeEnd">
+							<![CDATA[
+								A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="workTypeCd">
+							A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+						</isNotEmpty>
+						<isEqual prepend="AND" property="userDiv" compareValue="1">
+							B.USER_DIV ='3'
+						</isEqual>
+						<isEqual prepend="AND" property="userDiv" compareValue="2">
+							B.USER_DIV != '3'
+						</isEqual>
+						<isNotEmpty prepend="AND" property="folderTypeDivCd">
+							<![CDATA[
+								C.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="docFlag">
+							A.DOC_FLAG = '0'
+					        AND    
+					        <![CDATA[
+					            A.TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+					        ]]>
+						</isNotEmpty>				
+						<isNotEqual property="order" compareValue="1">
+							ORDER BY C.TITLE
+						</isNotEqual>
+						<isEqual property="order" compareValue="1">
+							ORDER BY A.WORK_DTIME
+						</isEqual>
+					</dynamic>
+				) Y
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) Z
+			WHERE z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) AA
+		ORDER BY AA.rnum	
+	</select>
+	<!-- 
+		COUNT - 감사추적 기록물별 추적 기록물철 목록을 조회한다.
+	 -->
+	<select id="countFolderTrace" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDFOLDER C
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.FOLDER_ID AND A.TRGT_DIV_CD='1'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="title">
+				(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyStart">
+				<![CDATA[
+					C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyEnd">
+				<![CDATA[
+					C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="userDiv" compareValue="1">
+				B.USER_DIV ='3'
+			</isEqual>
+			<isEqual prepend="AND" property="userDiv" compareValue="2">
+				B.USER_DIV != '3'
+			</isEqual>
+			<isNotEmpty prepend="AND" property="folderTypeDivCd">
+				<![CDATA[
+					C.FOLDER_TYPE_DIV_CD = #folderTypeDivCd:VARCHAR#
+				]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		 감사추적 기록물별 추적 기록물철 상세 목록을 조회한다.
+	 -->
+	<resultMap id="findFolderDetlTraceList-result" class="rms.accs.trace.domain.FolderTrace">
+		<result property="workDtime" 		column="work_dtime"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="workTypeCd" 		column="work_type_cd"/>
+	</resultMap>
+	<select id="countFolderDetlTraceList" parameterClass="rms.accs.trace.domain.FolderTrace" resultClass="java.lang.Long">
+		SELECT COUNT(1) 
+        FROM TB_ZZTRACE A, TB_STUSER B
+        WHERE A.USER_ID = B.USER_ID 
+        AND A.TRGT_ID = #folderId:VARCHAR# 
+        AND A.TRGT_DIV_CD='1'
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	<select id="findFolderDetlTraceList" parameterClass="rms.accs.trace.domain.FolderTrace" resultMap="findFolderDetlTraceList-result">
+		SELECT E.work_dtime
+		    ,E.user_nm
+		    ,E.dept_nm
+		    ,E.work_type_cd
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		             ,C.*
+		        FROM (
+		            SELECT B.USER_NM
+		                ,(SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		                ,A.WORK_DTIME
+		                ,(SELECT COM_CD_NM    FROM TB_ZZCOMCD    WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		            FROM TB_ZZTRACE A, TB_STUSER B
+		            WHERE A.USER_ID = B.USER_ID 
+		            AND A.TRGT_ID = #folderId:VARCHAR# 
+		            AND A.TRGT_DIV_CD='1'
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 감사추적 기록물별추적 기록물건 -->
+	<resultMap id="accs-recordtrace-result" class="rms.accs.trace.domain.RecordTrace" >
+		<result property="recordId" 	column="RECORD_ID"/>
+		<result property="userNm" 		column="USER_NM"/>
+		<result property="deptNm" 		column="DEPT_NM"/>
+		<result property="workTypeCd" 	column="WORK_TYPE_CD"/>
+		<result property="workDtime" 	column="WORK_DTIME"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm" 	column="ORG_ABBR_NM"/>
+		<result property="creatYyyy"	column="CREAT_YYYY"/>
+		<result property="dutyChrgrNm"	 column="DUTY_CHRGR_NM"/>
+		<result property="erecordFlagNm" column="ERECORD_FLAG_NM"/>
+		<result property="openDivNm"	 column="OPEN_DIV_NM"/>
+	</resultMap>
+	<!-- 
+		감사추적 기록물별 추적 기록물건 목록을 조회한다.
+	 -->
+	<select id="findRecordTrace" parameterClass="rms.accs.trace.domain.RecordTrace" resultMap="accs-recordtrace-result">
+		SELECT AA.RECORD_ID
+			, AA.USER_NM
+			, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = AA.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+			, AA.WORK_DTIME
+			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = AA.WORK_TYPE_CD ) WORK_TYPE_CD 
+			, AA.TITLE
+			, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_NM
+			, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = AA.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_ABBR_NM
+			, AA.CREAT_YYYY
+			, AA.DUTY_CHRGR_NM
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD23' AND Z.COM_CD = AA.ERECORD_FLAG) AS ERECORD_FLAG_NM
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD = 'RD05' AND Z.COM_CD = AA.OPEN_DIV_CD) AS OPEN_DIV_NM
+		FROM (
+			SELECT Z.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, Y.*
+				FROM (
+					SELECT A.TRGT_ID AS RECORD_ID
+						, B.USER_NM
+						, B.DEPT_CD
+						, A.WORK_DTIME
+						, A.WORK_TYPE_CD 
+						, C.TITLE
+						, C.ORG_CD
+						, C.CREAT_YYYY
+						, C.DUTY_CHRGR_NM
+						, C.ERECORD_FLAG
+						, C.OPEN_DIV_CD
+					FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C
+					WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND A.TRGT_DIV_CD='2'	
+					AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+					AND B.USER_ID = A.USER_ID
+					AND C.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+					AND C.RECORD_ID = A.TRGT_ID 
+					<dynamic>			
+						<isNotEmpty prepend="AND" property="recordId">
+							A.TRGT_ID = #recordId:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="title">
+							(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyyStart">
+							<![CDATA[
+								C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyyEnd">
+							<![CDATA[
+								C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="workDtimeStart">
+							<![CDATA[
+								A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="workDtimeEnd">
+							<![CDATA[
+								A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="workTypeCd">
+							A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+						</isNotEmpty>
+						<isEqual prepend="AND" property="userDiv" compareValue="1">
+							B.USER_DIV = '3'
+						</isEqual>
+						<isEqual prepend="AND" property="userDiv" compareValue="2">
+							B.USER_DIV != '3'
+						</isEqual>
+						<isNotEmpty prepend="AND" property="recordDetlTypeCd">
+							<![CDATA[
+								C.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+							]]>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="docFlag">
+							DOC_FLAG = '0'
+					        AND    
+					        <![CDATA[
+					            TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+					        ]]>
+						</isNotEmpty>		
+						<isNotEqual property="order" compareValue="1">
+							ORDER BY C.TITLE
+						</isNotEqual>
+						<isEqual property="order" compareValue="1">
+							ORDER BY A.WORK_DTIME
+						</isEqual>
+					</dynamic>
+				) Y
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) Z
+			WHERE z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) AA
+		ORDER BY AA.rnum
+	</select>
+	<!-- 
+		COUNT - 감사추적 기록물별 추적 기록물건 목록을 조회한다.
+	 -->
+	<select id="countRecordTrace" parameterClass="rms.accs.trace.domain.RecordTrace" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.RECORD_ID AND A.TRGT_DIV_CD='2'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="recordId">
+				 A.TRGT_ID = #recordId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="title">
+				(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyStart">
+				<![CDATA[
+					C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyEnd">
+				<![CDATA[
+					C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="userDiv" compareValue="1">
+				B.USER_DIV ='3'
+			</isEqual>
+			<isEqual prepend="AND" property="userDiv" compareValue="2">
+				B.USER_DIV != '3'
+			</isEqual>
+			<isNotEmpty prepend="AND" property="recordDetlTypeCd">
+				<![CDATA[
+					C.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+				]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 
+		 감사추적 기록물별 추적 기록물건 상세 목록을 조회한다.
+	 -->
+	<resultMap id="findRecordDetlTraceList-result" class="rms.accs.trace.domain.RecordTrace">
+		<result property="workDtime" 		column="work_dtime"/>
+		<result property="userNm" 			column="user_nm"/>
+		<result property="deptNm" 			column="dept_nm"/>
+		<result property="workTypeCd" 		column="work_type_cd"/>
+	</resultMap>
+	<select id="countRecordDetlTraceList" parameterClass="rms.accs.trace.domain.RecordTrace" resultClass="java.lang.Long">
+		SELECT COUNT(1) 
+        FROM TB_ZZTRACE A, TB_STUSER B
+        WHERE A.USER_ID = B.USER_ID 
+        AND A.TRGT_ID = #recordId:VARCHAR# 
+        AND A.TRGT_DIV_CD='2'
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	<select id="findRecordDetlTraceList" parameterClass="rms.accs.trace.domain.RecordTrace" resultMap="findRecordDetlTraceList-result">
+		SELECT E.work_dtime
+		    ,E.user_nm
+		    ,E.dept_nm
+		    ,E.work_type_cd
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		            ,C.*
+		        FROM (
+		            SELECT B.USER_NM
+		                ,(SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		                ,A.WORK_DTIME
+		                ,(SELECT COM_CD_NM    FROM TB_ZZCOMCD    WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		            FROM TB_ZZTRACE A, TB_STUSER B
+		            WHERE A.USER_ID = B.USER_ID 
+		            AND A.TRGT_ID = #recordId:VARCHAR# 
+		            AND A.TRGT_DIV_CD='2'
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	
+</sqlMap>

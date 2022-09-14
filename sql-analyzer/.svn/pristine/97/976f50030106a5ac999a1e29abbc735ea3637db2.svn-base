@@ -1,0 +1,95 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findRecordDocList
+
+		SELECT O.ERECORD_FLAG,		       F.ORIGN_FILE_ID, F.ORIGN_ID, F.MEDIUM_ID, M.MEDIUM_PATH, F.DOC_TYPE_SNO,		       NVL(F.AGENT_NM,' ') DOC_AGENT_NM, F.STORE_FILE_NM, F.FILE_NM "DOC_TILTE",		       				TO_CHAR(cast(F.REG_DTIME AS datetime), 'YYYY-MM-DD')||'T'||	   		   TO_CHAR(cast(F.REG_DTIME AS datetime), 'HH24:MI:SS') REG_DTIME,			   		       ' ' "DOC_LAN", ' ' "DOC_SW", ' ' "DOC_SUBJ", ' ' "DOC_DESC",		       F.DOC_TYPE_CD, C1.COM_CD_NM DOC_TYPE_NM, 		       0 "DOC_SCALE", NVL(F.PAGE_CNT,0) PAGE_CNT,		       F.DATA_FORMAT_CD, C2.COM_CD_NM DATA_FORMAT_NM,		       F.PDF_A1_TRANS_STATE		  FROM TB_STRECORDORIGN O		      ,TB_STORIGNFILE F		      ,TB_STMEDIUM M		      ,TB_ZZCOMCD C1		      ,TB_ZZCOMCD C2		 WHERE O.RECORD_CENTER_ID = '1'		   AND O.RECORD_ID = '1'		   AND O.ORIGN_ID = F.ORIGN_ID 		   AND O.ERECORD_FLAG = '1'		   AND F.RECORD_CENTER_ID = M.RECORD_CENTER_ID		   AND F.MEDIUM_ID = M.MEDIUM_ID		   AND (F.DOC_TYPE_CD != '10' AND F.DOC_TYPE_CD != 'S1') 		   AND F.DOC_TYPE_CD = C1.COM_CD		   AND C1.COM_TYPE_CD = 'RD21'  		   AND F.DATA_FORMAT_CD = C2.COM_CD		   AND C2.COM_TYPE_CD = 'RD08'  		 ORDER BY F.DOC_TYPE_SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findRecordPageList
+
+		SELECT NVL(STORE_PAGE_FILE_NM, ' ') STORE_PAGE_FILE_NM		       		  FROM TB_STORIGNPAGE		 WHERE O.ORIGN_FILE_ID = '1'		 ORDER BY SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findPDFFileList
+
+		SELECT NVL(P.FILE_NM,'') PDF_FILE_NM, P.DOC_TYPE_CD PDF_DOC_TYPE_CD,		       P.MEDIUM_ID, M.MEDIUM_PATH		  FROM TB_STORIGNPDFA1FILE P		      ,TB_STMEDIUM M		 WHERE P.RECORD_CENTER_ID = '1'		   AND P.ORIGN_ID = '1' 		   AND P.RECORD_CENTER_ID = M.RECORD_CENTER_ID		   AND P.MEDIUM_ID = M.MEDIUM_ID		 ORDER BY P.REG_DTIME	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findRecord
+
+		SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD')||'T'||TO_CHAR(SYSDATE, 'HH24:MI:SS')  CUR_SYS_DATE,		       F.FOLDER_ID, F.CLSS_DIV_CD, C0.COM_CD_NM CLSS_DIV_NM, F.CLSS_ID, 		       F.CREAT_SYS_FOLDER_ID, F.FOLDER_REG_SEQ, F.HO_NO,		       R.TAKE_YYYY, NVL(R.TAKE_YYYY_SNO,0) TAKE_YYYY_SNO,		       R.CREAT_SYS_CD, C1.COM_CD_NM CREAT_SYS_NM, R.DTCH_REG_NO,			   R.ORG_CD, O.FULL_ORG_NM ORG_NM,			   			   NVL(R.TITLE, ' ') TITLE, 			   NVL(R.SUB_TITLE, ' ') SUB_TITLE, 			   NVL(R.CORCT_TITLE, ' ') CORCT_TITLE,			   R.RECORD_REG_DIV_CD, C2.COM_CD_NM RECORD_REG_DIV_NM,			   R.RECORD_DETL_TYPE_CD,  C3.COM_CD_NM RECORD_DETL_TYPE_NM, 			   R.RECORD_SUMRY, R.ADJST_DESCR,			   NVL(C10.COM_CD_NM, '') MEDIUM,			   NVL(R.RECORD_SIZE,0) RECORD_SIZE,			   R.MEDIA_FORMAT, 			   			   NVL(C4.COM_CD_NM, '') MEDIA_FORMAT_NM,			   NVL(R.ATTACH_CNT,0) ATTACH_CNT, 			   NVL(R.RECORD_PAGE_CNT, ' ') RECORD_PAGE_CNT, 			   NVL(SUBSTR(R.ENFORC_YMD, 1, 8), ' ') ENFORC_YMD,  		       R.CREAT_ORG_REG_NO, R.DOC_DISTR_NO, 			   R.CREAT_SYS_RECORD_ID, R.CHNG_VER_NO, 			   R.OLD_RECORD_CREAT_ORG_NM, R.OLD_RECORD_DOCNO, R.OLD_RECORD_PRESV_TERM,  			   R.SPCL_RECORD_TYPE, NVL(C5.COM_CD_NM,'') SPCL_RECORD_TYPE_NM,  			   NVL(C6.COM_CD_NM,'')  RECORD_REG_TYPE_NM,  			   R.OPER_READ_RANGE_CD READ_RANGE, NVL(COR.COM_CD_NM,' ') READ_RANGE_NM,  			   R.SECU_CLSS_CD, NVL(C7.COM_CD_NM,'') SECU_CLSS_NM, R.SECU_CLSS_RSN,			   R.OPEN_DIV_CD, C8.COM_CD_NM OPEN_DIV_NM, 			   R.OPEN_GRADE, NVL(C9.COM_CD_NM,'') OPEN_GRADE_NM, 			   R.PART_OPEN_RSN, R.OPEN_LIMIT_PART, 				DECODE(R.OPEN_EXPT_DTIME, null, '',TO_CHAR(cast(R.OPEN_EXPT_DTIME AS datetime), 'YYYY-MM-DD')			   ||'T'||TO_CHAR(cast(R.OPEN_EXPT_DTIME AS datetime), 'HH24:MI:SS')) OPEN_EXPT_DTIME,			   			   R.DOC_NO		  FROM TB_RDRECORD R		      ,TB_RDFOLDER F		      ,TB_STORG O			  ,TB_ZZCOMCD C0			  ,TB_ZZCOMCD C1			  ,TB_ZZCOMCD C2			  ,TB_ZZCOMCD C3			  ,TB_ZZCOMCD C4			  ,TB_ZZCOMCD C5			  ,TB_ZZCOMCD C6			  ,TB_ZZCOMCD C7			  ,TB_ZZCOMCD C8			  ,TB_ZZCOMCD C9			  ,TB_ZZCOMCD COR			  ,TB_ZZCOMCD C10		 WHERE R.RECORD_CENTER_ID = '1'		   AND R.RECORD_ID = '1'		   AND R.RECORD_CENTER_ID = F.RECORD_CENTER_ID		   AND R.FOLDER_ID = F.FOLDER_ID		   AND R.RECORD_CENTER_ID = O.RECORD_CENTER_ID		   AND R.ORG_CD = O.ORG_CD		   AND R.OPER_READ_RANGE_CD = COR.COM_CD(+)		   AND COR.COM_TYPE_CD(+) = 'RD53' 		   AND F.CLSS_DIV_CD = C0.COM_CD		   AND C0.COM_TYPE_CD = 'RD19' 		   AND R.CREAT_SYS_CD = C1.COM_CD		   AND C1.COM_TYPE_CD = 'RD17' 		   AND R.RECORD_REG_DIV_CD = C2.COM_CD(+)		   AND C2.COM_TYPE_CD(+) = 'RD01' 		   AND R.RECORD_REG_DIV_CD = C6.COM_CD(+)		   AND C6.COM_TYPE_CD(+) = 'RD02' 		   AND R.RECORD_DETL_TYPE_CD = C3.COM_CD(+)		   AND C3.COM_TYPE_CD(+) = 'RD03' 		   AND R.MEDIA_FORMAT = C4.COM_CD(+)		   AND C4.COM_TYPE_CD(+) = 'RD15'		   AND R.SPCL_RECORD_TYPE = C5.COM_CD(+)		   AND C5.COM_TYPE_CD(+) = 'RD18'		   AND R.SECU_CLSS_CD = C7.COM_CD(+)		   AND C7.COM_TYPE_CD(+) = 'RD11'		   AND R.OPEN_DIV_CD = C8.COM_CD		   AND C8.COM_TYPE_CD = 'RD05'		   AND R.OPEN_GRADE = C9.COM_CD(+)		   AND C9.COM_TYPE_CD(+) = 'RD06'		   AND R.MEDIUM = C10.COM_CD(+)		   AND C10.COM_TYPE_CD(+) = 'RD67'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findBisClssList
+
+		SELECT BIS_CLSS_ID, BIS_CLSS_NM, NVL(LEVL,0) LEVL		  FROM TB_ZZBISCLSS START WITH BIS_CLSS_ID = '1'			   CONNECT BY PRIOR UPPER_BIS_CLSS_ID = BIS_CLSS_ID 		 ORDER BY NVL(LEVL,0);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findUnitList
+
+		SELECT LRG_CD, LRG_NM, MID_CD, MID_NM, SML_CD, SML_NM		  FROM TB_ZZUNIT		 WHERE RECORD_CENTER_ID = '1'		   AND UNIT_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findIndexList
+
+		SELECT KEYWD_LEVL, KEYWD 		  FROM TB_RDRECORDKEYWD		 WHERE RECORD_CENTER_ID = '1'		   AND RECORD_ID = '1'		 ORDER BY KEYWD_LEVL	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findCreatList
+
+		SELECT A.AGENT_TYPE_CD		       ,C1.COM_CD_NM AGENT_TYPE_NM			   ,NVL(A.AGENT_ID, ' ') AGENT_ID			   ,NVL(A.AGENT_NM, ' ') AGENT_NM			   ,NVL(A.AGENT_ORG_CD, ' ') AGENT_ORG_CD			   ,NVL(A.AGENT_ORG_NM, ' ') AGENT_ORG_NM			   ,NVL(A.AGENT_POS_RANK_NM, ' ') AGENT_POS_RANK_NM			   ,A.DUTY_TYPE_CD			   ,C2.COM_CD_NM DUTY_TYPE_NM			   				,DECODE(A.DUTY_ACT_DTIME, null, '', TO_CHAR(cast(A.DUTY_ACT_DTIME AS datetime), 'YYYY-MM-DD')			   ||'T'||TO_CHAR(cast(A.DUTY_ACT_DTIME AS datetime), 'HH24:MI:SS')) DUTY_ACT_DTIME			   ,NVL(A.OPIN,'') OPIN 			   ,DECODE(A.OPIN_DTIME, null, '', TO_CHAR(cast(A.OPIN_DTIME AS datetime), 'YYYY-MM-DD')			   ||'T'||TO_CHAR(cast(A.OPIN_DTIME AS datetime), 'HH24:MI:SS')) OPIN_DTIME							   		  FROM TB_RDRECORDCREAT A			  ,TB_ZZCOMCD C1			  ,TB_ZZCOMCD C2		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.RECORD_ID = '1'		   AND A.AGENT_TYPE_CD = C1.COM_CD		   AND C1.COM_TYPE_CD = 'RD12' 		   AND A.DUTY_TYPE_CD = C2.COM_CD		   AND C2.COM_TYPE_CD = 'RD59'  		 ORDER BY A.AGENT_SNO ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findInfoSrcList
+
+ 		SELECT I.INFO_SRC_TYPE_CD, C1.COM_CD_NM INFO_SRC_TYPE_NM,		       I.INFO_SRC_TITLE		  FROM TB_RDRECORDINFOSRC I			  ,TB_ZZCOMCD C1		 WHERE I.RECORD_CENTER_ID = '1'		   AND I.RECORD_ID = '1'		   AND I.INFO_SRC_TYPE_CD = C1.COM_CD		   AND C1.COM_TYPE_CD = 'RD47'  		 ORDER BY I.INFO_SRC_SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findRelList
+
+		SELECT R.REL_TYPE_CD, C.COM_CD_NM REL_TYPE_NM,			   R.REL_TRGT_ID, R.REL_DESCR		  FROM TB_RDRECORDREL R			  ,TB_ZZCOMCD C		 WHERE R.RECORD_CENTER_ID = '1'		   AND R.RECORD_ID = '1'		   AND R.REL_TYPE_CD = C.COM_CD		   AND C.COM_TYPE_CD = 'RD26'  		 ORDER BY R.REL_SEQ 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findStructureList
+
+		SELECT F.ORIGN_FILE_ID, 		       F.DOC_TYPE_CD, C.COM_CD_NM DOC_TYPE_NM		  FROM TB_STRECORDORIGN O		      ,TB_STORIGNFILE F		      ,TB_ZZCOMCD C		 WHERE O.RECORD_CENTER_ID = '1'		   AND O.RECORD_ID = '1'		   AND O.RECORD_CENTER_ID = F.RECORD_CENTER_ID		   AND O.ORIGN_ID = F.ORIGN_ID		   AND F.DOC_TYPE_CD = C.COM_CD		   AND C.COM_TYPE_CD = 'RD21'		   AND O.ERECORD_FLAG = '1'		 ORDER BY F.DOC_TYPE_SNO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findMFPicList
+
+		SELECT								DECODE(M.PIC_YMD, null, '', cast(M.PIC_YMD AS datetime), 'YYYY-MM-DD')				||'T'||cast(M.PIC_YMD AS datetime), 'HH24:MI:SS')) WORK_DTIME,				 			   M.GOODS_NM, M.FILM_SPEC, NVL(M.CUT_CNT,0) CUT_CNT, 			   M.PIC_USER_NM, M.EDIT_USER_NM, M.SUPVS_USER_NM		  FROM TB_SRMFPIC M		      ,TB_SRMFPICDETL D		 WHERE D.RECORD_CENTER_ID = '1'		   AND D.RECORD_ID = '1'		   AND M.RECORD_CENTER_ID = D.RECORD_CENTER_ID 		   AND M.PIC_SNO = D.PIC_SNO  		 ORDER BY M.PIC_YMD;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml
+-- Query    : select
+-- Query Id : findOpenHistList
+
+		SELECT H.CHNG_USER_ID WORK_USER_ID, U.USER_NM,			   U.POS, U.RANK,			   P.ORG_CD DEPT_CD, P.DEPT_NM,			   				DECODE(H.CHNG_YMD, null, '', TO_CHAR(cast(H.CHNG_YMD AS datetime), 'YYYY-MM-DD')			   ||'T'||TO_CHAR(cast(H.CHNG_YMD AS datetime), 'HH24:MI:SS')) WORK_DTIME, 			   H.OPEN_DIV_CD_BEF, C0.COM_CD_NM OPEN_DIV_CD_BEF_NM,			   H.OPEN_DIV_CD_AFT, C1.COM_CD_NM OPEN_DIV_CD_AFT_NM,			   H.CHNG_RSN          FROM TB_RDOPENHIST H			  ,TB_STUSER U			  ,TB_STDEPT P		      ,TB_ZZCOMCD C0		      ,TB_ZZCOMCD C1		 WHERE H.RECORD_CENTER_ID = '1'		   AND H.RECORD_ID = '1'		   AND H.RECORD_CENTER_ID = U.RECORD_CENTER_ID		   AND H.CHNG_USER_ID = U.USER_ID		   AND U.RECORD_CENTER_ID = P.RECORD_CENTER_ID		   AND U.DEPT_CD = P.DEPT_CD 		   AND H.OPEN_DIV_CD_BEF = C0.COM_CD		   AND C0.COM_TYPE_CD = 'RD05' 		   AND H.OPEN_DIV_CD_AFT = C1.COM_CD		   AND C1.COM_TYPE_CD = 'RD05'  		 ORDER BY H.CHNG_YMD	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\paramrecord.xml

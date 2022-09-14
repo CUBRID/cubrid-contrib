@@ -1,0 +1,726 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.detail">
+	
+	<!--
+		기록물건 상세정보 : 공통 정보 조회 (인수전 기록물)
+	-->
+	<resultMap id="findTkRecordHead-result" class="rms.common.detail.domain.Record">
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="recordTakeSeq"			column="record_take_seq" />
+		<result property="title"					column="title" />
+		<result property="creatSysCd"				column="creat_sys_cd" />
+		<result property="recordRegDivCd"			column="record_reg_div_cd" />
+		<result property="recordRegDivNm"			column="record_reg_div_nm" />
+		<result property="recordDetlTypeCd"			column="record_detl_type_cd" />
+		<result property="recordDetlTypeNm"			column="record_detl_type_nm" />
+		<result property="orgCd"					column="org_cd" />
+		<result property="orgNm"					column="org_nm" />
+		<result property="orgAbbrNm"				column="org_abbr_nm" />
+		<result property="erecordFlag"				column="erecord_flag" />
+		<result property="erecordFlagNm"			column="erecord_flag_nm" />
+		<result property="prodTypeCd"				column="prod_type_cd" />
+		<result property="folderId"					column="folder_id" />
+		<result property="folderTitle"				column="folder_title" />
+		<result property="accsFlag"					column="accs_flag" />
+	</resultMap>
+	<select id="findTkRecordHead" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordHead-result">
+		SELECT A.record_center_id
+			, A.record_take_seq
+			, A.title
+			, A.creat_sys_cd
+			, A.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=A.record_reg_div_cd) record_reg_div_nm
+			, A.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=A.record_detl_type_cd) record_detl_type_nm
+			, A.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_abbr_nm
+			, A.erecord_flag
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=A.erecord_flag) erecord_flag_nm
+<!-- 			, (CASE WHEN A.record_reg_div_cd IN ('1','3','5','6','7','8') THEN 0 ELSE 1 END) prod_type_cd -->
+			, (CASE WHEN A.prod_type_cd is not null THEN A.prod_type_cd ELSE (CASE WHEN A.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END) prod_type_cd
+			, A.folder_take_seq AS folder_id
+			, (SELECT F.title FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) folder_title
+		    , '1' AS accs_flag
+		FROM  TB_TKRECORD A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+	</select>
+	
+	<!--
+		기록물건 상세정보 : 공통 정보 조회 (인수후-보유기록물)
+	-->
+	<resultMap id="findTkRecordInfo-result" class="rms.common.detail.domain.Record">
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="recordTakeSeq"			column="record_take_seq" />
+		<result property="title"					column="title" />
+		<result property="subTitle"					column="sub_title" />
+		<result property="corctTitle"				column="corct_title" />
+		<result property="folderId"					column="folder_id" />
+		<result property="folderTitle"				column="folder_title" />
+		<result property="creatSysCd"				column="creat_sys_cd" />
+		<result property="creatSysNm"				column="creat_sys_nm" />
+		<result property="recordRegDivCd"			column="record_reg_div_cd" />
+		<result property="recordRegDivNm"			column="record_reg_div_nm" />
+		<result property="recordSumry"				column="record_sumry"	jdbcType="CLOB"	javaType="java.lang.String" />
+		<result property="creatYyyy"				column="creat_yyyy" />
+		<result property="dtchRegNo"				column="dtch_reg_no" />
+		<result property="orgCd"					column="org_cd" />
+		<result property="orgNm"					column="org_nm" />
+		<result property="orgAbbrNm"				column="org_abbr_nm" />
+		<result property="clssDivCd"				column="clss_div_cd" />
+		<result property="clssId"					column="clss_id" />
+		<result property="clssNm"					column="clss_nm" />
+		<result property="creatRegDtime"			column="creat_reg_dtime" />
+		<result property="recordDetlTypeCd"			column="record_detl_type_cd" />
+		<result property="recordDetlTypeNm"			column="record_detl_type_nm" />
+		<result property="recver"					column="recver" />
+		<result property="sender"					column="sender" />
+		<result property="enforcYmd"				column="enforc_ymd" />
+		<result property="docNo"					column="doc_no" />
+		<result property="docNoNm"					column="doc_no_nm" />
+		<result property="enforcDocno"				column="enforc_docno" />
+		<result property="readRangeNm"				column="read_range_nm" />
+		<result property="dutyChrgrNm"				column="duty_chrgr_nm" />
+		<result property="draftUserNm"				column="draft_user_nm" />
+		<result property="signUserNm"				column="sign_user_nm" />
+		<result property="operReadRangeCd"			column="oper_read_range_cd" />
+		<result property="operReadRangeNm"			column="oper_read_range_nm" />
+		<result property="openDivCd"				column="open_div_cd" />
+		<result property="openDivNm"				column="open_div_nm" />
+		<result property="openGrade"				column="open_grade" />
+		<result property="openGradeA"				column="open_grade_a" />
+		<result property="openGradeB"				column="open_grade_b" />
+		<result property="openGradeC"				column="open_grade_c" />
+		<result property="openGradeD"				column="open_grade_d" />
+		<result property="openGradeE"				column="open_grade_e" />
+		<result property="openGradeF"				column="open_grade_f" />
+		<result property="openGradeG"				column="open_grade_g" />
+		<result property="openGradeH"				column="open_grade_h" />
+		<result property="partOpenRsn"				column="part_open_rsn" />
+		<result property="openLimitPart"			column="open_limit_part" />
+		<result property="secuClssCd"				column="secu_clss_cd" />
+		<result property="secuClssNm"				column="secu_clss_nm" />
+		<result property="secuClssRsn"				column="secu_clss_rsn" />
+		<result property="secretTerm"				column="secret_term" />
+		<result property="spclRecordType"			column="spcl_record_type" />
+		<result property="spclRecordTypeA"			column="spcl_record_type_a" />
+		<result property="spclRecordTypeB"			column="spcl_record_type_b" />
+		<result property="spclRecordTypeC"			column="spcl_record_type_c" />
+		<result property="spclRecordTypeD"			column="spcl_record_type_d" />
+		<result property="spclRecordTypeE"			column="spcl_record_type_e" />
+		<result property="creatUserNm"				column="creat_user_nm" />
+		<result property="creatUserOrgNm"			column="creat_user_org_nm" />
+		<result property="creatUserPosRankNm"		column="creat_user_pos_rank_nm" />
+		<result property="creatDtime"				column="creat_dtime" />
+		<result property="creatSysRecordId"			column="creat_sys_record_id" />
+		<result property="oldRecordCreatOrgNm"		column="old_record_creat_org_nm" />
+		<result property="oldRecordDocno"			column="old_record_docno" />
+		<result property="oldRecordPresvTerm"		column="old_record_presv_term" />
+		<result property="oldRecordPresvTermNm"		column="old_record_presv_term_nm" />
+		<result property="presvLoc"					column="presv_loc" />
+		<result property="recordSize"				column="record_size" />
+		<result property="attachCnt"				column="attach_cnt" />
+		<result property="recordPageCnt"			column="record_page_cnt" />
+		<result property="creatRegNo"				column="creat_reg_no" />
+		<result property="creatOrgRegNo"			column="creat_org_reg_no" />
+		<result property="erecordFlag"				column="erecord_flag" />
+		<result property="erecordFlagNm"			column="erecord_flag_nm" />
+		<result property="scanProgStateCd"			column="scan_prog_state_cd" />
+		<result property="adjstDescr"				column="adjst_descr" />
+		<result property="audvisRecordType"			column="audvis_record_type" />
+		<result property="picYmd"					column="pic_ymd" />
+		<result property="picArea"					column="pic_area" />
+		<result property="mainUserNm"				column="main_user_nm" />
+		<result property="recordClssNm"				column="record_clss_nm" />
+		<result property="prodTypeCd"				column="prod_type_cd" />
+		<result property="folderKeepStateCd"		column="folder_keep_state_cd" />
+		<result property="folderKeepStateNm"		column="folder_keep_state_nm" />
+		<result property="accsFlag"					column="accs_flag" />
+		<result property="nonelectRegDtime"			column="nonelect_reg_dtime" />
+		<result property="dtchRegNoCnt"				column="dtch_reg_no_cnt" />
+		<result property="creatRegNoSub"			column="creat_reg_no_sub" />
+		<result property="distributeNo"				column="distribute_no" />
+		<result property="distributeDt"				column="distribute_dt" />
+		<result property="recallTypeCd"				column="recall_type_cd" />
+		<result property="closeTypeCd"				column="close_type_cd" />
+		<result property="audvisRecordSumry"		column="audvis_record_sumry" />
+	</resultMap>
+	<select id="findTkRecordInfo" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordInfo-result">
+		SELECT A.record_center_id
+			, A.record_take_seq
+			, A.title
+			, A.sub_title
+			, A.corct_title
+			, (SELECT F.title FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) folder_title
+			, A.creat_sys_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=A.creat_sys_cd) creat_sys_nm
+			, A.record_reg_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=A.record_reg_div_cd) record_reg_div_nm
+			, A.record_sumry
+			, A.creat_yyyy
+			, A.dtch_reg_no
+			, A.org_cd
+			, (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_nm
+			, (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) org_abbr_nm
+			, (SELECT F.clss_div_cd FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) clss_div_cd
+			, (SELECT F.clss_id FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) clss_id
+			, (SELECT F.clss_nm FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) clss_nm
+			, RPAD(A.creat_reg_dtime,14,'0') creat_reg_dtime
+			, A.record_detl_type_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD03' AND Z.com_cd=A.record_detl_type_cd) record_detl_type_nm
+			, A.recver
+			, A.sender
+			, SUBSTR(A.enforc_ymd, 1, 8) AS enforc_ymd
+			, A.doc_no
+			, (CASE WHEN (A.creat_sys_cd='02' OR A.creat_sys_cd='05' OR A.creat_sys_cd='06')
+						THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=SUBSTR(A.creat_reg_no,1,7)),SUBSTR(A.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(A.creat_reg_no,8))
+					WHEN (A.creat_sys_cd='01' OR A.creat_sys_cd='04')
+						THEN ( CASE WHEN A.record_detl_type_cd='01' THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd),A.org_cd) ||'-'|| TO_NUMBER(A.doc_no)
+									ELSE A.doc_no END)
+					ELSE A.doc_no
+				END) doc_no_nm
+			, (CASE WHEN (LENGTH(A.creat_org_reg_no)>7 AND (SELECT 1 FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=SUBSTR(A.creat_org_reg_no,1,7))=1)
+						THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=SUBSTR(A.creat_org_reg_no,1,7)),SUBSTR(A.creat_org_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(A.creat_org_reg_no,8))
+					ELSE A.creat_org_reg_no
+				END) creat_org_reg_no
+			, A.enforc_docno
+			, (CASE WHEN LENGTH(A.read_range)=7 THEN (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.read_range)
+					ELSE (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD43' AND Z.com_cd=A.read_range)
+				END) read_range_nm
+			, A.duty_chrgr_nm
+			, (CASE WHEN (A.record_detl_type_cd='01' AND A.prod_type_cd='1')
+						THEN (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='28'))
+					WHEN (A.record_detl_type_cd='02' OR A.record_detl_type_cd='03')
+						THEN (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='06'))
+					WHEN A.record_detl_type_cd='04'
+						THEN (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='07'))
+					WHEN A.creat_sys_cd='03'
+						THEN (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='01'))
+					ELSE
+						(SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='02'))
+				END) draft_user_nm 
+			, (CASE WHEN (A.record_detl_type_cd='01' AND A.prod_type_cd='0' AND A.close_type_cd = '0' AND A.draft_user_nm_tmp is not null AND A.sign_user_nm_tmp is null)
+                        THEN (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='02'))
+                     ELSE (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MAX(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='05'))
+                END ) sign_user_nm
+			, A.chk_oper_read_range_cd AS oper_read_range_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=A.chk_oper_read_range_cd) oper_read_range_nm
+			, A.open_div_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=A.open_div_cd) open_div_nm
+			, A.open_grade
+			, SUBSTR(A.open_grade,1,1) open_grade_a
+			, SUBSTR(A.open_grade,2,1) open_grade_b
+			, SUBSTR(A.open_grade,3,1) open_grade_c
+			, SUBSTR(A.open_grade,4,1) open_grade_d
+			, SUBSTR(A.open_grade,5,1) open_grade_e
+			, SUBSTR(A.open_grade,6,1) open_grade_f
+			, SUBSTR(A.open_grade,7,1) open_grade_g
+			, SUBSTR(A.open_grade,8,1) open_grade_h
+			, A.part_open_rsn
+			, A.open_limit_part
+			, A.secu_clss_cd
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD11' AND Z.com_cd=A.secu_clss_cd) secu_clss_nm
+			, A.secu_clss_rsn
+			, A.secret_term
+			, A.spcl_record_type
+			, SUBSTR(A.spcl_record_type,1,1) spcl_record_type_a
+			, SUBSTR(A.spcl_record_type,2,1) spcl_record_type_b
+			, SUBSTR(A.spcl_record_type,3,1) spcl_record_type_c
+			, SUBSTR(A.spcl_record_type,4,1) spcl_record_type_d
+			, SUBSTR(A.spcl_record_type,5,1) spcl_record_type_e
+			, A.creat_user_nm
+			, A.creat_user_org_nm
+			, A.creat_user_pos_rank_nm
+			, RPAD(A.creat_dtime,14,'0') creat_dtime
+			, A.creat_sys_record_id
+			, A.old_record_creat_org_nm
+			, A.old_record_docno
+			, A.old_record_presv_term
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD57' AND Z.com_cd=A.old_record_presv_term) old_record_presv_term_nm
+			, A.presv_loc
+			, CEIL(NVL(A.record_size/1024,0)) record_size
+			, TO_NUMBER(NVL(A.attach_cnt,'0')) attach_cnt
+			, TO_NUMBER(NVL(A.record_page_cnt,'0')) record_page_cnt
+			, A.creat_reg_no
+			, A.erecord_flag
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=A.erecord_flag) erecord_flag_nm
+			, (SELECT F.scan_prog_state_cd FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) scan_prog_state_cd
+			, '' AS adjst_descr
+			, A.audvis_record_type
+			, A.pic_ymd
+			, A.pic_area
+			, A.main_user_nm
+			, (CASE WHEN (SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=A.record_reg_div_cd)='' THEN ''
+					ELSE (SELECT Y.com_cd_nm FROM TB_ZZCOMCD Y WHERE Y.com_type_cd=(SELECT Z.sub_com_type_cd FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD02' AND Z.com_cd=A.record_reg_div_cd) AND Y.com_cd=A.record_clss_cd)
+				END) record_clss_nm
+			, A.folder_take_seq AS folder_id
+<!-- 			, (CASE WHEN A.record_reg_div_cd IN ('1','3','5','6','7','8') THEN 0 ELSE 1 END) prod_type_cd -->
+			, (CASE WHEN A.prod_type_cd is not null THEN A.prod_type_cd ELSE (CASE WHEN A.record_reg_div_cd IN ('1','3','5','6','7','8') THEN '0' ELSE '1' END) END) prod_type_cd
+			, (SELECT F.folder_keep_state_cd FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq) folder_keep_state_cd
+			, (SELECT (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=F.folder_keep_state_cd) FROM TB_TKFOLDER F WHERE F.record_center_id=A.record_center_id AND F.folder_take_seq=A.folder_take_seq ) folder_keep_state_nm
+			, '1' AS accs_flag
+	        , A.nonelect_reg_dtime
+	        , (SELECT COUNT(DTCH_REG_NO)
+          		FROM TB_TKRECORD
+          		WHERE CREAT_SYS_CD = A.CREAT_SYS_CD
+          		AND RECORD_CENTER_ID = A.RECORD_CENTER_ID
+          		AND ORG_CD = A.ORG_CD
+          		AND CREAT_YYYY = A.CREAT_YYYY
+          		AND CREAT_REG_NO = A.CREAT_REG_NO) dtch_reg_no_cnt
+			, SUBSTR(A.creat_reg_no, 8, 6) creat_reg_no_sub
+			, A.distribute_no
+			, A.distribute_dt
+			, A.recall_type_cd
+			, A.close_type_cd
+			, A.audvis_record_sumry
+		FROM (
+			SELECT  A.*
+				  , (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='02')) as draft_user_nm_tmp 
+                  , (SELECT Z.agent_nm FROM TB_TKRECORDCREAT Z WHERE Z.record_center_id=A.record_center_id AND Z.record_take_seq=A.record_take_seq AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_TKRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_take_seq=Z.record_take_seq AND Y.agent_type_cd='05')) as sign_user_nm_tmp
+				  , DECODE(A.creat_sys_cd, '01', DECODE(A.record_detl_type_cd, '01', DECODE(A.read_range,'0','03','1','01'
+											                                                           , DECODE((SELECT COUNT(1) FROM TB_STORG WHERE record_center_id=A.record_center_id AND upper_org_cd=A.read_range)
+																                                                ,0,'02','01'))
+																                  , '02')
+										, '02', DECODE(A.open_div_cd,'1','01','2','02','3','02')
+										, '04', DECODE(A.record_detl_type_cd, '01', DECODE(A.read_range,'0','03','1','01'
+											                                                           , DECODE((SELECT COUNT(1) FROM TB_STORG WHERE record_center_id=A.record_center_id AND upper_org_cd=A.read_range)
+																                                                ,0,'02','01'))
+																                  , '02')
+										, A.oper_read_range_cd ) chk_oper_read_range_cd
+			FROM  TB_TKRECORD A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+		) A
+	</select>
+	
+	<!-- 
+		기록물건 상세정보 : 분류체계 정보
+	 -->
+	<resultMap id="findTkRecordClssBisList-result" class="rms.common.detail.domain.RecordClss">
+		<result property="bisClssId"				column="bis_clss_id" />
+		<result property="bisClssNm"				column="bis_clss_nm" />
+		<result property="levl"						column="levl" />
+	</resultMap>
+	<select id="findTkRecordClssBisList" parameterClass="java.lang.String" resultMap="findTkRecordClssBisList-result">
+		SELECT bis_clss_id, bis_clss_nm, levl
+		FROM  TB_ZZBISCLSS
+		START WITH bis_clss_id = #value#
+		CONNECT BY PRIOR upper_bis_clss_id = bis_clss_id 
+	</select>
+	
+	<!-- 
+		인수이후 기록물건 (이력정보) - 전자문서시스템 변경이력 
+	 -->
+	<resultMap id="findTkRecordChngHistList-result" class="rms.common.detail.domain.RecordChngHist">
+		<result property="chngYmd"					column="chng_ymd" />
+		<result property="chngUserNm"				column="chng_user_nm" />
+		<result property="chngRsn"					column="chng_rsn" />
+		<result property="creatRegYmdBef"			column="creat_reg_ymd_bef" />
+		<result property="titleBef"					column="title_bef" />
+		<result property="pageCntBef"				column="page_cnt_bef" />
+		<result property="aprovPosRankBef"			column="aprov_pos_rank_bef" />
+		<result property="dutyChrgrBef"				column="duty_chrgr_bef" />
+		<result property="enforcYmdBef"				column="enforc_ymd_bef" />
+		<result property="recverBef"				column="recver_bef" />
+	</resultMap>
+	<select id="findTkRecordChngHistList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordChngHistList-result">
+        SELECT A.chng_ymd
+             , A.chng_user_nm
+             , A.chng_rsn
+             , (CASE WHEN A.creat_reg_ymd_bef != A.creat_reg_ymd_aft THEN A.creat_reg_ymd_bef END) AS creat_reg_ymd_bef
+             , (CASE WHEN A.title_bef != A.title_aft THEN A.title_bef END) AS title_bef
+             , (CASE WHEN A.page_cnt_bef != A.page_cnt_aft THEN TO_CHAR(TO_NUMBER(A.page_cnt_bef)) END) AS page_cnt_bef
+             , (CASE WHEN A.aprov_pos_rank_bef != A.aprov_pos_rank_aft THEN A.aprov_pos_rank_bef END) AS aprov_pos_rank_bef
+             , (CASE WHEN A.duty_chrgr_bef != A.duty_chrgr_aft THEN A.duty_chrgr_bef END) AS duty_chrgr_bef
+             , (CASE WHEN SUBSTR(A.enforc_ymd_bef, 1, 8) != SUBSTR(A.enforc_ymd_aft, 1, 8) THEN SUBSTR(A.enforc_ymd_bef, 1, 8) END) AS enforc_ymd_bef
+             , (CASE WHEN A.recver_bef != A.recver_aft THEN A.recver_bef END) recver_bef
+		FROM  TB_TKRECORDCHNGHIST A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+	</select>
+	
+	<!-- 
+		인수이후 기록물건 (파일목록 - 파일목록)
+	 -->
+	<resultMap id="findTkRecordFileList-result" class="rms.common.detail.domain.AttachFile">
+		<result property="rnum"						column="rnum" />
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="recordTakeSeq"			column="record_take_seq" />
+		<result property="attachFileType"			column="attach_file_type" />
+		<result property="regSeq"					column="reg_seq" />
+		<result property="docTypeCd"				column="doc_type_cd" />
+		<result property="docTypeNm"				column="doc_type_nm" />
+		<result property="fileNm"					column="file_nm" />
+		<result property="agentNm"					column="agent_nm" />
+		<result property="attachFilePageCnt"		column="attach_file_page_cnt" />
+		<result property="fileSize"					column="file_size" />
+		<result property="ver"						column="ver" />
+		<result property="idx"						column="idx" />
+		<result property="virusFlag"				column="virus_flag" />
+		<result property="attachFileMngInfo"		column="attach_file_mng_info" />
+	</resultMap>
+	<select id="findTkRecordFileList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordFileList-result">
+		SELECT ROWNUM rnum, ROWNUM idx, TA.*
+		FROM (
+			SELECT A.record_center_id
+				, A.record_take_seq
+				, A.attach_file_type
+				, A.reg_seq
+				, A.doc_type_cd
+				, Z.com_cd_nm doc_type_nm
+				, A.file_nm
+				, A.agent_nm
+				, A.attach_file_page_cnt
+				, A.attach_file_path
+				, CEIL(NVL(A.file_size/1024,0)) file_size
+				, A.ver
+				, A.virus_flag
+				, A.attach_file_mng_info
+			FROM  TB_TKATTACHFILE A
+			    , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD21') Z
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			<isNotEmpty prepend="AND" property="docTypeCd">
+				A.doc_type_cd  = #docTypeCd:VARCHAR#
+			</isNotEmpty>
+			AND   A.doc_type_cd = Z.com_cd(+)
+			ORDER BY A.doc_type_cd, A.doc_type_sno
+		) TA
+	</select>
+	
+	<!-- 
+		파일목록 - 01:본문+05:안건본문
+	 -->
+	<select id="findTkRecordFileList01" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordFileList-result">
+		SELECT ROWNUM rnum, ROWNUM idx, TA.*
+		FROM (
+			SELECT A.record_center_id
+				, A.record_take_seq
+				, A.attach_file_type
+				, A.reg_seq
+				, A.doc_type_cd
+				, Z.com_cd_nm doc_type_nm
+				, A.file_nm
+				, A.agent_nm
+				, A.attach_file_page_cnt
+				, A.attach_file_path
+				, CEIL(NVL(A.file_size/1024,0)) file_size
+				, A.ver
+				, A.virus_flag
+				, A.attach_file_mng_info
+			FROM  TB_TKATTACHFILE A
+			    , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD21') Z
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			AND   A.doc_type_cd IN ('01','05')
+			AND   A.doc_type_cd = Z.com_cd(+)
+			ORDER BY A.doc_type_cd, A.doc_type_sno
+		) TA
+	</select>
+	
+	<!-- 
+		파일목록 - 02:붙임+06:안건첨부+07:안건붙임+09:안건결과
+	 -->
+	<select id="findTkRecordFileList02" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordFileList-result">
+		SELECT ROWNUM rnum, ROWNUM idx, TA.*
+		FROM (
+			SELECT A.record_center_id
+				, A.record_take_seq
+				, A.attach_file_type
+				, A.reg_seq
+				, A.doc_type_cd
+				, Z.com_cd_nm doc_type_nm
+				, A.file_nm
+				, A.agent_nm
+				, A.attach_file_page_cnt
+				, A.attach_file_path
+				, CEIL(NVL(A.file_size/1024,0)) file_size
+				, A.ver
+				, A.virus_flag
+				, A.attach_file_mng_info
+			FROM  TB_TKATTACHFILE A
+			    , (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD21') Z
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			AND   A.doc_type_cd IN ('02','06','07','09')
+			AND   A.doc_type_cd = Z.com_cd(+)
+			ORDER BY A.doc_type_cd, A.doc_type_sno
+		) TA
+	</select>
+	
+	<!-- 
+		인수이후 기록물건 (행위자정보)
+	 -->
+	<resultMap id="findTkRecordCreatList-result" class="rms.common.detail.domain.RecordCreat">
+		<result property="rnum"						column="rnum" />
+		<result property="agentId"					column="agent_id" />
+		<result property="agentTypeCd"				column="agent_type_cd" />
+		<result property="agentTypeNm"				column="agent_type_nm" />
+		<result property="agentNm"					column="agent_nm" />
+		<result property="agentOrgNm"				column="agent_org_nm" />
+		<result property="agentPosRankNm"			column="agent_pos_rank_nm" />
+		<result property="dutyActDtime"				column="duty_act_dtime" />
+		<result property="reqStateVal"				column="req_state_val" />
+		<result property="opin"						column="opin"	jdbcType="CLOB"	javaType="java.lang.String" />
+		<result property="handlRslt"				column="handl_rslt" />
+		<result property="agentDutyTypeCd"			column="agent_duty_type_cd" />
+		<result property="ver"						column="ver" />
+		<result property="recordCenterId"			column="record_center_id" />
+		<result property="recordId"					column="record_take_seq" />
+		<result property="regSeq"					column="reg_seq" />
+	</resultMap>
+	<select id="findTkRecordCreatList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordCreatList-result">
+		SELECT ROWNUM rnum, TA.*
+		FROM (
+			SELECT A.agent_id
+			     , A.agent_type_cd
+			     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD12' AND Z.com_cd=A.agent_type_cd) agent_type_nm
+			     , TRIM(A.agent_nm) agent_nm
+			     , TRIM(A.agent_org_nm) agent_org_nm
+				 , A.agent_pos_rank_nm
+				 , A.req_state_val
+				 , (CASE WHEN A.duty_act_dtime='11111111111111' THEN '' ELSE RPAD(A.duty_act_dtime,14,'0') END) duty_act_dtime
+				 , A.opin
+				 , A.handl_rslt
+				 , A.agent_duty_type_cd
+				 , '' ver
+				 , A.record_center_id
+				 , A.record_take_seq
+				 , '' reg_seq
+			FROM  TB_TKRECORDCREAT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			<isNotEmpty prepend="AND" property="agentTypeCd">
+				A.agent_type_cd = #agentTypeCd:VARCHAR#
+			</isNotEmpty>
+			ORDER BY A.duty_act_dtime, A.agent_sno
+		) TA
+	</select>
+	<select id="findTkRecordCreatFirst" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordCreatList-result">
+		SELECT ROWNUM rnum, TA.*
+		FROM (
+			SELECT A.agent_id
+			     , A.agent_type_cd
+				 , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD12' AND Z.com_cd=A.agent_type_cd) agent_type_nm
+			     , TRIM(A.agent_nm) agent_nm
+			     , TRIM(A.agent_org_nm) agent_org_nm
+				 , A.agent_pos_rank_nm
+				 , A.req_state_val
+				 , (CASE WHEN A.duty_act_dtime='11111111111111' THEN '' ELSE RPAD(A.duty_act_dtime,14,'0') END) duty_act_dtime
+				 , A.opin
+				 , A.handl_rslt
+				 , A.agent_duty_type_cd
+				 , '' ver
+				 , A.record_center_id
+				 , A.record_take_seq
+				 , '' reg_seq
+			FROM  TB_TKRECORDCREAT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			AND   A.agent_type_cd IN ('06','07')
+			ORDER BY A.duty_act_dtime, A.agent_sno
+		) TA
+		WHERE ROWNUM = 1
+	</select>
+	<select id="findTkRecordCreatPathList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordCreatList-result">
+		SELECT ROWNUM rnum, TA.*
+		FROM (
+			SELECT A.agent_id
+			     , A.agent_type_cd
+			     , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD12' AND Z.com_cd=A.agent_type_cd) agent_type_nm
+			     , TRIM(A.agent_nm) agent_nm
+			     , TRIM(A.agent_org_nm) agent_org_nm
+				 , A.agent_pos_rank_nm
+				 , A.req_state_val
+				 , (CASE WHEN A.duty_act_dtime='11111111111111' THEN '' ELSE RPAD(A.duty_act_dtime,14,'0') END) duty_act_dtime
+				 , A.opin
+				 , A.handl_rslt
+				 , A.agent_duty_type_cd
+				 , '' ver
+				 , A.record_center_id
+				 , A.record_take_seq
+				 , '' reg_seq
+			FROM  TB_TKRECORDCREAT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			AND   A.agent_type_cd != '09'
+			ORDER BY A.agent_sno, A.duty_act_dtime 
+		) TA
+	</select>
+	<select id="findTkRecordCreatListRecv" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordCreatList-result">
+		SELECT ROWNUM rnum, TA.*
+		FROM (
+			SELECT A.agent_id
+			     , A.agent_type_cd
+			     , (CASE WHEN A.agent_type_cd='08' THEN '보고' WHEN A.agent_type_cd='04' THEN '참조' ELSE '' END) agent_type_nm
+			     , TRIM(A.agent_nm) agent_nm
+			     , TRIM(A.agent_org_nm) agent_org_nm
+				 , A.agent_pos_rank_nm
+				 , A.req_state_val
+				 , (CASE WHEN A.duty_act_dtime='11111111111111' THEN '' ELSE RPAD(A.duty_act_dtime,14,'0') END) duty_act_dtime
+				 , A.opin
+				 , A.handl_rslt
+				 , A.agent_duty_type_cd
+				 , '' ver
+				 , A.record_center_id
+				 , A.record_take_seq
+				 , '' reg_seq
+			FROM  TB_TKRECORDCREAT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+			AND   A.agent_type_cd IN ('08','04')
+			ORDER BY A.duty_act_dtime, A.agent_sno
+		) TA
+	</select>
+	
+	<!-- 
+		인수이후 기록물건 (기록물건정보 - 출처정보)
+	 -->
+	<resultMap id="findTkRecordInfoSrcList-result" class="rms.common.detail.domain.RecordInfoSrc">
+		<result property="infoSrcTypeCd"			column="info_src_type_cd" />
+		<result property="infoSrcTypeNm"			column="info_src_type_nm" />
+		<result property="infoSrcSno"				column="info_src_sno" />
+		<result property="infoSrcTitle"				column="info_src_title" />
+		<result property="regDtime"					column="reg_dtime" />
+	</resultMap>
+	<select id="findTkRecordInfoSrcList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordInfoSrcList-result">
+		SELECT A.info_src_type_cd
+			 , Z.com_cd_nm info_src_type_nm
+		     , A.info_src_sno
+		     , A.info_src_title
+		     , A.reg_dtime
+		FROM  TB_TKRECORDINFOSRC A
+			, (SELECT com_cd, com_cd_nm FROM TB_ZZCOMCD WHERE com_type_cd = 'RD47') Z
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+		AND   A.info_src_type_cd = Z.com_cd(+)
+	</select>
+	
+	<!-- 
+		인수이후 기록물건 (기록물건정보 - 검색어)
+	 -->
+	<resultMap id="findTkRecordKeywdList-result" class="rms.common.detail.domain.RecordKeywd">
+		<result property="keywd"					column="keywd"	jdbcType="CLOB"	javaType="java.lang.String" />
+	</resultMap>
+	<select id="findTkRecordKeywdList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordKeywdList-result">
+		SELECT REPLACE(REPLACE(KEYWD,'/',','),',,',',') keywd
+		FROM (
+			SELECT SUBSTR (MAX (SYS_CONNECT_BY_PATH (REPLACE(KEYWD,',','/'), ',')), 2) keywd
+			FROM (
+				SELECT spcl_list1||DECODE(NVL(spcl_list2,''),'','','/'||spcl_list2)
+							||DECODE(NVL(spcl_list3,''),'','','/'||spcl_list3) keywd
+					, record_take_seq
+					, rownum rnum
+				FROM TB_TKSPCLLIST A 
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.record_take_seq = #recordTakeSeq:VARCHAR#
+				ORDER BY A.seq
+			)
+			START WITH rnum = 1
+			CONNECT BY PRIOR rnum = rnum - 1 AND prior record_take_seq = record_take_seq
+		)
+	</select>
+	
+	<!-- 
+		기록물건 - 품질검사 정보  
+	 -->
+	<resultMap id="findTkRecordQultyTestFileList-result" class="rms.common.detail.domain.AttachFile">
+		<result property="rowIdx"					column="row_idx" />
+		<result property="rowCnt"					column="row_cnt" />
+		<result property="docTypeCd"				column="doc_type_cd" />
+		<result property="docTypeNm"				column="doc_type_nm" />
+		<result property="attachFileType"			column="attach_file_type" />
+		<result property="regSeq"					column="reg_seq" />
+		<result property="virusFlag"				column="virus_flag" />
+		<result property="virusCleanFlag"			column="virus_clean_flag" />
+		<result property="virusCleanApplyFlag"		column="virus_clean_apply_flag" />
+		<result property="virusCleanFlagNm"			column="virus_clean_flag_nm" />
+		<result property="fileNm"					column="file_nm" />
+		<result property="fileSize"					column="file_size" />
+		<result property="virusCleanFileInfo"		column="virus_clean_file_info" />
+		<result property="attachFilePath"			column="attach_file_path" />
+		<result property="virusCleanFileSize"		column="virus_clean_file_size" />
+		<result property="virusCleanFilePath"		column="virus_clean_file_path" />
+	</resultMap>
+	<select id="findTkRecordQultyTestFileList" parameterClass="rms.common.detail.domain.FindRecord" resultMap="findTkRecordQultyTestFileList-result">
+		SELECT ROW_NUMBER() OVER(PARTITION BY A.DOC_TYPE_CD ORDER BY A.DOC_TYPE_CD, A.REG_SEQ) AS ROW_IDX
+		      ,COUNT(*) OVER(PARTITION BY A.DOC_TYPE_CD) AS ROW_CNT
+		      ,A.DOC_TYPE_CD
+		      ,B.COM_CD_NM AS DOC_TYPE_NM
+		      ,A.ATTACH_FILE_TYPE
+		      ,A.REG_SEQ
+		      ,A.VIRUS_FLAG
+		      ,A.VIRUS_CLEAN_FLAG
+		      ,A.VIRUS_CLEAN_APPLY_FLAG
+		      ,DECODE(A.VIRUS_CLEAN_APPLY_FLAG, '1', '치료적용', '2', '치료미적용', DECODE(A.VIRUS_CLEAN_FLAG, '1', '치료', '2', '치료불가', DECODE(A.VIRUS_FLAG, '1', '감염', 'X'))) AS VIRUS_CLEAN_FLAG_NM
+		      ,A.FILE_NM
+		      ,A.FILE_SIZE
+		      ,A.ATTACH_FILE_PATH
+		      ,('TF' || '|' || A.ATTACH_FILE_TYPE || '|' || A.REG_SEQ) AS VIRUS_CLEAN_FILE_INFO
+		      ,A.VIRUS_CLEAN_FILE_SIZE
+		      ,A.VIRUS_CLEAN_FILE_PATH
+		FROM   (SELECT AA.DOC_TYPE_CD
+		              ,AA.ATTACH_FILE_TYPE
+		              ,AA.REG_SEQ
+		              ,AA.FILE_NM
+		              ,AA.ATTACH_FILE_PATH
+		              ,(NVL(AA.FILE_SIZE, 0) / 1024) AS FILE_SIZE
+		              ,(NVL(AA.VIRUS_CLEAN_FILE_SIZE, 0) / 1024) AS VIRUS_CLEAN_FILE_SIZE
+		              ,AA.VIRUS_CLEAN_FILE_PATH
+		              ,AA.VIRUS_FLAG
+		              ,AA.VIRUS_CLEAN_FLAG
+		              ,AA.VIRUS_CLEAN_APPLY_FLAG
+		        FROM   TB_TKATTACHFILE AA
+		              ,TB_TKRECORD     AB
+		        WHERE  AA.RECORD_CENTER_ID = AB.RECORD_CENTER_ID
+		        AND    AA.RECORD_TAKE_SEQ = AB.RECORD_TAKE_SEQ
+		        AND    AA.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		        AND    AA.RECORD_TAKE_SEQ = #recordTakeSeq:VARCHAR#
+		        AND    AB.ERECORD_FLAG = '1') A
+		      ,(SELECT COM_CD, COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD21') B
+		WHERE  A.DOC_TYPE_CD = B.COM_CD(+)
+	</select>
+	
+	<!-- 
+		기록물건 - 첨부파일정보
+	 -->
+	<resultMap id="findDetailTkRecordAttachFileList-result" class="rms.common.detail.domain.AttachFile">
+		<result property="recordCenterId" 		column="record_center_id"/>
+		<result property="recordTakeSeq" 		column="record_take_seq"/>
+		<result property="docTypeCd"	 		column="doc_type_cd"/>
+		<result property="docTypeNm"	 		column="doc_type_cd_nm"/>
+		<result property="docTypeSno"	 		column="doc_type_sno"/>
+		<result property="regSeq" 				column="reg_seq"/>
+		<result property="attachFileSeq" 		column="attach_file_seq"/>
+		<result property="fileNm" 				column="file_nm"/>
+		<result property="attachFileMngInfo" 	column="attach_file_mng_info"/>
+	</resultMap>
+	<select id="findDetailTkRecordAttachFileList" parameterClass="rms.common.detail.domain.AttachFile" resultMap="findDetailTkRecordAttachFileList-result">
+		select record_center_id, record_take_seq
+			, doc_type_cd
+			, doc_type_sno
+		    , (select com_cd_nm from tb_zzcomcd Z where com_type_cd = 'RD21' and com_cd = doc_type_cd) doc_type_cd_nm
+		    , reg_seq
+		    , attach_file_seq
+		    , file_nm 
+		    , attach_file_mng_info
+		from tb_tkattachfile 
+		where record_center_id = #recordCenterId:VARCHAR#
+		and record_take_seq = #recordTakeSeq:VARCHAR#
+		order by doc_type_cd, doc_type_sno
+	</select>
+	
+	<!-- 
+		UPDATE - 기록물건 파일관리 파일관리정보 갱신
+	 -->
+	<update id="updateTkRecordAttachFileMngInfo" parameterClass="rms.common.detail.domain.AttachFile">
+		UPDATE tb_tkattachfile 
+		SET attach_file_mng_info = #attachFileMngInfo:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND	record_take_seq = #recordTakeSeq:VARCHAR#
+		AND	reg_seq = #regSeq# 
+	</update>
+</sqlMap>

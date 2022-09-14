@@ -1,0 +1,53 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : select
+-- Query Id : findAccsSetRecord
+
+		SELECT AA.RECORD_ID			, AA.ORG_CD			, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD=AA.ORG_CD) ORG_ABBR_NM			, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD=AA.ORG_CD) ORG_NM			, AA.TITLE			, AA.OPER_READ_RANGE_CD			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD53' AND USE_FLAG='1' AND COM_CD = AA.OPER_READ_RANGE_CD) OPER_READ_RANGE_NM			, AA.CREAT_YYYY			, AA.RECORD_REG_DIV_CD			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD02' AND USE_FLAG='1' AND COM_CD = AA.RECORD_REG_DIV_CD) RECORD_REG_DIV_NM			, AA.RECORD_DETL_TYPE_CD			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'RD03' AND USE_FLAG='1' AND COM_CD = AA.RECORD_DETL_TYPE_CD) RECORD_DETL_TYPE_NM 			, AA.ACCS_SET_RSN		FROM (			SELECT Z.*			FROM (				SELECT ROWNUM AS rnum					, Y.*				FROM (					SELECT A.RECORD_ID						, A.ORG_CD						, A.TITLE						, A.OPER_READ_RANGE_CD						, A.CREAT_YYYY						, A.RECORD_REG_DIV_CD						, A.RECORD_DETL_TYPE_CD						, A.ACCS_SET_RSN					FROM  TB_RDRECORD A					WHERE A.OPER_READ_RANGE_CD IN ('02','03')					AND   A.RECORD_CENTER_ID = '1' 					ORDER BY A.RECORD_CENTER_ID, A.TITLE				) Y				WHERE ROWNUM <= '1'			) Z			WHERE z.rnum >= '1'		) AA		ORDER BY AA.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : select
+-- Query Id : countAccsSetRecord
+
+		SELECT COUNT(1)		FROM TB_RDRECORD A		WHERE A.OPER_READ_RANGE_CD IN ('02','03')		AND A.RECORD_CENTER_ID = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : select
+-- Query Id : findAccsSetRecordUserList
+
+		SELECT A.RECORD_ID			, A.ACCS_TYPE_CD			, A.ACCS_USER_ID			, B.USER_NM ACCS_USER_NM			, C.DEPT_ABBR_NM ACCS_USER_DEPT_NM			, '' ACCS_DEPT_CD			, '' ACCS_DEPT_NM 		FROM  TB_RDRECORDACCS A, TB_STUSER B, TB_STDEPT C		WHERE A.RECORD_CENTER_ID = '1'		AND A.RECORD_ID = '1'		AND A.ACCS_TYPE_CD = '1'		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.ACCS_USER_ID = B.USER_ID		AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		AND B.DEPT_CD = C.DEPT_CD		ORDER BY B.USER_NM	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : select
+-- Query Id : findAccsSetRecordDeptList
+
+		SELECT A.RECORD_ID			, A.ACCS_TYPE_CD			, '' ACCS_USER_ID			, '' ACCS_USER_NM			, '' ACCS_USER_DEPT_NM			, A.ACCS_DEPT_CD			, B.DEPT_NM ACCS_DEPT_NM		FROM  TB_RDRECORDACCS A, TB_STDEPT B		WHERE A.RECORD_CENTER_ID = '1'		AND A.RECORD_ID = '1'		AND A.ACCS_TYPE_CD = '2'		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.ACCS_DEPT_CD = B.DEPT_CD		ORDER BY B.DEPT_ABBR_NM;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : delete
+-- Query Id : deleteAccsSetRecord
+
+	 	DELETE 	 	FROM TB_RDRECORDACCS	 	WHERE RECORD_ID = '1'		 	AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : insert
+-- Query Id : createAccsSetRecordUser
+
+		INSERT INTO TB_RDRECORDACCS(RECORD_ID			, ACCS_SNO			, ACCS_TYPE_CD			, ACCS_USER_ID			, ACCS_DEPT_CD			, REG_DTIME			, RECORD_CENTER_ID		) VALUES ('1'			, NVL((SELECT MAX(ACCS_SNO) FROM TB_RDRECORDACCS WHERE RECORD_ID = '1' AND RECORD_CENTER_ID = '1'),1) + 1			, '1'			, '1'			, '1'			, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml
+-- Query    : update
+-- Query Id : updateAccsSetRecord
+
+		UPDATE TB_RDRECORD		SET ACCS_SET_RSN = '1'		WHERE RECORD_ID = '1'		AND RECORD_CENTER_ID = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\accs\accsset\AccsSetRecord.xml

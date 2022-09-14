@@ -1,0 +1,606 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfTrgtPagedList
+
+		SELECT COUNT(1)		FROM (		    SELECT ORG_CD		    	  ,ORG_NM, ORG_ABBR_NM		          ,SUM(acnt)+SUM(bcnt) ERECCNT    		          ,SUM(ccnt) MNGCNT2                   		          ,SUM(dcnt) MNGCNT1		          ,SUM(ccnt)+SUM(dcnt) MNGCNT		          ,SUM(ecnt) MNGCNT0		          ,SUM(fcnt) ARNGCNT1		          ,SUM(gcnt) ARNGCNT0		    FROM                           		        ( SELECT A.ORG_CD           		                ,B.ORG_NM    		                ,B.ORG_ABBR_NM                      		                ,DECODE(A.ERECORD_FLAG,          '2' ,COUNT(A.ERECORD_FLAG ),0)          acnt    		              	,DECODE(A.ERECORD_FLAG,          '3' ,COUNT(A.ERECORD_FLAG ),0)          bcnt    		              	,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  ccnt    		              	,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  dcnt    		              	,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ecnt    		              	,DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG), 0)      fcnt    		              	,DECODE(A.BOOKSF_ARNG_FLAG,      '0' ,COUNT(A.BOOKSF_ARNG_FLAG ),0)      gcnt    		          FROM TB_RDFOLDER A, TB_STORG B		          WHERE A.ERECORD_FLAG IN ('2','3')		          AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		          AND A.RECORD_CENTER_ID = '1'		          AND A.ORG_CD = B.ORG_CD		          AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		          GROUP BY A.ORG_CD,B.ORG_NM, B.ORG_ABBR_NM, A.ERECORD_FLAG, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO, A.BOOKSF_ARNG_FLAG		        )		    GROUP BY ORG_CD, ORG_NM, ORG_ABBR_NM		    ORDER BY ORG_CD		) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfTrgtPagedList
+
+		SELECT C.org_cd		      ,C.org_nm		      ,C.org_abbr_nm		      ,C.ereccnt		      ,C.mngcnt2		      ,C.mngcnt1		      ,C.mngcnt		      ,C.mngcnt0		      ,C.arngcnt1		      ,C.arngcnt0		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		              ,A.*		        FROM (		            SELECT ORG_CD		            	  ,ORG_NM, ORG_ABBR_NM		                  ,SUM(acnt)+SUM(bcnt) ERECCNT    		                  ,SUM(ccnt) MNGCNT2                   		                  ,SUM(dcnt) MNGCNT1		                  ,SUM(ccnt)+SUM(dcnt) MNGCNT		                  ,SUM(ecnt) MNGCNT0		                  ,SUM(fcnt) ARNGCNT1		                  ,SUM(gcnt) ARNGCNT0		            FROM                           		                ( SELECT A.ORG_CD           		                        ,B.ORG_NM    		                        ,B.ORG_ABBR_NM                      		                        ,DECODE(A.ERECORD_FLAG,          '2' ,COUNT(A.ERECORD_FLAG ),0)          acnt    		                        ,DECODE(A.ERECORD_FLAG,          '3' ,COUNT(A.ERECORD_FLAG ),0)          bcnt    		                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  ccnt    		                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  dcnt    		                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ecnt    		                        ,DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG), 0)      fcnt    		                        ,DECODE(A.BOOKSF_ARNG_FLAG,      '0' ,COUNT(A.BOOKSF_ARNG_FLAG ),0)      gcnt    		                  FROM TB_RDFOLDER A, TB_STORG B		                  WHERE A.ERECORD_FLAG IN ('2','3')		                  AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		                  AND A.RECORD_CENTER_ID = '1'		                  AND A.ORG_CD = B.ORG_CD		                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		                  GROUP BY A.ORG_CD,B.ORG_NM, B.ORG_ABBR_NM, A.ERECORD_FLAG, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO, A.BOOKSF_ARNG_FLAG		                )		            GROUP BY ORG_CD, ORG_NM, ORG_ABBR_NM		            ORDER BY ORG_CD		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfMngNoSpclPagedList
+
+		SELECT COUNT(1)         FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D        WHERE A.STAKRM_MNG_NO IS NULL        AND A.ERECORD_FLAG IN ('2','3')        AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')        AND A.RECORD_CENTER_ID = '1'        AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')        AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')        AND A.ORG_CD = D.ORG_CD        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID AND                  A.CUR_KEEP_ORG_CD = '1'              AND                 A.CUR_KEEP_ORG_CD = '1'              AND                 (A.TAKE_YYYY BETWEEN '1' AND '1')              AND                 A.ORG_CD = '1'              AND                 A.FOLDER_TYPE_DIV_CD = '1'              AND                 A.CREAT_SYS_CD = '1'              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.FOLDER_ID BETWEEN '1' AND '1')              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfMngNoSpclPagedList
+
+		SELECT G.folder_id		      ,G.org_cd		      ,G.org_nm		      ,G.org_abbr_nm		      ,G.title		      ,G.presv_term_cd		      ,G.presv_term_nm		      ,G.creat_yyyy		      ,G.folder_type_div_cd		      ,G.folder_detl_type_nm		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		                ,E.*		        FROM (		            SELECT A.FOLDER_ID, A.ORG_CD, D.ORG_NM, D.ORG_ABBR_NM, A.TITLE		                  ,A.PRESV_TERM_CD, B.COM_CD_NM AS PRESV_TERM_NM, A.CREAT_YYYY, A.FOLDER_TYPE_DIV_CD, C.COM_CD_NM AS FOLDER_DETL_TYPE_NM 		            FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D		            WHERE A.STAKRM_MNG_NO IS NULL		            AND A.ERECORD_FLAG IN ('2','3')		            AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		            AND A.RECORD_CENTER_ID = '1'		            AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')		            AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')		            AND A.ORG_CD = D.ORG_CD		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID                    AND                             A.CUR_KEEP_ORG_CD = '1'                         AND                            A.CUR_KEEP_ORG_CD = '1'                         AND                            (A.TAKE_YYYY BETWEEN '1' AND '1')                         AND                            A.ORG_CD = '1'                         AND                            A.FOLDER_TYPE_DIV_CD = '1'                         AND                            A.CREAT_SYS_CD = '1'                         AND                            (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')                         AND                            (A.FOLDER_ID BETWEEN '1' AND '1')                             		            ORDER BY A.FOLDER_ID		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfMngNoNomlPagedList
+
+		SELECT COUNT(1)        FROM (            SELECT RECORD_CENTER_ID, ORG_CD, ORG_NM                   ,SUM(acnt) MNGCNT1                                     ,SUM(bcnt) MNGCNT2                  ,SUM(ccnt) MNGCNT0            FROM                                        (SELECT A.RECORD_CENTER_ID, A.ORG_CD                               ,B.ORG_NM                                                                 ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  acnt                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  bcnt                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ccnt                     FROM TB_RDFOLDER A, TB_STORG B                WHERE A.ERECORD_FLAG IN ('2','3')                  AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')                  AND A.RECORD_CENTER_ID = '1'                  AND A.ORG_CD = B.ORG_CD                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID               GROUP BY A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO)            GROUP BY RECORD_CENTER_ID, ORG_CD, ORG_NM                ORDER BY RECORD_CENTER_ID, ORG_CD        ) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfMngNoNomlPagedList
+
+		SELECT E.org_cd		      ,E.org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id AND Z.org_cd = E.org_cd) AS org_abbr_nm		      ,E.mngcnt1		      ,E.mngcnt2		      ,E.mngcnt0		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT RECORD_CENTER_ID, ORG_CD, ORG_NM 		                  ,SUM(acnt) MNGCNT1                   		                  ,SUM(bcnt) MNGCNT2		                  ,SUM(ccnt) MNGCNT0		            FROM                           		             (SELECT A.RECORD_CENTER_ID, A.ORG_CD           		                    ,B.ORG_NM                                             		                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  acnt    		                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  bcnt    		                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ccnt    		                 FROM TB_RDFOLDER A, TB_STORG B		                WHERE A.ERECORD_FLAG IN ('2','3')		                  AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		                  AND A.RECORD_CENTER_ID = '1'		                  AND A.ORG_CD = B.ORG_CD		                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		               GROUP BY A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO)		            GROUP BY RECORD_CENTER_ID, ORG_CD, ORG_NM    		            ORDER BY RECORD_CENTER_ID, ORG_CD		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findRegistMngNoRuleCheck
+
+		SELECT NOML_MNG_NO_RULE		     , SPCL_MNG_NO_RULE		     , PRESV_BOX_ID_RULE		FROM  TB_STCONFIG		WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfMngNoSeq
+
+		SELECT TRIM(TO_CHAR(NVL(MAX(SUBSTR(STAKRM_MNG_NO,LENGTH(STAKRM_MNG_NO)-5,6)),0)+1,'000000')) MNG_NO_SEQ   		  FROM TB_RDFOLDER 		 WHERE STAKRM_MNG_NO_RULE = '1' 		   AND RECORD_CENTER_ID = '1' AND  			    ORG_CD = '1'			  AND 			    ORG_CD = '1'			  AND 				CREAT_YYYY = '1'			  AND 				PRESV_TERM_CD = '1'			  AND 				FOLDER_TYPE_DIV_CD = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfMngNoCount
+
+		SELECT SUM(ccnt) MNGCNT0	  	FROM (	  		  SELECT DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ccnt    		 		FROM TB_RDFOLDER A		 	   WHERE A.ERECORD_FLAG IN ('2','3')		 	     AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		 	     AND A.RECORD_CENTER_ID = '1'			   GROUP BY A.ORG_CD, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO			  )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfMngNo
+
+		UPDATE TB_RDFOLDER   		SET STAKRM_MNG_NO 			= '1'		   ,STAKRM_MNG_NO_DIV_CD 	= '1'		   ,STAKRM_MNG_NO_RULE 		= '1' 			  		WHERE RECORD_CENTER_ID 	= '1'		AND FOLDER_ID 			= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfMngNoFolder
+
+		SELECT FOLDER_ID, ORG_CD, CREAT_YYYY, PRESV_TERM_CD, FOLDER_TYPE_DIV_CD  		  FROM TB_RDFOLDER 		 WHERE STAKRM_MNG_NO IS NULL		   AND ERECORD_FLAG IN ('2','3')		   AND FOLDER_KEEP_STATE_CD IN ('01', '04')		   AND RECORD_CENTER_ID = '1'		  		 ORDER BY CREAT_SYS_CD||'-'||ORG_CD||'-'||CLSS_ID||'-'||CREAT_YYYY||'-'||FOLDER_REG_SEQ||'-'||HO_NO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfPagedList
+
+		SELECT COUNT(1)                            FROM TB_SRSTAKRM A, TB_SRBOOKSF B         WHERE A.STAKRM_ID = B.STAKRM_ID        AND A.RECORD_CENTER_ID = '1'         AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfPagedList
+
+		SELECT E.stakrm_id		      ,E.stakrm_nm		      ,E.booksf_id		      ,E.booksf_nm		      ,E.shelf_c_cnt		      ,E.shelf_r_cnt		      ,E.max_presv_box_cnt		      ,E.keep_presv_box_cnt		      ,E.remk		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT  A.STAKRM_ID,A.STAKRM_NM,B.BOOKSF_ID,B.BOOKSF_NM		                   ,NVL(B.SHELF_C_CNT,'0') AS SHELF_C_CNT		                   ,NVL(B.SHELF_R_CNT, '0') AS SHELF_R_CNT		                   ,NVL(B.MAX_PRESV_BOX_CNT, '0') AS MAX_PRESV_BOX_CNT		                   ,NVL(B.KEEP_PRESV_BOX_CNT, '0') AS KEEP_PRESV_BOX_CNT		                   ,B.REMK                     		            FROM TB_SRSTAKRM A, TB_SRBOOKSF B 		            WHERE A.STAKRM_ID = B.STAKRM_ID		            AND A.RECORD_CENTER_ID = '1' 		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                		            		            ORDER BY A.STAKRM_ID, B.BOOKSF_ID		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countStakrmPagedList
+
+		SELECT COUNT(1)        FROM  TB_SRSTAKRM          WHERE  RECORD_CENTER_ID = '1'         ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findStakrmPagedList
+
+		SELECT C.stakrm_id		      ,C.stakrm_nm		      ,NVL(C.keep_booksf_cnt,'0') AS booksf_cnt		      ,C.remk		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT *		            FROM  TB_SRSTAKRM  		            WHERE  RECORD_CENTER_ID = '1' 		            		            ORDER BY STAKRM_ID DESC 		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findMaxStakrmId
+
+		SELECT 	MAX(STAKRM_ID) 		  FROM  TB_SRSTAKRM		 WHERE  RECORD_CENTER_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createStakrm
+
+		INSERT INTO TB_SRSTAKRM (			RECORD_CENTER_ID, STAKRM_ID, STAKRM_NM, KEEP_BOOKSF_CNT, REMK		) VALUES (			'1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateStakrm
+
+	  	UPDATE TB_SRSTAKRM 	  	   SET STAKRM_NM 	= '1'	  	     , REMK			= '1'	  	     		 WHERE STAKRM_ID 	= '1'		   AND RECORD_CENTER_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : delete
+-- Query Id : deleteStakrm
+
+	  	DELETE FROM TB_SRSTAKRM		 WHERE STAKRM_ID 		= '1'		   AND RECORD_CENTER_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findStakrmIdList
+
+		SELECT 	STAKRM_ID AS STAKRM_ID, 	   		   	STAKRM_NM AS STAKRM_NM, 	   			NVL(KEEP_BOOKSF_CNT,'0') BOOKSF_CNT,	   			(REMK) AS STAKRM_REMK 	   	  FROM  TB_SRSTAKRM  	   	 WHERE  RECORD_CENTER_ID = '1' 		ORDER BY STAKRM_ID ASC 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findMaxBooksfId
+
+		SELECT 	MAX(BOOKSF_ID) 		  FROM  TB_SRBOOKSF 			 WHERE  RECORD_CENTER_ID = '1'		   AND  STAKRM_ID 		 = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksf
+
+		INSERT INTO TB_SRBOOKSF (			RECORD_CENTER_ID, BOOKSF_ID, BOOKSF_NM,  STAKRM_ID, STAKRM_SNO		   ,SHELF_C_CNT, SHELF_R_CNT, MAX_PRESV_BOX_CNT, REMK		) VALUES (			'1', '1', '1', '1', (SELECT (COUNT(BOOKSF_ID)+1) AS STAKRMSEQ FROM TB_SRBOOKSF WHERE STAKRM_ID='1')		   ,'1', '1', '1', '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateStakrmBooksfCnt
+
+	  	UPDATE TB_SRSTAKRM 	  	   SET KEEP_BOOKSF_CNT=(SELECT COUNT(STAKRM_ID) FROM TB_SRBOOKSF WHERE STAKRM_ID='1')	  	     		 WHERE RECORD_CENTER_ID = '1'		   AND STAKRM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksf
+
+	  	UPDATE TB_SRBOOKSF  	  	   SET BOOKSF_NM = '1' 	  	   	 , REMK	= '1' 	  	   	 , SHELF_C_CNT = '1' 	  	   	 , SHELF_R_CNT = '1' 	  	   	 , MAX_PRESV_BOX_CNT = '1'  		 WHERE RECORD_CENTER_ID = '1'	 	   AND STAKRM_ID = '1'		 	   AND BOOKSF_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : delete
+-- Query Id : deleteBooksf
+
+		DELETE FROM TB_SRBOOKSF		WHERE RECORD_CENTER_ID = '1'		AND STAKRM_ID = '1'		AND BOOKSF_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksInfo
+
+		SELECT 	BOOKSF_ID AS BOOKSF_ID, 	   			BOOKSF_NM AS BOOKSF_NM, 	   			(REMK) AS REMK, 	   			NVL(SHELF_C_CNT,'0') SHELF_C_CNT, 	   			NVL(SHELF_R_CNT, '0') SHELF_R_CNT, 	   			NVL(MAX_PRESV_BOX_CNT, '0') AS MAX_PRESV_BOX_CNT, 	   			STAKRM_ID AS STAKRM_ID, 	   			(SELECT STAKRM_NM FROM TB_SRSTAKRM WHERE STAKRM_ID = '1' AND RECORD_CENTER_ID = '1') AS STAKRM_NM, 	   			NVL(KEEP_PRESV_BOX_CNT, '0') AS KEEP_PRESV_BOX_CNT		  FROM TB_SRBOOKSF         	 WHERE RECORD_CENTER_ID = '1'		   AND STAKRM_ID 		= '1'		   AND BOOKSF_ID 		= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfArngPagedList
+
+		SELECT COUNT(1)        FROM  TB_SRBOOKSFARNG A                           WHERE A.RECORD_CENTER_ID = '1'         AND                  A.FIN_FLAG = '1'              AND                 A.FIN_FLAG = '1'              AND                 A.BOOKSF_ARNG_ID = '1'              AND                 A.PLAN_YMD = '1'              AND                 A.WORK_USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE RECORD_CENTER_ID='1' AND USER_NM LIKE '1')              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngPagedList
+
+		SELECT D.booksf_arng_id		      ,D.plan_ymd		      ,D.arng_ymd		      ,D.work_user_id		      ,(SELECT B.user_nm FROM TB_STUSER B WHERE B.record_center_id=D.record_center_id AND B.user_id=D.work_user_id) AS work_user_nm		      ,(SELECT COUNT(1) FROM TB_SRBOOKSFARNGDETL C WHERE C.record_center_id=D.record_center_id AND C.booksf_arng_id=D.booksf_arng_id) AS page_total		      ,D.fin_flag		      ,DECODE(D.fin_flag, '0', '미배치', '1', '배치','') AS fin_flag_nm		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		                ,B.*		        FROM (		            SELECT *		            FROM  TB_SRBOOKSFARNG A                   		            WHERE A.RECORD_CENTER_ID = '1'		             AND  		                    A.FIN_FLAG = '1'		                  AND 		                    A.FIN_FLAG = '1'		                  AND 		                    A.BOOKSF_ARNG_ID = '1'		                  AND 		                    A.PLAN_YMD = '1'		                  AND 		                    A.WORK_USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE RECORD_CENTER_ID='1' AND USER_NM LIKE '1')		                  		            ORDER BY A.BOOKSF_ARNG_ID		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfArngTempPagedList
+
+		SELECT COUNT(1)        FROM TB_ZZREQLISTTEMP A, TB_RDFOLDER B        WHERE A.RECORD_CENTER_ID = '1'        AND   A.USER_ID = '1'        AND   A.REMK = 'BOOKSFARNG'        AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID        AND   B.FOLDER_ID = A.TRGT_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngTempPagedList
+
+		SELECT E.folder_id		        ,(SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_nm		        ,(SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_abbr_nm		        ,E.title		        ,E.creat_yyyy		        ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm		        ,E.stakrm_mng_no		        ,(SELECT SUM(D.record_page_cnt) FROM TB_RDRECORD D WHERE D.record_center_id=E.record_center_id AND D.FOLDER_ID=E.folder_id) AS page_total		        ,E.arng_info		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT B.RECORD_CENTER_ID, B.FOLDER_ID, B.ORG_CD, B.TITLE, B.CREAT_YYYY		                    , B.PRESV_TERM_CD, B.STAKRM_MNG_NO, A.ARNG_INFO		            FROM TB_ZZREQLISTTEMP A, TB_RDFOLDER B		            WHERE A.RECORD_CENTER_ID = '1'		            AND   A.USER_ID = '1'		            AND   A.REMK = 'BOOKSFARNG'		            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND   B.FOLDER_ID = A.TRGT_ID		            ORDER BY B.RECORD_CENTER_ID, B.TITLE		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : delete
+-- Query Id : deleteBooksfTemp
+
+		DELETE FROM TB_ZZREQLISTTEMP		WHERE RECORD_CENTER_ID = '1' AND 			TRGT_ID = '1'		 		AND REMK = 'BOOKSFARNG'		AND USER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfArngFolderPagedList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A        WHERE NVL(BOOKSF_ARNG_FLAG,'0') = '0'        AND A.ERECORD_FLAG IN ('2','3')        AND A.FOLDER_KEEP_STATE_CD IN ('01','04')                        AND A.STAKRM_MNG_NO IS NOT NULL        AND A.RECORD_CENTER_ID = '1'        AND NOT EXISTS (SELECT E.TRGT_ID                                     FROM TB_ZZREQLISTTEMP E                                    WHERE E.RECORD_CENTER_ID = '1'                                    AND E.USER_ID = '1'                                    AND E.TRGT_ID = A.FOLDER_ID                                    AND E.REMK='BOOKSFARNG'                                     AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID)                                     AND NOT EXISTS (SELECT F.FOLDER_ID                                                                FROM TB_SRBOOKSFARNGDETL F                                                                WHERE F.RECORD_CENTER_ID='1'                                                                AND F.FOLDER_ID=A.FOLDER_ID                                                                AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID)         AND                  A.ORG_CD = '1'             AND                 A.ORG_CD = '1'             AND                 A.CREAT_USER_ORG_CD = '1'             AND                 (A.CREAT_YYYY BETWEEN '1' AND '1')              AND                 A.PRESV_TERM_CD = '1'             AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngFolderPagedList
+
+		SELECT F.folder_id		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = F.record_center_id AND Z.org_cd = F.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = F.record_center_id AND Z.org_cd = F.org_cd) AS org_abbr_nm		      ,F.title		      ,F.creat_yyyy		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = F.presv_term_cd) AS presv_term_nm		      ,F.stakrm_mng_no		      ,(SELECT SUM(Z.record_page_cnt) FROM TB_RDRECORD Z WHERE Z.record_center_id = F.record_center_id AND Z.folder_id = F.folder_id) AS page_total		FROM (		    SELECT E.*		    FROM (		        SELECT ROWNUM AS rnum		              ,D.*		        FROM (		            SELECT A.*		            FROM TB_RDFOLDER A		            WHERE NVL(BOOKSF_ARNG_FLAG,'0') = '0'		            AND A.ERECORD_FLAG IN ('2','3')		            AND A.FOLDER_KEEP_STATE_CD IN ('01','04')                		            AND A.STAKRM_MNG_NO IS NOT NULL		            AND A.RECORD_CENTER_ID = '1'		            AND NOT EXISTS (SELECT E.TRGT_ID 		                                        FROM TB_ZZREQLISTTEMP E		                                        WHERE E.RECORD_CENTER_ID = '1'		                                        AND E.USER_ID = '1'		                                        AND E.TRGT_ID = A.FOLDER_ID		                                        AND E.REMK='BOOKSFARNG' 		                                        AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID) 		                                        AND NOT EXISTS (SELECT F.FOLDER_ID		                                                                    FROM TB_SRBOOKSFARNGDETL F		                                                                    WHERE F.RECORD_CENTER_ID='1'		                                                                    AND F.FOLDER_ID=A.FOLDER_ID		                                                                    AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID)		             AND  		                    A.ORG_CD = '1'		                 AND 		                    A.ORG_CD = '1'		                 AND            			   	    A.CREAT_USER_ORG_CD = '1'           			     AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    A.PRESV_TERM_CD = '1'		                 AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                   		            ORDER BY A.STAKRM_MNG_NO		        ) D		        WHERE ROWNUM <= '1'		    ) E		    WHERE E.rnum >= '1'		) F		ORDER BY F.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksfTemp
+
+		INSERT INTO TB_ZZREQLISTTEMP (			RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK		) VALUES (			'1', '1', '1','BOOKSFARNG'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfTemp
+
+		UPDATE TB_ZZREQLISTTEMP 		   SET ARNG_INFO 		= '1'		 WHERE RECORD_CENTER_ID = '1'		   AND TRGT_ID 	= '1'		   AND USER_ID 	= '1'		   AND REMK		= 'BOOKSFARNG';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngSno
+
+		SELECT NVL(MAX(Sno),0) + 1 SNO		  FROM TB_SRBOOKSFARNG		 WHERE ARNG_YYYY = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksfArng
+
+		INSERT INTO TB_SRBOOKSFARNG (			RECORD_CENTER_ID, BOOKSF_ARNG_ID, ARNG_YYYY, SNO, WORK_USER_ID, WORK_DTIME, PLAN_YMD, FIN_FLAG		) VALUES (						'1', '1', '1', '1', '1', (Select to_char(sys_datetime,'YYYYMMDDHHMMSS') from dual), '1', '0'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngWriteList
+
+		SELECT B.FOLDER_ID			, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND C.ORG_CD=B.ORG_CD) ORG_NM			, (SELECT C.ORG_ABBR_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND C.ORG_CD=B.ORG_CD) ORG_ABBR_NM			, B.TITLE			, B.CREAT_YYYY			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD07' AND Z.COM_CD=B.PRESV_TERM_CD) PRESV_TERM_NM			, B.STAKRM_MNG_NO			, (SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND D.FOLDER_ID=B.FOLDER_ID) PAGE_TOTAL			, A.ARNG_INFO		FROM TB_ZZREQLISTTEMP A			, TB_RDFOLDER B		WHERE A.RECORD_CENTER_ID = '1'		AND   A.USER_ID = '1'		AND   A.REMK = 'BOOKSFARNG'		AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		AND   B.FOLDER_ID = A.TRGT_ID		ORDER BY B.RECORD_CENTER_ID, B.TITLE	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksfArngDetl
+
+		INSERT INTO TB_SRBOOKSFARNGDETL (			RECORD_CENTER_ID, BOOKSF_ARNG_ID, FOLDER_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_SHELF_CNO, BOOKSF_SHELF_RNO		) VALUES (			'1', '1', '1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createBooksfArngTemp
+
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK,ARNG_INFO)		(			SELECT '1' RECORD_CENTER_ID, '1' USER_ID, B.FOLDER_ID,'BOOKSFARNG', (B.STAKRM_ID||'-'||B.BOOKSF_ID||'-'||B.BOOKSF_SHELF_CNO||'-'||B.BOOKSF_SHELF_RNO) ARNG_INFO	 		FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B			WHERE A.BOOKSF_ARNG_ID = '1'	  		AND A.BOOKSF_ARNG_ID = B.BOOKSF_ARNG_ID	  		AND A.RECORD_CENTER_ID = '1'	  		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfArng
+
+		UPDATE TB_SRBOOKSFARNG		   SET ARNG_YYYY = '1'		      ,WORK_USER_ID = '1'		      		      ,WORK_DTIME = (Select to_char(sys_datetime,'YYYYMMDDHHMMSS') from dual)		      ,PLAN_YMD = '1'		WHERE RECORD_CENTER_ID = '1'		  AND BOOKSF_ARNG_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : delete
+-- Query Id : deleteBooksfArng
+
+		DELETE FROM TB_SRBOOKSFARNG 		WHERE RECORD_CENTER_ID = '1'		AND BOOKSF_ARNG_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : delete
+-- Query Id : deleteBooksfArngDetl
+
+		DELETE FROM TB_SRBOOKSFARNGDETL 		WHERE RECORD_CENTER_ID = '1'		AND BOOKSF_ARNG_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfArngFin
+
+	  	UPDATE TB_SRBOOKSFARNG 	  	SET 	ARNG_YMD     = '1'	  	       ,WORK_USER_ID = '1'	  	       ,FIN_FLAG     = '1'     		WHERE 	BOOKSF_ARNG_ID 	 = '1'		AND 	RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfArngFolder
+
+		UPDATE TB_RDFOLDER		   SET BOOKSF_ARNG_FLAG = '1'		 WHERE FOLDER_ID IN (SELECT B.FOLDER_ID						     FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B							 WHERE 	A.RECORD_CENTER_ID 	= '1'							 AND 	A.BOOKSF_ARNG_ID 	= '1'							 AND 	A.BOOKSF_ARNG_ID 	= B.BOOKSF_ARNG_ID							 AND 	A.RECORD_CENTER_ID 	= B.RECORD_CENTER_ID)		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findIsBooksf
+
+	    SELECT SHELF_C_CNT,SHELF_R_CNT	    FROM TB_SRBOOKSF	    WHERE RECORD_CENTER_ID='1'	    AND STAKRM_ID='1'	    AND BOOKSF_ID='1' 	    	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfArngInfoFolder
+
+		SELECT COUNT(1) 		  FROM TB_RDFOLDER		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_KEEP_STATE_CD IN ('01','04')		   AND REPLACE(STAKRM_MNG_NO,'-','') = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngInfoFolder
+
+		SELECT FOLDER_ID, BOOKSF_ARNG_FLAG		  FROM TB_RDFOLDER		 WHERE RECORD_CENTER_ID = '1'		   AND REPLACE(STAKRM_MNG_NO,'-','') = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocBooksfArngHead
+
+		SELECT TO_CHAR(TO_DATE(A.arng_ymd,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS arng_ymd			, (SELECT B.user_nm FROM TB_STUSER B WHERE B.user_id=A.work_user_id) AS work_user_nm		FROM  TB_SRBOOKSFARNG A		WHERE A.record_center_id = '1'		AND   A.booksf_arng_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocBooksfArngDataList
+
+		SELECT A.stakrm_id			, A.booksf_id	 			, MIN(B.stakrm_mng_no) AS stakrm_mng_no_f			, MAX(B.stakrm_mng_no) AS stakrm_mng_no_t		FROM  TB_SRBOOKSFARNGDETL A			, TB_RDFOLDER B		WHERE A.BOOKSF_ARNG_ID = '1'		AND   A.RECORD_CENTER_ID = '1'		AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND   A.FOLDER_ID = B.FOLDER_ID		GROUP BY A.STAKRM_ID, A.BOOKSF_ID		ORDER BY A.STAKRM_ID, A.BOOKSF_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfArngRePagedList
+
+		SELECT COUNT(1)        FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B        WHERE A.RECORD_CENTER_ID = '1'        AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')        AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')        AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID        AND   B.FOLDER_ID = A.FOLDER_ID         AND                  A.ORG_CD = '1'              AND                 A.ORG_CD = '1'              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 (A.CREAT_YYYY BETWEEN '1' AND '1')              AND                 A.PRESV_TERM_CD = '1'              AND                 REPLACE(A.STAKRM_MNG_NO, '-', '') = REPLACE('1', '-', '')              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                     B.STAKRM_ID = '1'              AND                     B.BOOKSF_ID = '1'              AND                     A.LAST_EVAL_YYYY = '1'              AND                     A.DISU_DIV_CD = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngRePagedList
+
+		SELECT E.record_center_id		      ,E.folder_id		      ,E.org_cd		      ,(SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_nm		      ,(SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_abbr_nm		      ,E.title		      ,E.creat_yyyy		      ,E.presv_term_cd		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm		      ,E.stakrm_mng_no		      ,(E.stakrm_id||'-'||E.booksf_id||'-'||E.booksf_shelf_cno||'-'||E.booksf_shelf_rno ) AS arng_info		      ,TO_CHAR(TO_NUMBER(E.record_tot_page_cnt)) AS page_total		      ,E.BOOKSF_ARNG_ID		      ,(CASE WHEN E.disu_div_cd='3' THEN '재책정' END) AS disu_div_cd_nm    		      ,(CASE WHEN E.booksf_arng_flag='1' THEN '배치'		             WHEN E.booksf_arng_flag='2' THEN '재배치'		        END) AS booksf_arng_flag         		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.FOLDER_ID, A.ORG_CD, A.TITLE, A.CREAT_YYYY		                    , DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) PRESV_TERM_CD, A.STAKRM_MNG_NO, B.STAKRM_ID, B.BOOKSF_ID, B.BOOKSF_SHELF_CNO		                    , B.BOOKSF_SHELF_RNO, A.RECORD_TOT_PAGE_CNT, B.BOOKSF_ARNG_ID, A.DISU_DIV_CD, A.BOOKSF_ARNG_FLAG		            FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B		            WHERE A.RECORD_CENTER_ID = '1'		            AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')		            AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')		            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND   B.FOLDER_ID = A.FOLDER_ID		             AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    REPLACE(A.STAKRM_MNG_NO, '-', '') = REPLACE('1', '-', '')		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                        B.STAKRM_ID = '1'  AND 		                        B.BOOKSF_ID = '1'		                  AND 		                        A.LAST_EVAL_YYYY = '1'		                  AND 		                        A.DISU_DIV_CD = '1'		                  		            ORDER BY A.RECORD_CENTER_ID, B.STAKRM_ID, B.BOOKSF_ID, B.BOOKSF_SHELF_CNO, B.BOOKSF_SHELF_RNO, A.TITLE		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfStakrmPagedList
+
+		SELECT COUNT(1)        FROM (            SELECT M.STAKRM_ID, M.STAKRM_NM                  FROM TB_SRSTAKRM M, TB_SRBOOKSF N            WHERE M.RECORD_CENTER_ID = '1'                        AND M.RECORD_CENTER_ID = N.RECORD_CENTER_ID            AND M.STAKRM_ID = N.STAKRM_ID            GROUP BY M.STAKRM_ID, M.STAKRM_NM            ORDER BY M.STAKRM_ID        ) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfStakrmPagedList
+
+		SELECT C.stakrm_id		        ,C.stakrm_nm		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT M.STAKRM_ID, M.STAKRM_NM                    FROM TB_SRSTAKRM M, TB_SRBOOKSF N                    WHERE M.RECORD_CENTER_ID = '1'                                        AND M.RECORD_CENTER_ID = N.RECORD_CENTER_ID                    AND M.STAKRM_ID = N.STAKRM_ID                    GROUP BY M.STAKRM_ID, M.STAKRM_NM                    ORDER BY M.STAKRM_ID		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfStakrmBooksfPagedList
+
+		SELECT COUNT(1)        FROM TB_SRBOOKSF        WHERE RECORD_CENTER_ID = '1'        AND STAKRM_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfStakrmBooksfPagedList
+
+		SELECT C.booksf_id		        ,C.booksf_nm		        ,C.shelf_c_cnt		        ,C.shelf_r_cnt		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                ,A.*		        FROM (		            SELECT *		            FROM TB_SRBOOKSF		            WHERE RECORD_CENTER_ID = '1'		            AND STAKRM_ID = '1'		          	ORDER BY BOOKSF_ID		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfArngReList
+
+		UPDATE TB_SRBOOKSFARNGDETL		   SET STAKRM_ID = '1'		     , BOOKSF_ID = '1'		     , BOOKSF_SHELF_CNO = '1'		     , BOOKSF_SHELF_RNO = '1'		 WHERE RECORD_CENTER_ID = '1'		   AND BOOKSF_ARNG_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfArngReFolder
+
+		UPDATE TB_RDFOLDER		   SET BOOKSF_ARNG_FLAG = '2'     		 WHERE RECORD_CENTER_ID = '1'		 AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngReBarcodeList
+
+		SELECT A.RECORD_CENTER_ID			, A.FOLDER_ID			, REPLACE(A.STAKRM_MNG_NO,'-','') STAKRM_MNG_NO			, A.BOOKSF_ARNG_FLAG			, B.BOOKSF_ARNG_ID			, B.STAKRM_ID			, B.BOOKSF_ID			, B.BOOKSF_SHELF_CNO			, B.BOOKSF_SHELF_RNO		FROM  TB_RDFOLDER A			, TB_SRBOOKSFARNGDETL B		WHERE A.RECORD_CENTER_ID = '1' AND (REPLACE(A.STAKRM_MNG_NO,'-','') IN				 ('1','1','1') ) 		AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		AND  A.FOLDER_ID = B.FOLDER_ID(+);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countPresvBoxTrgtPagedList
+
+		SELECT COUNT(1)        FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B        WHERE B.record_center_id = '1'        AND   B.stakrm_id = '1'        AND   B.booksf_id = '1'        AND   B.booksf_shelf_cno = '1'        AND   B.booksf_shelf_rno = '1'        AND   A.record_center_id = B.record_center_id        AND   A.folder_id = B.folder_id        AND   A.folder_keep_state_cd IN ('01','04')        AND   A.booksf_arng_flag IN ('1', '2')         AND                  A.PRESV_BOX_ID IS NULL              AND                 A.PRESV_BOX_ID IS NULL              AND                 A.DISU_DIV_CD = '3'              AND                 A.LAST_EVAL_YYYY = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPresvBoxTrgtPagedList
+
+		SELECT E.folder_id		      ,E.title		      ,E.creat_yyyy		      ,E.stakrm_mng_no		      ,E.presv_box_id		      ,(CASE WHEN LENGTH(E.presv_box_id)=15 THEN SUBSTR(E.presv_box_id,1,3)||'-'||SUBSTR(E.presv_box_id,4,3)||'-'||SUBSTR(E.presv_box_id,7,3)||'-'||SUBSTR(E.presv_box_id,10,3)||'-'||SUBSTR(E.presv_box_id,13,3)		             WHEN LENGTH(E.presv_box_id)=19 THEN SUBSTR(E.presv_box_id,1,7)||'-'||SUBSTR(E.presv_box_id,8,2)||'-'||SUBSTR(E.presv_box_id,10,4)||'-'||SUBSTR(E.presv_box_id,14,6)		             ELSE E.presv_box_id		        END) AS box_id		      ,(E.stakrm_id||'-'||E.booksf_id||'-'||E.booksf_shelf_cno||'-'||E.booksf_shelf_rno) AS arng_info		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm		      ,(CASE WHEN E.disu_div_cd='3' THEN '재책정' END) AS disu_div_cd_nm    		      ,(CASE WHEN E.booksf_arng_flag='1' THEN '배치' WHEN E.booksf_arng_flag='2' THEN '재배치' END) AS booksf_arng_flag         		      ,(CASE WHEN E.presv_box_arng_flag='1' THEN '편성' WHEN E.presv_box_arng_flag='2' THEN '재편성' ELSE E.presv_box_arng_flag END) AS presv_box_arng_flag     		      ,E.org_cd || E.presv_term_cd || E.creat_yyyy AS org_presv_creat		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                ,C.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.FOLDER_ID,A.TITLE,A.CREAT_YYYY,A.STAKRM_MNG_NO		                  ,A.PRESV_BOX_ID,B.STAKRM_ID,B.BOOKSF_ID,B.BOOKSF_SHELF_CNO,B.BOOKSF_SHELF_RNO		                  ,A.ORG_CD,A.PRESV_TERM_CD,A.DISU_DIV_CD,A.BOOKSF_ARNG_FLAG,A.PRESV_BOX_ARNG_FLAG		            FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B		            WHERE B.record_center_id = '1'		            AND   B.stakrm_id = '1'		            AND   B.booksf_id = '1'		            AND   B.booksf_shelf_cno = '1'		            AND   B.booksf_shelf_rno = '1'		            AND   A.record_center_id = B.record_center_id		            AND   A.folder_id = B.folder_id		            AND   A.folder_keep_state_cd IN ('01','04')		            AND   A.booksf_arng_flag IN ('1', '2') AND  		                    A.PRESV_BOX_ID IS NULL		                  AND 		                    A.PRESV_BOX_ID IS NULL		                  AND 		                    A.DISU_DIV_CD = '3'		                  AND 		                    A.LAST_EVAL_YYYY = '1'		                  		            ORDER BY A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||A.CLSS_ID||'-'||A.CREAT_YYYY||'-'||A.FOLDER_REG_SEQ||'-'||A.HO_NO		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfPresvBoxPagedList
+
+		SELECT COUNT(*)        FROM TB_SRPRESVBOX        WHERE STAKRM_ID 	  = '1'        AND BOOKSF_ID 		  = '1'        AND BOOKSF_SHELF_CNO  = '1'        AND BOOKSF_SHELF_RNO  = '1'        AND RECORD_CENTER_ID  = '1'        AND PRESV_BOX_ID_RULE = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfPresvBoxPagedList
+
+		SELECT E.*		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT presv_box_id		            	  ,use_flag					      ,DECODE(use_flag,'0','미사용','사용') AS use_flag_nm					      ,(CASE WHEN presv_box_id_rule = '2' THEN SUBSTR(presv_box_id, 14, 6) ELSE SUBSTR(presv_box_id, 13, 3) END) AS box_id					      ,presv_box_id_rule		            FROM TB_SRPRESVBOX		            WHERE RECORD_CENTER_ID  = '1'		            AND STAKRM_ID 	  		= '1'		            AND BOOKSF_ID 		  	= '1'		            AND BOOKSF_SHELF_CNO  	= '1'		            AND BOOKSF_SHELF_RNO  	= '1'		            AND PRESV_BOX_ID_RULE 	= '1'		             AND 		            	PRESV_BOX_ID LIKE '1'		             		            ORDER BY USE_FLAG DESC, BOX_ID		        ) C		        WHERE ROWNUM <= '1'		    )D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : insert
+-- Query Id : createPresvBox
+
+ 		  	INSERT INTO TB_SRPRESVBOX (		  		RECORD_CENTER_ID		  	   ,PRESV_BOX_ID		  	   ,STAKRM_ID		  	   ,BOOKSF_ID		  	   ,BOOKSF_SHELF_CNO		  	   ,BOOKSF_SHELF_RNO		  	   ,PRESV_BOX_SNO		  	   ,ARNG_FOLDER_CNT		  	   ,USE_FLAG		  	   ,PRESV_BOX_ID_RULE		  	   ,WORK_USER_ID			) VALUES (				'1'		  	   ,(SELECT '1'||'1'||'1'||TRIM(TO_CHAR(NVL(MAX(PRESV_BOX_SNO),0) + 1,'000000'))	 		 	 FROM TB_SRPRESVBOX	             WHERE SUBSTR(PRESV_BOX_ID, 1, 7) = '1'			     AND SUBSTR(PRESV_BOX_ID, 8, 2) = '1'			   	 AND SUBSTR(PRESV_BOX_ID, 10, 4) = '1'			   	 AND RECORD_CENTER_ID = '1'			   	 AND PRESV_BOX_ID_RULE = '1')		  	   ,'1'		  	   ,'1'		  	   ,'1'		  	   ,'1'		  	   ,(SELECT NVL(MAX(PRESV_BOX_SNO),0) + 1	 			 FROM TB_SRPRESVBOX	             WHERE SUBSTR(PRESV_BOX_ID, 1, 7) = '1'			     AND SUBSTR(PRESV_BOX_ID, 8, 2) = '1'			   	 AND SUBSTR(PRESV_BOX_ID, 10, 4) = '1'			   	 AND RECORD_CENTER_ID = '1'			   	 AND PRESV_BOX_ID_RULE = '1')		  	   ,0		  	   ,'0'		  	   ,'1'		  	   ,'1'			)	  	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : delete
+-- Query Id : deletePresvBox
+
+		DELETE FROM TB_SRPRESVBOX		WHERE RECORD_CENTER_ID  = '1'		AND PRESV_BOX_ID 		= '1'		AND USE_FLAG 			= '0';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updatePresvBoxFolder
+
+		UPDATE TB_RDFOLDER		   SET PRESV_BOX_ID = '1'		       , PRESV_BOX_ARNG_FLAG = '1'		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updatePresvBox
+
+		UPDATE TB_SRPRESVBOX		   SET ARNG_FOLDER_CNT = (SELECT COUNT(1) 		                            FROM TB_RDFOLDER 		                           WHERE RECORD_CENTER_ID = '1'		                             		                         )		     , USE_FLAG = DECODE((SELECT COUNT(1) 		                            FROM TB_RDFOLDER 		                           WHERE RECORD_CENTER_ID = '1'	                               		                         ), 0, '0','1'		                         )		 WHERE RECORD_CENTER_ID = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateKeepPresvBoxCnt
+
+		UPDATE TB_SRBOOKSF		   SET KEEP_PRESV_BOX_CNT = (SELECT COUNT(1) 		                               FROM TB_SRPRESVBOX 		                              WHERE STAKRM_ID = '1'		                                AND BOOKSF_ID = '1'		                                AND RECORD_CENTER_ID = '1')		 WHERE STAKRM_ID = '1'		   AND BOOKSF_ID = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findIsPresvBox
+
+	    SELECT STAKRM_ID,BOOKSF_ID,BOOKSF_SHELF_CNO,BOOKSF_SHELF_RNO	    FROM TB_SRPRESVBOX	    WHERE RECORD_CENTER_ID='1'	    AND PRESV_BOX_ID='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findFolderMngInfo
+
+		SELECT B.STAKRM_ID				, B.BOOKSF_ID		        , B.BOOKSF_SHELF_CNO		        , B.BOOKSF_SHELF_RNO		        , A.PRESV_BOX_ID		        , A.ORG_CD		        , A.PRESV_TERM_CD		        , A.CREAT_YYYY		FROM TB_RDFOLDER A,TB_SRBOOKSFARNGDETL B 		WHERE A.RECORD_CENTER_ID='1'		AND A.RECORD_CENTER_ID=B.RECORD_CENTER_ID		AND A.FOLDER_ID=B.FOLDER_ID 		AND A.FOLDER_KEEP_STATE_CD IN ('01','04') 		AND REPLACE(A.STAKRM_MNG_NO,'-','')='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updatePresvBoxBarcode
+
+		UPDATE TB_RDFOLDER		   SET PRESV_BOX_ID = '1'		       , PRESV_BOX_ARNG_FLAG = '1'		 WHERE REPLACE(STAKRM_MNG_NO,'-','') = '1'		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updatePresvBoxBarcodeCnt
+
+		UPDATE TB_SRPRESVBOX		   SET ARNG_FOLDER_CNT = (SELECT COUNT(1) 		                            FROM TB_RDFOLDER 		                           WHERE PRESV_BOX_ID = '1'		                             AND RECORD_CENTER_ID = '1')		     , USE_FLAG = '1'		 WHERE PRESV_BOX_ID = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countPresvBoxPrintPagedList
+
+		SELECT COUNT(1)        FROM TB_SRPRESVBOX        WHERE RECORD_CENTER_ID = '1'        AND ARNG_FOLDER_CNT > 0 AND                      STAKRM_ID = '1'              AND                     STAKRM_ID = '1'              AND                     BOOKSF_ID = '1'              AND                     BOOKSF_SHELF_CNO = '1'              AND                     BOOKSF_SHELF_RNO = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPresvBoxPrintPagedList
+
+		SELECT C.*		FROM (		    SELECT B.*		    FROM (		        SELECT ROWNUM AS rnum		                    ,A.*		        FROM (		            SELECT PRESV_BOX_ID		                 , (CASE WHEN LENGTH(PRESV_BOX_ID)=15 THEN SUBSTR(PRESV_BOX_ID,1,3)||'-'||SUBSTR(PRESV_BOX_ID,4,3)||'-'||SUBSTR(PRESV_BOX_ID,7,3)||'-'||SUBSTR(PRESV_BOX_ID,10,3)||'-'||SUBSTR(PRESV_BOX_ID,13,3)		                          WHEN LENGTH(PRESV_BOX_ID)=19 THEN SUBSTR(PRESV_BOX_ID,1,7)||'-'||SUBSTR(PRESV_BOX_ID,8,2)||'-'||SUBSTR(PRESV_BOX_ID,10,4)||'-'||SUBSTR(PRESV_BOX_ID,14,6)		                          ELSE PRESV_BOX_ID		                  END) BOX_ID		                 , ARNG_FOLDER_CNT		            FROM TB_SRPRESVBOX		            WHERE RECORD_CENTER_ID = '1'		            AND ARNG_FOLDER_CNT > 0 AND  		                        STAKRM_ID = '1'		                  AND 		                        STAKRM_ID = '1'		                  AND 		                        BOOKSF_ID = '1'		                  AND 		                        BOOKSF_SHELF_CNO = '1'		                  AND 		                        BOOKSF_SHELF_RNO = '1'		                  		            ORDER BY BOX_ID		        ) A		        WHERE ROWNUM <= '1'		    ) B		    WHERE B.rnum >= '1'		) C		ORDER BY C.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPresvDocBoxLabelCreateYyyys
+
+		SELECT 			  DISTINCT C.CREAT_YYYY		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.PRESV_BOX_ID = '1'		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		   AND C.ORG_CD = D.ORG_CD	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocboxLabelOrgNms
+
+		SELECT 			  DISTINCT D.ORG_NM		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.PRESV_BOX_ID = '1'		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		   AND C.ORG_CD = D.ORG_CD	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocboxLabelUnitNms
+
+		SELECT 			   C.CLSS_NM		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.PRESV_BOX_ID = '1'		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		   AND C.ORG_CD = D.ORG_CD		ORDER BY C.CLSS_NM, C.TITLE, C.FOLDER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocboxLabel
+
+		SELECT 			   C.STAKRM_MNG_NO,			   C.TITLE		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.PRESV_BOX_ID = '1'		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		   AND C.ORG_CD = D.ORG_CD		ORDER BY C.CLSS_NM, C.TITLE, C.FOLDER_ID;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfLabelPagedList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D        WHERE A.RECORD_CENTER_ID = '1'        AND A.STAKRM_MNG_NO IS NOT NULL        AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')        AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')        AND A.ORG_CD = D.ORG_CD        AND A.FOLDER_KEEP_STATE_CD IN ('01','04')        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID         AND                 A.CUR_KEEP_ORG_CD = '1'             AND                A.CUR_KEEP_ORG_CD = '1'             AND                (A.TAKE_YYYY BETWEEN '1' AND '1')             AND                A.ORG_CD = '1'             AND                A.FOLDER_TYPE_DIV_CD = '1'             AND                A.CREAT_SYS_CD = '1'             AND                (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')             AND                (A.STAKRM_MNG_NO BETWEEN '1' AND '1')             AND            	   A.LABEL_FLAG = '1'             AND 			  EXISTS (SELECT 1			         FROM TB_SRBOOKSFARNGDETL Z 			        WHERE A.RECORD_CENTER_ID=Z.RECORD_CENTER_ID 			              AND A.FOLDER_ID = Z.FOLDER_ID 			              AND Z.STAKRM_ID = '1'			               AND 			               Z.BOOKSF_ID = '1'				                AND 				               		Z.BOOKSF_SHELF_CNO = '1'				                 AND 				               		Z.BOOKSF_SHELF_RNO = '1'				                 			              AND A.BOOKSF_ARNG_FLAG IN ('1','2')			              AND A.RECORD_CENTER_ID = Z.RECORD_CENTER_ID AND A.FOLDER_ID = Z.FOLDER_ID			       )			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfLabelPagedList
+
+		SELECT G.folder_id		      ,G.org_cd		      ,G.org_nm		      ,G.org_abbr_nm		      ,G.title		      ,G.presv_term_nm		      ,G.creat_yyyy		      ,G.stakrm_mng_no		      ,G.folder_detl_type_nm		      ,DECODE(G.label_flag, '1', '유', '무') AS label_flag		      ,G.presv_box_no		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		              ,E.*		        FROM (		            SELECT A.FOLDER_ID, A.ORG_CD, D.ORG_NM, D.ORG_ABBR_NM, A.TITLE		                  ,B.COM_CD_NM PRESV_TERM_NM, A.CREAT_YYYY, A.STAKRM_MNG_NO, C.COM_CD_NM AS FOLDER_DETL_TYPE_NM, A.LABEL_FLAG		                  ,(SELECT BATCH_NO 		                    FROM (SELECT ROW_NUMBER() OVER (PARTITION BY B.RECORD_CENTER_ID, B.FOLDER_ID ORDER BY A.ARNG_YMD DESC, SNO DESC) AS SORT_NUM		                                ,A.RECORD_CENTER_ID		                                ,B.FOLDER_ID		                                ,B.STAKRM_ID||'/'|| B.BOOKSF_ID||'/'|| B.BOOKSF_SHELF_CNO||'/'|| B.BOOKSF_SHELF_RNO AS BATCH_NO 		                          FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B 		                          WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 		                          AND A.BOOKSF_ARNG_ID = B.BOOKSF_ARNG_ID 		                          AND A.FIN_FLAG = '1' )E 		                    WHERE SORT_NUM = '1' 		                    AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID 		                    AND E.FOLDER_ID = A.FOLDER_ID) AS PRESV_BOX_NO		             FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D		             WHERE A.RECORD_CENTER_ID = '1'		             AND A.STAKRM_MNG_NO IS NOT NULL		             AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')		             AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')		             AND A.ORG_CD = D.ORG_CD		             AND A.FOLDER_KEEP_STATE_CD IN ('01','04')		             AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID		              AND  		                    A.CUR_KEEP_ORG_CD = '1'		                  AND 		                    A.CUR_KEEP_ORG_CD = '1'		                  AND 		                    (A.TAKE_YYYY BETWEEN '1' AND '1')		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    A.FOLDER_TYPE_DIV_CD = '1'  AND 		                    A.CREAT_SYS_CD = '1'		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.STAKRM_MNG_NO BETWEEN '1' AND '1')		                  AND 		                	A.LABEL_FLAG = '1'		                  AND 						  EXISTS (SELECT 1						         FROM TB_SRBOOKSFARNGDETL Z 						        WHERE A.RECORD_CENTER_ID=Z.RECORD_CENTER_ID 						              AND A.FOLDER_ID = Z.FOLDER_ID 						              AND Z.STAKRM_ID = '1'						               AND 						               Z.BOOKSF_ID = '1'							                AND 							               		Z.BOOKSF_SHELF_CNO = '1'							                 AND 							               		Z.BOOKSF_SHELF_RNO = '1'							                 						              AND A.BOOKSF_ARNG_FLAG IN ('1','2')						       )  		             ORDER BY PRESV_BOX_NO, STAKRM_MNG_NO		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocBooksfLabelList
+
+		SELECT FOLDER_ID		     , replace(STAKRM_MNG_NO,'-','') AS STAKRM_MNG_NO		     , STAKRM_MNG_NO AS STAKRM_MNG_NO_F		  FROM TB_RDFOLDER		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findPrintDocBooksfLabelBatchList
+
+		SELECT A.FOLDER_ID			 , A.STAKRM_MNG_NO		  FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D		 WHERE A.STAKRM_MNG_NO IS NOT NULL		   AND (A.PRESV_TERM_CD = B.COM_CD and B.COM_TYPE_CD = 'RD07')		   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')		   AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')		   AND A.RECORD_CENTER_ID = '1'		   AND A.ORG_CD = D.ORG_CD		   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID AND  				A.CUR_KEEP_ORG_CD = '1'			  AND 				A.CUR_KEEP_ORG_CD = '1'			  AND 				A.PRESV_TERM_CD = '1'			  AND 				(A.TAKE_YYYY BETWEEN '1' AND '1')			  AND 				A.ORG_CD = '1'			  AND 				A.FOLDER_TYPE_DIV_CD = '1'			  AND 				A.CREAT_SYS_CD = '1'			  AND 				(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')			  AND 				(A.STAKRM_MNG_NO BETWEEN '1' AND '1')			  AND 				A.LABEL_FLAG = '1'			  		ORDER BY A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||A.CLSS_ID||'-'||A.CREAT_YYYY||'-'||A.FOLDER_REG_SEQ||'-'||A.HO_NO	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfLabelPrintBatch
+
+		UPDATE  TB_RDFOLDER Z		SET 	LABEL_FLAG = '1'		WHERE 	EXISTS (			SELECT 1			  FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D			 WHERE A.STAKRM_MNG_NO IS NOT NULL			   AND (A.PRESV_TERM_CD = B.COM_CD and B.COM_TYPE_CD = 'RD07')			   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')			   AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')			   AND A.RECORD_CENTER_ID = '1'			   AND A.ORG_CD = D.ORG_CD			   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID			   AND A.RECORD_CENTER_ID = Z.RECORD_CENTER_ID			   AND  A.FOLDER_ID = Z.FOLDER_ID AND  					A.CUR_KEEP_ORG_CD = '1'				  AND 					A.CUR_KEEP_ORG_CD = '1'				  AND 					A.PRESV_TERM_CD = '1'				  AND 					(A.TAKE_YYYY BETWEEN '1' AND '1')				  AND 					A.ORG_CD = '1'				  AND 					A.FOLDER_TYPE_DIV_CD = '1'				  AND 					A.CREAT_SYS_CD = '1'				  AND 					(A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')				  AND 					(A.STAKRM_MNG_NO BETWEEN '1' AND '1')				  		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : update
+-- Query Id : updateBooksfLabelPrint
+
+		UPDATE  TB_RDFOLDER		SET 	LABEL_FLAG = '1'		WHERE 	RECORD_CENTER_ID = '1'		AND 	FOLDER_ID 		 = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : countBooksfArngStatePagedList
+
+		SELECT COUNT(1)        FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B        WHERE A.RECORD_CENTER_ID = '1'        AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')        AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')        AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID        AND   B.FOLDER_ID = A.FOLDER_ID         AND                  A.ORG_CD = '1'              AND                 A.ORG_CD = '1'              AND                 (A.CREAT_YYYY BETWEEN '1' AND '1')              AND                 A.PRESV_TERM_CD = '1'              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              AND                 (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')              AND                 B.STAKRM_ID = '1'              AND                 B.BOOKSF_ID = '1'              AND                 B.BOOKSF_ARNG_ID = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml
+-- Query    : select
+-- Query Id : findBooksfArngStatePagedList
+
+		SELECT E.folder_id		      ,E.title		      ,E.creat_yyyy		      ,E.stakrm_mng_no		      ,E.presv_box_id		      ,(CASE WHEN LENGTH(E.presv_box_id)=15 		             THEN (SELECT Z.stakrm_nm FROM TB_SRSTAKRM Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = SUBSTR (E.presv_box_id, 1, 3)) || '-' || 		                  (SELECT Z.booksf_nm FROM TB_SRBOOKSF Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = SUBSTR (E.presv_box_id, 1, 3) AND Z.booksf_id = SUBSTR (E.presv_box_id, 4, 3)) || '-' || 		                  TO_NUMBER(SUBSTR (E.presv_box_id, 7, 3)) || '층-' || 		                  TO_NUMBER(SUBSTR (E.presv_box_id, 10, 3)) || '열-' || 		                   SUBSTR (E.presv_box_id, 13, 3)		             WHEN LENGTH(E.presv_box_id)=19 		             THEN SUBSTR(E.presv_box_id,1,7)||'-'||SUBSTR(E.presv_box_id,8,2)||'-'||SUBSTR(E.presv_box_id,10,4)||'-'||SUBSTR(E.presv_box_id,14,6)		             ELSE E.presv_box_id		        END) AS box_id 		      ,(E.stakrm_id||'-'||E.booksf_id||'-'||E.booksf_shelf_cno||'-'||E.booksf_shelf_rno) AS arng_info		      ,(SELECT Z.stakrm_nm FROM TB_SRSTAKRM Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = E.stakrm_id)||'-'||		       (SELECT Z.booksf_nm FROM TB_SRBOOKSF Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = E.stakrm_id AND Z.booksf_id = E.booksf_id)||'-'||		       TO_NUMBER(E.booksf_shelf_cno)||'층-'||		       TO_NUMBER(E.booksf_shelf_rno)||'열' AS arng_info_nm		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm		      ,CREAT_SYS_CD || '-' || ORG_CD || '-' || CLSS_ID || '-' || CREAT_YYYY || '-' || FOLDER_REG_SEQ AS folder_clss_no		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.RECORD_CENTER_ID, A.ORG_CD, A.FOLDER_ID, A.TITLE, A.CREAT_YYYY		                  ,A.STAKRM_MNG_NO, A.PRESV_BOX_ID, B.STAKRM_ID, B.BOOKSF_ID, B.BOOKSF_SHELF_CNO		                  ,B.BOOKSF_SHELF_RNO, A.PRESV_TERM_CD		                  ,A.CREAT_SYS_CD, A.CLSS_ID, A.FOLDER_REG_SEQ		            FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B		            WHERE A.RECORD_CENTER_ID = '1'		            AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')		            AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')		            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND   B.FOLDER_ID = A.FOLDER_ID AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    A.PRESV_TERM_CD = '1'		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                  AND 		                    B.STAKRM_ID = '1'		                  AND 		                    B.BOOKSF_ID = '1'		                  AND 		                    B.BOOKSF_ARNG_ID = '1'		                  		            ORDER BY A.PRESV_BOX_ID,A.STAKRM_MNG_NO		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\Booksf.xml

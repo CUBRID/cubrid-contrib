@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.file.download">
+
+	<!-- 
+		파일정보조회 : 접수파일(TK) 
+	 -->
+	<resultMap id="findTkAttachFile-result" class="rms.common.file.domain.TkAttachFile">
+			<result property="recordCenterId" 			column="record_center_id"/>
+			<result property="recordTakeSeq" 			column="record_take_seq"/>
+			<result property="regSeq" 					column="reg_seq"/>
+			<result property="docTypeCd" 				column="doc_type_cd"/>
+			<result property="fileNm" 					column="file_nm"/>
+			<result property="attachFilePath" 			column="attach_file_path"/>
+			<result property="attachFileType"			column="attach_file_type" />
+	</resultMap>
+	<select id="findTkAttachFile" parameterClass="rms.common.file.domain.TkAttachFile" resultMap="findTkAttachFile-result">
+		SELECT record_center_id
+		     , record_take_seq
+		     , attach_file_type
+		     , reg_seq
+		     , doc_type_cd
+		     , file_nm
+		     , attach_file_path
+		FROM  TB_TKATTACHFILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_take_seq = #recordTakeSeq:VARCHAR#
+		AND   attach_file_type = #attachFileType:VARCHAR#
+		AND   reg_seq = #regSeq:VARCHAR#
+	</select>
+
+	<!-- 
+		파일정보조회 : 접수파일(RC) 
+	 -->
+	<resultMap id="findRcAttachFile-result" class="rms.common.file.domain.OrignFile">
+			<result property="recordCenterId" 			column="record_center_id"/>
+			<result property="recordId"		 			column="record_id"/>
+			<result property="docTypeCd" 				column="doc_type_cd"/>
+			<result property="docTypeSno" 				column="doc_type_sno"/>
+			<result property="fileNm" 					column="file_nm"/>
+			<result property="filePath"					column="file_path" />
+	</resultMap>
+	<select id="findRcAttachFile" parameterClass="rms.common.file.domain.OrignFile" resultMap="findRcAttachFile-result">
+		SELECT record_center_id
+		     , record_id
+		     , doc_type_cd
+		     , doc_type_sno
+		     , file_nm
+		     , file_path
+		FROM  TB_RCORIGNFILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   record_id = #recordId:VARCHAR#
+		AND   doc_type_cd = #docTypeCd:VARCHAR#
+		AND   doc_type_sno = #docTypeSno:VARCHAR#
+	</select>
+	
+	<!-- 
+		파일정보조회 : 정부간행물첨부파일
+	 -->
+	<resultMap id="findPublFile-result" class="rms.common.file.domain.PublFile">
+			<result property="recordCenterId" 		column="record_center_id"/>
+			<result property="publRegId" 			column="publ_reg_id"/>
+			<result property="publFileReq"	 		column="publ_file_req"/>
+			<result property="publFileId" 			column="publ_file_id"/>
+			<result property="publfilePath" 		column="publfile_path"/>
+			<result property="storeFileNm" 			column="store_file_nm"/>
+	</resultMap>
+	<select id="findPublFile" parameterClass="rms.common.file.domain.PublFile" resultMap="findPublFile-result">
+		SELECT record_center_id
+            , publ_reg_id
+            , publ_file_req
+            , publ_file_id
+            , publfile_path
+            , store_file_nm
+        FROM  TB_GVPUBL_FILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   publ_reg_id = #publRegId:VARCHAR#
+		AND   publ_file_req = #publFileReq:VARCHAR#
+		AND   publ_reg_seq = #publRegSeq:VARCHAR#
+	</select>
+
+	<!-- 
+		파일정보조회 : 행정박물첨부파일
+	 -->
+	<resultMap id="findMuseumFile-result" class="rms.common.file.domain.MuseumFile">
+		<result property="recordCenterId"		column="record_center_id"/>
+		<result property="admnatnlId"			column="admnatnl_id"/>
+		<result property="imgSeq"				column="img_seq"/>
+		<result property="imgfileNm"			column="imgfile_nm"/>
+		<result property="imgfilePath"			column="imgfile_path"/>
+		<result property="storeFileNm"			column="store_file_nm"/>
+	</resultMap>
+	<select id="findMuseumFile" parameterClass="rms.common.file.domain.MuseumFile" resultMap="findMuseumFile-result">
+		SELECT record_center_id
+			, admnatnl_id
+			, img_seq
+			, imgfile_nm
+			, imgfile_path
+			, store_file_nm
+		FROM  TB_ADARCHIVALOBJIMG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   admnatnl_id = #admnatnlId:VARCHAR#
+		AND   img_seq = #imgSeq:VARCHAR#
+	</select>
+	
+	<resultMap id="findDetailRdRecordDRM-result" class="rms.common.detail.domain.Record">
+		<result property="openDivCd"				column="open_div_cd" />
+		<result property="erecordFlag"				column="erecord_flag" />
+	</resultMap>
+	
+	<select id="findDetailRdRecordDRM" parameterClass="rms.common.file.domain.OrignFile" resultMap="findDetailRdRecordDRM-result">
+		SELECT A.OPEN_DIV_CD, A.ERECORD_FLAG
+		  FROM TB_RDRECORD A
+		 WHERE     A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		       AND A.RECORD_ID =
+		              (SELECT RECORD_ID
+		                 FROM TB_STRECORDORIGN
+		                WHERE     RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		                      AND ORIGN_ID =
+		                             (SELECT DISTINCT ORIGN_ID
+		                                FROM TB_STORIGNFILE
+		                               WHERE     RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		                                     AND ORIGN_FILE_ID = #orignFileId:VARCHAR#
+		                              ))
+	</select>
+</sqlMap>

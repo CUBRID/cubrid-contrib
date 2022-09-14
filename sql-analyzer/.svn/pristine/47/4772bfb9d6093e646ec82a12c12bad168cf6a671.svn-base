@@ -1,0 +1,53 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : select
+-- Query Id : findRcTakovrSetPlanPagedList
+
+		SELECT D.record_center_id	        ,D.takovr_rep_cd||'-'||D.takovr_yyyy||'-'||lpad(to_char(D.takovr_sno), 6, '0') takovr_mng_no	        ,D.takovr_rep_cd	        ,D.takovr_yyyy	        ,D.takovr_sno	        ,D.takovr_prog_state_cd	        ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z where Z.com_type_cd = 'DF06' and Z.com_cd = D.takovr_prog_state_cd) takovr_prog_state_nm	        ,D.takovr_rep_nm	        ,D.take_rep_cd	        ,D.take_rep_nm	        ,D.takovr_rsn	        ,D.reg_dtime	    FROM (	    	SELECT C.*	    	FROM (	    		SELECT ROWNUM AS rnum	    			, B.*	    		FROM (					SELECT A.record_center_id				        ,A.takovr_rep_cd				        ,A.takovr_yyyy				        ,A.takovr_sno				        ,A.takovr_prog_state_cd				        ,A.takovr_rep_nm				        ,A.take_rep_cd				        ,A.take_rep_nm				        ,A.takovr_rsn				        ,A.reg_dtime					FROM TB_DFTAKOVRPLAN A					 WHERE  							A.take_rep_cd = '1'						  AND 							A.take_rep_cd = '1'						  AND 							A.takovr_yyyy = '1'						  AND 							A.takovr_prog_state_cd = '1'						  AND 							A.take_rep_nm like '1'						  					AND A.record_center_id = '1'					AND A.takovr_prog_state_cd != '05'					ORDER BY A.takovr_rep_cd, A.takovr_yyyy, A.takovr_sno DESC				) B				WHERE ROWNUM <= '1'			) C			WHERE C.rnum >= '1'		) D;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : select
+-- Query Id : countRcTakovrSetPlanPagedList
+
+		SELECT COUNT(1)		FROM TB_DFTAKOVRPLAN A WHERE  				A.take_rep_cd = '1'			  AND 				A.take_rep_cd = '1'			  AND 				A.takovr_yyyy = '1'			  AND 				A.takovr_prog_state_cd = '1'			  AND 				A.take_rep_nm like '1'			  		AND A.record_center_id = '1'		AND A.takovr_prog_state_cd != '05';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : insert
+-- Query Id : createRcTakovrSetPlan
+
+		INSERT INTO TB_DFTAKOVRPLAN             (takovr_rep_cd, takovr_yyyy, takovr_sno, record_center_id, takovr_rep_nm            ,take_rep_cd, take_rep_nm, takovr_rsn, takovr_prog_state_cd, takovr_file_state_cd, reg_user_id, reg_dtime        )        VALUES(             '1', '1', (SELECT NVL(MAX(Z.takovr_sno),0)+1 takovrSno                                                             FROM   TB_DFTAKOVRPLAN Z                                                             WHERE  Z.takovr_rep_cd    = '1'                                                             AND    Z.takovr_yyyy      = '1'), '1', '1'            ,'1', '1', '1', '01', '01', '1'	, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')        );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : update
+-- Query Id : updateRcTakovrSetPlan
+
+		UPDATE TB_DFTAKOVRPLAN		   SET take_rep_cd 	= '1'		      ,take_rep_nm 	= '1'		      ,takovr_rsn 	= '1'		 WHERE takovr_rep_cd = '1'		   AND takovr_yyyy 	 = '1'		   AND takovr_sno 	 = '1'		   AND record_center_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : delete
+-- Query Id : deleteRcTakovrRecordList
+
+		DELETE FROM TB_DFTAKOVRRECORDLIST		WHERE takovr_rep_cd = '1'		AND takovr_yyyy = '1'		AND takovr_sno = '1'		AND record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : delete
+-- Query Id : deleteRcTakovrFolderList
+
+		DELETE FROM TB_DFTAKOVRFOLDERLIST		WHERE takovr_rep_cd = '1'		AND takovr_yyyy = '1'		AND takovr_sno = '1' 		AND record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml
+-- Query    : delete
+-- Query Id : deleteRcTakovrSetPlan
+
+		DELETE FROM TB_DFTAKOVRPLAN 		 WHERE takovr_rep_cd 	= '1'		   AND takovr_yyyy 		= '1'		   AND takovr_sno 		= '1'		   AND record_center_id = '1'	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrSetPlan.xml

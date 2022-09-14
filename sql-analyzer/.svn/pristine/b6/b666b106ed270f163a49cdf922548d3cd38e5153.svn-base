@@ -1,0 +1,746 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTransCheckDate
+
+		SELECT  '00000' AS resultCode		FROM 	TB_TKORGTAKESCHED		WHERE   record_center_id = '1'		AND 	take_yyyy = '1'		AND 	take_org_cd = '1'		AND 	TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN erecord_take_start_plan_ymd AND erecord_take_close_plan_ymd;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findOrgCdByReturnFlag
+
+		SELECT	COUNT(1)		FROM  	TB_TKORGTAKEPLAN		WHERE 	record_center_id 	= '1' 		AND		take_org_cd 		= '1'		AND 	take_yyyy 			= '1'		AND		creat_sys_cd 		= '02'		AND		take_state_div_cd 	= '07'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findSelectTakeSno
+
+		SELECT  take_sno		FROM    TB_TKORGTAKEPLAN		WHERE	record_center_id = '1'		AND		take_yyyy = '1'		AND		take_org_cd = '1'		AND		creat_sys_cd = '02'		AND		take_state_div_cd = '07'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findSelectedTakeSno
+
+		SELECT  MAX(take_sno)		FROM    TB_TKORGTAKEPLAN		WHERE	record_center_id = '1'		AND		take_yyyy = '1'		AND		take_org_cd = '1'		AND		creat_sys_cd = '02';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findMaxTakeSno
+
+		SELECT  NVL(MAX(take_sno), 0)+1 take_sno		FROM    TB_TKORGTAKEPLAN		WHERE	record_center_id = '1'		AND		take_yyyy = '1'		AND		take_org_cd = '1'		AND		creat_sys_cd = '02'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : countUndTakeOrgNotEnd
+
+		SELECT	COUNT(1)		FROM  	TB_TKORGTAKEPLAN		WHERE 	record_center_id = '1'		AND 	take_yyyy = '1'		AND		take_org_cd = '1'		AND		creat_sys_cd = '1'		AND		take_state_div_cd IN ('03','04','05','06','09')		AND     recv_fin_state_cd != '2';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findOrgCdByStatusFlag
+
+		SELECT	COUNT(1)		FROM  	TB_TKORGTAKEPLAN		WHERE 	record_center_id = '1'		AND 	take_yyyy = '1'		AND		take_org_cd = '1'		AND		creat_sys_cd = '1'		AND		take_state_div_cd = '03'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeFolderTypeDivCdCheck
+
+		SELECT com_cd		FROM   TB_ZZCOMCD		WHERE  com_type_cd = 'RD01'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakePresvTermCdCheck
+
+		SELECT com_cd		FROM   TB_ZZCOMCD		WHERE  com_type_cd = 'RD57'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakePresvMethodCdCheck
+
+		SELECT com_cd		FROM   TB_ZZCOMCD		WHERE  com_type_cd = 'RD09'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakePresvAreaCdCheck
+
+		SELECT com_cd		FROM   TB_ZZCOMCD		WHERE  com_type_cd = 'RD10'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeClssNm
+
+		SELECT	unit_nm		FROM 	TB_ZZUNIT		WHERE 	record_center_id = '1'		AND 	unit_cd = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecordCenterId
+
+		SELECT record_center_id		FROM   TB_STORG		WHERE  org_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeOrgCdCheck
+
+		SELECT  COUNT(1) 		FROM    TB_STORG		WHERE   record_center_id = '1' 		AND     org_cd = '1' ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeFolderCheck
+
+		SELECT  COUNT(1) 		FROM    TB_TKFOLDER		WHERE   creat_sys_cd = '02'		AND     org_cd          = '1'		AND	    clss_id         = '1'		AND	    creat_yyyy      = '1'		AND	    folder_reg_seq  = '1'		AND	    ho_no           = '1'		AND		(rjct_flag		= '0' OR rjct_flag is null)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeFolderTitle
+
+		SELECT  title 		FROM    TB_TKFOLDER		WHERE   creat_sys_cd = '02'		AND     org_cd          = '1'		AND	    clss_id         = '1'		AND	    creat_yyyy      = '1'		AND	    folder_reg_seq  = '1'		AND	    ho_no           = '1'		AND 	take_sno 		= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecordCheck
+
+		SELECT COUNT(1)		FROM TB_TKRECORD A, TB_TKFOLDER B		WHERE A.CREAT_SYS_CD = '02' 		AND A.CREAT_YYYY = '1'		AND A.CREAT_REG_NO = '1'		AND A.DTCH_REG_NO = '1'		AND (B.RJCT_FLAG = '0' OR B.RJCT_FLAG IS NULL)		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		AND A.FOLDER_TAKE_SEQ = B.FOLDER_TAKE_SEQ	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecordTitle
+
+		SELECT  A.title 		FROM    TB_TKRECORD A, TB_TKFOLDER B		WHERE	A.record_center_id 	= B.record_center_id		AND 	A.folder_take_seq 	= B.folder_take_seq   		AND 	A.creat_sys_cd 		= '02'		AND	    A.creat_yyyy   		= '1'		AND	    A.creat_reg_no 		= '1'		AND	    A.dtch_reg_no  		= '1'		AND 	B.take_sno 			= '1'			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecordCheckAll
+
+		SELECT  COUNT(1) 		FROM    TB_TKRECORD		WHERE   creat_sys_cd = '02'		AND     org_cd = '1'		AND     creat_yyyy = '1'		AND     creat_reg_no = '1'		AND     dtch_reg_no = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeFolderAndRecordTitle
+
+		SELECT  substr(a.folder_clss_no,0,7)||'-'|| substr(a.folder_clss_no,8,8)||'-'||substr(a.folder_clss_no, 16, 4)||'-'||substr(a.folder_clss_no, 20, 6)||'-'||substr(a.folder_clss_no, 26, 3) folder_clss_no		        , B.title folder_title		        , A.title record_title		FROM    TB_TKRECORD A, TB_TKFOLDER B		WHERE 	A.record_center_id = B.record_center_id		AND 	A.folder_take_seq = B.folder_take_seq		AND 	A.creat_sys_cd = '02'		AND     A.org_cd = '1'		AND     A.creat_yyyy = '1'		AND     A.creat_reg_no = '1'		AND     A.dtch_reg_no = '1'		AND 	B.take_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeGfileDubFolderCheck
+
+		SELECT  take_org_cd, take_yyyy		FROM    TB_TKFOLDER		WHERE   record_center_id 	= '1'		AND     creat_sys_cd 		= '02'		AND     org_cd 				= '1'		AND     clss_id 			= '1'		AND     creat_yyyy 			= '1'		AND     folder_reg_seq 		= '1'		AND		ho_no 				= '1'		AND 	(rjct_flag 			= '0' OR rjct_flag is null);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findMaxFolderRecvSeq
+
+		SELECT TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkfolder_sq01.nextval), 15, '0')  		FROM     dual;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeDocDubRecordCheck
+
+		SELECT  a.take_org_cd, a.take_yyyy		FROM    TB_TKFOLDER a, TB_TKRECORD b		WHERE   a.record_center_id 	= b.record_center_id		AND     a.folder_take_seq 	= b.folder_take_seq		AND     b.creat_sys_cd 		= '02'		AND     b.org_cd 			= '1'		AND     b.creat_yyyy 		= '1'		AND     b.creat_reg_no 		= '1'		AND     b.dtch_reg_no 		= '1'		AND		(A.rjct_flag 		= '0' OR A.rjct_flag is null);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findMaxRecordTakeSeq
+
+		SELECT  TO_CHAR(SYSDATE,'YYYY')||LPAD((tb_tkrecord_sq01.nextval), 15, '0') 		FROM     dual;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findMaxDocTypeSno
+
+		SELECT  NVL(MAX(doc_type_sno), 0)+1 doc_type_sno		FROM    TB_TKATTACHFILE		WHERE   record_center_id = '1'		AND	    record_take_seq = '1'		AND	    doc_type_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeEfileCheck
+
+		SELECT COUNT(1)		FROM   TB_TKATTACHFILE A		     , TB_TKRECORD B		WHERE  A.record_center_id   = '1'		AND    A.creat_reg_no 		= '1'		AND    A.creat_yyyy 		= '1'		AND    A.attach_file_seq 	= '1'		AND	   A.doc_type_cd 		= '1'		AND    A.record_center_id 	= B.record_center_id		AND    A.record_take_seq 	= B.record_take_seq		AND    B.creat_sys_cd = '02'		AND    (SELECT Z.take_sno FROM tb_tkfolder Z WHERE Z.record_center_id = B.record_center_id AND Z.folder_take_seq = B.folder_take_seq) = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeAttachFileCheck
+
+		SELECT COUNT(1)		FROM   TB_TKATTACHFILE A		     , TB_TKRECORD B		WHERE  A.record_center_id 	= '1'		AND    A.creat_reg_no 		= '1'		AND    A.creat_yyyy 		= '1'		AND    A.attach_file_seq 	= '1'		AND	   A.doc_type_cd 		= '1'		AND    A.record_center_id 	= B.record_center_id		AND    A.record_take_seq 	= B.record_take_seq		AND    B.creat_sys_cd 		= '02'		AND    (SELECT Z.take_sno FROM tb_tkfolder Z WHERE Z.record_center_id = B.record_center_id AND Z.folder_take_seq = B.folder_take_seq) = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeDocFileCheck
+
+		SELECT COUNT(1)		FROM   TB_TKRECORD B		WHERE  B.record_center_id 	= '1'		AND    B.creat_sys_cd 		= '02'		AND    B.creat_reg_no 		= '1'		AND    B.creat_yyyy 		= '1'		AND    (SELECT Z.take_sno FROM tb_tkfolder Z WHERE Z.record_center_id = B.record_center_id AND Z.folder_take_seq = B.folder_take_seq) = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeDataFormatCheckList
+
+		SELECT	com_cd, com_cd_nm		FROM 	TB_ZZCOMCD		WHERE 	com_type_cd = 'RD08'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeEfileCntCheckList
+
+		SELECT folder_take_seq, MAX(folder_efile_cnt) AS folder_efile_cnt, MAX(attach_efile_cnt) AS attach_efile_cnt, MAX(folder_clss_no) as folder_clss_no, MAX(title) as title, MAX(line_no) as line_no		FROM 					(					SELECT folder_take_seq, TO_NUMBER(efile_cnt) AS folder_efile_cnt, 0 AS attach_efile_cnt						   ,org_cd||'-'||clss_id||'-'||creat_yyyy||'-'||folder_reg_seq||'-'||ho_no folder_clss_no       					   ,title, line_no					FROM 	TB_TKFOLDER					WHERE record_center_id = '1'					AND 		creat_sys_cd = '1'					AND 		take_org_cd = '1'					AND 		take_yyyy = '1'					AND 		take_sno = '1'					AND 		TO_NUMBER(efile_cnt) > 0					UNION ALL					SELECT A.folder_take_seq, 0 AS folder_efile_cnt, SUM(DECODE(c.file_nm,'',0,NULL,0,1)) AS attach_efile_cnt					       ,MAX(A.org_cd)||'-'||MAX(A.clss_id)||'-'||MAX(A.creat_yyyy)||'-'||MAX(A.folder_reg_seq)||'-'||MAX(A.ho_no)        			 	   ,MAX(A.title), MAX(A.line_no)					FROM 	TB_TKFOLDER a, TB_TKRECORD b, TB_TKATTACHFILE c					WHERE A.record_center_id = '1'					AND 		A.creat_sys_cd = '1'					AND 		A.take_org_cd = '1'					AND 		A.take_yyyy = '1'					AND 		A.take_sno = '1'					AND 		A.record_center_id = b.record_center_id					AND 		A.folder_take_seq = b.folder_take_seq					AND 		b.record_center_id = c.record_center_id					AND 		b.record_take_seq = c.record_take_seq					GROUP BY A.record_center_id, A.folder_take_seq					)		GROUP BY folder_take_seq		ORDER BY folder_take_seq	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeEfileRecvCheckList
+
+		SELECT   B.record_center_id			   , B.record_take_seq			   , MAX(A.org_cd)||'-'||MAX(A.clss_id)||'-'||MAX(A.creat_yyyy)||'-'||MAX(A.folder_reg_seq)||'-'||MAX(A.ho_no) folder_clss_no		       , MAX(B.creat_yyyy)||'-'||MAX(B.org_cd)||'-'||MAX(substr(B.creat_reg_no, 8, 13))||'-'||MAX(B.dtch_reg_no) record_reg_no		       , MAX(A.title) folder_title     		   , MAX(B.title) title     		   , MAX(B.line_no) line_no		FROM  TB_TKFOLDER A, TB_TKRECORD B, TB_TKATTACHFILE C		WHERE A.record_center_id = '1'		AND   A.creat_sys_cd = '1'		AND   A.take_org_cd = '1'		AND   A.take_yyyy = '1'		AND   A.take_sno = '1'		AND   A.record_center_id = B.record_center_id		AND   A.folder_take_seq = B.folder_take_seq		AND   B.record_center_id = C.record_center_id		AND   B.record_take_seq = C.record_take_seq		AND   C.file_nm IS NULL		GROUP BY B.record_center_id, B.record_take_seq		ORDER BY B.record_center_id, B.record_take_seq;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeIngTakeSno
+
+		SELECT	take_sno		FROM 	TB_TKORGTAKEPLAN		WHERE 	record_center_id = '1'		AND   	take_yyyy = '1'		AND 	take_org_cd = '1'		AND		creat_sys_cd = '1'		AND		take_state_div_cd = '03'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeCntCheck
+
+			SELECT	record_center_id, folder_take_seq,				org_cd, clss_id, creat_yyyy,	   			folder_reg_seq, ho_no, title,			   	TO_NUMBER(folder_list_cnt) AS folder_list_cnt, 			   	record_real_cnt, line_no		FROM 				(					SELECT	a.record_center_id, a.folder_take_seq, 							MAX(a.org_cd) AS org_cd, MAX(a.clss_id) AS clss_id, 		  		 			MAX(a.creat_yyyy) AS creat_yyyy, MAX(a.folder_reg_seq) AS folder_reg_seq, 		  					MAX(a.ho_no) AS ho_no, MAX(a.title) AS title,				   			MAX(a.record_reg_cnt) AS folder_list_cnt,				   			COUNT(b.record_take_seq) AS record_real_cnt,				   			MAX(a.line_no) as line_no					FROM 	TB_TKFOLDER a, TB_TKRECORD b					WHERE  	a.record_center_id = '1'					AND 	a.take_yyyy = '1'					AND 	a.take_org_cd = '1'					AND		a.creat_sys_cd = '02'					AND 	a.take_sno = '1'					AND		a.record_center_id = b.record_center_id(+)					AND		a.folder_take_seq = b.folder_take_seq(+)					GROUP BY a.record_center_id, a.folder_take_seq					ORDER BY a.record_center_id, a.folder_take_seq				);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeEfileInfo
+
+		SELECT	a.record_center_id,						a.folder_take_seq,						NVL(SUM(DECODE(b.erecord_flag,'1',1,0)),0) AS efile,						NVL(SUM(DECODE(b.erecord_flag,'2',1,0)),0) AS not_efile		FROM 		TB_TKFOLDER a, TB_TKRECORD b		WHERE 	a.record_center_id = '1'		AND   		a.take_yyyy = '1'		AND   		a.take_org_cd = '1'		AND   		a.creat_sys_cd = '02' 		AND   		a.take_sno = '1'		AND   		a.record_center_id = b.record_center_id		AND   		a.folder_take_seq = b.folder_take_seq		GROUP BY a.record_center_id, a.folder_take_seq		ORDER BY a.record_center_id, a.folder_take_seq;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeDocInfo
+
+		SELECT	a.record_center_id,						a.folder_take_seq,						b.record_take_seq,						NVL(COUNT(c.record_take_seq),0) AS attach_cnt,						NVL(SUM(TO_NUMBER(c.attach_file_page_cnt)),'0') AS record_page_cnt,						NVL(SUM(NVL(c.file_size,0)),0) AS record_size		FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKATTACHFILE c		WHERE 	a.record_center_id = '1'		AND   		a.take_yyyy = '1'		AND   		a.take_org_cd = '1'		AND   		a.creat_sys_cd = '02' 		AND   		a.take_sno = '1'		AND   		a.record_center_id = b.record_center_id		AND   		a.folder_take_seq = b.folder_take_seq		AND   		b.record_center_id = c.record_center_id		AND   		b.record_take_seq = c.record_take_seq		GROUP BY a.record_center_id, a.folder_take_seq, b.record_take_seq		ORDER BY a.record_center_id, a.folder_take_seq, b.record_take_seq;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeEfileInfo
+
+	 	UPDATE	TB_TKFOLDER		SET 	erecord_Flag = '1'		WHERE  	record_center_id = '1'		AND		folder_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeDocInfo
+
+	 	UPDATE	TB_TKRECORD		SET 	attach_cnt = '1',				record_page_cnt = LPAD('1',6,'0'),				record_size = '1'		WHERE  	record_center_id = '1'		AND		record_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeFolderInfo
+
+	 	UPDATE	TB_TKFOLDER A		SET 	A.folder_size = (SELECT NVL(SUM(NVL(B.record_size,0)),0) FROM TB_TKRECORD B WHERE B.record_center_id=A.record_center_id AND B.folder_take_seq=A.folder_take_seq ) 		WHERE  	A.record_center_id = '1' 		AND	    A.take_yyyy = '1' 		AND		A.take_org_cd = '1' 		AND		A.creat_sys_cd = '1' 		AND     A.take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateFolderRecordError
+
+	 	UPDATE	TB_TKFOLDER		SET 	exam_cont = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '기록물철정보의 기록물건수량오류(목록:'||'1'||'/실제:'|| '1' ||')',				error_flag = 'Y'		WHERE  	record_center_id = '1'		AND		folder_take_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateFolderEfileError
+
+	 	UPDATE	TB_TKFOLDER		SET 	exam_cont = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '기록물철정보의 전자파일갯수오류(목록:'||'1'||'/실제:'|| '1' ||')',				error_flag = 'Y'		WHERE  	record_center_id = '1'		AND		folder_take_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateFolderEfileRecvError
+
+	 	UPDATE	TB_TKFOLDER A		SET 	A.exam_cont = DECODE( ( SELECT COUNT(1)								FROM  TB_TKFOLDER B								WHERE B.record_center_id = A.record_center_id								AND   B.folder_take_seq = A.folder_take_seq								AND   B.exam_cont LIKE '%기록물건오류%')								,0,(DECODE(A.exam_cont,'',A.exam_cont,null,'',A.exam_cont||', ') || '기록물건오류')								, A.exam_cont)				, A.error_flag = 'Y'		WHERE  	( A.record_center_id, A.folder_take_seq )		        = ( SELECT record_center_id, folder_take_seq		            FROM  TB_TKRECORD		            WHERE record_center_id = '1'		            AND   record_take_seq = '1' );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateRecordEfileRecvError
+
+	 	UPDATE	TB_TKRECORD		SET 	exam_cont = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '전자파일누락오류',				error_flag = 'Y'		WHERE  	record_center_id = '1'		AND		record_take_seq = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateOrgTakePlanEnd
+
+ 		UPDATE	TB_TKORGTAKEPLAN K 		SET     K.take_state_div_cd = '1', 				K.rjct_rsn = '',  				K.rjct_ymd = '',  				K.infrm_file_nm = '', 				K.recv_fin_state_cd = '3', 				K.parent_take_sno = (SELECT MIN(take_sno) 			 					       FROM tb_tkfolder E                                                                          WHERE                                                                               EXISTS (SELECT 1			 								   FROM tb_tkfolder D			 								  WHERE D.record_center_id 	= K.record_center_id 			 									AND D.take_yyyy 		= K.take_yyyy 			 									AND D.take_org_cd 		= K.take_org_cd 			 									AND D.creat_sys_cd 		= K.creat_sys_cd 			 									AND D.take_sno 			= K.take_sno                                                                                                AND record_center_id = E.record_center_id                                                                                                AND creat_sys_cd = E.creat_sys_cd                                                                                                AND org_cd = E.org_cd                                                                                                AND clss_id = E.clss_id                                                                                                AND creat_yyyy = E.creat_yyyy                                                                                                AND folder_reg_seq = E.folder_reg_seq                                                                                                AND ho_no = E.ho_no)), 				K.recv_folder_err_cnt =  (SELECT count(1) FROM tb_tkfolder D			                               WHERE D.record_center_id  = K.record_center_id			                                 AND D.creat_sys_cd      = K.creat_sys_cd			                                 AND D.take_yyyy         = K.take_yyyy			                                 AND D.take_org_cd       = K.take_org_cd			                                 AND D.take_sno          = K.take_sno			                                 AND D.error_flag = 'Y'),		        K.recv_record_err_cnt = (SELECT count(1) FROM tb_tkrecord D		                                                                                    WHERE                                                      EXISTS (SELECT 1		                                           FROM tb_tkfolder E 		                                          WHERE E.record_center_id   = K.record_center_id		                                            AND E.creat_sys_cd       = K.creat_sys_cd		                                       	    AND E.take_yyyy          = K.take_yyyy		                                       		AND E.take_org_cd        = K.take_org_cd		                                       		AND E.take_sno           = k.take_sno                                                            AND E.record_center_id = D.record_center_id                                                            AND E.folder_take_seq = D.folder_take_seq		                                    	)		                                    AND D.error_flag = 'Y') 		WHERE  	record_center_id = '1' 		AND	    take_yyyy = '1' 		AND		take_org_cd = '1' 		AND		creat_sys_cd = '1' 		AND     take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertOrgTakePlanWait
+
+	 	INSERT INTO TB_TKORGTAKEPLAN		(			record_center_id, 	take_org_cd, 		take_yyyy, 		creat_sys_cd, 		take_state_div_cd,  			take_sno,			parent_take_sno, 	record_recv_ymd, 	recv_ymd, 		recv_div_cd,		reg_dtime,			recv_fin_state_cd		) VALUES (			'1', 	'1', 			'1', 			'1', 	'1', 			                        '1',					'1',						TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDD'),	'1',	TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),			'4'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateOrgTakePlanWait
+
+ 		UPDATE	TB_TKORGTAKEPLAN 		SET     take_state_div_cd = '1', 				bef_take_state_div_cd = DECODE(take_state_div_cd,'09',bef_take_state_div_cd,take_state_div_cd), 				recv_fin_state_cd = '4' 		WHERE  	record_center_id = '1' 		AND	    take_yyyy = '1' 		AND		take_org_cd = '1' 		AND		creat_sys_cd = '1' 		AND     take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertOrgTakePlan
+
+	 	INSERT INTO TB_TKORGTAKEPLAN		(			record_center_id, 	take_org_cd, 		take_yyyy, 		creat_sys_cd, 		take_state_div_cd,  			take_sno,			parent_take_sno, 			record_recv_ymd, 	recv_ymd, 		recv_div_cd,		reg_dtime,			recv_fin_state_cd		) VALUES (			'1', 	'1', 			'1', 			'1', 	'1',                         '1',					'1',						TO_CHAR(SYSDATE, 'YYYYMMDD'), 	TO_CHAR(SYSDATE, 'YYYYMMDD'),	'1',	TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),			'1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateOrgTakePlan
+
+ 		UPDATE	TB_TKORGTAKEPLAN 		SET     take_state_div_cd = '1', 				recv_fin_state_cd = '1' 		WHERE  	record_center_id = '1' 		AND	    take_yyyy = '1' 		AND		take_org_cd = '1' 		AND		creat_sys_cd = '1' 		AND     take_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateOrgTakePlanBef
+
+ 		UPDATE	TB_TKORGTAKEPLAN 		SET     take_state_div_cd = NVL(bef_take_state_div_cd,'03'), 				bef_take_state_div_cd = '', 				recv_fin_state_cd = '2' 		WHERE  	record_center_id 	= '1' 		AND	    take_yyyy 			= '1' 		AND		take_org_cd 		= '1' 		AND		creat_sys_cd 		= '1' 		AND     take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteOrgTakePlan
+
+		DELETE FROM TB_TKORGTAKEPLAN		WHERE   record_center_id = '1'		AND	   	take_yyyy = '1' 		AND		take_org_cd = '1' 		AND	    creat_sys_cd = '1' 		AND     take_state_div_cd = '03' 		AND     recv_fin_state_cd = '2'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvFolderCnt
+
+		UPDATE	TB_TKORGTAKEPLAN A		SET 	A.recv_folder_cnt 	= '1'		WHERE  	record_center_id 	= '1'		AND	    take_yyyy 			= '1'		AND		take_org_cd 		= '1'		AND		creat_sys_cd 		= '1'		AND     take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvFolderErrorCnt
+
+		UPDATE	TB_TKORGTAKEPLAN A		SET 	A.recv_folder_err_cnt = (NVL(A.recv_folder_err_cnt, 0)+'1')		WHERE  	record_center_id 	= '1'		AND	    take_yyyy 			= '1'		AND		take_org_cd 		= '1'		AND		creat_sys_cd 		= '1'		AND     take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvRecordCnt
+
+		UPDATE	TB_TKORGTAKEPLAN A		SET 	A.recv_record_cnt 	= '1'		WHERE  	record_center_id 	= '1'		AND	    take_yyyy 			= '1'		AND		take_org_cd 		= '1'		AND		creat_sys_cd 		= '1'		AND     take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvRecordErrorCnt
+
+		UPDATE	TB_TKORGTAKEPLAN A		SET 	A.recv_record_err_cnt 	= (NVL(A.recv_record_err_cnt, 0)+'1')		WHERE  	record_center_id 	= '1'		AND	    take_yyyy 			= '1'		AND		take_org_cd 		= '1'		AND		creat_sys_cd 		= '1'		AND     take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvAttachCnt
+
+		UPDATE	TB_TKORGTAKEPLAN A		SET 	A.recv_attach_cnt 	= (SELECT COUNT(1) 							             FROM TB_TKATTACHFILE Y							                                                                                WHERE                                                                        EXISTS (SELECT 1							                     FROM TB_TKRECORD X							                    WHERE  							                       EXISTS (SELECT 1							                             FROM TB_TKFOLDER 							                            WHERE RECORD_CENTER_ID = '1' 							                              AND TAKE_YYYY        = '1' 							                              AND TAKE_ORG_CD      = '1'							                              AND CREAT_SYS_CD     = '02' 							                              AND TAKE_SNO         = '1'                                                                                                                                                                            AND RECORD_CENTER_ID = X.RECORD_CENTER_ID                                                                                      AND RECORD_TAKE_SEQ = X.RECORD_TAKE_SEQ)                                                                                      AND RECORD_CENTER_ID = Y.RECORD_CENTER_ID                                                                                      AND RECORD_TAKE_SEQ = Y.RECORD_TAKE_SEQ))		WHERE  	record_center_id 	= '1'		AND	    take_yyyy 			= '1'		AND		take_org_cd 		= '1'		AND		creat_sys_cd 		= '1'		AND     take_sno 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateRecvAttachErrorCnt
+
+		UPDATE	TB_TKORGTAKEPLAN A		SET     A.recv_attach_err_cnt = (NVL(A.recv_attach_err_cnt, 0)+'1')		WHERE  	record_center_id = '1'		AND	    take_yyyy 		 = '1'		AND		take_org_cd 	 = '1'		AND		creat_sys_cd 	 = '1'		AND     take_sno 		 = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeGFile
+
+		INSERT INTO TB_TKFOLDER		(			folder_take_seq,					creat_sys_cd,        		org_cd,                 			clss_id,                    			creat_yyyy,			old_folder_creat_org_nm,		folder_reg_seq,      		ho_no,                  			take_yyyy,                  			take_sno, 			clss_nm,                           	title,               				folder_type_div_cd,     		folder_detl_type_cd,        		record_reg_cnt, 			efile_cnt,                            	new_div_cd,          		chng_flag,              			old_folder_clss_no,         		clss_div_cd, 			folder_start_dtime,  				folder_close_dtime,     funsh_end_dtime,            	funsh_rsn, 							presv_term_cd,                 				presv_method_cd,     			presv_area_cd,          	read_range,                 	creat_user_nm,       				creat_dtime,				creat_sys_folder_id,        		error_flag,          			virus_flag,             			exam_rslt_cd,                		rjct_flag,			take_fin_flag,							take_type_cd,				record_center_id, 			reg_dtime,							take_org_cd,			exam_cont,							group_presv_term_cd,	record_tot_page_cnt,		oper_read_range_cd,		line_no		) VALUES (			'1',				'1',       		'1',               			'1',                 			'1', 			'1',	'1',     		'1',                			'1',               		'1', 			'1',              			'1',            				'1',     		'1',       	LPAD('1',6,'0'),			LPAD('1',6,'0'),      '1',         		'1',            			'1',        	'1', 			'1', 			'1',    	'1',          	'1', 					'1',			'1',    		'1',        	'1',	            	'1',      			'1', 			'1',    		'1',        			'1',          	 		'1',             	'1',                        '1',					'1',				'1', 			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),  '1',			'1',					'1', LPAD('1',6,'0'), '1', '1'		)		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeGfileAgent
+
+		INSERT INTO TB_TKFOLDERCREAT(			record_center_id, 	folder_take_seq, 	agent_sno, 		agent_type_cd, 	agent_nm, 			reg_dtime,				agent_id, 				agent_org_cd, agent_org_nm,		agent_pos_rank_nm,			opin,							duty_type_cd,		duty_act_dtime					) VALUES (			'1', 								'1', 	'1', 						'1',	 	'1',			                        TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), 	'1', 				'1', 	'1',		'1',			'1',													'1',			'1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeGfileTakovr
+
+		INSERT INTO TB_TKFOLDERTAKETAKOVR 		(			record_center_id,	 	folder_take_seq, 			sno, 								take_takovr_div_cd, 					take_takovr_org_cd, 			reg_dtime, 				take_takovr_clss_id, 	take_takovr_creat_yyyy, 	take_takovr_folder_reg_seq, 	take_takovr_ho_no		) VALUES (			'1', 								'1', 		'1', 											'1', 					'1',                         TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), 	'1', 	'1', 	'1', 	'1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeDoc
+
+		INSERT INTO TB_TKRECORD		(			record_take_seq,	folder_take_seq,            creat_sys_cd,         	org_cd,                     title, 			record_reg_div_cd,  record_size,                read_range,            	open_div_cd,                creat_yyyy, 			reg_dtime,          creat_reg_dtime,            creat_reg_no,         	dtch_reg_no,                audvis_record_type,			record_page_cnt,    aprov_pos_rank_nm,          duty_chrgr_nm,       	enforc_ymd,                 creat_org_reg_no, 			erecord_flag,       old_record_creat_org_nm,	old_record_docno, 		old_record_presv_term,		open_limit_part,			recver,             sender,                     doc_distr_no,          	folder_clss_no,             spcl_record_type,			new_div_cd,         chng_flag,                  rjct_flag,				doc_no,    					creat_sys_record_id, 			record_center_id,	open_grade,					audvis_record_sumry,	orign_copy_flag, 			error_flag,			take_fin_flag,		exam_rslt_cd,				record_detl_type_cd,	record_sno,					secu_clss_rsn,			part_open_rsn,      oper_read_range_cd,			line_no,				exam_cont, 					prod_type_cd		) VALUES (			'1',			(SELECT folder_take_seq FROM TB_TKFOLDER WHERE record_center_id='1' AND creat_sys_cd='02' AND creat_sys_folder_id='1' AND take_sno = '1'),			'1',          			'1',                    '1', 			'1',               '1',               '1',           		'1',            '1', 						TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),			'1',            '1',          		'1',            '1',			LPAD( '1',6,'0'),   '1',         	'1',        		'1',            '1', 			'1',                  '1',  	'1', 			'1',	'1', 			'1',                       '1',                   '1',          		'1',         '1', 			'1',                     '1',                 '1',                 '1',                '1', 			'1', 				'1',				'1',		'1',		'1',			'1', 					'1',				'1',			'1',					'1',			'1', 					'1',			'1',					'1',				'1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeDocAgent
+
+		INSERT INTO TB_TKRECORDCREAT(	   		record_center_id, 	record_take_seq, 	agent_sno, 			agent_type_cd, 	agent_nm,	   		reg_dtime, 				agent_id, 					agent_org_cd, 		agent_org_nm, 	agent_pos_rank_nm, 	   		req_state_val, 			opin,							opin_dtime,			handl_rslt, 	duty_type_cd,	   		duty_act_dtime		) 		(			SELECT 	'1',							'1', 	NVL(MAX(agent_sno),0)+1 agentSno, 	'1', 		'1',					TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), 				'1', 			'1', 				'1',		'1', 					'1', 								'1',				'1',				'1', 		'1',					'1'			FROM    TB_TKRECORDCREAT			WHERE	record_center_id = '1'			AND		record_take_seq = '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeSprecord
+
+		INSERT INTO TB_TKSPCLLIST		(			record_center_id, 		spcl_list_take_seq,  	folder_take_seq,  		record_take_seq,  	spcl_list_loc,   			folder_clss_no, 		record_reg_no,    		seq,                    spcl_list1,         spcl_list2,      			spcl_list3, 			reg_dtime		)		(			SELECT 				'1', LPAD((TB_TKSPCLLIST_SQ01.NEXTVAL), 15, '0'),				DECODE('1', '1' 					,(SELECT folder_take_seq 					  FROM TB_TKFOLDER 					  WHERE record_center_id = '1' 					  AND   creat_sys_cd = '02'					  AND   creat_sys_folder_id = '1'), NULL),				DECODE('1', '2' 					,(SELECT record_take_seq 					  FROM TB_TKRECORD 					  WHERE record_center_id = '1'					  AND   creat_sys_cd = '02'					  AND   creat_yyyy = SUBSTR('1',1,4)					  AND   creat_reg_no = SUBSTR('1',5,13)					  AND   dtch_reg_no = SUBSTR('1',18,2)), NULL),				'1',				'1', '1', '1', '1', '1',				'1', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			FROM DUAL		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakePage
+
+		INSERT INTO TB_TKATTACHFILE		(			record_center_id,	record_take_seq,		reg_seq,				org_cd,			creat_yyyy,             			creat_reg_no, 		attach_file_seq,		attach_file_page_cnt,	doc_type_cd, 	doc_type_sno, 			reg_dtime, 			attach_file_type		) VALUES (			'1'			, NVL( '1'					,( SELECT A.record_take_seq					   FROM TB_TKRECORD A, TB_TKFOLDER B					   WHERE A.record_center_id = B.record_center_id					   AND   A.record_center_id='1'					   ANd 	 A.folder_take_seq = B.folder_take_seq					   AND   A.creat_sys_cd='02'					   AND   A.creat_yyyy='1'					   AND   A.creat_reg_no='1'					   AND   A.dtch_reg_no='00'					   AND   B.take_sno = '1' ) )			, (SELECT TO_NUMBER(NVL(MAX(reg_seq), 0)+1)			   FROM TB_TKATTACHFILE			   WHERE record_center_id = '1'			   AND record_take_seq = ( NVL( '1'					                        ,( SELECT A.record_take_seq											   FROM TB_TKRECORD A, TB_TKFOLDER B											   WHERE A.record_center_id = B.record_center_id											   AND   A.record_center_id='1'											   ANd 	 A.folder_take_seq = B.folder_take_seq											   AND   A.creat_sys_cd='02'											   AND   A.creat_yyyy='1'											   AND   A.creat_reg_no='1'											   AND   A.dtch_reg_no='00'											   AND   B.take_sno = '1' ) ) ) )			, '1'			, '1'			, '1'			, '1'			, LPAD( '1' ,6,'0')			, '1'			, '1'						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			, '01'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeGfileHist
+
+		INSERT INTO TB_TKFOLDERCHNGHIST		(			record_center_id, 				folder_take_seq,       	chng_hist_no,      org_cd,       	clss_id,      						creat_yyyy, 					folder_reg_seq,        	ho_no,             title_bef,     	title_aft, 							folder_type_div_cd_bef,  folder_type_div_cd_aft,  	chng_ymd,  			chng_rsn,	chng_user_nm, 				reg_dtime		) 		(			SELECT  B.record_center_id , B.folder_take_seq				, (SELECT NVL(MAX(A.chng_hist_no), 0)+1 chng_hist_no				   FROM  TB_TKFOLDERCHNGHIST A				   WHERE A.record_center_id = B.record_center_id				   AND   A.folder_take_seq = B.folder_take_seq) chng_hist_no				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'				, '1'								, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			FROM  TB_TKFOLDER B			WHERE B.record_center_id = '1'			AND   B.creat_sys_cd = '02'			AND   B.org_cd = '1'			AND   B.clss_id = '1'			AND   B.creat_yyyy = '1'			AND   B.folder_reg_seq = '1'			AND   B.ho_no = '1'			AND   B.take_sno = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertTakeDocHist
+
+		INSERT INTO TB_TKRECORDCHNGHIST		(			record_center_id,		record_take_seq,	chng_hist_no,				org_cd,             			creat_yyyy,			creat_reg_no,       	dtch_reg_no,        creat_reg_ymd_bef,  	creat_reg_ymd_aft,  		title_bef,			title_aft, 					page_cnt_bef,   	page_cnt_aft, 				aprov_pos_rank_bef, 	aprov_pos_rank_aft,			duty_chrgr_bef,  		duty_chrgr_aft,  	enforc_ymd_bef,       	enforc_ymd_aft, 			recver_bef,			recver_aft, 				chng_ymd, 			chng_rsn,         			chng_user_nm, 			reg_dtime		) 		(			SELECT  B.record_center_id , B.record_take_seq				, (SELECT NVL(MAX(A.chng_hist_no), 0)+1 chng_hist_no				   FROM  TB_TKRECORDCHNGHIST A				   WHERE A.record_center_id = B.record_center_id				   AND   A.record_take_seq = B.record_take_seq) chng_hist_no				, '1',    '1',				'1',     	'1',      	'1',  	'1', 		'1',				'1', 					'1',  		'1',				'1', 	'1',				'1', 		'1', 		'1',      	'1',  			'1',                                '1',				'1', 			'1',      			'1', 			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')			FROM  TB_TKRECORD B			WHERE B.record_center_id = '1'			AND   B.creat_yyyy = '1'			AND   B.creat_reg_no = '1'			AND   B.dtch_reg_no = '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakePage
+
+		UPDATE	tb_tkattachfile A		SET 	A.file_nm = '1',		    	A.data_format_cd = '1',				A.file_size = '1',				A.attach_file_path = '1'		WHERE 	A.record_center_id = '1'		AND 	A.creat_yyyy = '1'		AND 	A.creat_reg_no = '1'		AND 	A.attach_file_seq = '1'		AND		A.doc_type_cd = '1'		AND     '02' = ( SELECT B.creat_sys_cd 	                      FROM  TB_TKRECORD B 	                      WHERE B.record_center_id=A.record_center_id	                      AND   B.record_take_seq=A.record_take_seq );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeDocHistGr
+
+		DELETE FROM TB_TKRECORDCHNGHIST AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKRECORDCHNGHIST c			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND   		b.record_center_id = c.record_center_id			AND   		b.record_take_seq = c.record_take_seq			AND AAA.record_center_id = C.record_center_id			AND AAA.record_take_seq = C.record_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeDocAgentGr
+
+		DELETE FROM TB_TKRECORDCREAT AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKRECORDCREAT c			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND   		b.record_center_id = c.record_center_id			AND   		b.record_take_seq = c.record_take_seq			AND AAA.record_center_id = C.record_center_id			AND AAA.record_take_seq = C.record_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakePageGr
+
+		DELETE FROM TB_TKATTACHFILE AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKATTACHFILE c			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND   		b.record_center_id = c.record_center_id			AND   		b.record_take_seq = c.record_take_seq			AND AAA.record_center_id = C.record_center_id			AND AAA.record_take_seq = C.record_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeDocSpecGr
+
+		DELETE FROM TB_TKSPCLLIST AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKRECORD b, TB_TKSPCLLIST c			WHERE 	a.record_center_id = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_org_cd = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		c.spcl_list_loc = '2'			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND   		b.record_center_id = c.record_center_id			AND   		b.record_take_seq = c.record_take_seq			AND AAA.record_center_id = C.record_center_id			AND AAA.record_take_seq = C.record_take_seq			);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeDocGr
+
+		DELETE FROM TB_TKRECORD AAA		WHERE 			EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKRECORD b			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND AAA.record_center_id = B.record_center_id			AND AAA.folder_take_seq = B.folder_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeGfileHistGr
+
+		DELETE FROM TB_TKFOLDERCHNGHIST AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKFOLDERCHNGHIST b			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND AAA.record_center_id = B.record_center_id			AND AAA.folder_take_seq = B.folder_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeGfileAgentGr
+
+		DELETE FROM TB_TKFOLDERCREAT AAA		WHERE 			EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKFOLDERCREAT b			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND AAA.record_center_id = B.record_center_id			AND AAA.folder_take_seq = B.folder_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeGfileTakovrGr
+
+		DELETE FROM TB_TKFOLDERTAKETAKOVR AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKFOLDERTAKETAKOVR b			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND AAA.record_center_id = B.record_center_id			AND AAA.folder_take_seq = B.folder_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeGfileSpecGr
+
+		DELETE FROM TB_TKSPCLLIST AAA		WHERE 		EXISTS (SELECT 1			FROM 		TB_TKFOLDER a, TB_TKSPCLLIST b			WHERE 	a.record_center_id = '1'			AND   		a.take_yyyy = '1'			AND   		a.take_org_cd = '1'			AND   		a.creat_sys_cd = '02' 			AND   		a.take_sno = '1'		     AND 				  a.rjct_flag = '1'			 			AND   		b.spcl_list_loc = '1'			AND   		a.record_center_id = b.record_center_id			AND   		a.folder_take_seq = b.folder_take_seq			AND AAA.record_center_id = B.record_center_id			AND AAA.folder_take_seq = B.folder_take_seq			)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeGfileGr
+
+		DELETE FROM TB_TKFOLDER		WHERE	record_center_id = '1'		AND   	take_yyyy = '1'				AND   	take_org_cd = '1'		AND   	creat_sys_cd = '02' 		AND   	take_sno = '1' AND 			  rjct_flag = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeErrorGr
+
+		DELETE FROM TB_TKORGRECVERROR		WHERE	record_center_id = '1'		AND   	take_yyyy = '1'				AND   	take_org_cd = '1'		AND   	creat_sys_cd = '02' 		AND   	take_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : delete
+-- Query Id : deleteTakeOrgPlanGr
+
+		DELETE FROM TB_TKORGTAKEPLAN		WHERE	record_center_id = '1'		AND 	take_yyyy = '1'		AND 	take_org_cd = '1'		AND 	creat_sys_cd = '02'		AND 	take_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecvRjctInfrmInfoList
+
+		SELECT	folder_take_seq, org_cd, creat_yyyy, clss_id, 						folder_reg_seq, ho_no, rjct_cont		FROM  		TB_TKFOLDER		WHERE 	record_center_id = '1'		AND   		take_yyyy = '1'		AND   		take_org_cd = '1'		AND   		creat_sys_cd = '02'		AND   		take_sno = '1'		AND   		rjct_flag = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecvInfrmInfo
+
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,						b.link_class AS class_name, link_lang AS gr_language		FROM  		TB_STORG A, 						(SELECT 	* 		       			FROM 		TB_STLINKTRGT 		       			WHERE 	creat_sys_cd = '02') B 		WHERE 	A.record_center_id = '1'		AND   		A.org_cd = '1'		AND   		A.link_trgt_id = B.link_trgt_id(+)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecvTakeInfrmInfo
+
+		SELECT	b.link_ip recv_ip, b.link_port recv_port,						b.link_class AS class_name, link_lang AS gr_language		FROM  		TB_STORG A, 						(SELECT 	* 		       			FROM 		TB_STLINKTRGT 		       			WHERE 	creat_sys_cd = '02') B 		WHERE 	A.record_center_id = '1'		AND   		A.org_cd = '1'		AND   		A.link_trgt_id = B.link_trgt_id(+)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvRjctInfrm
+
+		UPDATE	TB_TKORGTAKEPLAN		SET   		rjct_rsn = '1',						infrm_file_nm = 	'1'		WHERE	 	record_center_id = '1'		AND 			take_yyyy = '1'		AND 			take_org_cd = '1'		AND 			creat_sys_cd = '02'		AND 		take_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRjctSendInfo
+
+		SELECT  infrm_file_nm		FROM     TB_TKORGTAKEPLAN		WHERE 	record_center_id = '1'		AND   		take_yyyy = '1'		AND   		take_org_cd = '1'		AND   		creat_sys_cd = '02'		AND   		take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeTakeSendInfo
+
+		SELECT  infrm_file_nm		FROM     TB_TKORGTAKEPLAN		WHERE 	record_center_id = '1'		AND   		take_yyyy = '1'		AND   		take_org_cd = '1'		AND   		creat_sys_cd = '02'		AND   		take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvRjctInfrmSend
+
+		UPDATE TB_TKORGTAKEPLAN		SET    rjct_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		     , take_state_div_cd = '07'		     , infrm_div_cd = '1'		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '02'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvTakeInfrm
+
+		UPDATE	TB_TKORGTAKEPLAN		SET   		take_user_nm = '1',						takovr_user_nm = '1',						infrm_file_nm = 	'1'		WHERE	 	record_center_id = '1'		AND 			take_yyyy = '1'		AND 			take_org_cd = '1'		AND 			creat_sys_cd = '02'		AND 			take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeRecvTakeInfrmSend
+
+		UPDATE TB_TKORGTAKEPLAN		SET    take_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')		     , take_state_div_cd = '08'		     , infrm_div_cd = '1'		WHERE record_center_id = '1'		AND   take_yyyy = '1'		AND   take_org_cd = '1'		AND   creat_sys_cd = '02'		AND   take_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateVaccineFolderCommit
+
+		UPDATE TB_TKFOLDER		SET   virus_flag = '0'     		, virus_dtime = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   CREAT_SYS_CD = '02'		AND   TAKE_SNO = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateVaccineOrgTakePlanCommit
+
+		UPDATE TB_TKORGTAKEPLAN		SET   virus_check_flag = '1'		WHERE RECORD_CENTER_ID = '1'		AND   TAKE_YYYY = '1'		AND   TAKE_ORG_CD = '1'		AND   CREAT_SYS_CD = '02'		AND   TAKE_SNO = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : creatUndTakeRecvErrorDesc
+
+ 		INSERT INTO TB_TKORGRECVERROR(		     RECORD_CENTER_ID, 		TAKE_YYYY, 		TAKE_ORG_CD, 		CREAT_SYS_CD, 		TAKE_SNO,		     RECV_DTIME, 			TAKE_FILE_NM, 	FILE_DIV_CD, 		LINE_NO, 			FOLDER_CLSS_NO,		     FOLDER_TITLE, 			RECORD_REG_NO, 	RECORD_TITLE, 		RECV_ERROR_FLAG, 	RECV_ERROR_RSN, 		     FOLDER_TAKE_SEQ,		RECORD_TAKE_SEQ		)		VALUES (			'1', 		'1', 		'1', 		'1', 		'1',		    NVL((SELECT Z.reg_dtime FROM TB_TKORGTAKEPLAN Z 		      WHERE Z.RECORD_CENTER_ID  = '1' 		        AND Z.TAKE_YYYY         = '1'		        AND Z.TAKE_ORG_CD       = '1'		        AND Z.CREAT_SYS_CD      = '1'		        AND Z.TAKE_SNO          = '1')						, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MI')), 		     '1', 			'1', 		'1', 			'1',		     '1', 		'1', 		'1', 		'1', 	SUBSTR('1', 0 , 1800),		     '1',		'1'		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeListFaildCount
+
+ 		SELECT 	count(1)  		FROM 	tb_tkorgrecverror 		WHERE	record_center_id = '1' 		AND 	take_yyyy   	 = '1' 		AND 	take_org_cd 	 = '1' 		AND 	creat_sys_cd 	 = '1' 		AND 	take_sno		 = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecvError
+
+		SELECT 	COUNT(1)		FROM 	tb_tkorgrecverror		WHERE 	record_center_id 	= 	'1'		AND 	take_yyyy 			= 	'1'		AND 	take_org_cd 		= 	'1'		AND 	creat_sys_cd 		= 	'1'		AND 	take_sno 			= 	'1'		AND 	file_div_cd 		= 	'1'		AND 	line_no 			= 	'1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateUndTakeRecvErrorDesc
+
+		UPDATE 	tb_tkorgrecverror		SET		recv_error_rsn = DECODE(recv_error_rsn, '', recv_error_rsn, null, '', recv_error_rsn||', ')||'1'		WHERE 	record_center_id 	= '1'		AND 	take_yyyy 			= '1'		AND 	take_org_cd 		= '1'		AND 	creat_sys_cd 		= '1'		AND 	take_sno 			= '1'		AND 	file_div_cd 		= '1'		AND 	line_no 			= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findVirusFileList
+
+		SELECT   attach_file_path file_nm		        ,(SELECT Z.org_cd||'-'||Z.clss_id||'-'||Z.creat_yyyy||'-'||Z.folder_reg_seq||'-'||Z.ho_no FROM tb_tkfolder z WHERE Z.folder_take_seq = (SELECT Y.folder_take_seq FROM tb_tkrecord y WHERE Y.record_take_seq = A.record_take_seq)) folder_clss_no		        ,(SELECT Z.title FROM tb_tkfolder z WHERE Z.folder_take_seq = (SELECT Y.folder_take_seq FROM tb_tkrecord y WHERE Y.record_take_seq = A.record_take_seq)) folder_title		        ,(SELECT Z.creat_yyyy||'-'||Z.org_cd||'-'||substr(Z.creat_reg_no, 8)||'-'||Z.dtch_reg_no FROM tb_tkrecord z WHERE Z.record_take_seq = A.record_take_seq) record_reg_no		        ,(SELECT Z.title FROM tb_tkrecord z WHERE Z.record_take_seq = A.record_take_seq) record_title		        ,(SELECT Z.folder_take_seq FROM tb_tkrecord Z WHERE Z.record_take_seq = A.record_take_seq) folder_take_seq 		        ,record_take_seq		FROM tb_tkattachfile A                WHERE                EXISTS                    (SELECT 1		    FROM    TB_TKFOLDER aA, TB_TKRECORD b		    WHERE   AA.record_center_id 	= 	'1'		    AND     AA.take_yyyy 		= 	'1'		    AND     AA.take_org_cd 		= 	'1'		    AND     AA.creat_sys_cd 		= 	'1'		    AND     AA.take_sno 			BETWEEN (SELECT Z.parent_take_sno                                                    FROM tb_tkorgtakeplan Z                                                   WHERE Z.record_center_id 	= '1'                                                     AND Z.take_yyyy 		= '1'                                                     AND Z.take_org_cd 		= '1'                                                     AND Z.creat_sys_cd 		= '1'                                                    AND Z.take_sno 			= '1') AND '1'		    AND     AA.record_center_id 	= 	B.record_center_id(+)		    AND     AA.folder_take_seq 	= 	B.folder_take_seq(+)                                        AND     B.record_center_id = A.record_center_id                    AND     B.record_take_seq = A.record_take_seq		    GROUP BY B.record_center_id, B.record_take_seq		)		AND virus_flag = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findFolderTakeSeq
+
+		SELECT  folder_take_seq 		FROM    TB_TKFOLDER		WHERE   creat_sys_cd = '02'		AND     org_cd         	= '1'		AND	    clss_id        	= '1'		AND	    creat_yyyy     	= '1'		AND	    folder_reg_seq 	= '1'		AND	    ho_no          	= '1'		AND		take_sno 		= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findRecordTakeSeq
+
+		SELECT  record_take_seq 		FROM    TB_TKRECORD A, TB_TKFOLDER B		WHERE 	A.record_center_id 	= B.record_center_id		AND		A.folder_take_seq	= B.folder_take_seq		AND 	A.creat_sys_cd 		= '02'		AND     A.creat_yyyy 		= '1'		AND     A.creat_reg_no 		= '1'		AND     A.dtch_reg_no 		= '1'		AND 	B.take_sno 			= '1'			;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : creatUndTakeFolderError
+
+		UPDATE TB_TKFOLDER		   SET EXAM_CONT = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '1'		   		, error_flag = 'Y'		 WHERE RECORD_CENTER_ID 	= '1'		   AND FOLDER_TAKE_SEQ	 	= '1'	 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : creatUndTakeRecordError
+
+		UPDATE TB_TKRECORD		   SET EXAM_CONT = DECODE(exam_cont,'',exam_cont,null,'',exam_cont||', ') || '1'		   		, error_flag = 'Y'		 WHERE RECORD_CENTER_ID 	= '1'		   AND RECORD_TAKE_SEQ	 	= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : insert
+-- Query Id : insertFolderTakeHist
+
+		INSERT INTO TB_TKFOLDERTAKEHIST(		    record_center_id,   folder_take_seq,    title, 				hist_sno,       creat_sys_cd,       		    org_cd,				clss_div_cd,        clss_id,            creat_yyyy,     folder_reg_seq,		    ho_no,				take_org_cd,        take_yyyy,          take_sno,       take_state_cd,		    exam_cont,			rjct_cont,			folder_err_flag,    record_err_cnt, record_tot_cnt, 		    file_err_cnt,		file_tot_cnt,		reg_dtime,			rjct_dtime		)		(		    SELECT    record_center_id, folder_take_seq, title                    ,(SELECT count(1)+1                      FROM   tb_tkfoldertakehist Z                      WHERE Z.record_center_id = K.record_center_id                      AND   Z.creat_sys_cd     = K.creat_sys_cd                      AND   Z.clss_id          = K.clss_id                      AND   Z.creat_yyyy       = K.creat_yyyy                      AND   Z.folder_reg_seq   = K.folder_reg_seq                      AND   Z.ho_no            = K.ho_no) hist_sno                    ,creat_sys_cd, org_cd, clss_div_cd, clss_id, creat_yyyy                    ,folder_reg_seq, ho_no, take_org_cd, take_yyyy, take_sno                    ,'1'                                        , reg_dtime, rjct_dtime		    FROM (		        SELECT      A.record_center_id                          , A.folder_take_seq                          , MAX(A.title) title                          , MAX(A.creat_sys_cd) creat_sys_cd                          , MAX(A.org_cd) org_cd                          , MAX(A.clss_div_cd) clss_div_cd                          , MAX(A.clss_id) clss_id                          , MAX(A.creat_yyyy) creat_yyyy                          , MAX(A.folder_reg_seq) folder_reg_seq                          , MAX(A.ho_no) ho_no                          , MAX(A.take_org_cd) take_org_cd                          , MAX(A.take_yyyy) take_yyyy                          , MAX(A.take_sno) take_sno                          , MAX(A.exam_cont) exam_cont                          , (CASE WHEN MAX(a.error_flag) = 'Y' THEN '1'                                  ELSE '0'                             END) folder_err_flag                          , NVL(SUM(CASE WHEN B.error_flag = 'Y' THEN 1                                         ELSE 0                                    END), 0) record_err_cnt                          , MAX(A.rjct_cont) rjct_cont                          , COUNT(B.record_take_seq) record_tot_cnt                          , SUM((select COUNT(1) FROM tb_tkattachfile Z WHERE Z.record_center_id = B.record_center_id AND Z.record_take_seq = B.record_take_seq AND Z.virus_flag = '1')) file_err_cnt                          , SUM((select COUNT(1) FROM tb_tkattachfile Z WHERE Z.record_center_id = B.record_center_id AND Z.record_take_seq = B.record_take_seq)) file_tot_cnt                          , MAX(A.reg_dtime) reg_dtime                           		        FROM  tb_tkfolder A		            , tb_tkrecord B		        WHERE   A.record_center_id  =   '1'		        AND     A.record_center_id  =   B.record_center_id		        AND     A.folder_take_seq   =   B.folder_take_seq		        AND     A.take_yyyy         =   '1'		        AND     A.take_org_cd       =   '1'		        AND     A.creat_sys_cd      =   '1'		        AND     A.take_sno          =   '1'		        		        GROUP BY A.record_center_id, A.folder_take_seq		    ) K		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : testUpdateVirusFlag
+
+		update tb_tkattachfile 				set virus_flag = '1' , virus_dtime = to_char(sys_datetime, 'YYYYMMDDHH24MISS')		where record_center_id = '1'		and creat_yyyy = '1'		and creat_reg_no = '1'		and org_cd = '1'		and doc_type_cd = '1'		and doc_type_sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateFolderRecvReFlag
+
+		UPDATE tb_tkfolder set recv_re_flag = '1'		 WHERE record_center_id = '1'		   AND org_cd 			= '1'		   AND clss_id 			= '1'		   AND creat_yyyy 		= '1'		   AND folder_reg_seq 	= '1'		   AND ho_no 			= '1'	 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : update
+-- Query Id : updateTakeFolderError
+
+		UPDATE TB_TKFOLDER Z           SET ERROR_FLAG = 'Y'              ,EXAM_CONT = EXAM_CONT||DECODE(EXAM_CONT, NULL, '', '', '', ', ')||'이상이있는 기록물건이 확인되었습니다..'                    WHERE             EXISTS                (SELECT 1                FROM TB_TKFOLDER A, TB_TKRECORD B                WHERE A.RECORD_CENTER_ID     = '1'                AND   A.RECORD_CENTER_ID     = B.RECORD_CENTER_ID                AND   A.FOLDER_TAKE_SEQ     = B.FOLDER_TAKE_SEQ                AND   A.TAKE_YYYY             = '1'                AND   A.TAKE_ORG_CD         = '1'                AND   A.CREAT_SYS_CD         = '1'                AND   A.TAKE_SNO             = '1'                AND   B.ERROR_FLAG             = 'Y'                AND   A.RECORD_CENTER_ID = Z.RECORD_CENTER_ID                AND   A.FOLDER_TAKE_SEQ = Z.FOLDER_TAKE_SEQ                )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findFolderLine
+
+		SELECT line_no 		FROM tb_tkfolder		WHERE record_center_id = '1'		AND   folder_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findRecordLine
+
+		SELECT line_no 		FROM tb_tkrecord		WHERE record_center_id = '1'		AND   record_take_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findErrorRecordList
+
+		SELECT DISTINCT A.record_center_id		      ,A.take_yyyy		      ,A.take_org_cd		      ,A.creat_sys_cd		      ,A.take_sno		      ,A.reg_dtime		      ,A.line_no		      ,a.org_cd||'-'||a.clss_id||'-'||a.creat_yyyy||'-'||a.folder_reg_seq||'-'||a.ho_no folder_clss_no		      ,A.title		      ,A.folder_take_seq 		FROM tb_tkfolder A, tb_tkrecord B		WHERE A.record_center_id 	= B.record_center_id		AND A.record_center_id 		= '1'		AND A.folder_take_seq 		= B.folder_take_seq		AND A.take_yyyy 			= '1'		AND A.take_org_cd 			= '1'		AND A.creat_sys_cd 			= '02'		AND A.take_sno 				= '1'		AND B.error_flag 			= 'Y';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findErrorAttachList
+
+		SELECT a.record_center_id,      	   a.take_yyyy,	  	   a.take_org_cd,	       a.creat_sys_cd,	       a.take_sno,	       a.reg_dtime,	       b.line_no,	       a.title folder_title,	       b.title record_title,	       a.org_cd||'-'||a.clss_id||'-'||a.creat_yyyy||'-'||a.folder_reg_seq||'-'||a.ho_no folder_clss_no,	       b.creat_yyyy||'-'||b.org_cd||'-'||substr(b.creat_reg_no, 8)||'-'||b.dtch_reg_no record_reg_no,	       a.folder_take_seq,	       b.record_take_seq	  FROM tb_tkfolder a, tb_tkrecord b	 WHERE     a.record_Center_id = '1'	       AND a.record_Center_id = b.record_Center_id	       AND a.folder_take_seq = b.folder_take_seq	       AND a.take_yyyy = '1'	       AND a.take_org_cd = '1'	       AND a.creat_sys_cd = '1'	       AND a.take_sno = '1'	       AND (SELECT COUNT (1)	              FROM tb_tkattachfile z	             WHERE     z.record_center_id = b.record_center_id	                   AND z.record_take_seq = b.record_take_seq	                   AND z.virus_flag = '1') > 0;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml
+-- Query    : select
+-- Query Id : findTakeRecvDtime
+
+ 		SELECT reg_dtime  		  FROM tb_tkorgtakeplan 		 WHERE record_center_id = '1' 		   AND take_yyyy   		= '1' 		   AND take_org_cd 		= '1' 		   AND creat_sys_cd 	= '1' 		   AND take_sno			= '1' 	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\take\undTake\UndTakeGroup.xml

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="mainRef">
+
+	<resultMap id="refDoc-doc-result" class="rms.common.main.domain.RefDoc" >
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userId" 			column="USER_ID"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+		<result property="boardTitle" 		column="BOARD_TITLE"/>
+		<result property="boardCont" 		column="BOARD_CONT"/>
+	</resultMap>
+	<!-- 
+		메인화면에서 참고자료 목록을 조회한다.
+	 -->
+	<select id="mainRefDocList" parameterClass="rms.common.main.domain.RefDoc" resultMap="refDoc-doc-result">
+		SELECT /*+ index_desc (TB_STREFDATA TB_STREFDATA_PK) */
+			  board_sno,record_center_id, board_title, board_cont
+			, user_nm,user_id, SUBSTR(reg_dtime, 0, 8) reg_dtime
+		FROM TB_STREFDATA
+		<![CDATA[
+			WHERE ROWNUM <='3'
+		]]>
+	</select>
+	
+	<!-- 
+		참고자료 목록을 조회한다.
+	 -->
+	<resultMap id="findRefDocPagedList-result" class="rms.common.main.domain.RefDoc">
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userId" 			column="USER_ID"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+		<result property="boardTitle" 		column="BOARD_TITLE"/>
+		<result property="boardCont" 		column="BOARD_CONT"/>
+	</resultMap>
+	<select id="countRefDocPagedList" parameterClass="rms.common.main.domain.RefDoc" resultClass="java.lang.Long">
+		SELECT  COUNT(1)
+        FROM TB_STREFDATA
+        <dynamic prepend="WHERE">
+            <isNotEmpty property="boardTitle">
+                <isEqual property="searchType" compareValue="1">
+                    BOARD_TITLE LIKE #boardTitle:VARCHAR#
+                </isEqual>
+                <isEqual property="searchType" compareValue="2">
+                    (BOARD_TITLE LIKE #boardTitle:VARCHAR# OR BOARD_CONT LIKE #boardTitle:VARCHAR#)
+                </isEqual>
+                <isEqual property="searchType" compareValue="3">
+                    (BOARD_TITLE LIKE #boardTitle:VARCHAR# OR BOARD_CONT LIKE #boardTitle:VARCHAR# OR USER_NM LIKE #boardTitle:VARCHAR#)
+                </isEqual>
+            </isNotEmpty>    
+        </dynamic>
+	</select>
+	<select id="findRefDocPagedList" parameterClass="rms.common.main.domain.RefDoc" resultMap="findRefDocPagedList-result">
+		SELECT C.board_sno
+		      ,C.record_center_id
+		      ,C.board_title
+		      ,C.board_cont
+		      ,C.user_nm
+		      ,C.user_id
+		      ,SUBSTR(C.reg_dtime, 0, 8) AS reg_dtime
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT  *
+		            FROM TB_STREFDATA
+		            <dynamic prepend="WHERE">
+		                <isNotEmpty property="boardTitle">
+		                    <isEqual property="searchType" compareValue="1">
+		                        BOARD_TITLE LIKE #boardTitle:VARCHAR#
+		                    </isEqual>
+		                    <isEqual property="searchType" compareValue="2">
+		                        (BOARD_TITLE LIKE #boardTitle:VARCHAR# OR BOARD_CONT LIKE #boardTitle:VARCHAR#)
+		                    </isEqual>
+		                    <isEqual property="searchType" compareValue="3">
+		                        (BOARD_TITLE LIKE #boardTitle:VARCHAR# OR BOARD_CONT LIKE #boardTitle:VARCHAR# OR USER_NM LIKE #boardTitle:VARCHAR#)
+		                    </isEqual>
+		                </isNotEmpty>    
+		            </dynamic>
+		            ORDER BY BOARD_SNO DESC
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+
+	<!-- 
+		참고자료을 등록한다.
+	 -->
+	<insert id="createRefDoc" parameterClass="rms.common.main.domain.RefDoc">
+		INSERT INTO TB_STREFDATA (BOARD_SNO,RECORD_CENTER_ID,BOARD_TITLE,BOARD_CONT,USER_ID,USER_NM,FIND_CNT,REG_DTIME) 
+		VALUES (
+			<!--cubrid #boardSno#, #recordCenterId#, #boardTitle#, #boardCont#, #userId#,#userNm#, 0,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+			#boardSno#, #recordCenterId#, #boardTitle#, #boardCont#, #userId#,#userNm#, 0,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+	<!-- 
+		참고자료 순번을 조회한다.
+	 -->
+	<select id="findBoardSno" resultClass="java.lang.Integer">
+		SELECT tb_strefdata_sq01.nextval from DUAL
+	</select>
+	
+	<!-- 
+		참고자료 첨부파일을 등록한다.
+	 -->
+	<insert id="createRefUploadDoc" parameterClass="rms.common.main.domain.RefDoc">
+		INSERT INTO tb_stattachfile
+		(BOARD_SNO,ATTACH_FILE_SNO,BOARD_DIV,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,RECORD_CENTER_ID,REG_USER_ID,REG_DTIME) 
+		<!--cubrid VALUES(#boardSno#,#attachFileSno#,#boardDiv#,#attachFileNm#,#fileSize#,#storePath#,#storeFileNm#,#recordCenterId#,#userId#,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'))-->
+		VALUES(#boardSno#,#attachFileSno#,#boardDiv#,#attachFileNm#,#fileSize#,#storePath#,#storeFileNm#,#recordCenterId#,#userId#,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))
+	</insert>
+	
+	<!-- 
+		참고자료 상세를 조회한다.
+	 -->
+	<resultMap id="findRefDocDetail-result" class="rms.common.main.domain.RefDoc">
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="recordCenterId" 	column="RECORD_CENTER_ID"/>
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="userId" 			column="USER_ID"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+		<result property="boardTitle" 		column="BOARD_TITLE"/>
+		<result property="boardCont" 		column="BOARD_CONT"/>
+	</resultMap>
+	<select id="findRefDocDetail" parameterClass="rms.common.main.domain.RefDoc" resultMap="findRefDocDetail-result">
+		SELECT BOARD_SNO,BOARD_TITLE,BOARD_CONT,RECORD_CENTER_ID,USER_NM,USER_ID,REG_DTIME
+		FROM TB_STREFDATA
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="boardSno">
+				BOARD_SNO = #boardSno:NUMBER#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		참고자료 첨부파일을 조회한다.
+	 -->
+	<resultMap id="findRefDocFile-result" class="rms.common.main.domain.RefDoc" >
+		<result property="boardSno" 		column="BOARD_SNO"/>
+		<result property="userId" 			column="REG_USER_ID"/>
+		<result property="boardDiv" 		column="BOARD_DIV"/>
+		<result property="attachFileSno" 	column="ATTACH_FILE_SNO"/>
+		<result property="attachFileNm" 	column="ATTACH_FILE_NM"/>
+		<result property="fileSize" 		column="FILE_SIZE"/>
+		<result property="storePath" 		column="STORE_PATH"/>
+		<result property="storeFileNm" 		column="STORE_FILE_NM"/>
+		<result property="regYmd" 			column="REG_DTIME"/>
+	</resultMap>
+	<select id="findRefDocFile" parameterClass="rms.common.main.domain.RefDoc" resultMap="findRefDocFile-result">
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME
+		FROM TB_STATTACHFILE
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		<isNotEmpty prepend="AND" property="attachFileSno">
+			<isNotEqual property="attachFileSno" compareValue="0">
+				ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+			</isNotEqual>
+		</isNotEmpty>
+		AND BOARD_DIV ='3'
+	</select>
+	
+	<!-- 
+		참고자료을 수정한다.
+	 -->
+	<update id="updateRefDoc" parameterClass="rms.common.main.domain.RefDoc">
+		UPDATE TB_STREFDATA
+	  	SET  BOARD_TITLE = #boardTitle:VARCHAR#
+	  		,BOARD_CONT  = #boardCont:VARCHAR#
+	  	WHERE BOARD_SNO  = #boardSno:NUMBER#
+	</update>
+	
+	<!-- 
+		참고자료 첨부파일의 최종 순번을 조회한다.
+	 -->
+	<select id="findAttachFileMaxSno" parameterClass="rms.common.main.domain.RefDoc" resultClass="java.lang.Integer">
+		SELECT NVL(MAX(attach_file_sno), 0) FROM TB_STATTACHFILE WHERE BOARD_SNO = #boardSno:NUMBER# AND BOARD_DIV ='3'
+	</select>
+	
+	<!-- 
+		참고자료 첨부파일을 삭제한다.
+	 -->	
+	<delete id="deleteRefDocFile" parameterClass="rms.common.main.domain.RefDoc">
+		DELETE FROM TB_STATTACHFILE 
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		<isNotEmpty prepend="AND" property="attachFileSno">
+			<isNotEqual property="attachFileSno" compareValue="0">
+				ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+			</isNotEqual>
+		</isNotEmpty> 
+		AND BOARD_DIV = '3'
+	</delete>
+	
+	<!-- 
+		참고자료을 삭제한다.
+	 -->
+	<delete id="deleteRefDoc" parameterClass="rms.common.main.domain.RefDoc">
+		DELETE FROM TB_STREFDATA WHERE BOARD_SNO = #boardSno:NUMBER#
+	</delete>
+	
+	<!-- 
+		참고자료 첨부파일을 조회한다.
+	 -->	
+	<select id="findRefDocDownloadFile" parameterClass="rms.common.main.domain.RefDoc" resultMap="findRefDocFile-result">
+		SELECT BOARD_SNO,BOARD_DIV,ATTACH_FILE_SNO,ATTACH_FILE_NM,FILE_SIZE,STORE_PATH,STORE_FILE_NM,REG_USER_ID,SUBSTR(REG_DTIME, 0, 8) REG_DTIME
+		FROM TB_STATTACHFILE
+		WHERE BOARD_SNO = #boardSno:NUMBER#
+		AND BOARD_DIV = #boardDiv:NUMBER#
+		AND ATTACH_FILE_SNO = #attachFileSno:NUMBER#
+	</select>	
+	
+</sqlMap>

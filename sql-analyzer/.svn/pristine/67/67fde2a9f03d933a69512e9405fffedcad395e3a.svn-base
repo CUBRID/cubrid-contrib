@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.config">
+
+	<resultMap id="recordCenter-result" 		class="rms.sys.confset.domain.RecordCenter" >
+		<result property="recordCenterId"		column="record_center_id"></result>
+		<result property="recordCenterCd"		column="record_center_cd"></result>
+		<result property="recordCenterNm"		column="record_center_nm"></result>
+		<result property="recordCenterFullNm"	column="record_center_full_nm"></result>
+	</resultMap>
+
+	<!-- 
+		공통 > 기록관정보 (SELECT)
+	 -->
+	<select id="findRecordCenter" parameterClass="java.lang.String" resultMap="recordCenter-result">
+		SELECT A.record_center_id
+		     , A.record_center_cd
+			 , A.record_center_nm
+			 , (SELECT B.full_org_nm FROM TB_STORG B
+			    WHERE B.record_center_id = A.record_center_id
+			    AND   B.org_cd = A.record_center_cd) record_center_full_nm
+		FROM TB_STRECORDCENTER A
+		WHERE A.record_center_id = #value:VARCHAR#
+	</select>
+	
+	<!-- 
+		공통 > 기록관정보 (SELECT)
+	 -->
+	<select id="findRecordCenterByCd" parameterClass="java.lang.String" resultMap="recordCenter-result">
+		SELECT A.record_center_id
+		     , A.record_center_cd
+			 , A.record_center_nm
+			 , (SELECT B.full_org_nm FROM TB_STORG B
+			    WHERE B.record_center_id = A.record_center_id
+			    AND   B.org_cd = A.record_center_cd) record_center_full_nm
+		FROM TB_STRECORDCENTER A
+		WHERE A.record_center_cd = #value:VARCHAR#
+	</select>
+	
+	<resultMap id="config-result" 		class="rms.sys.confset.domain.RecordCenterConfig" >
+		<result property="recordCenterId"		column="record_center_id"></result>
+		<result property="nomlMngNoRule"		column="noml_mng_no_rule"></result>
+		<result property="spclMngNoRule"		column="spcl_mng_no_rule"></result>
+		<result property="handlOrgCd"			column="handl_org_cd"></result>
+		<result property="linkServerIp"			column="link_server_ip"></result>
+		<result property="linkServerPort"		column="link_server_port"></result>
+		<result property="linkServerUserId"		column="link_server_user_id"></result>
+		<result property="linkServerPwd"		column="link_server_pwd"></result>
+		<result property="linkServerClass"		column="link_server_class"></result>
+		<result property="linkServerLang"		column="link_server_lang"></result>
+		<result property="handlOrgNm"			column="handl_org_nm"></result>
+		<result property="presvBoxIdRule"		column="presv_box_id_rule"></result>    <!-- 보존상자부여규칙 추가 -->
+	</resultMap>
+	
+	<!-- 
+		공통 >> 기록관 환경정보 (SELECT)
+	 -->
+	<select id="findConfig" parameterClass="java.lang.String" resultMap="config-result">
+		SELECT A.record_center_id
+		     , A.noml_mng_no_rule
+			 , A.spcl_mng_no_rule
+			 , A.handl_org_cd
+			 , A.link_server_ip
+			 , A.link_server_port
+			 , A.link_server_user_id
+			 , A.link_server_pwd
+			 , A.link_server_class
+			 , A.link_server_lang
+			 , (SELECT B.org_nm
+			    FROM  TB_STORG B
+				WHERE B.record_center_id=A.record_center_id
+				AND   B.org_cd=A.handl_org_cd) handl_org_nm
+			 , A.presv_box_id_rule   <!-- 보존상자번호부여규칙 추가(1:서고+서가+층+열+상자ID(3), 2:처리과코드+보존기간+생산연도+상자ID(6) -->         
+		FROM TB_STCONFIG A
+		WHERE A.record_center_id = #value:VARCHAR#
+	</select>
+
+</sqlMap>

@@ -1,0 +1,88 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : select
+-- Query Id : selectDeptSyncData
+
+		SELECT ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD,LEVL,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD		FROM TB_STORG_SYNC;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : delete
+-- Query Id : deleteDeptSyncData
+
+		DELETE FROM TB_STORG_SYNC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : select
+-- Query Id : selectRecordCenterId
+
+		SELECT RECORD_CENTER_ID		FROM TB_STORG		WHERE ORG_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertDeptSyncData
+
+		INSERT INTO TB_STORG_SYNC 		(ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD		,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD,LEVL)		VALUES (			'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'5'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : select
+-- Query Id : checkStorg
+
+		SELECT COUNT(*) FROM TB_STORG		WHERE ORG_CD = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertStorg
+
+		INSERT INTO TB_STORG (			RECORD_CENTER_ID,ORG_CD,ORG_NM,ORG_ABBR_NM,FULL_ORG_NM,HUPPER_ORG_CD,UPPER_ORG_CD			,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD, LEVL		)		VALUES (			'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'				,'5'	  		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertStdept
+
+		INSERT INTO TB_STDEPT (			DEPT_CD,RECORD_CENTER_ID,ORG_CD,DEPT_NM,DEPT_ABBR_NM,HUPPER_DEPT_CD,UPPER_DEPT_CD			,ORG_SEQ,CLOSE_FLAG,APPLY_START_YMD,APPLY_CLOSE_YMD, LEVL		)		VALUES (			'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'			,'1'					,'5'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : update
+-- Query Id : updateStorg
+
+		UPDATE TB_STORG		SET CLOSE_FLAG = '1'			, APPLY_START_YMD = '1'			, APPLY_CLOSE_YMD = '1'		WHERE ORG_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : update
+-- Query Id : updateStdept
+
+		UPDATE TB_STDEPT		SET CLOSE_FLAG = '1'			, APPLY_START_YMD = '1'			, APPLY_CLOSE_YMD = '1'		WHERE DEPT_CD = '1'		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : update
+-- Query Id : updateOrgLevel
+
+		UPDATE TB_STORG A        SET A.LEVL =(SELECT COUNT(1) FROM TB_STORG B START WITH B.ORG_CD = A.ORG_CD CONNECT BY PRIOR B.UPPER_ORG_CD=B.ORG_CD and prior B.RECORD_CENTER_ID = B.RECORD_CENTER_ID);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : update
+-- Query Id : updateDeptLevel
+
+		UPDATE TB_STDEPT A        SET A.LEVL =(SELECT COUNT(1) FROM TB_STDEPT B START WITH B.DEPT_CD = A.DEPT_CD CONNECT BY PRIOR B.UPPER_DEPT_CD=B.DEPT_CD);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml
+-- Query    : insert
+-- Query Id : insertZzOrgUnit
+
+		INSERT INTO TB_ZZORGUNIT		      (record_center_id, org_cd, unit_cd, take_flag, reg_dtime, use_flag,COM_UNIT_FLAG)		(			SELECT *			FROM 			(				SELECT DISTINCT A.record_center_id, B.org_cd, A.unit_cd, '0', A.reg_dtime, DECODE(A.state_cd,'2','0','1'),'1'				FROM TB_ZZUNIT A				   , TB_STORG B				WHERE A.record_center_id = B.record_center_id				AND   (A.unit_cd LIKE 'ZZ%' OR A.COM_UNIT_FLAG='1') 			) C			WHERE (C.record_center_id, C.org_cd, C.unit_cd)			            NOT IN (SELECT record_center_id, org_cd, unit_cd FROM TB_ZZORGUNIT)			AND   C.org_cd NOT IN (SELECT record_center_cd FROM TB_STRECORDCENTER)		);
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\xml\SyncDept.xml

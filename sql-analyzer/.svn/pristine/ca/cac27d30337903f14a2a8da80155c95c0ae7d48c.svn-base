@@ -1,0 +1,26 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeoReconv.xml
+
+updatePresvFormatNeoReconvOrgClearFolderToTransf
+Syntax: In line 7, column 35 before '		EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_c...'
+Syntax error: unexpected 'WHERE', expecting JOIN [CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeoReconv.xml
+-- Query    : update
+-- Query Id : updatePresvFormatNeoReconvOrgClearFolderToTransf
+
+		UPDATE TB_DFRECVTRANSFLIST Z				WHERE		EXISTS (			SELECT 1			FROM  TB_RDFOLDER A			WHERE A.record_center_id = '1'			AND   A.org_cd = '1'			AND   A.folder_keep_state_cd IN ('01','04')						AND   A.record_center_id = Z.record_center_id			AND   A.folder_id = Z.folder_id AND  					(A.creat_yyyy BETWEEN '1' AND '1')				  		)	;
+
+updatePresvFormatRecordNeoWaitRecord2cha
+Semantic: before '  = '1'			, A.neo_job_id = '1'		  			, A.neo_trans_state_2 = '...'
+There are multiple assignments to A.neo_trans_state_2. update TB_RDRECORD A set A.neo_trans_state_2='1', A.neo_job_...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeoReconv.xml
+-- Query    : update
+-- Query Id : updatePresvFormatRecordNeoWaitRecord2cha
+
+		UPDATE TB_RDRECORD A		SET   A.neo_trans_state_2 = '1'			, A.neo_job_id = '1'		  			, A.neo_trans_state_2 = '1'			  		WHERE 		EXISTS (            		SELECT 1            		FROM  TB_STREQTRANS            		WHERE job_id = '1'						AND record_center_id = A.record_center_id			AND record_id = A.record_id				)		AND (A.neo_trans_state_2 IS NULL OR A.neo_trans_state_2='0')	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\format\PresvFormatNeoReconv.xml

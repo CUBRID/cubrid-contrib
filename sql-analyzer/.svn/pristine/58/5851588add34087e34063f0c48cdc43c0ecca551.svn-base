@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="transf.offer.result">
+
+	<resultMap id="creatStateApprRecvResultList-result" class="rms.transf.offer.domain.CrInfrmRecvResult" >
+		<result property="repOrgCd" 						column="rep_org_cd"/>
+		<result property="crReportInfrmYyyy" 			column="cr_report_infrm_yyyy"/>
+		<result property="sendFileDataDiv" 				column="send_file_data_div"/>
+		<result property="sendFileDataDivNm" 			column="send_file_data_div_nm"/>
+		<result property="listLineNo" 						column="list_line_no"/>
+		<result property="infrmRecvErrorCont"			column="infrm_recv_error_cont"/>
+		<result property="recvFileDtime"					column="recv_file_dtime"/>
+	</resultMap>
+	
+	<resultMap id="creatStateApprTakeResultList-result" class="rms.transf.offer.domain.CrInfrmTakeResult" >
+		<result property="repOrgCd" 					column="rep_org_cd"/>
+		<result property="creatSysCd" 					column="creat_sys_cd"/>
+		<result property="orgCd" 							column="org_cd"/>
+		<result property="orgAbbrNm" 					column="org_abbr_nm"/>
+		<result property="orgNm" 							column="org_nm"/>
+		<result property="clssId" 							column="clss_id"/>
+		<result property="creatYyyy" 					column="creat_yyyy"/>
+		<result property="folderRegSeq"				column="folder_reg_seq"/>
+		<result property="hoNo"							column="ho_no"/>
+		<result property="title"								column="title"/>
+		<result property="presvTermCd"				column="presv_term_cd"/>
+		<result property="folderTypeDivCd"			column="folder_type_div_cd"/>
+		<result property="infrmRjctFlag"				column="infrm_rjct_flag"/>
+		<result property="infrmRjctFlagNm"			column="infrm_rjct_flag_nm"/>
+		<result property="infrmTakeErrorCont"		column="infrm_take_error_cont"/>
+		<result property="recordCenterCd"			column="record_center_cd"/>
+		<result property="recordCenterNm"			column="record_center_nm"/>
+	</resultMap>
+	
+	<resultMap id="findCreatStateApprMonitorPagedList-result" class="rms.transf.offer.domain.StateApprMonitor" >
+		<result property="rnum" 							column="RNUM"/>
+		<result property="fileNm" 							column="FILE_NM"/>
+		<result property="erecordFileCnt" 					column="ERECORD_FILE_CNT"/>
+		<result property="svcReqTme" 						column="SVC_REQ_TME"/>
+		<result property="svcHandlFinTme" 					column="SVC_HANDL_FIN_TME"/>
+		<result property="succFailFlag" 					column="SUCC_FAIL_FLAG"/>
+		<result property="errorCd" 							column="ERROR_CD"/>
+		<result property="errorMsg" 						column="ERROR_MSG"/>
+		<result property="errorDetlCont" 					column="ERROR_DETL_CONT"/>
+	</resultMap>
+	
+    
+	<!--
+		기록물인수>연계인수>생산현황통보접수결과 조회
+	-->
+	<select id="findCreatStateApprRecvResult" parameterClass="rms.transf.offer.domain.CrInfrmRecvResult"  resultMap="creatStateApprRecvResultList-result">
+        SELECT F.*
+        FROM (
+            SELECT ROWNUM AS rnum
+                   , D.*
+            FROM (
+                SELECT     a.rep_org_cd, a.cr_report_infrm_yyyy, a.send_file_data_div,
+                                   c.com_cd_nm AS send_file_data_div_nm, a.list_line_no,
+                                   a.infrm_recv_error_cont, a.recv_file_dtime
+                FROM       TB_CRINFRMRECVRESULT a,
+                               (SELECT record_center_cd
+                                FROM   TB_STRECORDCENTER
+                                WHERE  record_center_id = #recordCenterId:VARCHAR#
+                                ) b,
+                                (SELECT com_cd, com_cd_nm
+                                  FROM tb_zzcomcd
+                                 WHERE com_type_cd = 'CR01' 
+                                 AND use_flag = '1') c
+                WHERE     a.cr_report_infrm_yyyy = #crReportInfrmYyyy:VARCHAR#
+                AND            a.rep_org_cd = b.record_center_cd
+                AND             a.send_file_data_div = c.com_cd
+                ORDER BY a.rep_org_cd, a.cr_report_infrm_yyyy, a.send_file_data_div, a.list_line_no
+              ) D
+            WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+        ) F
+        WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!--
+		기록물인수>연계인수>생산현황통보접수결과 조회
+	-->
+	<select id="countFindCreatStateApprRecvResult" parameterClass="rms.transf.offer.domain.CrInfrmRecvResult"  resultClass="long">
+		SELECT 	COUNT(1)
+		FROM   	TB_CRINFRMRECVRESULT a,
+					   (SELECT record_center_cd
+				        FROM   TB_STRECORDCENTER
+						WHERE  record_center_id = #recordCenterId:VARCHAR#
+						) b,
+						(SELECT com_cd, com_cd_nm
+				          FROM tb_zzcomcd
+				         WHERE com_type_cd = 'CR01' 
+						 AND use_flag = '1') c
+		WHERE 	a.cr_report_infrm_yyyy = #crReportInfrmYyyy:VARCHAR#
+		AND			a.rep_org_cd = b.record_center_cd
+		AND 			a.send_file_data_div = c.com_cd
+	</select>
+	
+	<!--
+		기록물인수>연계인수>생산현황통보인수결과 조회
+	-->
+	<select id="findCreatStateApprTakeResult" parameterClass="rms.transf.offer.domain.CrInfrmTakeResult"  resultMap="creatStateApprTakeResultList-result">
+        SELECT F.*
+        FROM (
+            SELECT ROWNUM AS rnum
+                   , D.*
+            FROM (
+				SELECT 	a.rep_org_cd, a.creat_sys_cd, a.org_cd, b.org_abbr_nm, b.org_nm, a.clss_id, a.creat_yyyy, 
+								a.folder_reg_seq, a.ho_no, a.title, a.presv_term_cd, a.folder_type_div_cd, 
+								a.infrm_rjct_flag, DECODE(a.infrm_rjct_flag,'1','인수','2','반려','') AS infrm_rjct_flag_nm, 
+								a.infrm_take_error_cont, b.record_center_cd, b.record_center_nm
+				FROM  		TB_CRINFRMTAKERESULT a,
+								(SELECT 	a.record_center_id, a.org_cd, a.org_nm, a.org_abbr_nm,
+												b.record_center_cd, b.record_center_nm
+								FROM 		TB_STORG a, TB_STRECORDCENTER b
+								WHERE 	a.record_center_id = b.record_center_id
+								<isNotEmpty prepend="AND" property="recordCenterId">
+											a.record_center_id = #recordCenterId:VARCHAR#
+								</isNotEmpty>
+								<isNotEmpty prepend="AND" property="orgCd">
+											a.org_cd = #orgCd:VARCHAR#
+								</isNotEmpty>					  	
+								) b
+				WHERE 	SUBSTR(a.reg_dtime,1,4) = #crReportInfrmYyyy:VARCHAR#
+				AND	  		a.org_cd = b.org_cd
+				<isNotEmpty prepend="AND" property="infrmRjctFlag">
+								a.infrm_rjct_flag = #infrmRjctFlag:VARCHAR#
+				</isNotEmpty>
+				)D
+        ) F
+        WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	
+	<!--
+		기록물인수>연계인수>생산현황통보인수결과 조회
+	-->
+	<select id="countFindCreatStateApprTakeResult" parameterClass="rms.transf.offer.domain.CrInfrmTakeResult"  resultClass="long">
+		SELECT 	COUNT(1)
+		FROM  		TB_CRINFRMTAKERESULT a,
+			  			(SELECT 	record_center_id, org_cd, org_nm, org_abbr_nm
+			  			FROM 		TB_STORG
+			  			<isNotEmpty prepend="WHERE" property="recordCenterId">
+			  			 				record_center_id = #recordCenterId:VARCHAR#
+			  			 </isNotEmpty>
+			  			 <isNotEmpty prepend="AND" property="orgCd">
+					  				org_cd = #orgCd:VARCHAR#
+					  	</isNotEmpty>	
+			  			) b
+		WHERE 	SUBSTR(a.reg_dtime,1,4) = #crReportInfrmYyyy:VARCHAR#
+		AND	  		a.org_cd = b.org_cd
+		<isNotEmpty prepend="AND" property="infrmRjctFlag">
+					  	a.infrm_rjct_flag = #infrmRjctFlag:VARCHAR#
+		</isNotEmpty>	
+	</select>
+	
+	<select id="findCreatStateApprMonitorPagedList" parameterClass="rms.transf.offer.domain.StateAppr"  resultMap="findCreatStateApprMonitorPagedList-result">
+		SELECT X.RNUM
+		      ,X.FILE_NM
+		      ,X.ERECORD_FILE_CNT
+		      ,X.SVC_REQ_TME
+		      ,X.SVC_HANDL_FIN_TME
+		      ,X.SUCC_FAIL_FLAG
+		      ,Y.ERROR_CD
+		      ,Y.ERROR_MSG
+		      ,Y.ERROR_DETL_CONT
+		FROM   (SELECT ROW_NUMBER() OVER (ORDER BY B.SEND_LIST_LOG_SNO DESC, A.LOG_SNO) AS RNUM
+		              ,A.LOG_SNO
+		              ,A.FILE_NM
+		              ,A.ERECORD_FILE_CNT
+		              ,SUBSTR(A.SVC_REQ_TME, 1, 19) AS SVC_REQ_TME
+		              ,SUBSTR(A.SVC_HANDL_FIN_TME, 1, 19) AS SVC_HANDL_FIN_TME
+		              ,A.SUCC_FAIL_FLAG
+		        FROM   TB_STLOGMONITOR A
+		              ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM
+		                      ,MIN(BA.LOG_SNO) AS SEND_LIST_LOG_SNO
+		                FROM   TB_STLOGMONITOR BA
+		                WHERE  BA.FILE_NM LIKE '________PROD_MST_' || #crReportInfrmYyyy:VARCHAR# || '%'
+		               <!--  AND    BA.LOG_JOB_DIV = '2' -->
+		                GROUP BY BA.SEND_LIST_FILE_NM) B
+		        WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM
+		        AND    A.SVC_DIV = 'T'
+		        <!-- AND    A.LOG_JOB_DIV = '2' --> ) X
+		      ,(SELECT YA.LOG_SNO
+		              ,YB.ERROR_CD
+		              ,YB.ERROR_MSG
+		              ,YB.ERROR_DETL_CONT
+		        FROM   (SELECT B.LOG_SNO
+		                      ,MIN(A.ERROR_LOG_SNO) AS ERROR_LOG_SNO
+		                FROM   TB_STERRORLOG A
+		                      ,(SELECT BA.LOG_SNO
+		                              ,BA.FILE_NM
+		                              ,BA.LOG_CREAT_TME
+		                        FROM   TB_STLOGMONITOR BA
+		                              ,(SELECT DISTINCT BBA.SEND_LIST_FILE_NM
+		                                FROM   TB_STLOGMONITOR BBA
+		                                WHERE  BBA.FILE_NM LIKE '________PROD_MST_' || #crReportInfrmYyyy:VARCHAR# || '%'
+		                                <!-- AND    BBA.LOG_JOB_DIV = '2' --> ) BB
+		                        WHERE  BA.SEND_LIST_FILE_NM = BB.SEND_LIST_FILE_NM
+		                        AND    BA.SUCC_FAIL_FLAG = 'F'
+		                        AND    BA.SVC_DIV = 'T'
+		                       <!--  AND    BA.LOG_JOB_DIV = '2'  -->) B
+		                WHERE   SUBSTR(A.FILE_NM, DECODE(INSTR(A.FILE_NM, '/', -1), 0, 0, INSTR(A.FILE_NM, '/', -1)+1)) = B.FILE_NM
+		                AND     A.LOG_CREAT_TME <![CDATA[<=]]> B.LOG_CREAT_TME
+		                GROUP BY LOG_SNO) YA
+		               ,TB_STERRORLOG YB
+		        WHERE  YA.ERROR_LOG_SNO = YB.ERROR_LOG_SNO) Y
+		WHERE  X.LOG_SNO = Y.LOG_SNO(+)
+		ORDER BY RNUM
+	</select>
+	
+	<select id="countCreatStateApprMonitorPagedList" parameterClass="rms.transf.offer.domain.StateAppr"  resultClass="long">
+		SELECT COUNT(*) AS CNT
+		FROM   TB_STLOGMONITOR A
+		      ,(SELECT DISTINCT BA.SEND_LIST_FILE_NM
+		        FROM   TB_STLOGMONITOR BA
+		        WHERE  BA.FILE_NM LIKE '________PROD_MST_' || #crReportInfrmYyyy:VARCHAR# || '%'
+		        ) B
+		WHERE  A.SEND_LIST_FILE_NM = B.SEND_LIST_FILE_NM
+		AND    A.SVC_DIV = 'T'
+	</select>
+	
+	<!-- 
+		기록물인수>연계인수>생산현황통보접수결과 이전내역삭제
+	 -->
+	<delete id="deleteCrInfrmRecvResult" parameterClass="rms.transf.offer.domain.CrInfrmRecvResult">
+		DELETE 	FROM TB_CRINFRMRECVRESULT
+		WHERE 	cr_report_infrm_yyyy = #crReportInfrmYyyy:VARCHAR#
+		AND 			rep_org_cd = #repOrgCd:VARCHAR#
+	</delete>
+	
+		<!-- 
+		기록물인수>연계인수>생산현황통보접수결과 파일내역저장
+	 -->
+	<insert id="creatCrInfrmRecvResult" parameterClass="rms.transf.offer.domain.CrInfrmRecvResult">
+		INSERT INTO TB_CRINFRMRECVRESULT
+		(
+			cr_report_infrm_yyyy,	rep_org_cd,	send_file_data_div, 	list_line_no, 	infrm_recv_error_cont, 
+			recv_file_dtime, 			reg_dtime,		send_div,		error_flag
+		) VALUES (
+		  	#crReportInfrmYyyy:VARCHAR#,  	#repOrgCd:VARCHAR#, 								#sendFileDataDiv:VARCHAR#, 	#listLineNo:VARCHAR#, 	#infrmRecvErrorCont:VARCHAR#, 
+			<!--cubrid #recvFileDtime:VARCHAR#, 			TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),		#sendDiv:VARCHAR#,		#errorFlag:VARCHAR#		-->
+                        #recvFileDtime:VARCHAR#, 			TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'),		#sendDiv:VARCHAR#,		#errorFlag:VARCHAR#		
+		)
+	</insert>
+	
+		<!-- 
+		기록물인수>연계인수> 생산현황통보 생산현황통보접수결과 생산현황통보상태 update
+	 -->
+	<update id="updateCrInfrmRecvReportInfrmStateFlagInfo" parameterClass="rms.transf.offer.domain.CrInfrmRecvResult">
+		UPDATE TB_CRFOLDER
+		SET    CR_REPORT_INFRM_STATE_FLAG = #crReportInfrmStateFlag:VARCHAR#
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    CR_REPORT_INFRM_YYYY = #crReportInfrmYyyy:VARCHAR#
+	</update>
+	
+		<!-- 
+		기록물인수>연계인수>생산현황통보인수결과 이전내역삭제
+	 -->
+	<delete id="deleteCrInfrmTakeResult" parameterClass="rms.transf.offer.domain.CrInfrmTakeResult">
+		DELETE 	FROM TB_CRINFRMTAKERESULT
+		WHERE 	SUBSTR(reg_dtime,1,4) = #crReportInfrmYyyy:VARCHAR#
+		AND			rep_org_cd = #recordCenterCd:VARCHAR#
+	</delete>
+	
+		<!-- 
+		기록물인수>연계인수>생산현황통보인수결과 파일내역저장
+	 -->
+	<insert id="creatCrInfrmTakeResult" parameterClass="rms.transf.offer.domain.CrInfrmTakeResult">
+		INSERT INTO TB_CRINFRMTAKERESULT
+		(
+			rep_org_cd, 		creat_sys_cd, 				org_cd, 	clss_id, 				creat_yyyy, 
+			folder_reg_seq, 	ho_no, 							title, 			presv_term_cd, 	folder_type_div_cd, 
+			infrm_rjct_flag, 		infrm_take_error_cont, 	reg_dtime
+		) VALUES (
+			#repOrgCd:VARCHAR#, 		#creatSysCd:VARCHAR#, 			#orgCd:VARCHAR#, 	#clssId:VARCHAR#, 				#creatYyyy:VARCHAR#, 
+			#folderRegSeq:VARCHAR#, 	#hoNo:VARCHAR#, 						#title:VARCHAR#, 		#presvTermCd:VARCHAR#, 	#folderTypeDivCd:VARCHAR#, 
+			<!--cubrid #infrmRjctFlag:VARCHAR#, 	#infrmTakeErrorCont:VARCHAR#, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+                        #infrmRjctFlag:VARCHAR#, 	#infrmTakeErrorCont:VARCHAR#, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	
+		<!-- 
+		기록물인수>연계인수> 생산현황통보 생산현황통보인수결과 생산현황통보상태 update
+	 -->
+	<update id="updateCrInfrmTakeReportInfrmStateFlagInfo" parameterClass="rms.transf.offer.domain.CrInfrmTakeResult">
+		UPDATE TB_CRFOLDER
+		SET    CR_REPORT_INFRM_STATE_FLAG = #crReportInfrmStateFlag:VARCHAR#
+		WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND    CREAT_YYYY = #creatYyyy:VARCHAR#
+	</update>
+</sqlMap>

@@ -1,0 +1,130 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrFolderNeoFileList
+
+		SELECT A.folder_neo_file_id, A.rd_folder_id AS folder_id,		A.chng_sno, A.file_nm, A.neo_file_type_cd		, A.file_size, A.store_file_id, A.neo_trans_state, A.del_flag,		A.record_center_id		, A.medium_id, A.virus_flag, A.virus_dtime, A.trans_req_dtime,		A.trans_fin_dtime		, A.reg_dtime, A.file_path		, (SELECT F.creat_yyyy FROM TB_RCFOLDER F WHERE		F.record_center_id=A.record_center_id AND F.folder_id=A.folder_id) AS		creat_yyyy		FROM (		SELECT B.*		, '1' AS rd_folder_id		FROM TB_RCFOLDERNEOFILE B		, TB_RCTAKEFOLDERLIST C		WHERE C.take_rep_cd = '1'		AND C.take_yyyy = '1'		AND C.take_sno = '1'		AND C.record_center_id = '1'		AND C.folder_id = '1'		AND B.record_center_id = C.record_center_id		AND B.folder_id = C.folder_id		ORDER BY B.record_center_id, B.folder_id, B.chng_sno		) A;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrFolderNeoFile
+
+		INSERT INTO TB_STFOLDERNEOFILE		(		folder_neo_file_id, folder_id, chng_sno, file_nm, neo_file_type_cd		, file_size, store_file_id, neo_trans_state, del_flag, record_center_id		, medium_id, virus_flag, virus_dtime, trans_req_dtime, trans_fin_dtime		, reg_dtime		) VALUES (		'1', '1', '1', '1',		'1'		, '1', '1', '1',		'1', '1'		, '1', '1', '1',		'1', '1'		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrRecordErecordFlag
+
+		SELECT B.erecord_flag		FROM TB_RCRECORD B		, TB_RCTAKERECORDLIST C		WHERE C.take_rep_cd = '1'		AND		C.take_yyyy = '1'		AND C.take_sno = '1'		AND		C.record_center_id = '1'		AND C.record_id =		'1'		AND B.record_center_id = C.record_center_id		AND		B.record_id = C.record_id;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrRecordOrign
+
+		INSERT		INTO TB_STRECORDORIGN		(		record_center_id, orign_id, record_id, erecord_flag, del_flag		, reg_dtime		) VALUES (		'1', '1', '1', '1', '0'		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : update
+-- Query Id : updateTakeTakovrRecordOrign
+
+		UPDATE		TB_STRECORDORIGN		SET orign_id = '1'		WHERE record_center_id		= '1'		AND record_id = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : countTakeTakovrRecordOrign
+
+		SELECT COUNT(1)		FROM TB_STRECORDORIGN		WHERE record_center_id		= '1'		AND record_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrOrignFileList
+
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.doc_type_cd,		A.doc_type_sno, A.rd_orign_id AS orign_id		, A.orign_file_id, A.file_nm, A.store_file_nm, A.data_format_cd,		A.file_size		, A.store_file_id, A.medium_id, A.agent_nm, A.ver, A.page_cnt		, A.pdf_a1_trans_state, A.pdf_a1_trans_req_dtime,		A.pdf_a1_trans_fin_dtime, A.del_flag, A.virus_flag		, A.virus_dtime, A.reg_dtime, A.attach_file_seq, A.rel_file_key,		A.attach_file_mng_info		, A.file_path		FROM (		SELECT B.*		, '1' AS rd_record_id		, '1' AS rd_orign_id		FROM TB_RCORIGNFILE B		, TB_RCTAKERECORDLIST C		WHERE C.take_rep_cd = '1'		AND C.take_yyyy = '1'		AND C.take_sno = '1'		AND C.record_center_id = '1'		AND C.record_id = '1'		AND B.record_center_id = C.record_center_id		AND B.record_id = C.record_id		ORDER BY B.record_center_id, B.record_id, B.doc_type_cd, B.doc_type_sno		) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrOrignFile
+
+		INSERT		INTO TB_STORIGNFILE		(		orign_file_id, record_center_id, orign_id, doc_type_cd, doc_type_sno		, file_nm, store_file_nm, data_format_cd, file_size, store_file_id		, medium_id, agent_nm, ver, page_cnt, pdf_a1_trans_state		, pdf_a1_trans_req_dtime, pdf_a1_trans_fin_dtime, del_flag, virus_flag,		virus_dtime		, reg_dtime, attach_file_seq, rel_file_key, attach_file_mng_info,		file_path_rule		) VALUES (		'1', '1', '1', '1',		'1'		, '1', '1', '1',		'1', '1'		, '1', '1', '1',		'1', '1'		, '1', '1',		'1', '1', '1'		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), '1',		'1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrOrignPdfA1FileList
+
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.doc_type_cd,		A.doc_type_sno, A.rd_orign_id AS orign_id		, A.pdf_a1_file_id, A.file_nm, A.data_format_cd, A.file_size,		A.store_file_id		, A.medium_id, A.del_flag, A.virus_flag, A.virus_dtime, A.reg_dtime		, A.file_path		FROM (		SELECT B.*		, '1' AS rd_record_id		, '1' AS rd_orign_id		FROM TB_RCORIGNPDFA1FILE B		, TB_RCTAKERECORDLIST C		WHERE C.take_rep_cd = '1'		AND C.take_yyyy = '1'		AND C.take_sno = '1'		AND C.record_center_id = '1'		AND C.record_id = '1'		AND B.record_center_id = C.record_center_id		AND B.record_id = C.record_id		ORDER BY B.record_center_id, B.record_id, B.doc_type_cd, B.doc_type_sno		) A	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrOrignPdfA1File
+
+		INSERT INTO TB_STORIGNPDFA1FILE		(		pdf_a1_file_id, record_center_id, orign_id, doc_type_cd, doc_type_sno		, file_nm, data_format_cd, file_size, store_file_id, medium_id		, del_flag, virus_flag, virus_dtime, reg_dtime, file_path_rule		) VALUES		(		'1', '1', '1', '1',		'1'		, '1', '1', '1',		'1', '1'		, '1', '1', '1',		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrOrignNeoFileList
+
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.chng_sno,		A.rd_orign_id AS orign_id, A.orign_neo_file_id		, A.file_nm, A.neo_file_type_cd, A.file_size, A.store_file_id,		A.medium_id		, A.del_flag, A.virus_flag, A.virus_dtime, A.reg_dtime, A.file_path		FROM (		SELECT B.*		, '1' AS rd_record_id		, '1' AS rd_orign_id		FROM TB_RCORIGNNEOFILE B		, TB_RCTAKERECORDLIST C		WHERE C.take_rep_cd = '1'		AND C.take_yyyy = '1'		AND C.take_sno = '1'		AND C.record_center_id = '1'		AND C.record_id = '1'		AND B.record_center_id = C.record_center_id		AND B.record_id = C.record_id		ORDER BY B.record_center_id, B.record_id, B.chng_sno		) A;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrOrignNeoFile
+
+		INSERT		INTO TB_STORIGNNEOFILE		(		orign_neo_file_id, record_center_id, orign_id, chng_sno, file_nm		, neo_file_type_cd, file_size, store_file_id, medium_id, del_flag		, virus_flag, virus_dtime, reg_dtime		) VALUES (		'1', '1', '1',		'1', '1'		, '1' , '1', '1',		'1', '1'		, '1', '1', TO_CHAR(sys_datetime,		'YYYYMMDDHH24MISS')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrOrignPageList
+
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.doc_type_cd,		A.doc_type_sno, A.sno		, A.rd_orign_id AS orign_id, A.orign_page_id, A.orign_file_id,		A.orign_page_file_nm, A.store_page_file_nm		, A.store_file_id, A.data_format_cd, A.file_size, A.del_flag,		A.virus_flag		, A.virus_dtime, A.reg_dtime, A.file_path		FROM (		SELECT B.*		, '1' AS rd_record_id		, '1' AS rd_orign_id		FROM TB_RCORIGNPAGE B		, TB_RCTAKERECORDLIST C		WHERE C.take_rep_cd = '1'		AND C.take_yyyy = '1'		AND C.take_sno = '1'		AND C.record_center_id = '1'		AND C.record_id = '1'		AND B.record_center_id = C.record_center_id		AND B.record_id = C.record_id		ORDER BY B.record_center_id, B.record_id, B.doc_type_cd, B.doc_type_sno,		B.sno		) A;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrOrignPage
+
+		INSERT		INTO TB_STORIGNPAGE		(		orign_page_id, orign_file_id, sno, orign_page_file_nm, store_page_file_nm		, store_file_id, data_format_cd, file_size, del_flag, virus_flag		, virus_dtime, reg_dtime, file_path_rule		) VALUES (		'1', '1', '1',		'1', '1'		, '1', '1', '1',		'1', '1'		, '1', TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : select
+-- Query Id : findTakeTakovrOrignPageHistList
+
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.rd_orign_id AS		orign_id, A.orign_page_id, A.orign_file_id		, A.orign_page_file_nm, A.store_page_file_nm, A.store_file_id,		A.data_format_cd, A.file_size		, A.chng_user_id, A.chng_rsn, A.chng_dtime, A.file_path		FROM (		SELECT B.*		, '1' AS rd_record_id		, '1' AS rd_orign_id		FROM TB_RCORIGNPAGEHIST B		, TB_RCTAKERECORDLIST C		WHERE C.take_rep_cd = '1'		AND C.take_yyyy = '1'		AND C.take_sno = '1'		AND C.record_center_id = '1'		AND C.record_id = '1'		AND B.record_center_id = C.record_center_id		AND B.record_id = C.record_id		ORDER BY B.record_center_id, B.record_id, B.chng_dtime		) A;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrRecordOrignHist
+
+		INSERT INTO TB_STRECORDORIGNHIST		(		record_center_id, orign_id, record_id, chng_dtime		) VALUES (		'1', '1', '1', '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrOrignFileHist
+
+		INSERT INTO TB_STORIGNFILEHIST		(		orign_file_id, record_center_id, orign_id, doc_type_cd, file_nm		, store_file_nm, file_size, medium_id, page_cnt, chng_dtime		) VALUES (		'1', '1', '1',		'1', '1'		, '1', '1', '1',		'1', '1'		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml
+-- Query    : insert
+-- Query Id : createTakeTakovrOrignPageHist
+
+		INSERT INTO TB_STORIGNPAGEHIST		(		orign_page_id, orign_file_id, orign_page_file_nm, store_page_file_nm, store_file_id		, data_format_cd, file_size, chng_user_id, chng_rsn, chng_dtime		, file_path_rule		) VALUES (		'1', '1', '1',		'1', '1'		, '1', '1', '1',		'1', '1'		, '1'		);
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\orign\egovframework\sqlmap\orign\default\orign\FileTakeTakovrDao.xml

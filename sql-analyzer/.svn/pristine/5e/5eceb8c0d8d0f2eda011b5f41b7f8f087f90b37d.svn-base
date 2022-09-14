@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.verify">
+
+	<resultMap id="accs-verifyStatus-result" class="rms.accs.verify.domain.VerifyStatus" >
+		<result property="recordCenterId" 		column="record_center_id"/>
+		<result property="month" 				column="month"/>
+		<result property="verifyCnt" 			column="verify_cnt"/>	
+	</resultMap>
+	<!-- 
+		SELECT - 년도별 검증 현황 목록을 조회한다
+	 -->
+	<select id="findVerifyStatusByYearList" parameterClass="rms.accs.verify.domain.VerifyStatus" resultMap="accs-verifyStatus-result">
+		SELECT
+			A.record_center_id
+			<!--cubrid-->
+		    ,(CASE WHEN A.&quot;month&quot; = '01' THEN '1월'
+		         WHEN A.&quot;month&quot; = '02' THEN '2월'
+		         WHEN A.&quot;month&quot; = '03' THEN '3월'
+		         WHEN A.&quot;month&quot; = '04' THEN '4월'
+		         WHEN A.&quot;month&quot; = '05' THEN '5월'
+		         WHEN A.&quot;month&quot; = '06' THEN '6월'
+		         WHEN A.&quot;month&quot; = '07' THEN '7월'
+		         WHEN A.&quot;month&quot; = '08' THEN '8월'
+		         WHEN A.&quot;month&quot; = '09' THEN '9월'
+		         WHEN A.&quot;month&quot; = '10' THEN '10월'
+		         WHEN A.&quot;month&quot; = '11' THEN '11월'
+		         WHEN A.&quot;month&quot; = '12' THEN '12월'
+		     END) AS &quot;month&quot;
+		     ,(CASE WHEN A.&quot;month&quot; = '01' THEN month1
+		          WHEN A.&quot;month&quot; = '02' THEN month2
+		          WHEN A.&quot;month&quot; = '03' THEN month3
+		          WHEN A.&quot;month&quot; = '04' THEN month4
+		          WHEN A.&quot;month&quot; = '05' THEN month5
+		          WHEN A.&quot;month&quot; = '06' THEN month6
+		          WHEN A.&quot;month&quot; = '07' THEN month7
+		          WHEN A.&quot;month&quot; = '08' THEN month8
+		          WHEN A.&quot;month&quot; = '09' THEN month9
+		          WHEN A.&quot;month&quot; = '10' THEN month10
+		          WHEN A.&quot;month&quot; = '11' THEN month11
+		          WHEN A.&quot;month&quot; = '12' THEN month12
+		     END) AS verify_cnt
+		FROM
+		(
+		    SELECT B.*,
+		        SUM(CASE WHEN B.&quot;month&quot; = '01' THEN 1 ELSE 0 END) AS month1,
+		        SUM(CASE WHEN B.&quot;month&quot; = '02' THEN 1 ELSE 0 END) AS month2,
+		        SUM(CASE WHEN B.&quot;month&quot; = '03' THEN 1 ELSE 0 END) AS month3,
+		        SUM(CASE WHEN B.&quot;month&quot; = '04' THEN 1 ELSE 0 END) AS month4,
+		        SUM(CASE WHEN B.&quot;month&quot; = '05' THEN 1 ELSE 0 END) AS month5,
+		        SUM(CASE WHEN B.&quot;month&quot; = '06' THEN 1 ELSE 0 END) AS month6,
+		        SUM(CASE WHEN B.&quot;month&quot; = '07' THEN 1 ELSE 0 END) AS month7,
+		        SUM(CASE WHEN B.&quot;month&quot; = '08' THEN 1 ELSE 0 END) AS month8,
+		        SUM(CASE WHEN B.&quot;month&quot; = '09' THEN 1 ELSE 0 END) AS month9,
+		        SUM(CASE WHEN B.&quot;month&quot; = '10' THEN 1 ELSE 0 END) AS month10,
+		        SUM(CASE WHEN B.&quot;month&quot; = '11' THEN 1 ELSE 0 END) AS month11,
+		        SUM(CASE WHEN B.&quot;month&quot; = '12' THEN 1 ELSE 0 END) AS month12    
+		    FROM 
+		    (
+		        SELECT
+		        	 record_center_id 
+		        	,SUBSTR(req_dtime,5,2) &quot;month&quot;
+		        FROM TB_STFORMATVERIFYHIST
+		        WHERE SUBSTR(req_dtime, 1,4) = #verifyYear:VARCHAR#
+		        AND  record_center_id = #recordCenterId:VARCHAR# 
+		    ) B
+		    GROUP BY B.&quot;month&quot;, B.record_center_id
+		    ORDER BY B.&quot;month&quot;
+		) A	
+	</select>
+	
+	<!-- 
+		SELECT - 년도별 검증현황 목록중에서 월별 최대값을 구한다.
+	 -->
+	<resultMap id="accs-verifyStatusMax-result" class="rms.accs.verify.domain.VerifyStatus" >
+		<result property="maxCnt" 		column="max_cnt"/>	
+	</resultMap>	 
+	<select id="countMaxVerifyMonth" parameterClass="rms.accs.verify.domain.VerifyStatus" resultMap="accs-verifyStatusMax-result">
+		SELECT MAX(C.verify_cnt) AS max_cnt
+		FROM
+		(
+			SELECT
+				A.record_center_id
+				<!--cubrid-->
+			    ,(CASE WHEN A.&quot;month&quot; = '01' THEN '1월'
+			         WHEN A.&quot;month&quot; = '02' THEN '2월'
+			         WHEN A.&quot;month&quot; = '03' THEN '3월'
+			         WHEN A.&quot;month&quot; = '04' THEN '4월'
+			         WHEN A.&quot;month&quot; = '05' THEN '5월'
+			         WHEN A.&quot;month&quot; = '06' THEN '6월'
+			         WHEN A.&quot;month&quot; = '07' THEN '7월'
+			         WHEN A.&quot;month&quot; = '08' THEN '8월'
+			         WHEN A.&quot;month&quot; = '09' THEN '9월'
+			         WHEN A.&quot;month&quot; = '10' THEN '10월'
+			         WHEN A.&quot;month&quot; = '11' THEN '11월'
+			         WHEN A.&quot;month&quot; = '12' THEN '12월'
+			     END) AS &quot;month&quot;
+			     ,(CASE WHEN A.&quot;month&quot; = '01' THEN month1
+			          WHEN A.&quot;month&quot; = '02' THEN month2
+			          WHEN A.&quot;month&quot; = '03' THEN month3
+			          WHEN A.&quot;month&quot; = '04' THEN month4
+			          WHEN A.&quot;month&quot; = '05' THEN month5
+			          WHEN A.&quot;month&quot; = '06' THEN month6
+			          WHEN A.&quot;month&quot; = '07' THEN month7
+			          WHEN A.&quot;month&quot; = '08' THEN month8
+			          WHEN A.&quot;month&quot; = '09' THEN month9
+			          WHEN A.&quot;month&quot; = '10' THEN month10
+			          WHEN A.&quot;month&quot; = '11' THEN month11
+			          WHEN A.&quot;month&quot; = '12' THEN month12
+			     END) AS verify_cnt
+			FROM
+			(
+			    SELECT B.*,
+			        SUM(CASE WHEN B.&quot;month&quot; = '01' THEN 1 ELSE 0 END) AS month1,
+			        SUM(CASE WHEN B.&quot;month&quot; = '02' THEN 1 ELSE 0 END) AS month2,
+			        SUM(CASE WHEN B.&quot;month&quot; = '03' THEN 1 ELSE 0 END) AS month3,
+			        SUM(CASE WHEN B.&quot;month&quot; = '04' THEN 1 ELSE 0 END) AS month4,
+			        SUM(CASE WHEN B.&quot;month&quot; = '05' THEN 1 ELSE 0 END) AS month5,
+			        SUM(CASE WHEN B.&quot;month&quot; = '06' THEN 1 ELSE 0 END) AS month6,
+			        SUM(CASE WHEN B.&quot;month&quot; = '07' THEN 1 ELSE 0 END) AS month7,
+			        SUM(CASE WHEN B.&quot;month&quot; = '08' THEN 1 ELSE 0 END) AS month8,
+			        SUM(CASE WHEN B.&quot;month&quot; = '09' THEN 1 ELSE 0 END) AS month9,
+			        SUM(CASE WHEN B.&quot;month&quot; = '10' THEN 1 ELSE 0 END) AS month10,
+			        SUM(CASE WHEN B.&quot;month&quot; = '11' THEN 1 ELSE 0 END) AS month11,
+			        SUM(CASE WHEN B.&quot;month&quot; = '12' THEN 1 ELSE 0 END) AS month12    
+			    FROM 
+			    (
+			        SELECT
+			        	 record_center_id 
+			        	,SUBSTR(req_dtime,5,2) &quot;month&quot;
+			        FROM TB_STFORMATVERIFYHIST
+			        WHERE SUBSTR(req_dtime, 1,4) = #verifyYear:VARCHAR#
+			        AND  record_center_id = #recordCenterId:VARCHAR# 
+			    ) B
+			    GROUP BY B.&quot;month&quot;, B.record_center_id
+			    ORDER BY B.&quot;month&quot;
+			) A			
+		) C
+	</select>
+	
+	<resultMap id="accs-verifyStatusByDoc-result" class="rms.accs.verify.domain.VerifyStatus" >
+		<result property="recordCenterId" 	column="record_center_id"/>
+		<result property="neoGuBun" 		column="neo_gubun"/>
+		<result property="trgtId" 			column="trgt_id"/>		
+		<result property="trgtTitle" 		column="trgt_title"/>
+		<result property="reqUserId" 		column="req_user_id"/>
+		<result property="reqUserNm" 		column="req_user_nm"/>
+		<result property="reqDtime" 		column="req_dtime"/>	
+		<result property="resultDivCd" 		column="result_div_cd"/>
+		<result property="resultDivNm" 		column="result_div_nm"/>
+		<result property="resultCode" 		column="result_code"/>
+		<result property="resultMsg" 		column="result_msg"/>
+	</resultMap>
+	<select id="findVerifyStatusByDoc" parameterClass="rms.accs.verify.domain.VerifyStatus" resultMap="accs-verifyStatusByDoc-result">
+		SELECT AA.record_center_id
+			, AA.neo_gubun
+			, AA.trgt_id
+			, AA.trgt_title			
+			, AA.req_user_id
+			, AA.req_user_nm
+			, AA.req_dtime
+			, AA.result_div_cd
+			, AA.result_div_nm
+			, AA.result_code
+			, AA.result_msg
+		FROM (
+			SELECT Z.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, Y.*
+				FROM (
+					SELECT A.record_center_id
+						, (CASE WHEN A.neo_gubun = '1' THEN '기록물철'
+					            WHEN A.neo_gubun = '2' THEN '기록물건'
+					        END) AS neo_gubun       
+						, (CASE WHEN A.neo_gubun = '1' THEN (SELECT title from TB_RDFOLDER where folder_id = A.trgt_id)
+					            WHEN A.neo_gubun = '2' THEN (SELECT title from TB_RDRECORD where record_id = A.trgt_id)
+					        END) AS trgt_title
+					    , A.trgt_id
+					    , A.req_user_id
+				        , (SELECT user_nm from TB_STUSER where user_id = A.req_user_id) AS req_user_nm
+				        , A.req_dtime
+				        , A.result_div_cd
+						, (CASE WHEN A.result_div_cd = '1' THEN '정상'
+								WHEN A.result_div_cd = '2' THEN '오류'
+				        	END) AS result_div_nm
+				        , A.result_code
+				        , A.result_msg
+					FROM  TB_STFORMATVERIFYHIST A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					<dynamic>
+						<isNotEmpty prepend="AND" property="neoGuBun">
+							A.neo_gubun = #neoGuBun:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="reqUserId">
+							A.req_user_id = #reqUserId:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="reqDtimeFromYyyy">
+							<isNotEmpty property="reqDtimeToYyyy">
+								(A.req_dtime BETWEEN #reqDtimeFromYyyy:VARCHAR#||'000000' AND #reqDtimeToYyyy:VARCHAR#||'240000')
+							</isNotEmpty>
+							<isEmpty property="reqDtimeToYyyy">
+								A.req_dtime <![CDATA[>=]]> #reqDtimeFromYyyy:VARCHAR#||'000000'
+							</isEmpty>
+						</isNotEmpty>
+						<isEmpty prepend="AND" property="reqDtimeFromYyyy">
+							<isNotEmpty property="reqDtimeToYyyy">
+								A.req_dtime <![CDATA[<=]]> #reqDtimeToYyyy:VARCHAR#||'240000'
+							</isNotEmpty>
+						</isEmpty>
+						<isNotEmpty prepend="AND" property="resultDivCd">
+							A.result_div_cd = #resultDivCd:VARCHAR#
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY A.record_center_id, A.req_dtime DESC
+				) Y
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) Z
+			WHERE z.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) AA
+		ORDER BY AA.rnum
+	</select>
+
+	<select id="countVerifyStatusByDoc" parameterClass="rms.accs.verify.domain.VerifyStatus" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_STFORMATVERIFYHIST A
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	  	<dynamic>
+			<isNotEmpty prepend="AND" property="neoGuBun">
+				A.neo_gubun = #neoGuBun:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="reqUserId">
+				A.req_user_id = #reqUserId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="reqDtimeFromYyyy">
+				<isNotEmpty property="reqDtimeToYyyy">
+					(A.req_dtime BETWEEN #reqDtimeFromYyyy:VARCHAR#||'000000' AND #reqDtimeToYyyy:VARCHAR#||'240000')
+				</isNotEmpty>
+				<isEmpty property="reqDtimeToYyyy">
+					A.req_dtime <![CDATA[>=]]> #reqDtimeFromYyyy:VARCHAR#||'000000'
+				</isEmpty>
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="reqDtimeFromYyyy">
+				<isNotEmpty property="reqDtimeToYyyy">
+					A.req_dtime <![CDATA[<=]]> #reqDtimeToYyyy:VARCHAR#||'240000'
+				</isNotEmpty>
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="resultDivCd">
+				A.result_div_cd = #resultDivCd:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+</sqlMap>	

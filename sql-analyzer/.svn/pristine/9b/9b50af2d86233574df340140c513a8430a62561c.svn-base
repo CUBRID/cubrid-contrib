@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.format">
+
+	<!--
+		포맷변환모니터링
+		 : 변환대기시간 조회
+	-->
+	<resultMap id="findPresvFormatMonitorWait-resultMap" class="rms.presv.format.domain.PresvFormatMonitor">
+		<result property="serverIpAddress"		column="server_ip_address" />
+		<result property="serverStatus"			column="server_status" />
+		<result property="waitCnt"				column="wait_cnt" />
+		<result property="lastResponseDtime"	column="last_response_dtime" />
+		<result property="waitTime"				column="wait_time" />
+	</resultMap>
+	<select id="findPresvFormatMonitorWait" parameterClass="rms.presv.format.domain.PresvFormatMonitor" resultMap="findPresvFormatMonitorWait-resultMap">
+		SELECT A.wflb_server_ip AS server_ip_address
+			, (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='NE03' AND Z.com_cd=A.status) AS server_status
+			, (SELECT COUNT(1) FROM TB_STREQTRANS B WHERE B.wflb_server_ip=A.wflb_server_ip AND B.request_status IN ('A')) AS wait_cnt
+			, TO_CHAR(A.update_date, 'YYYYMMDDHH24MISS') AS last_response_dtime
+			<!--cubrid , NVL(((TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS'),'YYYYMMDDHH24MISS')-TO_DATE(TO_CHAR(A.update_date,'YYYYMMDDHH24MISS'),'YYYYMMDDHH24MISS'))*24*60*60),0) AS wait_time-->
+			, NVL(((CAST(TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS') AS TIMESTAMP)-CAST(TO_CHAR(A.update_date,'YYYYMMDDHH24MISS') AS TIMESTAMP))),0) AS wait_time
+		FROM  TB_STWFLBMONITOR A
+	</select>
+
+	<!--
+		포맷변환모니터링
+		 : 변환서버 작업현황 조회
+	-->
+	<resultMap id="findPresvFormatMonitorServerList-resultMap" class="rms.presv.format.domain.PresvFormatMonitor">
+		<result property="docDetGubun"			column="doc_det_gubun" />
+		<result property="jobRecordCnt"			column="job_record_cnt" />
+		<result property="jobFileCnt"			column="job_file_cnt" />
+		<result property="estimateNm"			column="estimate_nm" />
+		<result property="todayJobRecordCnt"	column="today_job_record_cnt" />
+		<result property="todayJobFileCnt"		column="today_job_file_cnt" />
+	</resultMap>
+	<select id="findPresvFormatMonitorServerList" parameterClass="rms.presv.format.domain.PresvFormatMonitor" resultMap="findPresvFormatMonitorServerList-resultMap">
+		SELECT C.doc_det_gubun
+			, NVL(B.job_record_cnt,0) AS job_record_cnt
+			, NVL(B.job_file_cnt,0) AS job_file_cnt
+			, (CASE WHEN NVL(B.job_file_cnt,0) = 0 THEN '-'
+					WHEN NVL(B.gap_sec,0) = 0 THEN '알수없음'
+					WHEN 60>(B.job_file_cnt * B.gap_sec)   THEN (B.job_file_cnt * B.gap_sec)||'초'
+					<!--cubrid WHEN 3600>(B.job_file_cnt * B.gap_sec) THEN TO_CHAR((B.job_file_cnt * B.gap_sec / 60),'FM999990')||'분'-->
+					WHEN 3600>(B.job_file_cnt * B.gap_sec) THEN RTRIM(LTRIM(TO_CHAR((B.job_file_cnt * B.gap_sec / 60),'999990'),' '),0)||'분'
+					<!--cubrid ELSE TO_CHAR((B.job_file_cnt * B.gap_sec / 3600),'FM999990')||'시간'-->
+					ELSE RTRIM(LTRIM(TO_CHAR((B.job_file_cnt * B.gap_sec / 3600),'999990'),' '),0)||'시간'
+				END) AS estimate_nm
+            , (SELECT COUNT(1) FROM TB_STREQTRANS Z WHERE Z.NEO_GUBUN = C.doc_det_gubun AND REQUEST_STATUS IN ('C','D') AND (TRUNC(Z.REQUEST_START_TIME) = TRUNC(SYSDATE) OR TRUNC(Z.REQUEST_END_TIME) = TRUNC(SYSDATE))) AS today_job_record_cnt
+            , (SELECT COUNT(1) FROM TB_STREQRESULT Y, TB_STREQTRANS Z WHERE Y.RECORD_CENTER_ID = Z.RECORD_CENTER_ID AND Y.JOB_ID = Z.JOB_ID AND Z.NEO_GUBUN = C.doc_det_gubun AND Y.REQUEST_STATUS IN ('C','D') AND (TRUNC(Z.REQUEST_START_TIME) = TRUNC(SYSDATE) OR TRUNC(Z.REQUEST_END_TIME) = TRUNC(SYSDATE))) today_job_file_cnt
+		FROM (
+               SELECT NEO_GUBUN AS doc_det_gubun, 
+                      COUNT(1) AS job_record_cnt, 
+                      SUM(CNT) AS job_file_cnt,
+                      <!--cubrid NVL((SELECT TO_CHAR((((Z.REQUEST_END_TIME - Z.REQUEST_START_TIME)*24*60*60) / CNT),'FM999990') -->
+                      NVL((SELECT RTRIM(LTRIM(TO_CHAR((((Z.REQUEST_END_TIME - Z.REQUEST_START_TIME)) / CNT/1000),'999990'),' '),0) 
+			FROM (SELECT COUNT(1) CNT,  NEO_GUBUN , REQUEST_END_TIME, REQUEST_START_TIME, A.JOB_ID FROM TB_STREQTRANS A INNER JOIN (SELECT MAX(JOB_ID) AS MAX_JOB_ID FROM TB_STREQTRANS GROUP BY NEO_GUBUN, NEOCHASU, RECORD_ID, FOLDER_ID, RECORD_CENTER_ID) M ON M.MAX_JOB_ID = A.JOB_ID LEFT OUTER JOIN TB_STREQFILE B ON B.JOB_ID = A.JOB_ID GROUP BY A.JOB_ID, NEO_GUBUN , REQUEST_END_TIME, REQUEST_START_TIME ) Z WHERE Z.NEO_GUBUN = C.NEO_GUBUN AND Z.job_id = (SELECT MAX(Y.job_id) FROM TB_STREQTRANS Y WHERE Y.NEO_GUBUN=C.NEO_GUBUN AND Y.REQUEST_START_TIME IS NOT NULL AND Y.REQUEST_END_TIME IS NOT NULL)),0) AS gap_sec      
+               FROM ( SELECT COUNT(1) CNT,  NEO_GUBUN, A.JOB_ID FROM TB_STREQTRANS A INNER JOIN (SELECT MAX(JOB_ID) AS MAX_JOB_ID FROM TB_STREQTRANS GROUP BY NEO_GUBUN, NEOCHASU, RECORD_ID, FOLDER_ID, RECORD_CENTER_ID) M ON M.MAX_JOB_ID = A.JOB_ID LEFT OUTER JOIN TB_STREQFILE B ON B.JOB_ID = A.JOB_ID WHERE REQUEST_STATUS IN ('-','A','B') GROUP BY A.JOB_ID, NEO_GUBUN ) C 
+               GROUP BY  NEO_GUBUN
+		) B
+		, (SELECT Z.com_cd AS doc_det_gubun FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='ST22') C
+		WHERE C.doc_det_gubun=B.doc_det_gubun(+)
+		ORDER BY C.doc_det_gubun
+	</select>
+
+	<!--
+		포맷변환모니터링
+		 : 기록관별 작업현황 조회
+	-->
+	<resultMap id="findPresvFormatMonitorRecordCenterList-resultMap" class="rms.presv.format.domain.PresvFormatMonitor">
+		<result property="recordCenterId"		column="record_center_id" />
+		<result property="recordCenterNm"		column="record_center_nm" />
+		<result property="docDetGubun"			column="doc_det_gubun" />
+		<result property="jobRecordCnt"			column="job_record_cnt" />
+		<result property="jobFileCnt"			column="job_file_cnt" />
+		<result property="estimateNm"			column="estimate_nm" />
+		<result property="todayJobRecordCnt"	column="today_job_record_cnt" />
+		<result property="todayJobFileCnt"		column="today_job_file_cnt" />
+	</resultMap>
+	<select id="findPresvFormatMonitorRecordCenterList" parameterClass="rms.presv.format.domain.PresvFormatMonitor" resultMap="findPresvFormatMonitorRecordCenterList-resultMap">
+		SELECT C.record_center_id
+			, C.record_center_nm
+			, C.doc_det_gubun
+			, NVL(B.job_record_cnt,0) AS job_record_cnt
+			, NVL(B.job_file_cnt,0) AS job_file_cnt
+			, (CASE WHEN NVL(B.job_file_cnt,0) = 0 THEN '-'
+					WHEN NVL(B.gap_sec,0) = 0 THEN '알수없음'
+					WHEN 60>(B.job_file_cnt * B.gap_sec) THEN (B.job_file_cnt * B.gap_sec)||'초'
+					<!--cubrid WHEN 3600>(B.job_file_cnt * B.gap_sec) THEN TO_CHAR((B.job_file_cnt * B.gap_sec / 60),'FM999990')||'분'
+					ELSE TO_CHAR((B.job_file_cnt * B.gap_sec / 3600),'FM999990')||'시간'-->
+					WHEN 3600>(B.job_file_cnt * B.gap_sec) THEN RTRIM(LTRIM(TO_CHAR((B.job_file_cnt * B.gap_sec / 60),'999990'),' '),0)||'분'
+					ELSE RTRIM(LTRIM(TO_CHAR((B.job_file_cnt * B.gap_sec / 3600),'999990'),' '),0)||'시간'
+				END) AS estimate_nm
+            , (SELECT COUNT(1) FROM TB_STREQTRANS Z WHERE Z.record_center_id = C.record_center_id AND Z.NEO_GUBUN = C.doc_det_gubun AND REQUEST_STATUS IN ('C','D') AND (TRUNC(Z.REQUEST_START_TIME) = TRUNC(SYSDATE) OR TRUNC(Z.REQUEST_END_TIME) = TRUNC(SYSDATE))) AS today_job_record_cnt
+            , (SELECT COUNT(1) FROM TB_STREQRESULT Y, TB_STREQTRANS Z WHERE Y.record_center_id = C.record_center_id AND Y.RECORD_CENTER_ID = Z.RECORD_CENTER_ID AND Y.JOB_ID = Z.JOB_ID AND Z.NEO_GUBUN = C.doc_det_gubun AND Y.REQUEST_STATUS IN ('C','D') AND (TRUNC(Z.REQUEST_START_TIME) = TRUNC(SYSDATE) OR TRUNC(Z.REQUEST_END_TIME) = TRUNC(SYSDATE))) today_job_file_cnt
+		FROM (
+				SELECT record_center_id
+					, neo_gubun AS doc_det_gubun
+				    , COUNT(1) AS job_record_cnt
+				    , SUM(cnt) AS job_file_cnt
+				    <!--cubrid , NVL((SELECT TO_CHAR((((Z.REQUEST_END_TIME - Z.REQUEST_START_TIME)*24*60*60) / CNT),'FM999990') FROM -->
+				    , NVL((SELECT RTRIM(LTRIM(TO_CHAR((((Z.REQUEST_END_TIME - Z.REQUEST_START_TIME)) / CNT/1000),'999990'),' '),0) FROM 
+<!--cubrid (SELECT COUNT(1) CNT,  NEO_GUBUN , REQUEST_END_TIME, REQUEST_START_TIME, MAX(A.JOB_ID) KEEP (DENSE_RANK LAST ORDER BY REQUEST_START_TIME) JOB_ID FROM TB_STREQTRANS A, TB_STREQFILE B  WHERE B.JOB_ID = A.JOB_ID GROUP BY A.JOB_ID, NEO_GUBUN , REQUEST_END_TIME, REQUEST_START_TIME ) Z -->
+(SELECT COUNT(1) CNT,  NEO_GUBUN , REQUEST_END_TIME, REQUEST_START_TIME, (select A.JOB_ID FROM TB_STREQTRANS WHERE REQUEST_START_TIME = (SELECT MAX(REQUEST_START_TIME) FROM TB_STREQTRANS)) AS JOB_ID FROM TB_STREQTRANS A, TB_STREQFILE B  WHERE B.JOB_ID = A.JOB_ID GROUP BY A.JOB_ID, NEO_GUBUN , REQUEST_END_TIME, REQUEST_START_TIME ) Z 
+WHERE Z.NEO_GUBUN = C.NEO_GUBUN AND Z.job_id=(SELECT MAX(Y.job_id) FROM TB_STREQTRANS Y WHERE Y.NEO_GUBUN=C.NEO_GUBUN AND Y.REQUEST_START_TIME IS NOT NULL AND Y.REQUEST_END_TIME IS NOT NULL)),0) AS gap_sec      
+				FROM ( SELECT COUNT(1) CNT,  NEO_GUBUN, A.JOB_ID, A.record_center_id FROM TB_STREQTRANS A INNER JOIN (SELECT MAX(JOB_ID) AS MAX_JOB_ID FROM TB_STREQTRANS GROUP BY NEO_GUBUN, NEOCHASU, RECORD_ID, FOLDER_ID, RECORD_CENTER_ID) M ON M.MAX_JOB_ID = A.JOB_ID LEFT OUTER JOIN TB_STREQFILE B ON B.JOB_ID = A.JOB_ID WHERE REQUEST_STATUS IN ('-','A','B') GROUP BY A.JOB_ID, NEO_GUBUN, A.record_center_id ) C 
+				GROUP BY record_center_id, neo_gubun
+		) B
+		, (SELECT R.record_center_id, R.record_center_nm, Z.com_cd AS doc_det_gubun FROM TB_STRECORDCENTER R, TB_ZZCOMCD Z WHERE Z.com_type_cd='ST22') C
+		WHERE C.record_center_id=B.record_center_id(+)
+		AND   C.doc_det_gubun=B.doc_det_gubun(+)
+		ORDER BY C.record_center_id, C.doc_det_gubun
+	</select>
+</sqlMap>

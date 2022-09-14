@@ -1,0 +1,382 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countReadCarryOutPagedList
+
+		SELECT COUNT(1)        FROM (            SELECT /*+ ORDERED*/                     C.RECORD_CENTER_ID,C.FOLDER_ID,C.TITLE,C.STAKRM_MNG_NO,C.CREAT_YYYY                   ,D.ORG_NM,K.READ_USER_ID,K.READ_USER_NM,K.READ_USER_DEPT_NM,K.READ_REQNO                   ,C.OUT_FLAG,C.BOOKSF_ARNG_FLAG,K.RD_TITLE,K.READ_REQ_DIV_NM,K.RECORD_ID                   ,K.READ_REQ_PROG_STATE_CD,K.READ_APROV_CD,K.READ_RSN,K.READ_START_YMD,K.READ_CLOSE_YMD            FROM (                SELECT B.RECORD_CENTER_ID                        ,B.FOLDER_ID                        ,A.READ_USER_ID                        ,A.READ_USER_NM                        ,A.READ_USER_DEPT_NM                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO                        ,'' RD_TITLE                        ,'1' READ_REQ_DIV_NM                        ,'' RECORD_ID                        ,B.READ_REQ_PROG_STATE_CD                        ,B.READ_APROV_CD                        ,A.READ_RSN                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD                FROM  TB_RDREADREQ A, TB_RDFOLDERREADDETL B                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                AND A.READ_REQNO = B.READ_REQNO                AND A.RECORD_CENTER_ID = '1'                AND A.READ_START_YMD <=TO_CHAR (SYSDATE, 'YYYYMMDD')                AND A.READ_CLOSE_YMD >= TO_CHAR (SYSDATE, 'YYYYMMDD')                AND B.READ_APROV_CD='2' AND                     B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'                                 UNION ALL                SELECT C.RECORD_CENTER_ID                        ,C.FOLDER_ID                        ,A.READ_USER_ID                        ,A.READ_USER_NM                        ,A.READ_USER_DEPT_NM                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO                        ,C.TITLE AS RD_TITLE                        ,'2' READ_REQ_DIV_NM                        ,B.RECORD_ID                        ,B.READ_REQ_PROG_STATE_CD                        ,B.READ_APROV_CD                        ,A.READ_RSN                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD                FROM TB_RDREADREQ A,TB_RDRECORDREADDETL B,TB_RDRECORD C                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                AND A.READ_REQNO = B.READ_REQNO                AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID                AND B.RECORD_ID = C.RECORD_ID                                 AND A.RECORD_CENTER_ID = '1'                AND A.READ_START_YMD <= TO_CHAR (SYSDATE, 'YYYYMMDD')                AND A.READ_CLOSE_YMD >= TO_CHAR (SYSDATE, 'YYYYMMDD')                                 AND B.READ_APROV_CD='2'                AND C.ERECORD_FLAG IN ('2','3')                 AND                     B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'                                 ) K, TB_RDFOLDER C, TB_STORG D            WHERE K.RECORD_CENTER_ID = C.RECORD_CENTER_ID            AND K.FOLDER_ID = C.FOLDER_ID            AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID            AND C.ORG_CD = D.ORG_CD            AND C.ERECORD_FLAG IN ('2','3')            AND C.FOLDER_KEEP_STATE_CD IN ('01','04')             AND                 K.READ_USER_NM LIKE '1'              AND                 (C.TITLE LIKE '1' OR C.SUB_TITLE LIKE '1' OR C.CORCT_TITLE LIKE '1')                         ORDER BY K.READ_REQNO DESC        );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findReadCarryOutPagedList
+
+		SELECT G.folder_id		      ,G.title		      ,G.stakrm_mng_no		      ,G.creat_yyyy		      ,G.org_nm		      ,G.read_user_id		      ,G.read_user_nm		      ,G.read_user_dept_nm		      ,(SELECT Z.stakrm_id||'-'||Z.booksf_id||'-'||Z.booksf_shelf_cno||'-'||Z.booksf_shelf_rno FROM TB_SRBOOKSFARNGDETL Z WHERE Z.record_center_id = G.record_center_id AND Z.folder_id = G.folder_id) AS arng_info		      ,DECODE(G.out_flag,'1','반출','보유') AS out_flag_nm		      ,G.read_reqno		      ,G.out_flag		      ,G.booksf_arng_flag		      ,G.rd_title		      ,G.read_req_div_nm		      ,G.record_id		      ,G.read_req_prog_state_cd		      ,G.read_aprov_cd		      ,G.read_rsn		      ,G.read_start_ymd		      ,G.read_close_ymd		      ,(CASE WHEN G.read_req_prog_state_cd = '3' AND G.read_aprov_cd ='2' THEN '열람대기' WHEN  G.read_req_prog_state_cd = '4' THEN '열람완료' END) AS status		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		                ,E.*		        FROM (		            SELECT /*+ ORDERED*/ 		                    C.RECORD_CENTER_ID,C.FOLDER_ID,C.TITLE,C.STAKRM_MNG_NO,C.CREAT_YYYY		                   ,D.ORG_NM,K.READ_USER_ID,K.READ_USER_NM,K.READ_USER_DEPT_NM,K.READ_REQNO		                   ,C.OUT_FLAG,C.BOOKSF_ARNG_FLAG,K.RD_TITLE,K.READ_REQ_DIV_NM,K.RECORD_ID		                   ,K.READ_REQ_PROG_STATE_CD,K.READ_APROV_CD,K.READ_RSN,K.READ_START_YMD,K.READ_CLOSE_YMD		            FROM (		                SELECT B.RECORD_CENTER_ID		                        ,B.FOLDER_ID		                        ,A.READ_USER_ID		                        ,A.READ_USER_NM		                        ,A.READ_USER_DEPT_NM		                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO		                        ,'' RD_TITLE		                        ,'1' READ_REQ_DIV_NM		                        ,'' RECORD_ID		                        ,B.READ_REQ_PROG_STATE_CD		                        ,B.READ_APROV_CD		                        ,A.READ_RSN		                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD		                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD		                FROM  TB_RDREADREQ A, TB_RDFOLDERREADDETL B		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		                AND A.READ_REQNO = B.READ_REQNO		                AND A.RECORD_CENTER_ID = '1'		                AND A.READ_START_YMD <=TO_CHAR (SYSDATE, 'YYYYMMDD')		                AND A.READ_CLOSE_YMD >= TO_CHAR (SYSDATE, 'YYYYMMDD')		                AND B.READ_APROV_CD='2' AND 	                        B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'	                     		                UNION ALL		                SELECT C.RECORD_CENTER_ID		                        ,C.FOLDER_ID		                        ,A.READ_USER_ID		                        ,A.READ_USER_NM		                        ,A.READ_USER_DEPT_NM		                        ,SUBSTR(A.READ_REQNO, 1, 4)||'-'||SUBSTR(A.READ_REQNO, 5, 6) READ_REQNO		                        ,C.TITLE AS RD_TITLE		                        ,'2' READ_REQ_DIV_NM		                        ,B.RECORD_ID		                        ,B.READ_REQ_PROG_STATE_CD		                        ,B.READ_APROV_CD		                        ,A.READ_RSN		                        ,TO_CHAR(TO_DATE(A.READ_START_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_START_YMD		                        ,TO_CHAR(TO_DATE(A.READ_CLOSE_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') READ_CLOSE_YMD		                FROM TB_RDREADREQ A,TB_RDRECORDREADDETL B,TB_RDRECORD C		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		                AND A.READ_REQNO = B.READ_REQNO		                AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		                AND B.RECORD_ID = C.RECORD_ID                 		                AND A.RECORD_CENTER_ID = '1'		                AND A.READ_START_YMD <= TO_CHAR (SYSDATE, 'YYYYMMDD')		                AND A.READ_CLOSE_YMD >= TO_CHAR (SYSDATE, 'YYYYMMDD')                 		                AND B.READ_APROV_CD='2'		                AND C.ERECORD_FLAG IN ('2','3')	                     AND 	                        B.READ_REQ_PROG_STATE_CD = '3' AND B.READ_APROV_CD = '2'	                     		                ) K, TB_RDFOLDER C, TB_STORG D		            WHERE K.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND K.FOLDER_ID = C.FOLDER_ID		            AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID		            AND C.ORG_CD = D.ORG_CD		            AND C.ERECORD_FLAG IN ('2','3')		            AND C.FOLDER_KEEP_STATE_CD IN ('01','04')	                 AND 	                    K.READ_USER_NM LIKE '1'	                  AND 	                    (C.TITLE LIKE '1' OR C.SUB_TITLE LIKE '1' OR C.CORCT_TITLE LIKE '1')	                 		            ORDER BY K.READ_REQNO DESC		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutSno
+
+		SELECT NVL(MAX(OUT_SNO),0) + 1 OUT_SNO		  FROM TB_SROUT		 WHERE OUT_YYYY = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createReadCarryOut
+
+		INSERT INTO TB_SROUT (			RECORD_CENTER_ID, OUT_ID, OUT_YYYY, OUT_SNO, OUT_YMD, OUT_TYPE_CD, RETRN_EXPT_YMD, OUT_USER_NM,OUT_USER_POS_RANK_NM,OUT_USER_ORG_NM,OUT_FOLDER_CNT,OUT_RSN, WORK_USER_ID		) VALUES (			'1', REPLACE('1', '-', ''), '1', '1', '1', '5', '1', '1','','1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createInOutFolder
+
+		INSERT INTO TB_SRINOUTFOLDER (			RECORD_CENTER_ID, OUT_ID, FOLDER_ID, IN_ID, IN_FLAG, REG_DTIME		) VALUES (			'1', REPLACE('1', '-', ''), '1', '', '0'		, (SELECT TO_CHAR(sys_datetime,'YYYYMMDDHHMMSS') FROM DUAL)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateOutFolder
+
+		UPDATE TB_RDFOLDER		   SET OUT_FLAG = '1'		 WHERE FOLDER_ID IN (SELECT FOLDER_ID		                       FROM TB_SRINOUTFOLDER		                      WHERE RECORD_CENTER_ID = '1'		                        AND OUT_ID = REPLACE('1', '-', ''))           AND RECORD_CENTER_ID = '1'		                        	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateReadCarryOutWriteFolder
+
+	                    UPDATE TB_RDFOLDERREADDETL          SET READ_REQ_PROG_STATE_CD = '4'          WHERE RECORD_CENTER_ID = '1'          AND READ_REQNO = REPLACE('1', '-', '')          AND FOLDER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateReadCarryOutWriteRecord
+
+	                    UPDATE TB_RDRECORDREADDETL          SET READ_REQ_PROG_STATE_CD = '4'          WHERE RECORD_CENTER_ID = '1'          AND READ_REQNO = REPLACE('1', '-', '')          AND RECORD_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryOutPagedList
+
+		SELECT COUNT(1)        FROM TB_SROUT A, TB_ZZCOMCD B        WHERE (A.OUT_TYPE_CD = B.COM_CD and B.COM_TYPE_CD = 'SR01')        AND A.RECORD_CENTER_ID = '1' AND                  A.OUT_ID = REPLACE('1', '-', '')              AND                 A.OUT_ID = REPLACE('1', '-', '')              AND                 A.OUT_TYPE_CD = '1'              AND                 A.OUT_YMD = '1'              AND                 A.OUT_USER_NM = '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutPagedList
+
+		SELECT SUBSTR(E.out_id, 1, 4)||'-'||SUBSTR(E.out_id, 5, 6) AS out_id		      ,E.out_ymd		      ,E.com_cd AS out_type_cd		      ,E.com_cd_nm AS out_type_nm		      ,E.retrn_expt_ymd		      ,E.out_user_nm		      ,E.out_user_org_nm		      ,E.out_user_pos_rank_nm		      ,E.out_rsn		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.*, B.*		            FROM TB_SROUT A, TB_ZZCOMCD B		            WHERE (A.OUT_TYPE_CD = B.COM_CD and B.COM_TYPE_CD = 'SR01')		            AND A.RECORD_CENTER_ID = '1'		             AND  		                    A.OUT_ID = REPLACE('1', '-', '')		                  AND 		                    A.OUT_ID = REPLACE('1', '-', '')		                  AND 		                    A.OUT_TYPE_CD = '1'		                  AND 		                    A.OUT_YMD = '1'		                  AND 		                    A.OUT_USER_NM = '1'		                  		            ORDER BY A.record_center_id, A.out_id		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryOutWriteList
+
+		SELECT COUNT(1)        FROM (            SELECT  /*+ ORDERED */                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY                   ,B.STAKRM_MNG_NO                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID                   ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D,            TB_STORG E            WHERE  A.RECORD_CENTER_ID = '1'            AND  A.REMK = 'CARRYOUT'            AND  A.USER_ID = '1'            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID            AND  A.TRGT_ID = B.FOLDER_ID            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID            AND  A.TRGT_ID = C.FOLDER_ID            AND  C.OUT_ID = REPLACE('1', '-', '')            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID            AND  B.FOLDER_ID = D.FOLDER_ID            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID            AND  B.ORG_CD = E.ORG_CD            UNION             SELECT  /*+ ORDERED */                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY                   ,B.STAKRM_MNG_NO                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID                   ,'' OUT_ID            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRBOOKSFARNGDETL D, TB_STORG E            WHERE  A.RECORD_CENTER_ID = '1'            AND  A.REMK = 'CARRYOUT'            AND  A.USER_ID = '1'            AND  NOT EXISTS (SELECT FOLDER_ID TRGT_ID                              FROM TB_SRINOUTFOLDER                             WHERE RECORD_CENTER_ID='1'                             AND RECORD_CENTER_ID = A.RECORD_CENTER_ID                             AND FOLDER_ID = A.TRGT_ID                             AND OUT_ID=REPLACE('1', '-', '')                             )            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID            AND  A.TRGT_ID = B.FOLDER_ID            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID            AND  B.FOLDER_ID = D.FOLDER_ID            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID            AND  B.ORG_CD = E.ORG_CD          ) E	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutWriteList
+
+		SELECT G.folder_id		      ,G.org_nm		      ,G.org_abbr_nm		      ,G.title		      ,G.creat_yyyy		      ,G.presv_term_nm		      ,G.stakrm_mng_no		      ,G.out_flag_nm		      ,G.arng_info		      ,G.box_id		      ,G.out_id		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		                ,E.*		        FROM (		            SELECT  /*+ ORDERED */		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY		                   ,B.STAKRM_MNG_NO		                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM		                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM		                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO		                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID		                   ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID		            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D,		            TB_STORG E		            WHERE  A.RECORD_CENTER_ID = '1'		            AND  A.REMK = 'CARRYOUT'		            AND  A.USER_ID = '1'		            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND  A.TRGT_ID = B.FOLDER_ID		            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND  A.TRGT_ID = C.FOLDER_ID		            AND  C.OUT_ID = REPLACE('1', '-', '')		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		            AND  B.FOLDER_ID = D.FOLDER_ID		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID		            AND  B.ORG_CD = E.ORG_CD		            UNION 		            SELECT  /*+ ORDERED */		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY		                   ,B.STAKRM_MNG_NO		                   ,(SELECT   COM_CD_NM FROM   TB_ZZCOMCD WHERE   COM_CD = B.PRESV_TERM_CD AND COM_TYPE_CD = 'RD07') AS PRESV_TERM_NM		                   ,DECODE(B.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM		                   ,(D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) AS ARNG_INFO		                   ,SUBSTR(B.PRESV_BOX_ID,13,3) BOX_ID		                   ,'' OUT_ID		            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRBOOKSFARNGDETL D, TB_STORG E		            WHERE  A.RECORD_CENTER_ID = '1'		            AND  A.REMK = 'CARRYOUT'		            AND  A.USER_ID = '1'		            AND  NOT EXISTS (SELECT FOLDER_ID TRGT_ID 		                             FROM TB_SRINOUTFOLDER		                             WHERE RECORD_CENTER_ID='1'		                             AND RECORD_CENTER_ID = A.RECORD_CENTER_ID		                             AND FOLDER_ID = A.TRGT_ID		                             AND OUT_ID=REPLACE('1', '-', '')		                             )		            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND  A.TRGT_ID = B.FOLDER_ID		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		            AND  B.FOLDER_ID = D.FOLDER_ID		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID		            AND  B.ORG_CD = E.ORG_CD  		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryOutTempAll
+
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = '1' AND USER_ID = '1' AND REMK ='CARRYOUT'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryOutFolderPagedList
+
+		SELECT COUNT(1)         FROM TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_STORG F         WHERE A.RECORD_CENTER_ID = '1'         AND NVL(A.OUT_FLAG,'0') = '0'           AND A.BOOKSF_ARNG_FLAG IN ('1', '2')         AND A.FOLDER_KEEP_STATE_CD IN ('01','04')         AND A.FOLDER_ID = B.FOLDER_ID         AND A.ORG_CD =  F.ORG_CD         AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID         AND A.RECORD_CENTER_ID = F.RECORD_CENTER_ID         AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')         AND NOT EXISTS (SELECT D.FOLDER_ID                          FROM TB_DFDISUSEHIST D                         WHERE D.LAST_DISUSE_EVAL_DIV_CD = '1'                                                 AND D.RECORD_CENTER_ID =  '1'                         AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID                         AND D.FOLDER_ID = A.FOLDER_ID)         AND NOT EXISTS (SELECT E.FOLDER_ID                          FROM TB_DFTRANSFHIST E                         WHERE E.CONFM_TRANSF_DIV_CD IN ('1','3')                                                 AND E.RECORD_CENTER_ID =  '1'                         AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID                         AND A.FOLDER_ID = E.FOLDER_ID)                 AND NOT EXISTS (SELECT F.TRGT_ID                         FROM TB_ZZREQLISTTEMP F                         WHERE F.RECORD_CENTER_ID = '1'                         AND F.USER_ID = '1'                         AND F.TRGT_ID = A.FOLDER_ID                         AND F.REMK = 'CARRYOUT'                         AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID         )                AND                   A.ORG_CD = '1'               AND                  A.ORG_CD = '1'               AND                  (A.CREAT_YYYY BETWEEN '1' AND '1')               AND                  A.PRESV_TERM_CD = '1'               AND                  (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')               AND                  (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')               ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutFolderPagedList
+
+		SELECT I.folder_id		      ,I.org_nm		      ,I.org_abbr_nm		      ,I.title		      ,I.creat_yyyy		      ,I.presv_term_nm		      ,I.stakrm_mng_no		      ,I.out_flag_nm		      ,I.arng_info		      ,I.box_id		FROM (		    SELECT H.*		    FROM (		        SELECT ROWNUM AS rnum		                ,G.*		        FROM (		            SELECT A.FOLDER_ID, F.ORG_NM, F.ORG_ABBR_NM, A.TITLE, A.CREAT_YYYY		                  ,C.COM_CD_NM PRESV_TERM_NM, A.STAKRM_MNG_NO		                  ,DECODE(A.OUT_FLAG,'1','반출','보유') OUT_FLAG_NM		                  ,(B.STAKRM_ID||'-'||B.BOOKSF_ID||'-'||B.BOOKSF_SHELF_CNO||'-'||B.BOOKSF_SHELF_RNO) ARNG_INFO		                  ,SUBSTR(A.PRESV_BOX_ID,13,3) BOX_ID		            FROM TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_STORG F		            WHERE A.RECORD_CENTER_ID = '1'		            AND NVL(A.OUT_FLAG,'0') = '0'  		            AND A.BOOKSF_ARNG_FLAG IN ('1', '2')		            AND A.FOLDER_KEEP_STATE_CD IN ('01','04')		            AND A.FOLDER_ID = B.FOLDER_ID		            AND A.ORG_CD =  F.ORG_CD		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND A.RECORD_CENTER_ID = F.RECORD_CENTER_ID		            AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')		            AND NOT EXISTS (SELECT D.FOLDER_ID 		                            FROM TB_DFDISUSEHIST D		                            WHERE D.LAST_DISUSE_EVAL_DIV_CD = '1'                        		                            AND D.RECORD_CENTER_ID =  '1'		                            AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID		                            AND D.FOLDER_ID = A.FOLDER_ID)		            AND NOT EXISTS (SELECT E.FOLDER_ID 		                            FROM TB_DFTRANSFHIST E		                            WHERE E.CONFM_TRANSF_DIV_CD IN ('1','3')                        		                            AND E.RECORD_CENTER_ID =  '1'		                            AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID		                            AND A.FOLDER_ID = E.FOLDER_ID)        		            AND NOT EXISTS (SELECT F.TRGT_ID		                            FROM TB_ZZREQLISTTEMP F		                            WHERE F.RECORD_CENTER_ID = '1'		                            AND F.USER_ID = '1'		                            AND F.TRGT_ID = A.FOLDER_ID		                            AND F.REMK = 'CARRYOUT'		                            AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            )       AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    A.PRESV_TERM_CD = '1'		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    (A.CLSS_DIV_CD= '1' AND A.CLSS_ID = '1')		                     		        ) G		        WHERE ROWNUM <= '1'		    ) H		    WHERE H.rnum >= '1'		) I 		ORDER BY I.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createCarryOutTemp
+
+		INSERT INTO TB_ZZREQLISTTEMP (			RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK		) VALUES (			'1', '1','1','CARRYOUT'		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryOutTemp
+
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = '1' AND TRGT_ID = '1' AND USER_ID = '1' AND REMK = 'CARRYOUT'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutTemp
+
+		SELECT TRGT_ID FOLDER_ID		  FROM TB_ZZREQLISTTEMP		 WHERE RECORD_CENTER_ID = '1'		   AND USER_ID = '1'		   AND REMK='CARRYOUT'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createCarryOut
+
+		INSERT INTO TB_SROUT (			RECORD_CENTER_ID, OUT_ID, OUT_YYYY, OUT_SNO, OUT_YMD		   ,OUT_TYPE_CD, RETRN_EXPT_YMD, OUT_USER_NM, OUT_USER_ORG_NM, OUT_USER_POS_RANK_NM		   ,OUT_FOLDER_CNT,OUT_RSN, WORK_USER_ID		) VALUES (			'1', REPLACE('1', '-', ''), '1', '1', '1'		   ,'1', '1', '1', '1', '1'		   ,'1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateCarryOutTemp
+
+		UPDATE TB_ZZREQLISTTEMP		   SET INOUT_ID = REPLACE('1', '-', '')		 WHERE RECORD_CENTER_ID = '1'		   AND USER_ID = '1'		   AND TRGT_ID = '1'		   AND REMK = 'CARRYOUT';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createModifyCarryOutTemp
+
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK, INOUT_ID)		(			SELECT '1' RECORD_CENTER_ID, '1' USER_ID, A.FOLDER_ID,'CARRYOUT', DECODE(A.OUT_ID, '', A.IN_ID, A.OUT_ID)	 		FROM TB_SRINOUTFOLDER A			WHERE A.OUT_ID = REPLACE('1', '-', '')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryInPagedList
+
+		SELECT COUNT(1)        FROM TB_SRIN A        WHERE A.RECORD_CENTER_ID = '1'         AND                  A.IN_ID = REPLACE('1', '-', '')              AND                 A.IN_ID = REPLACE('1', '-', '')              AND                 A.IN_YMD = '1'              AND                 A.IN_USER_NM LIKE '1'              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryInPagedList
+
+		SELECT SUBSTR(D.in_id, 1, 4)||'-'||SUBSTR(D.in_id, 5, 6) AS in_id		      ,D.in_ymd		      ,D.in_user_nm		      ,D.in_user_org_nm		      ,D.in_user_pos_rank_nm		      ,D.in_rsn		FROM (		    SELECT C.*		    FROM (		        SELECT ROWNUM AS rnum		              ,B.*		        FROM (		            SELECT *		            FROM TB_SRIN A		            WHERE A.RECORD_CENTER_ID = '1'		             AND  		                    A.IN_ID = REPLACE('1', '-', '')		                  AND 		                    A.IN_ID = REPLACE('1', '-', '')		                  AND 		                    A.IN_YMD = '1'		                  AND 		                    A.IN_USER_NM LIKE '1'		                  		            ORDER BY A.RECORD_CENTER_ID, A.IN_ID		        ) B		        WHERE ROWNUM <= '1'		    ) C		    WHERE C.rnum >= '1'		) D		ORDER BY D.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryInOutFolder
+
+		DELETE FROM TB_SRINOUTFOLDER WHERE RECORD_CENTER_ID = '1' AND OUT_ID = REPLACE('1', '-', '')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateCarryOutFolderCnt
+
+		UPDATE TB_SROUT A		SET OUT_FOLDER_CNT = (						  SELECT COUNT(1) 						  FROM TB_SRINOUTFOLDER B 						  WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 						  AND A.OUT_ID = B.OUT_ID 						 )		WHERE RECORD_CENTER_ID = '1'		AND OUT_ID = REPLACE('1', '-', '')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutChngTemp
+
+		SELECT TRGT_ID FOLDER_ID		  FROM TB_ZZREQLISTTEMP		 WHERE USER_ID = '1'		   AND RECORD_CENTER_ID = '1'		   AND REMK='CARRYOUT'		   AND TRGT_ID NOT IN (SELECT FOLDER_ID TRGT_ID                                  FROM TB_SRINOUTFOLDER                                WHERE RECORD_CENTER_ID='1'                                  AND OUT_ID=REPLACE('1', '-', ''))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryOut
+
+		DELETE FROM TB_SROUT WHERE OUT_ID = REPLACE('1', '-', '') AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryInOutFolder
+
+		SELECT FOLDER_ID 		  FROM TB_RDFOLDER		 WHERE RECORD_CENTER_ID = '1'		   AND REPLACE(STAKRM_MNG_NO,'-','') = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryOutInfo
+
+		SELECT COUNT(1)		  FROM TB_RDFOLDER A, 		  	   TB_SRBOOKSFARNGDETL B,			   TB_ZZCOMCD C,  		  	   TB_STORG F		 WHERE NVL(A.OUT_FLAG,'0') = '0'			   AND A.BOOKSF_ARNG_FLAG IN ('1', '2')			   AND A.FOLDER_ID = B.FOLDER_ID		   AND A.ORG_CD =  F.ORG_CD		   AND A.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.RECORD_CENTER_ID = F.RECORD_CENTER_ID		   AND (A.PRESV_TERM_CD = C.COM_CD and C.COM_TYPE_CD = 'RD07')		   AND NOT EXISTS (SELECT D.FOLDER_ID 		                 FROM TB_DFDISUSEHIST D		   				WHERE D.LAST_DISUSE_EVAL_DIV_CD = '1'								   				  AND D.RECORD_CENTER_ID = '1'						  AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID						  AND D.FOLDER_ID = A.FOLDER_ID)           AND NOT EXISTS (SELECT E.FOLDER_ID 		                 FROM TB_DFTRANSFHIST E		   				WHERE E.CONFM_TRANSF_DIV_CD IN ('1','3')								   				  AND E.RECORD_CENTER_ID = '1'						  AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID						  AND A.FOLDER_ID = E.FOLDER_ID)		           AND NOT EXISTS (SELECT F.TRGT_ID		                 FROM TB_ZZREQLISTTEMP F		   				WHERE F.RECORD_CENTER_ID = '1'						  AND F.USER_ID = '1'						  AND F.TRGT_ID = A.FOLDER_ID						  AND F.REMK='CARRYOUT'						  AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID)	  		   AND A.FOLDER_ID='1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findPrintDocCarryOutHead
+
+		SELECT SUBSTR(A.OUT_ID, 1, 4)||'-'||SUBSTR(A.OUT_ID, 5, 6) OUT_ID			 , to_char(to_date(A.OUT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') OUT_YMD		     , B.COM_CD_NM OUT_TYPE_NM		     , to_char(to_date(A.RETRN_EXPT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') RETRN_EXPT_YMD		     , A.OUT_USER_NM		     , A.OUT_USER_ORG_NM		     , A.OUT_USER_POS_RANK_NM		     , A.OUT_RSN		  FROM TB_SROUT A, TB_ZZCOMCD B  		 WHERE A.RECORD_CENTER_ID = '1'		   AND (A.OUT_TYPE_CD = B.COM_CD and B.COM_TYPE_CD = 'SR01')		   AND A.OUT_ID = REPLACE('1', '-', '');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findPrintDocCarryOutData
+
+		SELECT A.CREAT_SYS_CD 			 , A.FOLDER_ID		     , A.org_cd		     , A.clss_id		     , A.creat_yyyy		     , A.folder_reg_seq		     , A.ho_no				     , A.TITLE			 , C.COM_CD_NM FOLDER_TYPE_DIV_CD			 , (SELECT COUNT(*) FROM TB_RDRECORD D WHERE A.FOLDER_ID = D.FOLDER_ID) RECORD_CNT			 , DECODE(A.PRESV_BOX_ID,'', (D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) 			                           , SUBSTR(A.PRESV_BOX_ID, 0,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 4,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 7,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 10,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 13,3) 									   ) ARNG_INFO		     ,(SELECT COUNT(*)	          FROM TB_RDFOLDER	          WHERE CREAT_SYS_CD = A.CREAT_SYS_CD	          AND ORG_CD = A.ORG_CD	          AND CLSS_ID = A.CLSS_ID	          AND CREAT_YYYY = A.CREAT_YYYY	          AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS HO_NO_CNT		  FROM TB_RDFOLDER A, TB_SRINOUTFOLDER B, TB_ZZCOMCD C, TB_SRBOOKSFARNGDETL D		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.FOLDER_ID = B.FOLDER_ID 		   AND B.OUT_ID = REPLACE('1', '-', '')		   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')		   AND A.FOLDER_ID = D.FOLDER_ID		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryInTempAll
+
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = '1' AND USER_ID = '1' AND REMK ='CARRYIN'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryInWriteList
+
+		SELECT COUNT(1)        FROM (            SELECT   /*+ ORDERED */                     B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM                    ,B.STAKRM_MNG_NO                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID                    ,C.IN_FLAG            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E            WHERE  A.RECORD_CENTER_ID ='1'            AND  A.REMK='CARRYIN'            AND  A.USER_ID='1'            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID            AND  A.TRGT_ID = B.FOLDER_ID            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID            AND  A.TRGT_ID = C.FOLDER_ID            AND  C.IN_ID=REPLACE('1', '-', '')            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID            AND  B.FOLDER_ID = D.FOLDER_ID            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID            AND  B.ORG_CD= E.ORG_CD            UNION             SELECT   /*+ ORDERED */                     B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM                    ,B.STAKRM_MNG_NO                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID                    ,C.IN_FLAG            FROM  (SELECT *                         FROM TB_ZZREQLISTTEMP X                        WHERE X.RECORD_CENTER_ID='1'                        AND NOT EXISTS (SELECT Z.FOLDER_ID                                        FROM TB_SRINOUTFOLDER Z                                        WHERE Z.RECORD_CENTER_ID='1'                                        AND Z.RECORD_CENTER_ID = X.RECORD_CENTER_ID                                        AND Z.FOLDER_ID = X.TRGT_ID                                        AND IN_ID=REPLACE('1', '-', '')                                       ))A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E            WHERE  A.RECORD_CENTER_ID ='1'            AND  A.REMK='CARRYIN'            AND  A.USER_ID='1'            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID            AND  A.TRGT_ID = B.FOLDER_ID            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID            AND  A.TRGT_ID = C.FOLDER_ID            AND  C.IN_FLAG='0'            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID            AND  B.FOLDER_ID = D.FOLDER_ID            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID            AND  B.ORG_CD= E.ORG_CD        ) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryInWriteList
+
+		SELECT H.folder_id		      ,H.org_nm		      ,H.org_abbr_nm		      ,H.title		      ,H.creat_yyyy		      ,H.presv_term_nm		      ,H.stakrm_mng_no		      ,H.arng_info		      ,H.out_id		      ,H.in_flag		FROM (		    SELECT G.*		    FROM (		        SELECT ROWNUM AS rnum		                ,F.*		        FROM (		            SELECT   /*+ ORDERED */ 		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY		                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM		                    ,B.STAKRM_MNG_NO		                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO		                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID		                    ,C.IN_FLAG		            FROM  TB_ZZREQLISTTEMP A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E		            WHERE  A.RECORD_CENTER_ID ='1'		            AND  A.REMK='CARRYIN'		            AND  A.USER_ID='1'		            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID		            AND  A.TRGT_ID = B.FOLDER_ID		            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND  A.TRGT_ID = C.FOLDER_ID		            AND  C.IN_ID=REPLACE('1', '-', '')		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		            AND  B.FOLDER_ID = D.FOLDER_ID		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID		            AND  B.ORG_CD= E.ORG_CD		            UNION 		            SELECT   /*+ ORDERED */ 		                    B.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, B.TITLE, B.CREAT_YYYY		                    ,(SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_CD=B.PRESV_TERM_CD AND COM_TYPE_CD='RD07') AS PRESV_TERM_NM		                    ,B.STAKRM_MNG_NO		                    ,(D.STAKRM_ID|| '-' || D.BOOKSF_ID || '-'|| D.BOOKSF_SHELF_CNO || '-' || D.BOOKSF_SHELF_RNO) AS ARNG_INFO		                    ,SUBSTR(C.OUT_ID, 1, 4)||'-'||SUBSTR(C.OUT_ID, 5, 6) OUT_ID		                    ,C.IN_FLAG		            FROM  (SELECT * 		                        FROM TB_ZZREQLISTTEMP X		                        WHERE X.RECORD_CENTER_ID='1'		                        AND NOT EXISTS (SELECT Z.FOLDER_ID		                                        FROM TB_SRINOUTFOLDER Z		                                        WHERE Z.RECORD_CENTER_ID='1'		                                        ANd Z.RECORD_CENTER_ID = X.RECORD_CENTER_ID		                                        AND Z.FOLDER_ID = X.TRGT_ID		                                        AND IN_ID=REPLACE('1', '-', '')		                                       ))A, TB_RDFOLDER B, TB_SRINOUTFOLDER C, TB_SRBOOKSFARNGDETL D, TB_STORG E		            WHERE  A.RECORD_CENTER_ID ='1'		            AND  A.REMK='CARRYIN'		            AND  A.USER_ID='1'		            AND  A.RECORD_CENTER_ID=B.RECORD_CENTER_ID		            AND  A.TRGT_ID = B.FOLDER_ID		            AND  A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND  A.TRGT_ID = C.FOLDER_ID		            AND  C.IN_FLAG='0'		            AND  B.RECORD_CENTER_ID = D.RECORD_CENTER_ID		            AND  B.FOLDER_ID = D.FOLDER_ID		            AND  B.RECORD_CENTER_ID = E.RECORD_CENTER_ID		            AND  B.ORG_CD= E.ORG_CD		        ) F		        WHERE ROWNUM <= '1'		    ) G		    WHERE G.rnum >= '1'		) H		ORDER BY H.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryInFolderPagedList
+
+		 SELECT COUNT(1)         FROM   TB_SRINOUTFOLDER D, TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_SROUT F, TB_STORG E         WHERE  D.RECORD_CENTER_ID='1'         AND  D.RECORD_CENTER_ID = F.RECORD_CENTER_ID         AND  D.IN_FLAG = '0'         AND  D.RECORD_CENTER_ID=A.RECORD_CENTER_ID         AND  D.FOLDER_ID = A.FOLDER_ID         AND  D.OUT_ID = F.OUT_ID         AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID         AND  A.FOLDER_ID = B.FOLDER_ID         AND  A.RECORD_CENTER_ID = E.RECORD_CENTER_ID         AND  A.ORG_CD = E.ORG_CD         AND (A.PRESV_TERM_CD = C.COM_CD AND C.COM_TYPE_CD = 'RD07')         AND NOT EXISTS (SELECT   F.TRGT_ID folder_id                         FROM   TB_ZZREQLISTTEMP F                         WHERE       F.RECORD_CENTER_ID = '1'                         AND F.RECORD_CENTER_ID = D.RECORD_CENTER_ID                         AND F.TRGT_ID = D.folder_id                         AND F.REMK='CARRYIN'                         AND F.USER_ID = '1'                        )          AND                   A.ORG_CD = '1'               AND                  A.ORG_CD = '1'               AND                  (A.CREAT_YYYY BETWEEN '1' AND '1')               AND                  A.PRESV_TERM_CD = '1'               AND                  (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')               AND                  D.OUT_ID = REPLACE('1', '-', '')               AND                  F.OUT_USER_NM LIKE '1'               ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryInFolderPagedList
+
+		SELECT H.folder_id		      ,H.org_nm		      ,H.org_abbr_nm		      ,H.title		      ,H.creat_yyyy		      ,H.presv_term_nm		      ,H.stakrm_mng_no		      ,H.out_id		      ,H.in_flag		      ,H.arng_info		FROM(		    SELECT G.*		    FROM (		        SELECT ROWNUM AS rnum		                ,F.*		        FROM (		            SELECT  /*+ordered*/		                    A.FOLDER_ID, E.ORG_NM, E.ORG_ABBR_NM, A.TITLE, A.CREAT_YYYY,		                    C.COM_CD_NM PRESV_TERM_NM, A.STAKRM_MNG_NO,		                    SUBSTR(D.OUT_ID, 1, 4)||'-'||SUBSTR(D.OUT_ID, 5, 6) OUT_ID,		                    '' IN_FLAG,		                    (B.STAKRM_ID|| '-'|| B.BOOKSF_ID|| '-'|| B.BOOKSF_SHELF_CNO|| '-'|| B.BOOKSF_SHELF_RNO) AS ARNG_INFO		            FROM   TB_SRINOUTFOLDER D, TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B, TB_ZZCOMCD C, TB_SROUT F, TB_STORG E		            WHERE  D.RECORD_CENTER_ID='1'		            AND  D.RECORD_CENTER_ID = F.RECORD_CENTER_ID		            AND  D.IN_FLAG = '0'		            AND  D.RECORD_CENTER_ID=A.RECORD_CENTER_ID		            AND  D.FOLDER_ID = A.FOLDER_ID		            AND  D.OUT_ID = F.OUT_ID		            AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		            AND  A.FOLDER_ID = B.FOLDER_ID		            AND  A.RECORD_CENTER_ID = E.RECORD_CENTER_ID		            AND  A.ORG_CD = E.ORG_CD		            AND (A.PRESV_TERM_CD = C.COM_CD AND C.COM_TYPE_CD = 'RD07')		            AND NOT EXISTS (SELECT   F.TRGT_ID folder_id		                            FROM   TB_ZZREQLISTTEMP F		                            WHERE       F.RECORD_CENTER_ID = '1'		                            AND F.RECORD_CENTER_ID = D.RECORD_CENTER_ID		                            AND F.TRGT_ID = D.folder_id		                            AND F.REMK='CARRYIN'		                            AND F.USER_ID = '1'		                           ) AND  		                    A.ORG_CD = '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.CREAT_YYYY BETWEEN '1' AND '1')		                  AND 		                    A.PRESV_TERM_CD = '1'		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  AND 		                    D.OUT_ID = REPLACE('1', '-', '')		                  AND 		                    F.OUT_USER_NM LIKE '1'		                    		        ) F		        WHERE ROWNUM <= '1'		    ) G		    WHERE G.rnum >= '1'		) H		ORDER BY H.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createCarryInTemp
+
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK)		VALUES ('1', '1','1','CARRYIN') ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryInTemp
+
+		DELETE FROM TB_ZZREQLISTTEMP WHERE RECORD_CENTER_ID = '1' AND TRGT_ID = '1' AND USER_ID = '1' AND REMK = 'CARRYIN'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryInSno
+
+		SELECT NVL(MAX(IN_SNO),0) + 1 IN_SNO		  FROM TB_SRIN		 WHERE IN_YYYY = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createCarryIn
+
+		INSERT INTO TB_SRIN (			RECORD_CENTER_ID, IN_ID, IN_YYYY, IN_SNO, IN_YMD, IN_USER_NM		   ,IN_USER_ORG_NM, IN_USER_POS_RANK_NM, IN_FOLDER_CNT, IN_RSN, WORK_USER_ID		) VALUES (			'1', REPLACE('1', '-', ''), '1', '1', '1', '1'		   ,'1', '1', '1', '1', '1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateInFolderFin
+
+		UPDATE TB_SRINOUTFOLDER		   SET IN_FLAG = '1'		     , IN_ID   = REPLACE('1', '-', '')		 WHERE IN_FLAG = '0'		 		   AND FOLDER_ID IN (SELECT TRGT_ID		                       FROM TB_ZZREQLISTTEMP		                      WHERE USER_ID = '1'		                        AND RECORD_CENTER_ID = '1'		                        AND REMK='CARRYIN')		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateInFolder
+
+		UPDATE TB_RDFOLDER		   SET OUT_FLAG = '0'		 WHERE FOLDER_ID IN (SELECT FOLDER_ID		                       FROM TB_SRINOUTFOLDER		                      WHERE IN_ID = REPLACE('1', '-', '')		                        AND RECORD_CENTER_ID = '1')		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateInOutFolder
+
+		UPDATE TB_SRINOUTFOLDER		   SET IN_FLAG = '0', IN_ID = ''		 WHERE IN_ID = REPLACE('1', '-', '')		   AND FOLDER_ID IN (SELECT FOLDER_ID FROM TB_SRINOUTFOLDER		                      WHERE IN_ID =REPLACE('1', '-', '')		                        AND RECORD_CENTER_ID = '1')		   AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateCarryInTemp
+
+		UPDATE TB_ZZREQLISTTEMP		   SET INOUT_ID = REPLACE('1', '-', '')		 WHERE RECORD_CENTER_ID = '1'		   AND USER_ID = '1'		   AND TRGT_ID = '1'		   AND REMK = 'CARRYIN';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : insert
+-- Query Id : createCarryInOutTemp
+
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID,REMK, INOUT_ID)		(			SELECT '1' RECORD_CENTER_ID, '1' USER_ID, A.FOLDER_ID,'CARRYIN', IN_ID 	 		FROM TB_SRINOUTFOLDER A			WHERE A.IN_ID = REPLACE('1', '-', '')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : delete
+-- Query Id : deleteCarryIn
+
+		DELETE FROM TB_SRIN		 WHERE IN_ID = REPLACE('1', '-', '')		   AND RECORD_CENTER_ID = '1'		 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryInInfo
+
+ 		SELECT COUNT(1) 		  FROM TB_SRINOUTFOLDER D,        	   TB_RDFOLDER A,        	   TB_SRBOOKSFARNGDETL B,        	   TB_ZZCOMCD C,	           TB_STORG E		 WHERE D.RECORD_CENTER_ID='1'		   AND D.IN_FLAG = '0'		   AND D.RECORD_CENTER_ID=A.RECORD_CENTER_ID		   AND D.FOLDER_ID = A.FOLDER_ID		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.FOLDER_ID = B.FOLDER_ID		   AND A.RECORD_CENTER_ID = E.RECORD_CENTER_ID		   AND A.ORG_CD = E.ORG_CD		   AND (A.PRESV_TERM_CD = C.COM_CD AND C.COM_TYPE_CD = 'RD07')		   AND D.FOLDER_ID NOT IN               (SELECT   F.TRGT_ID FOLDER_ID                  FROM   TB_ZZREQLISTTEMP F                 WHERE       F.RECORD_CENTER_ID = '1'                         AND F.remk='CARRYIN'                         AND F.USER_ID = '1')          AND  A.FOLDER_ID='1'             ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : update
+-- Query Id : updateInFolderBarCode
+
+		UPDATE TB_SRINOUTFOLDER		   SET IN_FLAG = '1'		     , IN_ID   = REPLACE('1', '-', '')		 WHERE RECORD_CENTER_ID = '1'		   AND FOLDER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findPrintDocCarryInHead
+
+		SELECT DISTINCT SUBSTR(A.IN_ID, 1, 4)||'-'||SUBSTR(A.IN_ID, 5, 6) IN_ID		     , to_char(to_date(A.IN_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') IN_YMD			 , A.IN_USER_NM		     , A.IN_USER_ORG_NM		     , A.IN_USER_POS_RANK_NM		     , A.IN_RSN			 , to_char(to_date(B.OUT_YMD,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') OUT_YMD		  FROM TB_SRIN A, TB_SROUT B, TB_SRINOUTFOLDER C		 WHERE 		       A.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		   AND B.OUT_ID = C.OUT_ID		   AND A.IN_ID = C.IN_ID		   AND A.RECORD_CENTER_ID = '1'		   AND A.IN_ID = REPLACE('1', '-', '')   	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findPrintDocCarryInData
+
+		SELECT A.CREAT_SYS_CD			 , A.FOLDER_ID		     , A.org_cd		     , A.clss_id		     , A.creat_yyyy		     , A.folder_reg_seq		     , A.ho_no				     , A.TITLE			 , C.COM_CD_NM FOLDER_TYPE_DIV_CD			 , (SELECT COUNT(*) FROM TB_RDRECORD D WHERE A.FOLDER_ID = D.FOLDER_ID) RECORD_CNT			 , DECODE(A.PRESV_BOX_ID,'', (D.STAKRM_ID||'-'||D.BOOKSF_ID||'-'||D.BOOKSF_SHELF_CNO||'-'||D.BOOKSF_SHELF_RNO) 			                           , SUBSTR(A.PRESV_BOX_ID, 0,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 4,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 7,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 10,3)||'-'|| SUBSTR(A.PRESV_BOX_ID, 13,3) 									   ) ARNG_INFO	         ,(SELECT COUNT(*)	          FROM TB_RDFOLDER	          WHERE CREAT_SYS_CD = A.CREAT_SYS_CD	          AND ORG_CD = A.ORG_CD	          AND CLSS_ID = A.CLSS_ID	          AND CREAT_YYYY = A.CREAT_YYYY	          AND FOLDER_REG_SEQ = A.FOLDER_REG_SEQ) AS HO_NO_CNT		  FROM TB_RDFOLDER A, TB_SRINOUTFOLDER B, TB_ZZCOMCD C, TB_SRBOOKSFARNGDETL D		 WHERE B.IN_ID = REPLACE('1', '-', '')		   AND B.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.FOLDER_ID = B.FOLDER_ID		   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')		   AND A.FOLDER_ID = D.FOLDER_ID		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryOutList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A, TB_SROUT B, TB_SRINOUTFOLDER C, TB_STORG D        WHERE A.FOLDER_ID = C.FOLDER_ID        AND B.OUT_ID = C.OUT_ID        AND A.ORG_CD = D.ORG_CD        AND B.RECORD_CENTER_ID = '1'        AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID        AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID        AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID         AND                  (B.RETRN_EXPT_YMD < TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')              AND                 (B.RETRN_EXPT_YMD < TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')              AND                 (B.OUT_ID = REPLACE('1', '-', ''))              AND                 (B.OUT_TYPE_CD = '1')              AND                 (B.OUT_YMD BETWEEN '1' AND '1')              AND                 B.RETRN_EXPT_YMD = '1'              AND                 B.OUT_USER_NM LIKE '1'              AND                 A.ORG_CD = '1'              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryOutList
+
+		SELECT G.folder_id			  ,G.org_cd		      ,G.org_nm		      ,G.org_abbr_nm		      ,G.title		      ,G.stakrm_mng_no		      ,SUBSTR(G.out_id, 1, 4)||'-'||SUBSTR(G.out_id, 5, 6) AS out_id		      ,G.out_ymd		      ,G.out_user_nm		      ,G.retrn_expt_ymd		      ,(CASE WHEN G.in_flag = 0 AND G.retrn_expt_ymd < TO_CHAR(SYSDATE,'YYYYMMDD')  THEN '반출(기일초과)'		             WHEN G.in_flag = '0' AND G.retrn_expt_ymd >= TO_CHAR(SYSDATE,'YYYYMMDD') THEN '반출(기일내)'		             WHEN G.in_flag = '1' THEN '반입완료'             		        END) AS div_nm		FROM (		    SELECT F.*		    FROM (		        SELECT ROWNUM AS rnum		                ,E.*		        FROM (		            SELECT A.FOLDER_ID, D.ORG_NM, D.ORG_ABBR_NM, D.ORG_CD, A.TITLE		                  ,A.STAKRM_MNG_NO,B.OUT_ID, B.OUT_YMD, B.OUT_USER_NM, B.RETRN_EXPT_YMD		                  ,C.IN_FLAG		            FROM TB_RDFOLDER A, TB_SROUT B, TB_SRINOUTFOLDER C, TB_STORG D		            WHERE A.FOLDER_ID = C.FOLDER_ID		            AND B.OUT_ID = C.OUT_ID		            AND A.ORG_CD = D.ORG_CD		            AND B.RECORD_CENTER_ID = '1'		            AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND B.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND B.RECORD_CENTER_ID = D.RECORD_CENTER_ID AND  		                    (B.RETRN_EXPT_YMD < TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')		                  AND 		                    (B.RETRN_EXPT_YMD < TO_CHAR(SYSDATE,'YYYYMMDD') AND C.IN_FLAG='0')		                  AND 		                    (B.OUT_ID = REPLACE('1', '-', ''))		                  AND 		                    (B.OUT_TYPE_CD = '1')		                  AND 		                    (B.OUT_YMD BETWEEN '1' AND '1')		                  AND 		                    B.RETRN_EXPT_YMD = '1'		                  AND 		                    B.OUT_USER_NM LIKE '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                    		                    ORDER BY B.OUT_YMD		                  		        ) E		        WHERE ROWNUM <= '1'		    ) F		    WHERE F.rnum >= '1'		) G		ORDER BY G.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : countCarryInList
+
+		SELECT COUNT(1)        FROM TB_RDFOLDER A, TB_SRINOUTFOLDER C, TB_SRIN D, TB_ZZCOMCD E, TB_STORG F        WHERE A.FOLDER_ID = C.FOLDER_ID        AND D.IN_ID  = C.IN_ID        AND A.ORG_CD = F.ORG_CD        AND (A.PRESV_TERM_CD = E.COM_CD and E.COM_TYPE_CD = 'RD07')        AND C.IN_FLAG = '1'        AND D.RECORD_CENTER_ID = '1'        AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID        AND D.RECORD_CENTER_ID = C.RECORD_CENTER_ID        AND D.RECORD_CENTER_ID = F.RECORD_CENTER_ID         AND                  C.IN_ID = REPLACE('1', '-', '')              AND                 C.IN_ID = REPLACE('1', '-', '')              AND                 (D.IN_YMD BETWEEN '1' AND '1')              AND                 D.IN_USER_NM LIKE '1'              AND                 A.ORG_CD = '1'              AND                 (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')              ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml
+-- Query    : select
+-- Query Id : findCarryInList
+
+		SELECT I.folder_id			  ,I.org_cd		      ,I.org_nm		      ,I.org_abbr_nm		      ,I.title		      ,I.creat_yyyy		      ,I.presv_term_nm		      ,I.stakrm_mng_no		      ,I.in_id		      ,I.in_user_nm		      ,I.in_ymd		FROM (		    SELECT H.*		    FROM (		        SELECT ROWNUM AS rnum		              ,G.*		        FROM (		            SELECT A.FOLDER_ID, F.ORG_NM, F.ORG_ABBR_NM, A.TITLE, A.CREAT_YYYY		                  ,E.COM_CD_NM PRESV_TERM_NM, A.STAKRM_MNG_NO, SUBSTR(D.IN_ID, 1, 4)||'-'||SUBSTR(D.IN_ID, 5, 6) IN_ID, D.IN_USER_NM, D.IN_YMD		                  ,F.ORG_CD		            FROM TB_RDFOLDER A, TB_SRINOUTFOLDER C, TB_SRIN D, TB_ZZCOMCD E, TB_STORG F		            WHERE A.FOLDER_ID = C.FOLDER_ID		            AND D.IN_ID  = C.IN_ID		            AND A.ORG_CD = F.ORG_CD		            AND (A.PRESV_TERM_CD = E.COM_CD and E.COM_TYPE_CD = 'RD07')		            AND C.IN_FLAG = '1'		            AND D.RECORD_CENTER_ID = '1'		            AND D.RECORD_CENTER_ID = A.RECORD_CENTER_ID		            AND D.RECORD_CENTER_ID = C.RECORD_CENTER_ID		            AND D.RECORD_CENTER_ID = F.RECORD_CENTER_ID AND  		                    C.IN_ID = REPLACE('1', '-', '')		                  AND 		                    C.IN_ID = REPLACE('1', '-', '')		                  AND 		                    (D.IN_YMD BETWEEN '1' AND '1')		                  AND 		                    D.IN_USER_NM LIKE '1'		                  AND 		                    A.ORG_CD = '1'		                  AND 		                    (A.TITLE LIKE '1' OR A.SUB_TITLE LIKE '1' OR A.CORCT_TITLE LIKE '1')		                  		        ) G		        WHERE ROWNUM <= '1'		    ) H		    WHERE H.rnum >= '1'		) I		ORDER BY I.rnum	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\booksf\CarryInOut.xml

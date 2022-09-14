@@ -1,0 +1,46 @@
+Read(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskMst.xml
+
+createOptidiskFldHist
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_sroptihist_fld_record_center_id_optidisk_id_folder_id(B+tree: 4|272|1400) ON CLASS tb_sroptihist_fld(CLASS_OID: 0|488|15). key: {'1', '1', '1'}(OID: 3|550|22).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskMst.xml
+-- Query    : insert
+-- Query Id : createOptidiskFldHist
+
+		INSERT 	INTO tb_sroptihist_fld (			record_center_id, folder_id, optidisk_id, store_size, record_cnt		) VALUES (			'1', '1', '1', '1', '1'		)	;
+
+createOptidiskRcdHist
+Operation would have caused one or more unique constraint violations. INDEX pk_tb_sroptihist_rcd_record_center_id_folder_id_record_id_optidisk_id(B+tree: 4|274|1410) ON CLASS tb_sroptihist_rcd(CLASS_OID: 0|488|16). key: {'1', '1', '1', '1'}(OID: 1|2122|48).[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskMst.xml
+-- Query    : insert
+-- Query Id : createOptidiskRcdHist
+
+ 		INSERT	INTO tb_sroptihist_rcd (			record_center_id, folder_id, record_id, optidisk_id, record_discern, store_size, split_seq, file_cnt		) VALUES (			'1', '1', '1', '1', '1', '1', '1', '1'		);
+
+createOptidiskBooksf
+The constraint of the foreign key 'tb_sroptidisk_booksf_fk01' is invalid, due to value '{'1', '1'}'.[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskMst.xml
+-- Query    : insert
+-- Query Id : createOptidiskBooksf
+
+		INSERT INTO TB_SROPTIDISK_BOOKSF (			RECORD_CENTER_ID, OPTIDISK_BOOKSF_ID, OPTIDISK_BOOKSF_NM, OPTIDISK_STAKRM_ID, OPTIDISK_STAKRM_SNO, 	  		   	SHELF_C_CNT, SHELF_R_CNT, MAX_ARNG_DISK_CNT, CUR_ARNG_DISK_CNT, REMK		) VALUES (			'1', '1', '1', '1'		   ,(SELECT (COUNT(OPTIDISK_BOOKSF_ID)+1) AS STAKRMSEQ FROM TB_SROPTIDISK_BOOKSF WHERE OPTIDISK_STAKRM_ID='1')	  	   ,'1', '1', '1', '1', '1')	;
+
+findOptiDiskStoreCheckList
+Semantic: before ' 		        	  ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST WHERE R...'
+T.CHECK_YMD is not single valued. Attributes exposed in
+aggregate queries must also appear in the group by clause. select [__t1].CHECK_YMD, nvl(sum([__t1].A_CHK_CNT), 0), nvl(...[CAS INFO-127.0.0.1:54330,2,10704],[SESSION-36],[URL-jdbc:cubrid:127.0.0.1:54330:rms:dba:********:].
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskMst.xml
+-- Query    : select
+-- Query Id : findOptiDiskStoreCheckList
+
+		SELECT CHECK_YMD			  ,NVL(SUM(A_CHK_CNT), 0) A_CHK_CNT			  ,NVL(SUM(A_NRMLT_CNT), 0) A_NRMLT_CNT			  ,NVL(SUM(A_LOS_CNT), 0) A_LOS_CNT			  ,NVL(SUM(A_DAMAGE_CNT), 0) A_DAMAGE_CNT			  ,NVL(SUM(A_ETC_CNT), 0) A_ETC_CNT			  ,NVL(SUM(B_CHK_CNT), 0) B_CHK_CNT			  ,NVL(SUM(B_NRMLT_CNT), 0) B_NRMLT_CNT			  ,NVL(SUM(B_LOS_CNT), 0) B_LOS_CNT			  ,NVL(SUM(B_DAMAGE_CNT), 0) B_DAMAGE_CNT			  ,NVL(SUM(B_ETC_CNT), 0) B_ETC_CNT			  ,NVL(SUM(C_CHK_CNT), 0) C_CHK_CNT			  ,NVL(SUM(C_NRMLT_CNT), 0) C_NRMLT_CNT			  ,NVL(SUM(C_LOS_CNT), 0) C_LOS_CNT			  ,NVL(SUM(C_DAMAGE_CNT), 0) C_DAMAGE_CNT			  ,NVL(SUM(C_ETC_CNT), 0) C_ETC_CNT		FROM (        		        SELECT CHECK_YMD		        	  ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '1') A_CHK_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '1') A_NRMLT_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '1') A_LOS_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '1') A_DAMAGE_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '4' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '1') A_ETC_CNT		        	  ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '2') B_CHK_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '2') B_NRMLT_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '2') B_LOS_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '2') B_DAMAGE_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '4' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '2') B_ETC_CNT		        	  ,(SELECT COUNT(1) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '3') C_CHK_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '1' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '3') C_NRMLT_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '2' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '3') C_LOS_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '3' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '3') C_DAMAGE_CNT		        	  ,(SELECT SUM(CASE WHEN CNTCHK_RSLT_CD = '4' THEN 1 ELSE 0 END) FROM TB_SROPTIDISK_MST WHERE RECORD_CENTER_ID = T.RECORD_CENTER_ID AND ORG_CD = T.ORG_CD AND SEQ = T.SEQ AND OPTIDISK_TYPE_CD = '3') C_ETC_CNT		        FROM (		                SELECT A.RECORD_CENTER_ID, A.ORG_CD, A.SEQ, SUBSTR(B.CHECK_YMD, 0, 4) CHECK_YMD, B.CNTCHK_RSLT_CD         		                FROM TB_SROPTIDISK_MST A,		                        TB_SROPTIDISK_CNTCHKDETL B		                WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		                AND A.ORG_CD = B.ORG_CD		                AND A.SEQ = B.SEQ		                AND A.RECORD_CENTER_ID = '1'		                AND A.OPTIDISK_STATE_CD = '4'		                AND SUBSTR(B.CHECK_YMD, 0, 4) BETWEEN '1' AND '1'		                ) T    		    )	    GROUP BY CHECK_YMD  		 	;
+
+
+Close(log) : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\presv\optidiskmst\OptidiskMst.xml

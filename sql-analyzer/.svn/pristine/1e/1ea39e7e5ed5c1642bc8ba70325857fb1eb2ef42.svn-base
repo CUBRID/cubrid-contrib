@@ -1,0 +1,81 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : select
+-- Query Id : findRcTakovrPlanList
+
+		SELECT takovr_rep_cd||'-'||takovr_yyyy||'-'||LPAD(takovr_sno, 6, '0') takovr_mng_no			, takovr_prog_state_cd		FROM  TB_DFTAKOVRPLAN		WHERE record_center_id = '1'		ORDER BY takovr_rep_cd, takovr_yyyy, takovr_sno DESC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : select
+-- Query Id : findRcTakovrMngInf
+
+		SELECT A.takovr_yyyy			 , A.takovr_rep_nm		     , A.takovr_rep_cd		     , A.take_rep_nm		     , A.take_rep_cd		     , A.takovr_rsn		     , A.takovr_prog_state_cd		     , A.takovr_file_state_cd			 , (SELECT COUNT(1)			    FROM   TB_DFTAKOVRFOLDERLIST Z 			    WHERE  Z.takovr_rep_Cd = A.takovr_rep_cd 			    AND    Z.takovr_yyyy = A.takovr_yyyy 			    AND    Z.takovr_sno = A.takovr_sno) AS fixed_folder_cnt		FROM  TB_DFTAKOVRPLAN A		WHERE A.takovr_rep_cd = '1'		AND   A.takovr_yyyy = '1'		AND   A.takovr_sno  = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : select
+-- Query Id : findRcTakovrChoiceTrgtPagedList
+
+	 	SELECT D.record_center_id,	         D.org_cd,	         (SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_nm,	         (SELECT Z.org_abbr_nm FROM tb_storg Z WHERE Z.record_center_id = D.record_center_id AND Z.org_cd = D.org_cd) AS org_abbr_nm,	         D.folder_cnt,	         D.record_cnt,	         (SELECT COUNT (1)	            FROM TB_DFTAKOVRFOLDERLIST X, tb_rdfolder Y	           WHERE     X.record_center_id = Y.record_center_id	                 AND X.folder_id = Y.folder_id	                 AND X.takovr_rep_cd = '1'	                 AND X.takovr_yyyy = '1'	                 AND X.takovr_sno = '1'	                 AND Y.org_cd = D.org_cd) AS fixed_folder_cnt,	         NVL((SELECT SUM(Y.record_reg_cnt)	            FROM TB_DFTAKOVRFOLDERLIST X, tb_rdfolder Y	           WHERE     X.record_center_id = Y.record_center_id	                 AND X.folder_id = Y.folder_id	                 AND X.takovr_rep_cd = '1'	                 AND X.takovr_yyyy = '1'	                 AND X.takovr_sno = '1'	                 AND Y.org_cd = D.org_cd), 0) AS fixed_record_cnt	    FROM (	    	SELECT ROWNUM AS rnum		        , C.*		    FROM (	    		SELECT B.record_center_id,	                   B.org_cd,	                   COUNT (1) folder_cnt,	                   SUM(B.record_reg_cnt) record_cnt	              FROM tb_rdfolder B	             WHERE     B.record_center_id = '1'  	                  	  AND B.folder_keep_state_cd IN ('01', '02', '03', '04')			              AND NOT EXISTS (SELECT Z.folder_id			                              FROM TB_DFTAKOVRFOLDERLIST Z			                              WHERE     Z.record_center_id = B.record_center_id			                              AND Z.folder_id = B.folder_id			                              AND (Z.takovr_rep_cd != '1' OR Z.takovr_yyyy != '1' OR Z.takovr_sno != '1'))  				GROUP BY B.record_center_id, B.org_cd		        ORDER BY B.record_center_id, B.org_cd		    ) C			WHERE ROWNUM <= '1'		) D		WHERE D.rnum >= '1'		ORDER BY D.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : select
+-- Query Id : countRcTakovrChoiceTrgtPagedList
+
+		SELECT COUNT(1)		FROM (			SELECT B.record_center_id				, B.org_cd				, COUNT(1) folder_cnt				, SUM(B.record_reg_cnt) record_cnt			FROM  TB_RDFOLDER B			WHERE B.record_center_id = '1'                    	  AND B.folder_keep_state_cd IN ('01', '02', '03', '04')		              AND NOT EXISTS (SELECT Z.folder_id		                              FROM TB_DFTAKOVRFOLDERLIST Z		                              WHERE     Z.record_center_id = B.record_center_id		                              AND Z.folder_id = B.folder_id		                              AND (Z.takovr_rep_cd != '1' OR Z.takovr_yyyy != '1' OR Z.takovr_sno != '1'))  			GROUP BY B.record_center_id, B.org_cd		) C;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : insert
+-- Query Id : createRcTakovrChoiceTrgtFixed
+
+	 	INSERT INTO TB_DFTAKOVRFOLDERLIST (		     takovr_rep_cd,takovr_yyyy,takovr_sno,folder_id,record_center_id		    ,record_reg_cnt		) 		(		    SELECT '1', '1', '1', A.folder_id, A.record_center_id		          ,(SELECT COUNT(1) FROM TB_RDRECORD B WHERE B.record_center_id = A.record_center_id AND B.folder_id =A.folder_id)		    FROM tb_rdfolder A		    WHERE record_center_id = '1'		    AND  org_cd = '1'		    AND A.folder_keep_state_cd IN ('01', '02', '03', '04')		    AND NOT EXISTS (		        SELECT X.folder_id 		        FROM TB_DFTAKOVRFOLDERLIST X		        WHERE X.record_center_id = A.record_center_id		        AND   X.folder_id 		 = A.folder_id		    )		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : delete
+-- Query Id : deleteRcTakovrChoiceTrgtFixed
+
+	 	DELETE 		FROM TB_DFTAKOVRFOLDERLIST A		WHERE takovr_rep_cd = '1'		AND   takovr_yyyy = '1'		AND   takovr_sno = '1'		AND   EXISTS (		        SELECT Z.folder_id FROM tb_rdfolder Z 		        WHERE Z.record_center_id = A.record_center_id		        AND   Z.folder_id = A.folder_id		        		) 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : update
+-- Query Id : updateRcTakovrChoiceTrgtCommit
+
+	 	UPDATE TB_DFTAKOVRPLAN	 	   SET takovr_prog_state_cd = '1'	 	 WHERE takovr_rep_cd = '1'	 	   AND takovr_yyyy = '1'	 	   AND takovr_sno = '1'	 	   AND record_center_id = '1'  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : select
+-- Query Id : findRcTakovrChoiceTrgtFolderPagedList
+
+	 	SELECT C.record_center_id	 		 , C.folder_id		     , C.creat_yyyy		     , C.title		     , C.org_cd		     , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_nm		     , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = C.record_center_id AND Z.org_cd = C.org_cd) org_abbr_nm		     , (SELECT COUNT(1) FROM TB_DFTAKOVRFOLDERLIST Z WHERE Z.record_center_id = C.record_center_id AND Z.folder_id = C.folder_id) fixed_flag		FROM (	    	SELECT ROWNUM AS rnum		        , B.*		    FROM (		    	SELECT A.*				FROM  TB_RDFOLDER A				WHERE A.record_center_id = '1'								AND A.folder_keep_state_cd IN ('01', '02', '03', '04')				AND NOT EXISTS				          (SELECT Z.folder_id				             FROM TB_DFTAKOVRFOLDERLIST Z				            WHERE     Z.record_center_id = A.record_center_id				                  AND Z.folder_id = A.folder_id				                  AND (Z.takovr_rep_cd != '1' OR Z.takovr_yyyy != '1' OR Z.takovr_sno != '1'))				ORDER BY A.record_center_id, A.title			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'		ORDER BY C.rnum;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : select
+-- Query Id : countRcTakovrChoiceTrgtFolderPagedList
+
+	 	SELECT COUNT(1)		FROM  TB_RDFOLDER A		WHERE A.record_center_id = '1'				AND NOT EXISTS		          (SELECT Z.folder_id		             FROM TB_DFTAKOVRFOLDERLIST Z		            WHERE     Z.record_center_id = A.record_center_id		                  AND Z.folder_id = A.folder_id		                  AND (Z.takovr_rep_cd != '1' OR Z.takovr_yyyy != '1' OR Z.takovr_sno != '1'));
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : insert
+-- Query Id : createRcTakovrChoiceTrgtFolderFixed
+
+		INSERT INTO TB_DFTAKOVRFOLDERLIST(		     takovr_rep_cd,takovr_yyyy,takovr_sno,folder_id,record_center_id,record_reg_cnt		)		VALUES (		    '1', '1', '1', '1', '1',		    (SELECT count(1) FROM TB_RDRECORD WHERE record_center_id = '1' AND folder_id = '1')		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml
+-- Query    : delete
+-- Query Id : deleteRcTakovrChoiceTrgtFolderFixed
+
+	 	DELETE 	 	FROM TB_DFTAKOVRFOLDERLIST		WHERE takovr_rep_cd = '1'		AND   takovr_yyyy 	= '1'		AND   takovr_sno 	= '1'		and   folder_id 	= '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\rcTakovr\RcTakovrChoiceTrgt.xml

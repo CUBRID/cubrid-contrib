@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.openresortopin">
+
+
+	<!-- 공개재분류 의견등록 전문요원의견등록 -->
+	<resultMap id="open-resort-expert-opin-stat-result" class="rms.eval.openresortopin.domain.OpenResortOpin">
+		<result property="deptAbbrNm" 				 column="DEPT_ABBR_NM"                  nullValue=""  />
+		<result property="closeFlag"				 column="CLOSE_FLAG"                    nullValue="0" />
+		<result property="handlOrgCd" 				 column="HANDL_ORG_CD"                  nullValue=""  />
+		<result property="total" 					 column="TOTAL"                         nullValue="0" />
+		<result property="choiceCnt" 				 column="CHOICE_CNT"                    nullValue="0" />
+		<result property="handlUnregistCnt" 		 column="HANDL_UNREGIST_CNT"            nullValue="0" />
+		<result property="handlOpenCnt" 			 column="HANDL_OPEN_CNT"                nullValue="0" />
+		<result property="handlPartOpenCnt" 		 column="HANDL_PART_OPEN_CNT"           nullValue="0" />
+		<result property="handlCloseCnt" 			 column="HANDL_CLOSE_CNT"               nullValue="0" />
+		<result property="expertUnregistCnt" 		 column="EXPERT_UNREGIST_CNT"           nullValue="0" />
+		<result property="expertOpenCnt" 			 column="EXPERT_OPEN_CNT"               nullValue="0" />
+		<result property="expertPartOpenCnt" 		 column="EXPERT_PART_OPEN_CNT"          nullValue="0" />
+		<result property="expertCloseCnt" 			 column="EXPERT_CLOSE_CNT"              nullValue="0" />
+		<result property="reviewCnt" 			 	 column="REVIEW_CNT"                    nullValue="0" />
+	</resultMap>
+	<!-- 공개재분류 의견등록 전문요원의견등록 처리부서미지정건수를 조회한다. -->
+	<select id="findOpenResortExpertOpinStatList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="open-resort-expert-opin-stat-result">
+		SELECT	t.dept_abbr_nm, t.handl_org_cd, t.close_flag, t.total, t.choice_cnt, t.handl_unregist_cnt, t.handl_open_cnt, t.handl_part_open_cnt, handl_close_cnt, t.expert_unregist_cnt, t.expert_open_cnt, t.expert_part_open_cnt, t.expert_close_cnt, t.review_cnt
+		FROM	(
+					SELECT
+					   b.dept_abbr_nm, 
+					   a.handl_org_cd, 
+					   b.close_flag,
+					   a.total,
+					   a.choice_cnt,
+					   a.handl_unregist_cnt,
+					   a.handl_open_cnt,
+					   a.handl_part_open_cnt,
+					   a.handl_close_cnt,
+					   a.expert_unregist_cnt,
+					   a.expert_open_cnt,
+					   a.expert_part_open_cnt,
+					   a.expert_close_cnt,
+					   a.review_cnt
+					FROM (
+					      SELECT handl_org_cd,
+					         COUNT(*) total, 
+					         SUM(choice_cnt) AS choice_cnt,
+					         SUM(handl_unregist_cnt) AS handl_unregist_cnt,
+					         SUM(handl_open_cnt) AS handl_open_cnt,
+					         SUM(handl_part_open_cnt) AS handl_part_open_cnt,
+					         SUM(handl_close_cnt) AS handl_close_cnt,
+					         SUM(expert_unregist_cnt) AS expert_unregist_cnt,
+					         SUM(expert_open_cnt) AS expert_open_cnt,
+					         SUM(expert_part_open_cnt) AS expert_part_open_cnt,
+					         SUM(expert_close_cnt) AS expert_close_cnt,
+					         SUM(review_cnt) AS review_cnt
+					      FROM(
+					          SELECT handl_org_cd,
+					          (CASE WHEN  resort_prog_state_cd = '2' then 1 ELSE 0 END ) AS choice_cnt ,
+					          (CASE WHEN  resort_prog_state_cd = '3' then 1 ELSE 0 END) AS handl_unregist_cnt ,
+					          (CASE WHEN  resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '1' then 1 ELSE 0 END) AS handl_open_cnt,              
+					          (CASE WHEN  resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '2' then 1 ELSE 0 END) AS handl_part_open_cnt ,
+					          (CASE WHEN  resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '3' then 1 ELSE 0 END) AS handl_close_cnt ,
+					          (CASE WHEN  resort_prog_state_cd = '4' then 1 ELSE 0 END) AS expert_unregist_cnt ,
+					          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '1' then 1 ELSE 0 END) AS expert_open_cnt ,
+					          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '2' then 1 ELSE 0 END) AS expert_part_open_cnt ,
+					          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '3' then 1 ELSE 0 END) AS expert_close_cnt ,
+					          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND discu_trgt_flag = '1' then 1 ELSE 0 END) AS review_cnt 
+					          FROM tb_rdopenresortopin 
+					          WHERE  	record_center_id = #recordCenterId:VARCHAR#
+					          <isNotEmpty property="resortCase" prepend="AND"> 
+					              resort_case = #resortCase:VARCHAR#
+					          </isNotEmpty>
+					          <isNotEmpty property="handlOrgCd" prepend="AND"> 
+					              handl_org_cd = #handlOrgCd:VARCHAR#
+					          </isNotEmpty>					          
+					          AND     resort_yyyy = #resortYyyy:VARCHAR#
+					          AND resort_prog_state_cd IN ('3','4','5','6','7') 
+					          AND handl_org_cd != '0' 
+					      ) 
+					      GROUP BY handl_org_cd) a, tb_stdept b 
+						WHERE a.handl_org_cd = b.org_cd 
+					UNION
+						SELECT
+						   DISTINCT '기록관' AS dept_abbr_nm, 
+						   a.handl_org_cd, 
+						  '1' AS close_flag,
+						   a.total,
+						   a.choice_cnt,
+						   a.handl_unregist_cnt,
+						   a.handl_open_cnt,
+						   a.handl_part_open_cnt,
+						   a.handl_close_cnt,
+						   a.expert_unregist_cnt,
+						   a.expert_open_cnt,
+						   a.expert_part_open_cnt,
+						   a.expert_close_cnt,
+						   a.review_cnt
+						FROM (
+						      SELECT handl_org_cd,
+						         COUNT(*) total, 
+						         SUM(choice_cnt) AS choice_cnt,
+						         SUM(handl_unregist_cnt) AS handl_unregist_cnt,
+						         SUM(handl_open_cnt) AS handl_open_cnt,
+						         SUM(handl_part_open_cnt) AS handl_part_open_cnt,
+						         SUM(handl_close_cnt) AS handl_close_cnt,
+						         SUM(expert_unregist_cnt) AS expert_unregist_cnt,
+						         SUM(expert_open_cnt) AS expert_open_cnt,
+						         SUM(expert_part_open_cnt) AS expert_part_open_cnt,
+						         SUM(expert_close_cnt) AS expert_close_cnt,
+						         SUM(review_cnt) AS review_cnt
+						      FROM(
+						          SELECT handl_org_cd,
+						          (CASE WHEN  resort_prog_state_cd = '2' then 1 ELSE 0 END ) AS choice_cnt ,
+						          (CASE WHEN  resort_prog_state_cd = '3' then 1 ELSE 0 END) AS handl_unregist_cnt ,
+						          (CASE WHEN  resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '1' then 1 ELSE 0 END) AS handl_open_cnt,              
+						          (CASE WHEN  resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '2' then 1 ELSE 0 END) AS handl_part_open_cnt ,
+						          (CASE WHEN  resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '3' then 1 ELSE 0 END) AS handl_close_cnt ,
+						          (CASE WHEN  resort_prog_state_cd = '4' then 1 ELSE 0 END) AS expert_unregist_cnt ,
+						          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '1' then 1 ELSE 0 END) AS expert_open_cnt ,
+						          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '2' then 1 ELSE 0 END) AS expert_part_open_cnt ,
+						          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '3' then 1 ELSE 0 END) AS expert_close_cnt ,
+						          (CASE WHEN  resort_prog_state_cd IN ('5','6','7') AND discu_trgt_flag = '1' then 1 ELSE 0 END) AS review_cnt 
+						          FROM tb_rdopenresortopin 
+						          WHERE  	record_center_id = #recordCenterId:VARCHAR#
+						          <isNotEmpty property="resortCase" prepend="AND"> 
+						              resort_case = #resortCase:VARCHAR#
+						          </isNotEmpty>
+						          <isNotEmpty property="handlOrgCd" prepend="AND"> 
+						              handl_org_cd = #handlOrgCd:VARCHAR#
+						          </isNotEmpty>								          
+						          AND     resort_yyyy = #resortYyyy:VARCHAR#
+						          AND resort_prog_state_cd IN ('3','4','5','6','7') 
+						          AND handl_org_cd = '0' 
+						      ) 
+						      GROUP BY handl_org_cd) a          
+				) t
+		ORDER by t.handl_org_cd ASC		
+		<!-- 
+		SELECT t.dept_abbr_nm
+			, t.handl_org_cd
+			, t.close_flag
+			, t.total
+			, t.choice_cnt
+			, t.handl_unregist_cnt
+			, t.handl_open_cnt
+			, t.handl_part_open_cnt
+			, handl_close_cnt
+			, t.expert_unregist_cnt
+			, t.expert_open_cnt
+			, t.expert_part_open_cnt
+			, t.expert_close_cnt
+			, t.review_cnt
+		FROM (
+			SELECT c.dept_abbr_nm
+				, c.handl_org_cd
+				, c.close_flag, c.total
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd = '2') as choice_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd = '3') as handl_unregist_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '1') as handl_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '2') as handl_part_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '3') as handl_close_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd = '4') as expert_unregist_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '1') as expert_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '2') as expert_part_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '3') as expert_close_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND discu_trgt_flag = '1') as review_cnt
+			FROM (
+				SELECT b.dept_abbr_nm
+				 	, b.close_flag
+				 	, a.handl_org_cd
+				 	, a.total
+				 	, '$resortCase$' as resort_case
+				 	, '$resortYyyy$' as resort_yyyy
+				 	, '$recordCenterId$' as record_center_id
+				FROM (
+					SELECT handl_org_cd
+						, COUNT(*) as total
+					FROM tb_rdopenresortopin
+					WHERE record_center_id = #recordCenterId:VARCHAR#
+					<isNotEmpty property="resortCase" prepend="AND"> 
+						resort_case = #resortCase:VARCHAR#
+					</isNotEmpty>
+					AND resort_yyyy = #resortYyyy:VARCHAR#
+					AND resort_prog_state_cd IN ('3','4','5','6','7')
+					AND handl_org_cd != '0'
+					GROUP BY handl_org_cd
+				) a, tb_stdept b  		         
+				WHERE   a.handl_org_cd = b.org_cd
+			) c
+			UNION
+			SELECT distinct '기록관' as dept_abbr_nm
+				, c.handl_org_cd
+				, '1' as close_flag
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('3','4','5','6','7')) as total
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd = '2') as choice_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd = '3') as handl_unregist_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '1') as handl_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '2') as handl_part_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('4','5','6','7') AND handl_org_open_div_cd = '3') as handl_close_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd = '4') as expert_unregist_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '1') as expert_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '2') as expert_part_open_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND expert_org_open_div_cd = '3') as expert_close_cnt
+				, (SELECT COUNT(*) FROM tb_rdopenresortopin WHERE record_center_id = c.record_center_id AND handl_org_cd = c.handl_org_cd <isNotEmpty property="resortCase" prepend="AND" open=" ">resort_case = c.resort_case</isNotEmpty> AND resort_yyyy = c.resort_yyyy AND resort_prog_state_cd IN ('5','6','7') AND discu_trgt_flag = '1') as review_cnt 		
+			FROM tb_rdopenresortopin c
+			WHERE c.record_center_id = #recordCenterId:VARCHAR#
+			AND c.resort_yyyy = #resortYyyy:VARCHAR#
+			AND c.handl_org_cd = '0'
+			<isNotEmpty property="resortCase" prepend="AND"> 
+				c.resort_case = #resortCase:VARCHAR#
+			</isNotEmpty>        
+		) t
+		ORDER by t.handl_org_cd ASC
+		 -->
+	</select>
+	
+	
+	<!-- 공개재분류 의견등록 의견일괄등록 목록을 조회한다. -->
+	<resultMap id="open-resort-prog-state-result" class="rms.eval.openresortopin.domain.OpenResortOpin">
+		<result property="deptAbbrNm" 				column="DEPT_ABBR_NM" 				nullValue=""	/>
+		<result property="handlOrgCd" 				column="HANDL_ORG_CD" 				nullValue=""	/>
+		<result property="choiceCnt" 				column="CHOICE_CNT" 				nullValue="0"	/>
+		<result property="handlOpinCnt" 			column="HANDL_OPIN_CNT"				nullValue="0"	/>
+		<result property="expertOpinEndCnt"			column="EXPERT_OPIN_END_CNT"		nullValue="0"	/>
+		<result property="expertOpinContCnt"		column="EXPERT_OPIN_CONT_CNT"		nullValue="0"	/>
+		<result property="reviewOpinCnt"			column="REVIEW_OPIN_CNT"			nullValue="0"	/>
+		<result property="opinRsltCnt" 				column="OPIN_RSLT_CNT" 				nullValue="0"	/>
+		<result property="dwnCnt"	 				column="DWN_CNT"	 				nullValue="0"	/>
+		<result property="deptCnt"	 				column="DEPT_CNT"	 				nullValue="0"	/>
+	</resultMap>
+	<!-- 
+		SELECT - 공개재분류 의견등록 의견일괄등록 목록을 조회한다.
+	 -->
+	<select id="findOpenResortOpinProgStatePagedList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="open-resort-prog-state-result">
+		SELECT E.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, C.*
+			FROM (
+				SELECT t.dept_abbr_nm
+					, t.close_flag
+					, t.handl_org_cd
+					, t.choice_cnt
+					, t.handl_opin_cnt
+					, t.expert_opin_end_cnt
+					, t.expert_opin_cont_cnt
+					, t.review_opin_cnt
+					, t.opin_rslt_cnt
+					, t.dwn_cnt, t.dept_cnt
+				FROM (
+					SELECT d.dept_abbr_nm
+						, d.close_flag
+						, d.handl_org_cd
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '3') as dept_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6') and excel_dwn_flag = '1') as dwn_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6','7')) as choice_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('4','5','6','7')) as handl_opin_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '0') as expert_opin_end_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '1') as expert_opin_cont_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('6','7') and discu_trgt_flag = '1') as review_opin_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '7') as opin_rslt_cnt
+					FROM (
+						SELECT b.dept_abbr_nm
+							, b.close_flag
+							, a.handl_org_cd
+							, '$resortYyyy$' as resort_yyyy
+							, '$recordCenterId$' as record_center_id
+						FROM (
+							SELECT handl_org_cd
+							FROM tb_rdopenresortopin
+							WHERE record_center_id = #recordCenterId:VARCHAR#
+							AND resort_yyyy = #resortYyyy:VARCHAR#
+							<isNotEmpty property="resortCase">
+								<isNotEqual property="resortCase" prepend="AND" compareValue="0">
+							    	resort_case = #resortCase:VARCHAR#
+							    </isNotEqual>
+							</isNotEmpty>
+							GROUP BY handl_org_cd
+						) a, tb_stdept b  		         
+						WHERE   a.handl_org_cd = b.org_cd
+					) d
+					UNION
+					SELECT distinct '기록관' as dept_abbr_nm
+						, '1' as close_flag
+						, d.handl_org_cd
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '3') as dept_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6') and excel_dwn_flag = '1') as dwn_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6','7')) as choice_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('4','5','6','7')) as handl_opin_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '0') as expert_opin_end_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '1') as expert_opin_cont_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('6','7') and discu_trgt_flag = '1') as review_opin_cnt
+						, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '7') as opin_rslt_cnt
+					FROM tb_rdopenresortopin d
+					WHERE d.record_center_id = #recordCenterId:VARCHAR#
+		            AND d.resort_yyyy = #resortYyyy:VARCHAR#
+		            AND d.handl_org_cd = '0'
+		            <isNotEmpty property="resortCase">
+		                <isNotEqual property="resortCase" prepend="AND" compareValue="0">
+		                    d.resort_case = #resortCase:VARCHAR#
+		               	</isNotEqual>
+		            </isNotEmpty>
+				) t
+				ORDER by t.handl_org_cd ASC
+			) C
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) E
+		WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 공개재분류 의견등록 의견일괄등록 목록을 조회한다.
+	 -->
+	<select id="countOpenResortOpinProgStatePagedList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+			SELECT d.dept_abbr_nm
+				, d.close_flag
+				, d.handl_org_cd
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '3') as dept_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6') and excel_dwn_flag = '1') as dwn_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6','7')) as choice_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('4','5','6','7')) as handl_opin_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '0') as expert_opin_end_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '1') as expert_opin_cont_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('6','7') and discu_trgt_flag = '1') as review_opin_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '7') as opin_rslt_cnt
+			FROM (
+				SELECT b.dept_abbr_nm
+					, b.close_flag
+					, a.handl_org_cd
+					, '$resortYyyy$' as resort_yyyy
+					, '$recordCenterId$' as record_center_id
+				FROM (
+					SELECT handl_org_cd
+					FROM tb_rdopenresortopin
+					WHERE record_center_id = #recordCenterId:VARCHAR#
+					AND resort_yyyy = #resortYyyy:VARCHAR#
+					<isNotEmpty property="resortCase">
+						<isNotEqual property="resortCase" prepend="AND" compareValue="0">
+					    	resort_case = #resortCase:VARCHAR#
+					    </isNotEqual>
+					</isNotEmpty>
+					GROUP BY handl_org_cd
+				) a, tb_stdept b  		         
+				WHERE   a.handl_org_cd = b.org_cd
+			) d
+			UNION
+			SELECT distinct '기록관' as dept_abbr_nm
+				, '1' as close_flag
+				, d.handl_org_cd
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '3') as dept_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6') and excel_dwn_flag = '1') as dwn_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('3','4','5','6','7')) as choice_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('4','5','6','7')) as handl_opin_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '0') as expert_opin_end_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('5','6','7') and discu_trgt_flag = '1') as expert_opin_cont_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd in ('6','7') and discu_trgt_flag = '1') as review_opin_cnt
+				, (select count(*) from tb_rdopenresortopin where record_center_id = d.record_center_id and resort_yyyy = d.resort_yyyy <isNotEmpty property="resortCase"><isNotEqual property="resortCase" prepend="AND" compareValue="0" open=" ">resort_case = '$resortCase$'</isNotEqual></isNotEmpty> and handl_org_cd = d.handl_org_cd and resort_prog_state_cd = '7') as opin_rslt_cnt
+			FROM tb_rdopenresortopin d
+			WHERE d.record_center_id = #recordCenterId:VARCHAR#
+            AND d.resort_yyyy = #resortYyyy:VARCHAR#
+            AND d.handl_org_cd = '0'
+            <isNotEmpty property="resortCase">
+                <isNotEqual property="resortCase" prepend="AND" compareValue="0">
+                    d.resort_case = #resortCase:VARCHAR#
+               	</isNotEqual>
+            </isNotEmpty>
+		) t
+	</select>
+	
+	<!-- 공개재분류 의견등록 처리부서의견등록 등록 및 수정 -->
+	<!-- 박성우_의견등록 공백 trim처리-->
+	<update id="updateOpenResortHandlOpin" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		UPDATE	tb_rdopenresortopin
+		SET handl_org_open_div_cd = #handlOrgOpenDivCd:VARCHAR#
+			, handl_open_grade = #handlOpenGrade:VARCHAR#
+			, handl_open_limit_part = #handlOpenLimitPart:VARCHAR#
+			, handl_open_reg_ymd = #handlOpenRegYmd:VARCHAR#
+			, handl_org_chrgr_id = #handlOrgChrgrId:VARCHAR#
+			, handl_org_open_opin = trim(#handlOrgOpenOpin:VARCHAR#)
+			, resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+			, rjct_flag = '0'
+			, handl_Org_Open_Ymd = #handlOrgOpenYmd:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND record_id = #recordId:VARCHAR#
+		AND resort_seq = #resortSeq#
+	</update>
+	
+	<!-- 공개재분류 의견등록 처리부서의견등록 반려처리 -->
+	<update id="updateOpenResortTrgtRjct" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		UPDATE tb_rdopenresortopin
+		SET resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+			, rjct_flag = #rjctFlag:VARCHAR#
+			, handl_org_chrgr_id = ''
+			, handl_org_cd = ''
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+		AND record_id = #recordId:VARCHAR#
+		AND resort_yyyy = #resortYyyy:VARCHAR#
+		AND resort_case = #resortCase:VARCHAR#
+		AND resort_seq = #resortSeq#
+	</update>
+	
+	<!-- 공개재분류 의견등록 전문요원의견 등록 및 수정 -->
+	<update id="updateOpenResortExpertOpin" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		UPDATE tb_rdopenresortopin
+		SET expert_org_open_div_cd = #expertOrgOpenDivCd:VARCHAR#
+			, expert_open_grade = #expertOpenGrade:VARCHAR#
+			, expert_limit_part = #expertLimitPart:VARCHAR#
+			, expert_reg_ymd = #expertRegYmd:VARCHAR#
+			, expert_org_open_opin = trim(#expertOrgOpenOpin:VARCHAR#)
+			, resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+			, discu_trgt_flag = #discuTrgtFlag:VARCHAR#
+			, record_chrgr_id = #recordChrgrId:VARCHAR#
+			, expert_org_open_ymd = #expertOrgOpenYmd:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND record_id = #recordId:VARCHAR#
+		AND resort_seq = #resortSeq#
+	</update>
+	
+	<!-- 공개재분류 의견등록 심의위원의견 등록 및 수정 -->
+	<update id="updateOpenResortReviewOpin" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		UPDATE tb_rdopenresortopin
+		SET review_org_open_div_cd = #reviewOrgOpenDivCd:VARCHAR#
+			, review_open_grade = #reviewOpenGrade:VARCHAR#
+			, review_limit_part = #reviewLimitPart:VARCHAR#
+			, review_reg_ymd = #reviewRegYmd:VARCHAR#
+			, review_org_open_opin = trim(#reviewOrgOpenOpin:VARCHAR#)
+			, resort_prog_state_cd = #resortProgStateCd:VARCHAR#
+			, review_org_open_ymd = #reviewOrgOpenYmd:VARCHAR# 
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND record_id = #recordId:VARCHAR#
+		AND resort_seq = #resortSeq#
+	</update>
+	
+	<!-- 공개재분류 의견등록 전문요원의견 등록 및 수정시 심의상정여부에 따라 공개심의진행상태 값 입력(건테이블 update) -->
+	<update id="updateRecordRevwState" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		UPDATE 	tb_rdrecord
+		SET		open_revw_prog_state = #openRevwProgState:VARCHAR#
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_id = #recordId:VARCHAR#		
+	</update>
+	
+	<!-- 공개재분류 의견등록 엑셀저장 엑셀다운로드여부 변경 -->
+	<update id="updateOpenResortExcelDwnFlag" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		UPDATE	tb_rdopenresortopin
+		SET		excel_dwn_flag = #excelDwnFlag:VARCHAR#
+		WHERE	record_center_id = #recordCenterId:VARCHAR#
+		AND		record_id = #recordId:VARCHAR#
+		AND		resort_seq = #resortSeq#	
+	</update>
+	
+	<!-- 공개재분류 의견등록 일괄등록 결과반영 상태여부 조회 -->
+	<select id="countAlreadyRsltOpenResortOpin" resultClass="int" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin">
+		SELECT /*+  index(TB_RDOPENRESORTOPIN TB_RDOPENRESORTOPIN_IDX06 )*/ COUNT(*)
+		FROM tb_rdopenresortopin
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND	record_id = #recordId:VARCHAR#
+		AND	resort_seq = #resortSeq#
+		AND	resort_prog_state_cd = '7'
+	</select>
+	
+	<!-- 공개재분류 의견등록 처리부서의견등록 변경이력 -->
+	<resultMap id="open-resort-hist-result" class="rms.eval.openresortopin.domain.OpenResortHist">
+		<result property="recordCenterId" 		column="RECORD_CENTER_ID" 		nullValue=""  />	<!-- 기록관ID -->
+		<result property="recordId" 				column="RECORD_ID" 					nullValue=""  />	<!-- 기록물ID -->
+		<result property="chngHistNo" 			column="CHNG_HIST_NO" 				nullValue="0" />	<!-- 변경이력 일련번호 -->
+		<result property="openDivCdBef" 		column="OPEN_DIV_CD_BEF" 			nullValue=""  />	<!-- 변경전 공개구분코드 -->
+		<result property="openDivCdAft" 		column="OPEN_DIV_CD_AFT" 			nullValue=""  />	<!-- 변경후 공개구분코드 -->
+		<result property="chngYmd" 				column="CHNG_YMD" 					nullValue=""  />	<!-- 변경일 -->
+		<result property="chngRsn" 				column="CHNG_RSN" 					nullValue=""  />	<!-- 변경사유 -->
+		<result property="chngUserId" 			column="CHNG_USER_ID" 				nullValue=""  />	<!-- 변경자ID -->
+		<result property="chngUserNm" 			column="CHNG_USER_NM" 				nullValue=""  />	<!-- 변경자명 -->
+		<result property="chngOrgCd" 			column="CHNG_ORG_CD" 				nullValue=""  />	<!-- 처리부서코드 -->
+		<result property="chngOrgNm" 			column="CHNG_ORG_NM" 				nullValue=""  />	<!-- 처리부서명 -->
+		<result property="takeMngNo" 			column="TAKE_MNG_NO" 				nullValue=""  />	<!-- 인수관리번호 -->
+		<result property="openGradeBef" 		column="OPEN_GRADE_BEF" 			nullValue=""  />	<!-- 변경전 공개호수 -->
+		<result property="openGradeAft" 		column="OPEN_GRADE_AFT" 			nullValue=""  />	<!-- 변경후 공개호수 -->
+		<result property="openLimitPartBef" 	column="OPEN_LIMIT_PART_BEF" 	nullValue=""  />	<!-- 변경전 공개제한부분 -->
+		<result property="openLimitPartAft" 	column="OPEN_LIMIT_PART_AFT" 	nullValue=""  />	<!-- 변경후 공개제한부분 -->
+		<result property="partOpenRsnBef" 		column="PART_OPEN_RSN_BEF" 		nullValue=""  />	<!-- 변경전 부분공개사유 -->
+		<result property="partOpenRsnAft" 		column="PART_OPEN_RSN_AFT" 		nullValue=""  />	<!-- 변경후 부분공개사유 -->
+		<result property="resortYyyy" 			column="RESORT_YYYY" 				nullValue=""  />	<!-- 공개재분류년도 -->
+		<result property="resortCase" 			column="RESORT_CASE" 				nullValue=""  />	<!-- 공개재분류유형 -->
+		<result property="resortCaseNo" 		column="RESORT_CASE_NO" 			nullValue="0" />	<!-- 공개재분류 일련번호 -->
+		<result property="resortDocNo" 			column="RESORT_DOC_NO" 			nullValue=""  />	<!-- 결제문서번호 -->
+		<result property="discuTrgtFlag" 		column="DISCU_TRGT_FLAG" 			nullValue="0" />	<!-- 심의대상코드 -->
+		<result property="resortReason" 		column="RESORT_REASON"	 			nullValue="" />		<!-- 선정사유 -->
+	</resultMap>
+	<!-- 
+		SELECT - 공개재분류 의견등록 처리부서의견등록 변경이력
+	 -->
+	<select id="findOpenResortHistPagedList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="open-resort-hist-result">
+		SELECT B.*
+		FROM (
+			SELECT ROWNUM AS rnum
+				, A.*
+			FROM (
+				SELECT record_center_id
+					, record_id
+					, chng_hist_no
+					, open_div_cd_bef
+					, open_div_cd_aft
+					, chng_ymd
+					, chng_rsn
+					, chng_user_id
+					, take_mng_no
+					, open_grade_bef
+					, open_grade_aft
+					, open_limit_part_bef
+					, open_limit_part_aft
+					, part_open_rsn_bef
+					, part_open_rsn_aft
+					, chng_org_cd
+					, resort_yyyy
+					, resort_case
+					, resort_case_no
+					, resort_doc_no
+					, (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = o.chng_org_cd) as chng_org_nm
+					, (SELECT user_nm FROM tb_stuser WHERE record_center_id = o.record_center_id AND user_id = o.chng_user_id) as chng_user_nm
+					, (SELECT resort_reason FROM tb_rdopenresortreason WHERE record_center_id = o.record_center_id AND resort_yyyy = o.resort_yyyy AND resort_case = o.resort_case AND resort_case_no = o.resort_case_no) as resort_reason
+					, (SELECT discu_trgt_flag FROM tb_rdopenresortopin WHERE record_center_id = o.record_center_id AND resort_yyyy = o.resort_yyyy AND resort_case = o.resort_case AND resort_case_no = o.resort_case_no AND resort_doc_no = o.resort_doc_no AND record_center_id = o.record_center_id AND record_id = o.record_id) as discu_trgt_flag
+				FROM tb_rdopenhist o
+				WHERE record_center_id = #recordCenterId:VARCHAR#
+				AND record_id = #recordId:VARCHAR#
+				ORDER BY chng_hist_no DESC
+			) A
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) B
+		WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 공개재분류 의견등록 처리부서의견등록 변경이력
+	 -->
+	<select id="countOpenResortHistPagedList" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultClass="java.lang.Long">
+		SELECT	COUNT(*)
+		FROM	(
+			SELECT record_center_id
+				, record_id
+				, chng_hist_no
+				, open_div_cd_bef
+				, open_div_cd_aft
+				, chng_ymd
+				, chng_rsn
+				, chng_user_id
+				, take_mng_no
+				, open_grade_bef
+				, open_grade_aft
+				, open_limit_part_bef
+				, open_limit_part_aft
+				, part_open_rsn_bef
+				, part_open_rsn_aft
+				, chng_org_cd
+				, resort_yyyy
+				, resort_case
+				, resort_case_no
+				, resort_doc_no
+				, (SELECT dept_abbr_nm FROM tb_stdept WHERE org_cd = o.chng_org_cd) as chng_org_nm
+				, (SELECT user_nm FROM tb_stuser WHERE record_center_id = o.record_center_id AND user_id = o.chng_user_id) as chng_user_nm
+				, (SELECT resort_reason FROM tb_rdopenresortreason WHERE record_center_id = o.record_center_id AND resort_yyyy = o.resort_yyyy AND resort_case = o.resort_case AND resort_case_no = o.resort_case_no) as resort_reason
+				, (SELECT discu_trgt_flag FROM tb_rdopenresortopin WHERE record_center_id = o.record_center_id AND resort_yyyy = o.resort_yyyy AND resort_case = o.resort_case AND resort_case_no = o.resort_case_no AND resort_doc_no = o.resort_doc_no AND record_center_id = o.record_center_id AND record_id = o.record_id) as discu_trgt_flag
+			FROM tb_rdopenhist o
+			WHERE record_center_id = #recordCenterId:VARCHAR#
+			AND record_id = #recordId:VARCHAR#
+		)
+	</select>
+	
+	
+	<!-- 공개재분류 의견등록 일괄등록 중 발생한 오류를 저장한 엑셀파일 조회 -->
+	<resultMap id="findOpenResortOpinRegOpinBatchErrorXls-result" class="java.util.HashMap">
+		<result property="fileNm" 			column="file_nm"/>
+		<result property="fileKey" 			column="file_key"/>
+	</resultMap>
+	<select id="findOpenResortOpinRegOpinBatchErrorXls" parameterClass="rms.eval.openresortopin.domain.OpenResortOpin" resultMap="findOpenResortOpinRegOpinBatchErrorXls-result">
+		SELECT file_nm
+			, file_key
+		FROM TB_ZZREQEXCELLIST
+		WHERE REQ_USER_ID = #reqUserId:VARCHAR#
+		AND REQ_MENU_ID = #menuId:VARCHAR#
+		AND REQ_INDEX = #reqIndex:VARCHAR#
+	</select>
+</sqlMap>

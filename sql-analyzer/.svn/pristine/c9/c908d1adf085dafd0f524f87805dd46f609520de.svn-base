@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="common.detail">
+	
+	<!--
+		정부간행물 상세정보
+	-->
+	<resultMap id="findPublicationsHead-result" class="rms.common.detail.domain.Publications">
+		<result property="recordCenterId"	column="record_center_id"/>
+		<result property="publRegId"		column="publ_reg_id" />
+		<result property="publSltFlag"		column="publ_slt_flag"/>
+		<result property="orgDiv"			column="org_div"/>
+		<result property="orgCd"			column="org_cd"/>
+		<result property="orgNm"			column="org_nm"/>
+		<result property="title"			column="title"/>
+		<result property="content"			column="content"/>
+		<result property="publYmd"			column="publ_ymd"/>
+		<result property="pageCnt"			column="page_cnt"/>
+		<result property="depositFlag"		column="deposit_flag"/>
+		<result property="remk"				column="remk"/>
+		<result property="publPrd"			column="publ_prd"/>
+		<result property="publType"			column="publ_type"/>
+		<result property="publMedia"		column="publ_media"/>
+		<result property="shapMat"			column="shap_mat"/>
+		<result property="stakrmId"			column="stakrm_id"/>
+		<result property="booksfId"			column="booksf_id"/>
+		<result property="firstKeepCnt"		column="first_keep_cnt"/>
+		<result property="curKeepCnt"		column="cur_keep_cnt"/>
+		<result property="destryRsn1"		column="destry_rsn1"/>
+		<result property="destryRsn2"		column="destry_rsn2"/>
+		<result property="destryRsn3"		column="destry_rsn3"/>
+		<result property="openDivCd"		column="open_div_cd"/>
+		<result property="openGrade"		column="open_grade"/>
+		<result property="grade1"			column="grade1"/>
+		<result property="grade2"			column="grade2"/>
+		<result property="grade3"			column="grade3"/>
+		<result property="grade4"			column="grade4"/>
+		<result property="grade5"			column="grade5"/>
+		<result property="grade6"			column="grade6"/>
+		<result property="grade7"			column="grade7"/>
+		<result property="grade8"			column="grade8"/>
+		<result property="partOpenRsn"		column="part_open_rsn"/>
+		<result property="publProgStat"		column="publ_prog_stat"/>
+		<result property="crReportYmd"		column="cr_report_ymd"/>
+		<result property="destryFlagNm"		column="destry_flag_nm"/>
+		<result property="publPrdNm"		column="publ_prd_nm"/>
+		<result property="creatOrgNm"		column="creat_org_nm"/>
+		<result property="publTypeNm"		column="publ_type_nm"/> 
+		<result property="orgDivNm"			column="org_div_nm"/>
+		<result property="depositFlagNm"	column="deposit_flag_nm"/>
+		<result property="openDivCdNm"		column="open_div_cd_nm"/>
+		<result property="destryFlag"		column="destry_flag"/>
+	</resultMap>
+	<select id="findPublicationsHead" parameterClass="rms.common.detail.domain.FindPublications" resultMap="findPublicationsHead-result">
+		SELECT A.record_center_id
+		    , A.publ_reg_id
+		    , A.publ_slt_flag
+		    , A.org_div
+		    , A.org_cd
+		    , A.title
+		    , A.content
+		    , TO_CHAR(TO_DATE(A.publ_ymd, 'YYYYMMDD'), 'YYYY-MM-DD') AS publ_ymd
+		    , A.page_cnt
+		    , A.deposit_flag
+		    , A.remk
+		    , A.publ_prd
+		    , A.publ_type
+		    , A.publ_media
+		    , A.shap_mat
+		    , A.stakrm_id
+		    , A.booksf_id
+		    , A.first_keep_cnt
+		    , A.cur_keep_cnt
+		    , A.destry_rsn1
+		    , A.destry_rsn2
+		    , A.destry_rsn3
+		    , A.open_div_cd
+		    , A.open_grade
+		    , SUBSTR(A.open_grade,1,1) AS grade1
+		    , SUBSTR(A.open_grade,2,1) AS grade2
+		    , SUBSTR(A.open_grade,3,1) AS grade3
+		    , SUBSTR(A.open_grade,4,1) AS grade4
+		    , SUBSTR(A.open_grade,5,1) AS grade5
+		    , SUBSTR(A.open_grade,6,1) AS grade6
+		    , SUBSTR(A.open_grade,7,1) AS grade7
+		    , SUBSTR(A.open_grade,8,1) AS grade8
+		    , A.part_open_rsn
+		    , A.publ_prog_stat
+		    , A.cr_report_ymd
+		    , A.destry_flag
+		    , A.creat_org_nm
+		    , (CASE WHEN A.destry_flag='0' THEN '보존' ELSE '폐기' END) AS destry_flag_nm
+		    , (CASE WHEN A.deposit_flag='1' THEN 'O' ELSE 'X' END) AS deposit_flag_nm
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=A.open_div_cd) AS open_div_cd_nm
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV01' AND Z.com_cd=A.org_div) AS org_div_nm
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV02' AND Z.com_cd=A.publ_prd) AS publ_prd_nm
+		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV03' AND Z.com_cd=A.publ_type) AS publ_type_nm
+		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) AS org_nm
+		FROM  TB_GVPUBL A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.publ_reg_id = #publRegId:VARCHAR#
+		AND   A.publ_reg_seq = #publRegSeq:INT#
+	</select>
+	
+	<!-- 
+		정부간행물 첨부파일목록
+	 -->
+	<resultMap id="findPublicationsAttachFileList-result" class="rms.common.detail.domain.PublicationsAttachFile">
+		<result property="recordCenterId"				column="record_center_id"/>
+		<result property="publRegId"					column="publ_reg_id"/>
+		<result property="publFileReq"					column="publ_file_req"/>
+		<result property="publRegSeq"					column="publ_reg_seq"/>		
+		<result property="publFileId"					column="publ_file_id"/>
+		<result property="publfilePath"					column="publfile_path"/>
+		<result property="storeFileNm"					column="store_file_nm"/>
+	</resultMap>
+	<select id="findPublicationsAttachFileList" parameterClass="rms.common.detail.domain.FindPublications" resultMap="findPublicationsAttachFileList-result">
+		SELECT record_center_id
+			, publ_reg_id
+			, publ_file_req
+			, publ_reg_seq
+			, publ_file_id
+			, publfile_path
+			, store_file_nm
+		FROM  TB_GVPUBL_FILE
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND   publ_reg_id = #publRegId:VARCHAR#
+		AND   publ_reg_seq = #publRegSeq:INT#
+		ORDER BY record_center_id, publ_reg_id, TO_NUMBER(publ_file_req)
+	</select>
+</sqlMap>

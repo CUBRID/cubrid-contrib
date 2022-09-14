@@ -1,0 +1,67 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : select
+-- Query Id : countScheduleList
+
+		SELECT	COUNT(*)			FROM	tb_stschedule		WHERE	record_center_id = '1'		AND		job_type = '1' AND 			job_param like '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : select
+-- Query Id : findScheduleList
+
+		SELECT E.seq	           ,E.job_type	           ,E.job_state	           ,E.job_start_dtime	           ,E.job_result	           ,E.job_req_dtime	           ,E.job_param	           ,E.job_end_dtime		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                , C.*		        FROM (		            SELECT    *     		            FROM    tb_stschedule		            WHERE    record_center_id ='1'		            AND        job_type = '1' AND 		                job_param like '1'		             		            ORDER BY seq DESC		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : select
+-- Query Id : countScheduleInList
+
+		SELECT	COUNT(1)			FROM	tb_stschedule		WHERE	record_center_id = '1'		AND		job_type = '1'			 AND seq in ('1','1','1') ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : select
+-- Query Id : findScheduleInList
+
+		SELECT seq        	  ,record_center_id		      ,job_type		      ,job_state		      ,job_start_dtime		      ,job_result		      ,job_req_dtime		      ,job_param		     ,job_end_dtime			FROM	tb_stschedule		WHERE	record_center_id = '1'		AND		job_type = '1'			 AND seq in ('1','1','1') 		ORDER	BY seq ASC	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : insert
+-- Query Id : createSchedule
+
+		INSERT	INTO tb_stschedule(seq								  ,record_center_id								  ,job_type								  ,job_state								  ,job_start_dtime								  ,job_result								  ,job_req_dtime								  ,job_param								  ,job_end_dtime)		VALUES	(tb_stschedule_sq01.nextval				,'1'				,'1'				,'0'				,'1'				,'1'				,'1'				,'1'				,'1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : delete
+-- Query Id : deleteSchedule
+
+		DELETE	FROM tb_stschedule		WHERE	record_center_id = '1' AND 			seq = '1'		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : delete
+-- Query Id : deleteResortData
+
+		DELETE	FROM TB_RDOPENRESORTOPIN		WHERE	record_center_id = '1'		AND		RESORT_YYYY = '1'		AND	    RESORT_CASE = '1'		AND     RESORT_PROG_STATE_CD = '1'		AND		SCHEDULE_SEQ = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : delete
+-- Query Id : deleteDisuseData
+
+		DELETE	FROM TB_DFDISUSEOPIN		WHERE	record_center_id = '1'		AND		DISCU_YYYY = '1'		AND     DISCU_PROG_STATE_CD = '01'		AND		SCHEDULE_SEQ = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml
+-- Query    : update
+-- Query Id : updateSchedule
+
+		UPDATE	tb_stschedule		SET		job_req_dtime = '1',				job_start_dtime = '1',				job_end_dtime = '1',				job_result = '1',				job_state = '1'  , 					job_param = '1'				 		WHERE	record_center_id = '1'		AND		seq = '1'				;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\schedule\Schedule.xml

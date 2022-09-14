@@ -1,0 +1,60 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : select
+-- Query Id : findRmsOperState
+
+		SELECT A.rep_org_nm		      ,A.rep_org_cd		      ,A.org_addr		      ,A.oper_org_nm		      ,A.oper_chrgr_nm		      ,A.user_arng_state		      ,A.rule_apply_flag		      ,A.oper_rule_estb_flag		      ,A.brm_type_cd		      ,A.LINK_SYS		      ,A.stakrm_area		      ,A.estb_org_nm		      ,A.estb_chrgr_nm		      ,A.estb_ymd		      ,A.ars_goods_nm		      ,A.ars_use_ymd_from		      ,A.ars_use_ymd_to		      ,A.record_center_cd		      ,A.record_center_id		      ,(SELECT Z.full_org_nm FROM TB_STORG Z WHERE Z.org_cd = record_center_cd AND Z.record_center_id=A.record_center_id) AS org_nm		      ,(SELECT COUNT(1) FROM TB_STDEPT Z WHERE Z.record_center_id = A.record_center_id AND Z.close_flag = '0') AS dept_cnt		      ,(SELECT COUNT(1) FROM TB_STUSER Z WHERE Z.record_center_id = A.record_center_id) AS user_cnt		FROM TB_STRECORDCENTER A		WHERE A.record_center_id =  '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : update
+-- Query Id : updateRmsOperState
+
+		UPDATE TB_STRECORDCENTER		SET org_addr = '1'		   ,oper_org_nm = '1'		   ,oper_chrgr_nm = '1'		   ,user_arng_state = '1'		   ,rule_apply_flag = '1'		   ,oper_rule_estb_flag = '1'		   ,brm_type_cd = '1'		   ,link_sys = '1'		   ,stakrm_area = '1'		   ,estb_org_nm = '1'		   ,estb_chrgr_nm = '1'		   ,estb_ymd = '1'		   ,ars_goods_nm = '1'		   ,ars_use_ymd_From = '1'		   ,ars_use_ymd_To = '1'		WHERE record_center_id =  '1'    	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : select
+-- Query Id : countDutyDivPagedList
+
+		SELECT COUNT(1)        FROM TB_STRECORDCHRGR a, tb_strecordcenter b        WHERE a.record_center_id = '1'        and b.record_center_id = a.record_center_id        order by a.user_sort_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : select
+-- Query Id : findDutyDivPagedList
+
+		SELECT E.sno		      ,E.chrgr_nm		      ,E.pos		      ,E.duty		      ,E.tel_no		      ,E.email		      ,E.remk		      ,E.user_sort_sno		      ,E.record_center_cd		      ,E.record_center_id		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		                    ,C.*		        FROM (		            SELECT A.*, B.record_center_cd		            FROM TB_STRECORDCHRGR a, tb_strecordcenter b		            WHERE a.record_center_id = '1'		            and b.record_center_id = a.record_center_id		            order by a.user_sort_sno		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : insert
+-- Query Id : createDutyDiv
+
+		INSERT INTO TB_STRECORDCHRGR(			record_center_id, sno, chrgr_nm, pos, duty, tel_no, email, remk, user_sort_sno		) VALUES (			 '1'			,(SELECT NVL(MAX(sno),0) + 1 FROM TB_STRECORDCHRGR WHERE record_center_id = '1')		    ,'1','1','1','1','1','1','1'		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : update
+-- Query Id : updateDutyDiv
+
+		UPDATE TB_STRECORDCHRGR		SET   chrgr_nm = '1'		     ,pos = '1'		     ,duty = '1'		     ,tel_no = '1'		     ,email = '1'		     ,remk = '1'		     ,user_sort_sno = '1'		WHERE record_center_id = '1'		AND sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : delete
+-- Query Id : deleteDutyDiv
+
+		DELETE FROM TB_STRECORDCHRGR WHERE record_center_id = '1' AND sno = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml
+-- Query    : insert
+-- Query Id : creatReportRsltInfo
+
+	INSERT INTO TB_STREPORTRSLT (CUR_STATE_REPORT_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,									CUR_STATE_RECV_ERROR_CONT,RECV_FILE_DTIME,REG_DTIME)			VALUES('1','1','1','1',			       '1','1','1'			)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\rmsstate\RmsState.xml

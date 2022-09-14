@@ -1,0 +1,172 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : countRecordConfmPageList
+
+		SELECT COUNT(1)		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.UNIT_CD = B.UNIT_CD(+)		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		  				ORDER BY REG_DTIME			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findRecordConfmPageList
+
+		SELECT A.UNIT_CD			 , UNIT_NM			 , CASE WHEN LRG_NM IS NULL OR MID_NM IS NULL OR SML_NM IS NULL				 THEN ''				 ELSE (LRG_NM || '>' || MID_NM || '>' || SML_NM )				 END UNIT_PATH_NM			 , DECODE(REG_DTIME, '', '', SUBSTR(REG_DTIME, 0,8)) REG_DTIME			 , (SELECT com_cd_nm		          FROM tb_zzcomcd		         WHERE com_type_cd = 'RD57'		           AND use_flag = '1'		           AND com_cd = presv_term_cd) PRESV_TERM_NM			 , (SELECT com_cd_nm		          FROM tb_zzcomcd		         WHERE com_type_cd = 'ZZ28'		           AND use_flag = '1'		           AND com_cd = presvterm_state_cd) PRESVTERM_STATE_NM			 , (SELECT com_cd_nm		          FROM tb_zzcomcd		         WHERE com_type_cd = 'ZZ27'		           AND use_flag = '1'		           AND com_cd = presvterm_chng_rsn_cd) PRESVTERM_CHNG_RSN_NM			 , UNIT_DESCR			 , (SELECT com_cd_nm		          FROM tb_zzcomcd		         WHERE com_type_cd = 'RD57'		           AND use_flag = '1'		           AND com_cd = nars_presv_term_cd) NARS_PRESV_TERM_NM			 , NARS_OPIN			 , NARS_CHECK_YMD		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.UNIT_CD = B.UNIT_CD(+)		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		  				ORDER BY REG_DTIME			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findRecordInfo
+
+		SELECT RECORD_CENTER_ID,			   RECORD_CENTER_CD,		       RECORD_CENTER_NM		  FROM TB_STRECORDCENTER		 WHERE RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : countPresvTermReqFileList
+
+		SELECT COUNT(1)		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.UNIT_CD = B.UNIT_CD		   AND A.PRESVTERM_STATE_CD = '0';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findPresvTermReqFileList
+
+		SELECT DECODE(A.PRESVTERM_CHNG_RSN_CD,'0','01','1','02') PRESVTERM_CHNG_RSN_CD,			   A.UNIT_CD, 			   A.UNIT_NM, 			   B.ORG_PRESV_TERM_CD, 			   B.ORG_OPIN, 			   B.ORG_FIX_YMD, 			   B.RECORD_CENTER_PRESV_TERM_CD, 			   B.RECORD_CENTER_OPIN, 			   B.RECORD_CENTER_CHECK_YMD, 			   A.UNIT_DESCR,			   SUBSTR(A.REG_DTIME,1,4) REG_DTIME		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B		 WHERE A.RECORD_CENTER_ID = '1'		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND A.UNIT_CD = B.UNIT_CD		   AND A.PRESVTERM_STATE_CD = '0';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : update
+-- Query Id : updatePresvTermState
+
+		UPDATE TB_ZZUNIT		   SET PRESVTERM_STATE_CD = '1'		 WHERE UNIT_CD = '1'		   AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findUnitCurState
+
+		SELECT A.UNIT_NM			 , A.UNIT_CD			 , CASE WHEN A.LRG_NM IS NULL OR A.MID_NM IS NULL OR A.SML_NM IS NULL				 THEN ''				 ELSE (A.LRG_NM || '>' || A.MID_NM || '>' || A.SML_NM )				 END UNIT_PATH_NM		     , A.UNIT_DESCR		     , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD10' AND COM_CD = A.PRESV_AREA_CD) PRESV_AREA			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD09' AND COM_CD = A.PRESV_METHOD_CD) PRESV_METHOD			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ21' AND COM_CD = A.FUNSH_RECORD_FLAG) FUNSH_RECORD_FLAG_NM			 , A.FUNSH_RECORD_TRANSF_YMD			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ05' AND COM_CD = A.TRANSF_READ_EXPT_CNT) TRANSF_READ_EXPT_CNT_NM			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'ZZ04' AND COM_CD = A.MAIN_READ_USG) MAIN_READ_USG_NM			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD22' AND COM_CD = A.SPCL_LIST_LOC) SPCL_LIST_LOC_NM			 , A.SPCL_LIST1			 , A.SPCL_LIST2			 , A.SPCL_LIST3			 , DECODE(A.STATE_CD, '2', 'ÆóÁö', 'ÇöÁ¸') STATE_NM		     , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = A.PRESV_TERM_CD) PRESV_TERM_NM		     , DECODE(A.REG_DTIME, '', '', SUBSTR(A.REG_DTIME,1,8)) PRESV_TERM_FIX_YMD		     , A.PRESV_TERM_FIX_RSN		     , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = B.ORG_PRESV_TERM_CD) ORG_PRESV_TERM_NM		     , B.ORG_FIX_YMD 		     , B.ORG_OPIN  			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = B.RECORD_CENTER_PRESV_TERM_CD) RECORD_CENTER_PRESV_TERM_NM		     , B.RECORD_CENTER_CHECK_YMD			 , B.RECORD_CENTER_OPIN			 , (SELECT COM_CD_NM FROM TB_ZZCOMCD WHERE COM_TYPE_CD = 'RD57' AND COM_CD = B.NARS_PRESV_TERM_CD) NARS_PRESV_TERM_NM		     , B.NARS_CHECK_YMD			 , B.NARS_OPIN		  FROM TB_ZZUNIT A		     , TB_ZZUNITPRESVTERMHIST B		 WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		   AND A.UNIT_CD = B.UNIT_CD(+)		   AND A.UNIT_CD = '1'		   AND A.RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : checkComUnit
+
+			SELECT COM_UNIT_FLAG		  FROM TB_ZZUNIT		 WHERE RECORD_CENTER_ID = '1'		   AND UNIT_CD = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findOrg
+
+			SELECT ORG_NM, ORG_CD		  FROM TB_STORG 		 WHERE ORG_CD IN (SELECT ORG_CD FROM TB_ZZORGUNIT WHERE RECORD_CENTER_ID = '1' AND UNIT_CD = '1' AND USE_FLAG = '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findOrgComUnit
+
+			SELECT record_center_nm ORG_NM			 , record_center_cd ORG_CD		  FROM TB_STRECORDCENTER 		 WHERE record_center_id = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : checkConfmReq
+
+		SELECT count(1)		  FROM TB_ZZUNIT A, TB_ZZUNITPRESVTERMHIST B		 WHERE A.UNIT_CD = '1'		   AND A.RECORD_CENTER_ID = '1'		   AND A.PRESVTERM_STATE_CD = '1'		   AND A.UNIT_CD = B.UNIT_CD		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : update
+-- Query Id : updateNarPresvTermHist
+
+	    UPDATE TB_ZZUNITPRESVTERMHIST	       SET NARS_PRESV_TERM_CD = (SELECT COM_CD 	                                   FROM TB_ZZCOMCD 	                                  WHERE COM_TYPE_CD = 'RD57'	                                    AND COM_CD = '1'	                                UNION                                     SELECT COM_CD                                       FROM TB_ZZCOMCD                                      WHERE COM_TYPE_CD = 'RD57'                                        AND COM_CD_NM = '1')	         , NARS_CHECK_YMD = '1'	  	     , NARS_OPIN = '1'	     WHERE UNIT_CD = '1'	     AND   RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : update
+-- Query Id : updateUnitPresvTerm
+
+	    UPDATE TB_ZZUNIT	       SET PRESV_TERM_CD = (SELECT COM_CD                                   FROM TB_ZZCOMCD                                  WHERE COM_TYPE_CD = 'RD57'                                   AND COM_CD = '1'	                           UNION                                SELECT COM_CD                                  FROM TB_ZZCOMCD                                 WHERE COM_TYPE_CD = 'RD57'                                   AND COM_CD_NM = '1')	         , PRESV_TERM_FIX_RSN = '1'	  	     	  	     , REG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')	  	     , PRESVTERM_STATE_CD = '1'	     WHERE UNIT_CD = '1'	     AND   RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : insert
+-- Query Id : createUnitChngHist
+
+		INSERT INTO TB_ZZUNITCHNGHIST (   	   					       RECORD_CENTER_ID							 , UNIT_CD							 , CHNG_SEQ							 , CHNG_YMD							 , CHNG_ITEM_CD							 , CHNG_BEF_VAL							 , CHNG_AFT_VAL							 , CHNG_RSN							  )                        VALUES ( 					           '1'							 , '1'							 , LPAD((SELECT NVL(MAX(CHNG_SEQ),0)+1 							           FROM TB_ZZUNITCHNGHIST									  WHERE UNIT_CD = '1'									    AND RECORD_CENTER_ID = '1'), 6, '0')							 , TO_CHAR(SYSDATE,'YYYYMMDD')    						 , '04'							 , (SELECT PRESV_TERM_CD 							      FROM TB_ZZUNIT 							     WHERE UNIT_CD = '1'								   AND RECORD_CENTER_ID = '1')							 , '1'    						 , '1'							 );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findOrgCd
+
+	    SELECT ORG_CD 		  FROM TB_ZZUNIT A, TB_ZZORGUNIT B		 WHERE A.UNIT_CD = '1'		   AND A.RECORD_CENTER_ID = '1'		   AND A.UNIT_CD = B.UNIT_CD		   AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID		   AND B.USE_FLAG = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : insert
+-- Query Id : creatOrgUnitWorkHist
+
+		INSERT INTO TB_ZZORGUNITWORKHIST (		 			 					   RECORD_CENTER_ID										 , ORG_CD										 , UNIT_CD										 , WORK_TYPE_CD										 , WORK_DTIME										 ) 								  VALUES ( '1'								         , '1'										 , '1'										 , '2'										 										 , TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')										 );
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : update
+-- Query Id : updateUnitPresvTermNotMedi
+
+	    UPDATE TB_ZZUNIT	       SET PRESVTERM_STATE_CD = '1'	  	     , REG_DTIME = TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')	     WHERE UNIT_CD = '1'	     AND   RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : update
+-- Query Id : updateUnitDescr
+
+	    UPDATE TB_ZZUNIT	       SET UNIT_DESCR = '1'	     WHERE UNIT_CD = '1'	       AND RECORD_CENTER_ID = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findComUnitFlag
+
+       SELECT COUNT(1)	     FROM TB_ZZUNIT	    WHERE UNIT_CD = '1'	      AND RECORD_CENTER_ID = '1'	      AND COM_UNIT_FLAG = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : countPresvTerm
+
+	    SELECT count(1)	      FROM TB_ZZCOMCD	     WHERE COM_TYPE_CD = 'RD57'	       AND (COM_CD = '1'	        OR COM_CD_NM = '1')	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : checkUnitHist
+
+		SELECT count(1)		  FROM TB_ZZUNITPRESVTERMHIST		 WHERE UNIT_CD = '1'		   AND NARS_OPIN = '1'           AND RECORD_CENTER_ID = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : findCAMSLinkErrorPagedList
+
+		SELECT PRESV_TERM_MEDI_REQ_YYYY, 			   SEND_FILE_DATA_DIV,		       			   REP_ORG_CD, 		       			   LIST_LINE_NO, 		                      PRESV_TERM_RECV_ERROR_CONT,               RECV_FILE_DTIME,               REG_DTIME 		        FROM  TB_ZZPRESVRECVRSLT	 WHERE  				PRESV_TERM_MEDI_REQ_YYYY = '1'			  AND 				PRESV_TERM_MEDI_REQ_YYYY = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : select
+-- Query Id : countCAMSLinkErrorPagedList
+
+		SELECT COUNT(1)		FROM  TB_ZZPRESVRECVRSLT		 WHERE  				PRESV_TERM_MEDI_REQ_YYYY = '1'			  AND 				PRESV_TERM_MEDI_REQ_YYYY = '1'			  ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml
+-- Query    : insert
+-- Query Id : creatPresvTermReqFileInfo
+
+		INSERT INTO TB_ZZPRESVRECVRSLT (PRESV_TERM_MEDI_REQ_YYYY,REP_ORG_CD,SEND_FILE_DATA_DIV,LIST_LINE_NO,									PRESV_TERM_RECV_ERROR_CONT,REG_DTIME,RECV_FILE_DTIME)			VALUES('1','1','1','1',			       '1','1','1'			)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\unitMng\RecordCenterCofm.xml

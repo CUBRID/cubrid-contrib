@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="stnd.stndinfo">
+	
+	
+	<!-- 기준관리 준칙/기준관리 -->
+	<resultMap id="stnd-stndmng-result" class="rms.stnd.stndinfo.domain.StndMng" >
+		<result property="stndMngTypeCd"	column="STND_MNG_TYPE_CD"/>
+		<result property="cdDivNm" 			column="CD_DIV_NM"/>
+		<result property="applyTrgtNm" 		column="APPLY_TRGT_NM"/>
+		<result property="ver"			 	column="VER"/>
+		<result property="recvDtime" 		column="RECV_DTIME"/>	
+		<result property="userNm" 			column="USER_NM"/>
+		<result property="recvFileNm" 		column="RECV_FILE_NM"/>	
+		<result property="estbYmd" 			column="ESTB_YMD"/>	
+		<result property="applyFlagNm" 		column="APPLY_FLAG_NM"/>	
+		<result property="infoFileId" 		column="INFO_FILE_ID"/>			
+	</resultMap>
+	<!-- 
+		SELECT - 기준관리 준칙/기준관리 목록을 조회한다.
+	 -->
+	<select id="findStndMng" parameterClass="rms.stnd.stndinfo.domain.StndMng" resultMap="stnd-stndmng-result">
+		SELECT E.STND_MNG_TYPE_CD
+			,(SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ07' AND USE_FLAG='1' AND COM_CD = E.CD_DIV ) CD_DIV_NM
+			, E.APPLY_TRGT_NM
+			, E.VER
+			, E.RECV_DTIME
+			, (SELECT USER_NM FROM TB_STUSER WHERE USER_ID = E.WORK_USER_ID AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# ) USER_NM
+			, E.RECV_FILE_NM
+			, E.ESTB_YMD
+			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ02' AND USE_FLAG='1' AND COM_CD = E.APPLY_FLAG ) as  APPLY_FLAG_NM
+			, E.INFO_FILE_ID
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.STND_MNG_TYPE_CD
+						, B.CD_DIV
+						, B.APPLY_TRGT_NM
+						, A.VER
+						, A.RECV_DTIME
+						, A.WORK_USER_ID
+						, A.RECV_FILE_NM
+						, A.ESTB_YMD
+						, A.APPLY_FLAG
+						, INFO_FILE_ID
+					FROM TB_ZZSTNDMNG A, TB_ZZSTNDMNGTYPE B 
+					WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+					AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+					AND B.STND_MNG_TYPE_CD = A.STND_MNG_TYPE_CD
+					<dynamic>			
+						<isNotEmpty prepend="AND" property="cdDiv">
+							B.CD_DIV = #cdDiv:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="stndMngTypeCd">
+							A.STND_MNG_TYPE_CD = #stndMngTypeCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="ver">
+							A.VER = #ver:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="applyTrgtNm">
+							B.APPLY_TRGT_NM = #applyTrgtNm:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="recvDtimeStart">
+							A.RECV_DTIME <![CDATA[>=]]> #recvDtimeStart:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="recvDtimeEnd">
+							A.RECV_DTIME <![CDATA[<=]]> #recvDtimeEnd:VARCHAR#
+						</isNotEmpty>			
+					</dynamic>
+					ORDER BY A.RECV_DTIME
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	<!-- 
+		COUNT - 기준관리 준칙/기준관리 목록을 조회한다.
+	 -->
+	<select id="countStndMng" parameterClass="rms.stnd.stndinfo.domain.StndMng" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM TB_ZZSTNDMNG A, TB_ZZSTNDMNGTYPE B 
+		WHERE A.STND_MNG_TYPE_CD = B.STND_MNG_TYPE_CD 
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="cdDiv">
+				B.CD_DIV = #cdDiv:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="stndMngTypeCd">
+				A.STND_MNG_TYPE_CD = #stndMngTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="ver">
+				A.VER = #ver:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="applyTrgtNm">
+				B.APPLY_TRGT_NM = #applyTrgtNm:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="recvDtimeStart">
+			<![CDATA[
+				A.RECV_DTIME >= #recvDtimeStart:VARCHAR#
+			]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="recvDtimeEnd">
+			<![CDATA[
+				A.RECV_DTIME <= #recvDtimeEnd:VARCHAR#
+			]]>
+			</isNotEmpty>			
+		</dynamic>
+	</select>
+
+	
+		<!-- 
+		CREATE
+	 -->
+	<insert id="createStndMng" parameterClass="rms.stnd.stndinfo.domain.StndMng">
+		INSERT INTO TB_ZZSTNDMNG(STND_MNG_TYPE_CD, VER, RECV_DTIME, WORK_USER_ID, RECV_FILE_NM, INFO_FILE_ID, ESTB_YMD, APPLY_FLAG, RECORD_CENTER_ID) 
+		VALUES (#stndMngTypeCd:VARCHAR# ,#ver:VARCHAR#
+		<!--cubrid , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')-->
+		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		, #workUserId:VARCHAR#, #recvFileNm:VARCHAR#, #infoFileId:VARCHAR#, #estbYmd:VARCHAR#, '0', #recordCenterId:VARCHAR#)
+	</insert>
+	
+	<!-- 
+		DELETE
+	 -->	
+	<delete id="deleteStndMng" parameterClass="rms.stnd.stndinfo.domain.StndMng">
+	  DELETE 
+	  FROM TB_ZZSTNDMNG
+	  WHERE STND_MNG_TYPE_CD = #stndMngTypeCd:VARCHAR# 
+	  AND VER = #ver:VARCHAR#
+	  AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</delete>
+	
+	<!-- 
+		UPDATE
+	 -->	
+	<update id="updateStndMng" parameterClass="rms.stnd.stndinfo.domain.StndMng">
+	  UPDATE TB_ZZSTNDMNG
+	  SET  APPLY_FLAG = '1'
+	  WHERE STND_MNG_TYPE_CD = #stndMngTypeCd:VARCHAR# 
+	  AND VER = #ver:VARCHAR#
+	  AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</update>
+	
+	<resultMap id="code-result" class="rms.common.code.domain.Code" >
+	    <result property="code" 	column="CODE"></result>
+	    <result property="name" 	column="NAME"></result>
+	</resultMap>
+	
+		<!--  공통 코드 조회 -->
+	<select id="findComCd" parameterClass="rms.common.code.domain.Code" resultMap="code-result">
+		SELECT COM_CD    AS CODE, 
+			   COM_CD_NM AS NAME
+		FROM TB_ZZCOMCD
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="type">
+				COM_TYPE_CD = #type:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="use">
+				USE_FLAG = #use:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="code">
+				COM_CD = #code:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="name">
+				COM_CD_NM = #name:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY COM_CD
+	</select>	
+</sqlMap>

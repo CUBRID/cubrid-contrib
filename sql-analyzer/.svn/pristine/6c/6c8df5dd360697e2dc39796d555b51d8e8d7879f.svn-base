@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="eval.reval">
+
+
+	<!-- 재평가 결과등록 철목록 조회 -->
+	<resultMap id="revalRsltReg-result" class="rms.eval.reval.domain.RevalFolder" >
+		<result property="folderId" 			column="folder_id"/>
+		<result property="clssId" 				column="clss_id"/>
+		<result property="clssNm" 				column="clss_nm"/>
+		<result property="title" 				column="title"/>
+		<result property="creatYyyy" 			column="creat_yyyy"/>
+		<result property="presvTermCd" 			column="presv_term_cd"/>
+		<result property="presvTermNm" 			column="presv_term_nm"/>
+		<result property="bisTermNm" 			column="bis_term_nm"/>
+		<result property="refixAftPresvTermCd" 	column="refix_aft_presv_term_cd"/>
+		<result property="refixAftPresvTerm" 	column="refix_aft_presv_term"/>
+		<result property="revalSeq" 			column="reval_seq"/>
+		<result property="revalStateNm" 		column="reval_state_nm"/>
+		<result property="orgCd" 				column="org_cd"/>
+		<result property="orgNm" 				column="org_nm"/>
+		<result property="orgAbbrNm" 			column="org_abbr_nm"/>
+	</resultMap>
+	<!-- 
+		SELECT - 재평가 결과등록 철목록 조회
+	 -->
+	<select id="findRevalRsltRegPagedList" parameterClass="rms.eval.reval.domain.RevalFolder" resultMap="revalRsltReg-result">
+        SELECT H.*
+        FROM (
+        	SELECT ROWNUM AS rnum
+        		, G.*
+        	FROM (
+		        <dynamic>
+		        	<isEmpty property="revalStateCd">
+						SELECT * FROM (
+					</isEmpty>
+					<isNotEqual property="revalStateCd" compareValue="1">
+						SELECT A.folder_id
+							, A.clss_id
+							, A.clss_nm
+							, A.title
+							, A.creat_yyyy
+							, A.presv_term_cd
+							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm
+							, (CASE A.CLSS_DIV_CD WHEN '1' THEN (SELECT D.COM_CD_NM 
+							                        			 FROM TB_ZZBISCLSS C,TB_ZZCOMCD D
+							                       				 WHERE D.COM_TYPE_CD = 'RD07'
+							                         			 AND D.COM_CD = C.PRESV_TERM_CD
+							                         			 AND C.BIS_CLSS_ID = A.CLSS_ID)
+							       				  WHEN '2' THEN (SELECT D.COM_CD_NM
+							                        			 FROM TB_ZZUNIT E,TB_ZZCOMCD D
+							                       				 WHERE D.COM_TYPE_CD ='RD57'
+							                         			 AND E.RECORD_CENTER_ID= #recordCenterId:VARCHAR#
+							                         			 AND D.COM_CD = E.PRESV_TERM_CD
+							                         			 AND E.UNIT_CD = A.CLSS_ID
+							                         			 AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID)
+							  END) BIS_TERM_NM
+							, '' refix_aft_presv_term_cd
+							, '' refix_aft_presv_term
+							, '' reval_seq
+							, '미등록' reval_state_nm
+							, A.org_cd		     
+							, (SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id = #recordCenterId:VARCHAR# AND C.org_cd = A.org_cd) org_nm
+							, (SELECT C.org_abbr_nm FROM  TB_STORG C WHERE C.record_center_id = #recordCenterId:VARCHAR# AND C.org_cd = A.org_cd) org_abbr_nm			
+						FROM TB_RDFOLDER A
+						WHERE A.record_center_id = #recordCenterId:VARCHAR#
+						AND A.FOLDER_KEEP_STATE_CD IN ('01','04')
+						AND nvl(A.disuse_eval_prog_flag,'0') = '0'
+						AND nvl(A.reval_prog_flag,'0') = '0'  
+					    <isNotEmpty prepend="AND" property="clssId">
+							(A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="title">
+							(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR# OR A.corct_title LIKE #title:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyyF">
+							A.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="presvTermCd">
+							A.presv_term_cd = #presvTermCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>
+					</isNotEqual>
+					<isEmpty property="revalStateCd">
+						UNION
+					</isEmpty>
+					<isNotEqual property="revalStateCd" compareValue="0">
+						SELECT A.folder_id
+							, A.clss_id
+							, A.clss_nm
+							, A.title
+							, A.creat_yyyy
+							, A.presv_term_cd
+							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=A.presv_term_cd) presv_term_nm
+							, (CASE A.CLSS_DIV_CD WHEN '1' THEN (SELECT D.COM_CD_NM 
+							                      	 			 FROM TB_ZZBISCLSS C,TB_ZZCOMCD D
+							                      				 WHERE D.COM_TYPE_CD = 'RD07'
+							                        			 AND D.COM_CD = C.PRESV_TERM_CD
+							                        			 AND C.BIS_CLSS_ID = A.CLSS_ID)
+							      				  WHEN '2' THEN (SELECT D.COM_CD_NM
+							                       				 FROM TB_ZZUNIT E,TB_ZZCOMCD D
+							                      				 WHERE D.COM_TYPE_CD ='RD57'
+							                        			 AND E.RECORD_CENTER_ID= #recordCenterId:VARCHAR#
+							                        			 AND D.COM_CD = E.PRESV_TERM_CD
+							                        			 AND E.UNIT_CD = A.CLSS_ID
+							                        			 AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID)
+							  END) BIS_TERM_NM
+							, B.refix_aft_presv_term refix_aft_presv_term_cd
+							, (SELECT C.com_cd_nm FROM TB_ZZCOMCD C WHERE C.com_type_cd = 'RD07' AND C.com_cd=B.refix_aft_presv_term) refix_aft_presv_term
+							, B.reval_seq
+							, decode(B.refix_aft_presv_term,'','미등록','등록') reval_state_nm
+						    , B.org_cd
+						    , (SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id = #recordCenterId:VARCHAR# AND C.org_cd = B.org_cd) org_nm
+						    , (SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id = #recordCenterId:VARCHAR# AND C.org_cd = B.org_cd) org_abbr_nm			
+						FROM TB_RDFOLDER A
+						    , TB_DFREVALHIST B
+						WHERE A.record_center_id = B.record_center_id
+						AND A.FOLDER_KEEP_STATE_CD IN ('01','04')
+						AND A.folder_id = B.folder_id
+						AND A.record_center_id = #recordCenterId:VARCHAR#
+						AND nvl(A.disuse_eval_prog_flag,'0') = '0'
+						AND nvl(A.reval_prog_flag,'1') = '1'
+						AND (B.reval_prog_state_cd = '7' and B.eval_discu_no is null)
+					    <isNotEmpty prepend="AND" property="clssId">
+							(A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="title">
+							(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR# OR A.corct_title LIKE #title:VARCHAR#)
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyyF">
+							A.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="presvTermCd">
+							A.presv_term_cd = #presvTermCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="orgCd">
+							A.org_cd = #orgCd:VARCHAR#
+						</isNotEmpty>	
+					</isNotEqual>
+					<isEmpty property="revalStateCd">
+						)
+					</isEmpty>
+				</dynamic>
+				ORDER BY folder_id
+			) G
+			WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		) H
+		WHERE H.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+	</select>
+	<!-- 
+		COUNT - 재평가 결과등록 철목록 조회
+	 -->
+	<select id="countRevalRsltRegPagedList" parameterClass="rms.eval.reval.domain.RevalFolder" resultClass="java.lang.Long">
+	 	<dynamic>
+       		<isEmpty property="revalStateCd">
+			  	SELECT SUM(CNT) CNT FROM (
+			</isEmpty>
+			<isNotEqual property="revalStateCd" compareValue="1">
+				SELECT COUNT(1) CNT
+				FROM TB_RDFOLDER A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND A.FOLDER_KEEP_STATE_CD IN ('01','04') <!-- 현존,인수 -->
+				AND nvl(A.disuse_eval_prog_flag,'0') = '0'<!-- 폐기 진행 아님 -->
+				AND nvl(A.reval_prog_flag,'0') = '0'      <!-- 재평가 진행중 아님 --> 
+				<isNotEmpty prepend="AND" property="clssId">
+					(A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR# OR A.corct_title LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyF">
+					A.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="presvTermCd">
+					A.presv_term_cd = #presvTermCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+			</isNotEqual>
+			<isEmpty property="revalStateCd"> 
+					UNION
+			</isEmpty>
+			<!-- 재평가결과등록, 재평가결과반영 -->
+			<isNotEqual property="revalStateCd" compareValue="0">
+				SELECT COUNT(1) CNT	
+				FROM TB_RDFOLDER A, TB_DFREVALHIST B
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND A.record_center_id = B.record_center_id
+				AND A.folder_id = B.folder_id
+				AND A.FOLDER_KEEP_STATE_CD IN ('01','04')  <!-- 현존,인수 -->
+				AND nvl(A.disuse_eval_prog_flag,'0') = '0' <!-- 폐기진행중 아님 -->
+				<!-- 재평가 결과등록 에서 진행중 -->
+				AND nvl(A.reval_prog_flag,'1') = '1'
+				AND (B.reval_prog_state_cd = '7' and B.eval_discu_no is null)
+				<isNotEmpty prepend="AND" property="clssId">
+					(A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="title">
+					(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR# OR A.corct_title LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatYyyyF">
+					A.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="presvTermCd">
+					A.presv_term_cd = #presvTermCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.org_cd = #orgCd:VARCHAR#
+				</isNotEmpty>
+			</isNotEqual>
+			<isEmpty property="revalStateCd">
+				) 
+			</isEmpty>
+		</dynamic>
+	</select>
+	
+	
+	<!-- 재평가 결과등록 심의위원목록 조회 -->
+	<resultMap id="discusUserList-result" class="rms.eval.reval.domain.RevalFolder" >
+		<result property="discuUserId" 				column="discu_user_id"/>
+		<result property="discuUserNm" 				column="discu_user_nm"/>
+		<result property="discuUserEvalPresvTermCd" column="discu_user_eval_presv_term_cd"/>
+		<result property="discuUserEvalPresvTerm" 	column="discu_user_eval_presv_term"/>
+		<result property="discuUserEvalRsn" 		column="discu_user_eval_rsn"/>	
+	</resultMap>
+	<!-- 
+		SELECT - 재평가 결과등록 심의위원목록 조회
+	 -->
+	<select id="findDiscuUserList" parameterClass="rms.eval.reval.domain.RevalFolder" resultMap="discusUserList-result">
+		SELECT B.user_id discu_user_id, B.user_nm discu_user_nm
+		    , '' discu_user_eval_presv_term_cd
+		    , '' discu_user_eval_presv_term
+		    , '' discu_user_eval_rsn  
+		FROM TB_STUSERGRP A, TB_STUSER B 
+		WHERE A.user_id = B.user_id
+		AND A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.grant_grp_cd = '002'
+	</select>
+	
+	
+	<!-- 재평가 결과등록 결과일괄반영 일괄반영 대상 조회 -->
+	<resultMap id="RevalBatchApply-result" class="rms.eval.reval.domain.RevalFolder" >
+		<result property="recordCenterId" 			column="record_center_id"/>
+		<result property="folderId" 				column="folder_id"/>
+		<result property="revalSeq" 				column="reval_seq"/>
+		<result property="cnclEvalPresvTermCd" 		column="cncl_eval_presv_term_cd"/>
+		<result property="refixBefPresvTermCd" 		column="refix_bef_presv_term_cd"/>
+		<result property="refixAftPresvTermCd" 		column="refix_aft_presv_term_cd"/>
+		<result property="refixAftRsn" 				column="refix_aft_rsn"/>
+		<result property="creatYyyy" 				column="creat_yyyy"/>
+		<result property="exptDisuseYyyyBef" 		column="expt_disuse_yyyy_bef"/>
+		<result property="evalDiscuNo" 				column="eval_discu_no"/>
+	</resultMap>
+	<!-- 
+		SELECT - 재평가 결과등록 결과일괄반영 일괄반영 대상 조회
+	 -->
+	<select id="findRevalRsltBatchApplyList" parameterClass="rms.eval.reval.domain.RevalFolder" resultMap="RevalBatchApply-result">
+		SELECT B.record_center_id
+		    , B.folder_id
+			, B.reval_seq
+			, B.cncl_eval_presv_term_cd
+			, B.refix_bef_presv_term refix_bef_presv_term_cd	
+			, B.refix_aft_presv_term refix_aft_presv_term_cd
+			, B.refix_aft_rsn
+			, A.creat_yyyy
+			, B.expt_disuse_yyyy_bef
+			, B.eval_discu_no
+		FROM TB_RDFOLDER A
+		    , TB_DFREVALHIST B
+		WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		AND B.reval_prog_state_cd = '7'
+        AND B.eval_discu_no is NULL		
+		AND B.folder_id = A.folder_id
+		AND A.record_center_id = #recordCenterId:VARCHAR#
+		AND A.folder_keep_state_cd != '03'
+		AND A.reval_prog_flag ='1' 											
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="clssId">
+				(A.clss_div_cd = #clssDivCd:VARCHAR# AND A.clss_id = #clssId:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="title">
+				(A.title LIKE #title:VARCHAR# OR A.sub_title LIKE #title:VARCHAR# OR A.corct_title LIKE #title:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyF">
+				A.creat_yyyy BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="presvTermCd">
+				A.presv_term_cd = #presvTermCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="cnclEvalPresvTermCd">
+				(B.cncl_eval_presv_term_cd = #cnclEvalPresvTermCd:VARCHAR#
+				<isEqual prepend="OR" property="cnclEvalPresvTermCd" compareValue="0">
+					B.cncl_eval_presv_term_cd IS NULL
+				</isEqual>
+				)
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.folder_id
+	</select>
+	
+	
+	<!-- 
+		INSERT - 재평가 결과등록 결과등록
+	 -->
+	<insert id="createRevalRsltListHist" parameterClass="rms.eval.reval.domain.RevalFolder">
+		INSERT INTO TB_DFREVALHIST (record_center_id
+			, folder_id
+			, reval_seq
+			, eval_discu_no
+			, org_cd
+			, handl_org_cd
+			, reval_prog_state_cd
+			, handl_org_eval_presv_term_cd
+			, handl_org_eval_rsn
+			, handl_org_eval_ymd
+			, record_center_eval_presv_term_
+			, record_center_eval_rsn
+			, record_center_eval_ymd
+			, cncl_eval_presv_term_cd
+			, cncl_eval_rsn, cncl_eval_ymd
+			, last_reval_presv_term_cd
+			, presv_term_refix_ymd
+			, expt_disuse_yyyy_bef
+			, refix_bef_presv_term
+			, refix_aft_presv_term
+			, refix_bef_rsn, refix_aft_rsn
+		) SELECT record_center_id
+		     , A.folder_id
+			 , (SELECT LPAD(NVL(MAX(reval_seq),0)+1, 19, '0') FROM TB_DFREVALHIST)
+			 , ''
+			 , A.org_cd
+		     , #handlOrgCd:VARCHAR#
+		     , '7'
+		     , #handlOrgEvalPresvTermCd:VARCHAR#
+		     , #handlOrgEvalRsn:VARCHAR#
+		     , TO_CHAR(SYSDATE,'YYYYMMDD')
+ 	         , #recordCenterEvalPresvTermCd:VARCHAR#
+ 	         , #recordCenterEvalRsn:VARCHAR#
+	         , TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , #cnclEvalPresvTermCd:VARCHAR#
+		     , #cnclEvalRsn:VARCHAR#
+		     , TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , #cnclEvalPresvTermCd:VARCHAR#
+			 , TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , expt_disuse_yyyy
+		     , presv_term_cd
+			 , #cnclEvalPresvTermCd:VARCHAR#
+		     , presv_term_fix_rsn
+			 , #cnclEvalRsn:VARCHAR#
+		FROM TB_RDFOLDER A
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+	</insert>
+	<!-- 
+		UPDATE - 결과등록 결과등록 (철상태 갱신)
+	 -->
+	<update id="updateRevalRsltReg" parameterClass="rms.eval.reval.domain.RevalFolder">
+		UPDATE TB_RDFOLDER
+		SET reval_state_cd = '7', reval_prog_flag = '1'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+	</update>
+	<!-- 결과등록 revalSeq 목록 조회 -->
+	<resultMap id="revalSeqList-result" class="rms.eval.reval.domain.RevalFolder" >
+		<result property="folderId" 				column="folder_id"/>
+		<result property="revalSeq" 				column="reval_seq"/>
+	</resultMap>
+	<!-- 
+		SELECT - 결과등록 revalSeq 목록 조회
+	 -->
+	<select id="findRevalSeq" parameterClass="rms.take.undTake.domain.ParamsWrapper" resultMap="revalSeqList-result">
+		SELECT folder_id
+			, max(reval_seq) reval_seq 
+		FROM TB_DFREVALHIST 
+		WHERE record_center_id = #params[0].recordCenterId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND" property="params" open="(" close=")" conjunction="OR">
+				folder_id = #params[].folderId:VARCHAR#
+			</iterate>
+		</dynamic>
+		GROUP BY folder_id, reval_seq
+		ORDER BY folder_id
+	</select>
+	<!-- 
+		UPDATE - 결과등록 결과수정 (이력 갱신)
+	 -->
+	<update id="updateRevalRsltListHist" parameterClass="rms.eval.reval.domain.RevalFolder">
+		UPDATE TB_DFREVALHIST
+		SET   reval_prog_state_cd = '7'
+			, handl_org_cd = #handlOrgCd:VARCHAR#	
+			, handl_org_eval_presv_term_cd = #handlOrgEvalPresvTermCd:VARCHAR#
+			, handl_org_eval_rsn = #handlOrgEvalRsn:VARCHAR#
+			, handl_org_eval_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+ 	        , record_center_eval_presv_term_ = #recordCenterEvalPresvTermCd:VARCHAR#
+ 	        , record_center_eval_rsn = #recordCenterEvalRsn:VARCHAR#
+	        , record_center_eval_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+		    , cncl_eval_presv_term_cd = #cnclEvalPresvTermCd:VARCHAR#
+		    , cncl_eval_rsn = #cnclEvalRsn:VARCHAR#
+		    , cncl_eval_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+		    , last_reval_presv_term_cd = #cnclEvalPresvTermCd:VARCHAR#
+			, refix_aft_presv_term = #cnclEvalPresvTermCd:VARCHAR#
+			, refix_aft_rsn = #cnclEvalRsn:VARCHAR#
+			, presv_term_refix_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+		AND reval_seq = #revalSeq:VARCHAR#
+	</update>
+	
+	
+	<!-- 
+		INSERT - 재평가 결과반영 결과반영 심의서 생성
+	 -->
+	<insert id="createRevalDiscu" parameterClass="rms.eval.reval.domain.RevalFolder">
+		INSERT INTO TB_DFREVALDISCU (record_center_id
+			, eval_discu_no
+			, eval_yyyy
+			, sno
+			, discu_trgt_record_cnt
+			, reg_user_id, reg_dtime
+		) VALUES(#recordCenterId:VARCHAR#
+			, (SELECT #revalYyyy:VARCHAR#||LPAD(NVL(SUBSTR(MAX(eval_discu_no),5),0)+1, 6, '0') FROM TB_DFREVALDISCU WHERE record_center_id = #recordCenterId:VARCHAR# AND eval_yyyy = #revalYyyy:VARCHAR#)
+			, #revalYyyy:VARCHAR#
+			, (SELECT (NVL(MAX(sno),0)+1) FROM TB_DFREVALDISCU WHERE record_center_id = #recordCenterId:VARCHAR# AND eval_yyyy = #revalYyyy:VARCHAR#)
+			, 0
+			, #userId:VARCHAR#
+			<!--cubrid , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+			, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	<!-- 
+		SELECT - 재평가 결과등록 심의서 생성 후 심의서 번호 조회
+	 -->
+	<select id="findDiscuNo" parameterClass="rms.eval.reval.domain.RevalFolder" resultClass="java.lang.String">
+		SELECT MAX(eval_discu_no) eval_discu_no
+		FROM TB_DFREVALDISCU
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</select>
+	<!-- 
+		UPDATE - 결과등록 결과반영 이력 갱신
+	 -->
+	<update id="updateRevalHistDiscuNo" parameterClass="rms.eval.reval.domain.RevalFolder">
+		UPDATE TB_DFREVALHIST
+		SET eval_discu_no = #evalDiscuNo:VARCHAR#
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+		AND reval_prog_state_cd = '7'
+		AND eval_discu_no is null
+	</update>
+	<!-- 
+		UPDATE - 결과등록 결과반영 평가심의서 갱신
+	 -->
+	<update id="updateDiscuNoCnt" parameterClass="rms.eval.reval.domain.RevalFolder">
+		UPDATE TB_DFREVALDISCU
+		SET discu_trgt_record_cnt = (
+			SELECT COUNT(1) 
+		    FROM TB_DFREVALHIST
+		    WHERE eval_discu_no = #evalDiscuNo:VARCHAR#
+		)
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND eval_discu_no = #evalDiscuNo:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 재평가 결과반영
+	 -->
+	<update id="updatePresvTermRevalSetList" parameterClass="rms.eval.reval.domain.RevalFolder">
+		UPDATE TB_RDFOLDER
+		SET  reval_state_cd = '0'
+		    , reval_prog_flag = '0'
+		    , presv_term_cd = (
+		    	SELECT refix_aft_presv_term
+                FROM TB_DFREVALHIST
+                WHERE folder_id = #folderId:VARCHAR#
+                AND reval_seq = #revalSeq:VARCHAR#
+            )
+		    , presv_term_fix_rsn = (
+		    	SELECT refix_aft_rsn
+                FROM TB_DFREVALHIST
+                WHERE folder_id = #folderId:VARCHAR#
+                AND reval_seq = #revalSeq:VARCHAR#
+            )
+		    <isGreaterEqual property="lastRevalEvalPresvTermCd" compareValue="20">
+		    	, expt_disuse_yyyy = ''
+		    	, expt_transf_yyyy = (TO_NUMBER(DECODE(creat_sys_cd,'01',creat_yyyy,'04',creat_yyyy,SUBSTR(FOLDER_CLOSE_DTIME,0,4)))+10)
+		     	, PRESV_AREA_CD='2'
+			</isGreaterEqual>
+			<isLessThan property="lastRevalEvalPresvTermCd" compareValue="20">
+		     	, expt_disuse_yyyy = (
+		     		SELECT (TO_NUMBER(DECODE(A.creat_sys_cd,'01',A.creat_yyyy,'04',A.creat_yyyy,NVL(SUBSTR(A.FOLDER_CLOSE_DTIME,0,4),A.CREAT_YYYY)))+1+TO_NUMBER(B.refix_aft_presv_term))
+		            FROM TB_RDFOLDER A,TB_DFREVALHIST B
+		            WHERE A.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		            AND A.FOLDER_ID=#folderId:VARCHAR#
+		            AND A.FOLDER_ID=B.FOLDER_ID
+		            AND A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		            AND B.REVAL_SEQ = #revalSeq:VARCHAR#
+		        )
+		     	, expt_transf_yyyy = ''
+		     	, PRESV_AREA_CD='1'
+			</isLessThan>
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+	</update>
+	<!-- 
+		UPDATE - 결과등록 결과반영 결과반영에 따른 기록물철 공개목록변경
+	 -->
+	<update id="updateOpenList" parameterClass="rms.eval.reval.domain.RevalFolder">
+		UPDATE TB_STOPENLIST
+		SET PRESV_TERM_CD= (
+			SELECT refix_aft_presv_term
+            FROM TB_DFREVALHIST
+            WHERE folder_id = #folderId:VARCHAR#
+            AND reval_seq = #revalSeq:VARCHAR#
+            )
+            <!--cubrid , REVAL_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+            , REVAL_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+            , CHNG_TYPE='02'
+            <!--cubrid , CHNG_DTIME=TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')-->
+            , CHNG_DTIME=TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')
+            , OPENLIST_OFFER_FLAG='0'
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+		AND folder_id = #folderId:VARCHAR#
+	</update>
+</sqlMap>

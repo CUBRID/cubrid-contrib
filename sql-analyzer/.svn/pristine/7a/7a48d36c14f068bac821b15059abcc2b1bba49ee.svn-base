@@ -1,0 +1,53 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : select
+-- Query Id : countOrgChngHistMngList
+
+		SELECT COUNT(1)        FROM tb_storg A        WHERE record_center_id = '1'        ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : select
+-- Query Id : findOrgChngHistMngList
+
+		SELECT E.org_cd, E.org_nm, E.apply_start_ymd, E.apply_close_ymd		FROM (		    SELECT D.*		    FROM (		        SELECT ROWNUM AS rnum		              ,C.*		        FROM (		            SELECT A.*		            FROM tb_storg A		            WHERE record_center_id = '1'		            ORDER BY close_flag asc, org_cd		        ) C		        WHERE ROWNUM <= '1'		    ) D		    WHERE D.rnum >= '1'		)E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : select
+-- Query Id : findChngAftOrgCdList
+
+		select chng_aft_org_cd, chng_aft_org_nm		from tb_storghist		where chng_bef_org_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : delete
+-- Query Id : deleteOrgChngHist
+
+		DELETE	tb_storghist WHERE	chng_bef_org_cd = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : insert
+-- Query Id : createOrgChngHist
+
+		INSERT INTO TB_STORGHIST (			CHNG_BEF_ORG_CD, CHNG_AFT_ORG_CD, CHNG_BEF_ORG_NM, CHNG_AFT_ORG_NM, REG_DTIME		)		VALUES (			'1',						'1',			(SELECT org_abbr_nm FROM tb_storg WHERE record_center_id = '1' AND org_cd = '1'),			(SELECT org_abbr_nm FROM tb_storg WHERE record_center_id = '1' AND org_cd = '1'),			to_char(SYSDATE, 'YYYYMMDD')		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : select
+-- Query Id : countDetailOrgHist
+
+		SELECT COUNT(1)		FROM (			(				SELECT * FROM (				SELECT    'DN' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime				FROM    tb_storghist            				START WITH chng_aft_org_cd = '1'				CONNECT BY prior chng_bef_org_cd = chng_aft_org_cd				ORDER BY lev DESC)			) 			UNION ALL			(				SELECT * FROM (				SELECT    'UP' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime				FROM    tb_storghist				START WITH chng_bef_org_cd = '1'				CONNECT BY chng_bef_org_cd = prior chng_aft_org_cd				ORDER BY lev)			)		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml
+-- Query    : select
+-- Query Id : findDetailOrgHist
+
+		(			SELECT * FROM (			SELECT    'DN' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime			FROM    tb_storghist            			START WITH chng_aft_org_cd = '1'			CONNECT BY prior chng_bef_org_cd = chng_aft_org_cd			ORDER BY lev DESC)		) 		UNION ALL		(			SELECT * FROM (			SELECT    'UP' as chk, level as lev, chng_bef_org_nm, chng_bef_org_cd, chng_aft_org_nm, chng_aft_org_cd, reg_dtime			FROM    tb_storghist			START WITH chng_bef_org_cd = '1'			CONNECT BY chng_bef_org_cd = prior chng_aft_org_cd			ORDER BY lev)		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\sys\recordmng\OrgChngHistMng.xml

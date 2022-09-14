@@ -1,0 +1,2512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="presv.booksf">
+	
+	<!-- 
+		서가배치_관리대상총괄표
+		: 생산부서별 관리대상 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfTrgtPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 기록물 생산부서 Name -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="erecCnt" 				column="ERECCNT"/>				<!-- 비전자기록-->
+		<result property="mngCnt" 				column="MNGCNT"/>				<!-- 부여 -->
+		<result property="mngCnt0" 				column="MNGCNT0"/>				<!-- 미부여 -->
+		<result property="mngCnt1"				column="MNGCNT1"/>				<!-- 특별 -->
+		<result property="mngCnt2"				column="MNGCNT2"/>				<!-- 일반 -->	
+		<result property="arngCnt0"				column="ARNGCNT0"/>				<!-- 미배치 -->
+		<result property="arngCnt1" 			column="ARNGCNT1"/>				<!-- 배치 -->
+	</resultMap>
+	<select id="countBooksfTrgtPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM (
+		    SELECT ORG_CD
+		    	  ,ORG_NM, ORG_ABBR_NM
+		          ,SUM(acnt)+SUM(bcnt) ERECCNT    
+		          ,SUM(ccnt) MNGCNT2                   
+		          ,SUM(dcnt) MNGCNT1
+		          ,SUM(ccnt)+SUM(dcnt) MNGCNT
+		          ,SUM(ecnt) MNGCNT0
+		          ,SUM(fcnt) ARNGCNT1
+		          ,SUM(gcnt) ARNGCNT0
+		    FROM                           
+		        ( SELECT A.ORG_CD           
+		                ,B.ORG_NM    
+		                ,B.ORG_ABBR_NM                      
+		                ,DECODE(A.ERECORD_FLAG,          '2' ,COUNT(A.ERECORD_FLAG ),0)          acnt    <!-- 비전자기록 -->
+		              	,DECODE(A.ERECORD_FLAG,          '3' ,COUNT(A.ERECORD_FLAG ),0)          bcnt    <!-- 비전자기록 -->
+		              	,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  ccnt    <!-- 관리번호부여일반 -->
+		              	,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  dcnt    <!-- 관리번호부여특별 -->
+		              	,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ecnt    <!-- 관리번호부여미부여 -->
+		              	,DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG), 0)      fcnt    <!-- 서가배치 -->
+		              	,DECODE(A.BOOKSF_ARNG_FLAG,      '0' ,COUNT(A.BOOKSF_ARNG_FLAG ),0)      gcnt    <!-- 서가비배치 -->
+		          FROM TB_RDFOLDER A, TB_STORG B
+		          WHERE A.ERECORD_FLAG IN ('2','3')
+		          AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		          AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		          AND A.ORG_CD = B.ORG_CD
+		          AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		          GROUP BY A.ORG_CD,B.ORG_NM, B.ORG_ABBR_NM, A.ERECORD_FLAG, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO, A.BOOKSF_ARNG_FLAG
+		        )
+		    GROUP BY ORG_CD, ORG_NM, ORG_ABBR_NM
+		    ORDER BY ORG_CD
+		) A
+	</select>
+	<select id="findBooksfTrgtPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfTrgtPagedList-result">
+		SELECT C.org_cd
+		      ,C.org_nm
+		      ,C.org_abbr_nm
+		      ,C.ereccnt
+		      ,C.mngcnt2
+		      ,C.mngcnt1
+		      ,C.mngcnt
+		      ,C.mngcnt0
+		      ,C.arngcnt1
+		      ,C.arngcnt0
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,A.*
+		        FROM (
+		            SELECT ORG_CD
+		            	  ,ORG_NM, ORG_ABBR_NM
+		                  ,SUM(acnt)+SUM(bcnt) ERECCNT    
+		                  ,SUM(ccnt) MNGCNT2                   
+		                  ,SUM(dcnt) MNGCNT1
+		                  ,SUM(ccnt)+SUM(dcnt) MNGCNT
+		                  ,SUM(ecnt) MNGCNT0
+		                  ,SUM(fcnt) ARNGCNT1
+		                  ,SUM(gcnt) ARNGCNT0
+		            FROM                           
+		                ( SELECT A.ORG_CD           
+		                        ,B.ORG_NM    
+		                        ,B.ORG_ABBR_NM                      
+		                        ,DECODE(A.ERECORD_FLAG,          '2' ,COUNT(A.ERECORD_FLAG ),0)          acnt    <!-- 비전자기록 -->
+		                        ,DECODE(A.ERECORD_FLAG,          '3' ,COUNT(A.ERECORD_FLAG ),0)          bcnt    <!-- 비전자기록 -->
+		                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  ccnt    <!-- 관리번호부여일반 -->
+		                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  dcnt    <!-- 관리번호부여특별 -->
+		                        ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ecnt    <!-- 관리번호부여미부여 -->
+		                        ,DECODE(A.BOOKSF_ARNG_FLAG, '1', COUNT(A.BOOKSF_ARNG_FLAG), '2', COUNT(A.BOOKSF_ARNG_FLAG), 0)      fcnt    <!-- 서가배치 -->
+		                        ,DECODE(A.BOOKSF_ARNG_FLAG,      '0' ,COUNT(A.BOOKSF_ARNG_FLAG ),0)      gcnt    <!-- 서가비배치 -->
+		                  FROM TB_RDFOLDER A, TB_STORG B
+		                  WHERE A.ERECORD_FLAG IN ('2','3')
+		                  AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                  AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                  AND A.ORG_CD = B.ORG_CD
+		                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		                  GROUP BY A.ORG_CD,B.ORG_NM, B.ORG_ABBR_NM, A.ERECORD_FLAG, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO, A.BOOKSF_ARNG_FLAG
+		                )
+		            GROUP BY ORG_CD, ORG_NM, ORG_ABBR_NM
+		            ORDER BY ORG_CD
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서고관리번호부여(특별)
+		: 기록물철 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfMngNoSpclPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서CD -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+		<result property="presvTermCd"			column="PRESV_TERM_CD"/>		<!-- 보존기간 -->	
+		<result property="presvTermNm"			column="PRESV_TERM_NM"/>		<!-- 보존기간명 -->	
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="folderTypeDivCd" 		column="FOLDER_TYPE_DIV_CD"/>	<!-- 기록물형태 -->
+		<result property="folderDetlTypeNm" 	column="FOLDER_DETL_TYPE_NM"/>	<!-- 기록물형태 -->
+	</resultMap>
+	<select id="countBooksfMngNoSpclPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1) 
+        FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D
+        WHERE A.STAKRM_MNG_NO IS NULL
+        AND A.ERECORD_FLAG IN ('2','3')
+        AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')
+        AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+        AND A.ORG_CD = D.ORG_CD
+        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="curKeepOrgCd">
+                A.CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty property="presvTermCd">
+	        	<isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	                A.PRESV_TERM_CD IN ('20','25')
+                </isEqual>
+	            <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+                </isNotEqual>		            
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="takeYyyyF">
+                (A.TAKE_YYYY BETWEEN #takeYyyyF:VARCHAR# AND #takeYyyyT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="folderDetlTypeCd">
+                A.FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatSysCd">
+                A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+            </isNotEmpty>                    
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="folderIdF">
+                (A.FOLDER_ID BETWEEN #folderIdF:VARCHAR# AND #folderIdT#)
+            </isNotEmpty>
+        </dynamic>    
+	</select>
+	<select id="findBooksfMngNoSpclPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfMngNoSpclPagedList-result">
+		SELECT G.folder_id
+		      ,G.org_cd
+		      ,G.org_nm
+		      ,G.org_abbr_nm
+		      ,G.title
+		      ,G.presv_term_cd
+		      ,G.presv_term_nm
+		      ,G.creat_yyyy
+		      ,G.folder_type_div_cd
+		      ,G.folder_detl_type_nm
+		FROM (
+		    SELECT F.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,E.*
+		        FROM (
+		            SELECT A.FOLDER_ID, A.ORG_CD, D.ORG_NM, D.ORG_ABBR_NM, A.TITLE
+		                  ,A.PRESV_TERM_CD, B.COM_CD_NM AS PRESV_TERM_NM, A.CREAT_YYYY, A.FOLDER_TYPE_DIV_CD, C.COM_CD_NM AS FOLDER_DETL_TYPE_NM 
+		            FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D
+		            WHERE A.STAKRM_MNG_NO IS NULL
+		            AND A.ERECORD_FLAG IN ('2','3')
+		            AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')
+		            AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+		            AND A.ORG_CD = D.ORG_CD
+		            AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+                   <dynamic prepend="AND">
+                       <isNotEmpty prepend="AND" property="curKeepOrgCd">
+                           A.CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+                       </isNotEmpty>
+			           <isNotEmpty property="presvTermCd">
+				           <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+				               A.PRESV_TERM_CD IN ('20','25')
+			               </isEqual>
+				           <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+                           A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+			               </isNotEqual>		            
+                       </isNotEmpty>
+                       <isNotEmpty prepend="AND" property="takeYyyyF">
+                           (A.TAKE_YYYY BETWEEN #takeYyyyF:VARCHAR# AND #takeYyyyT:VARCHAR#)
+                       </isNotEmpty>
+                       <isNotEmpty prepend="AND" property="orgCd">
+                           A.ORG_CD = #orgCd:VARCHAR#
+                       </isNotEmpty>
+                       <isNotEmpty prepend="AND" property="folderDetlTypeCd">
+                           A.FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+                       </isNotEmpty>
+                       <isNotEmpty prepend="AND" property="creatSysCd">
+                           A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+                       </isNotEmpty>                    
+                       <isNotEmpty prepend="AND" property="title">
+                           (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+                       </isNotEmpty>
+                       <isNotEmpty prepend="AND" property="folderIdF">
+                           (A.FOLDER_ID BETWEEN #folderIdF:VARCHAR# AND #folderIdT#)
+                       </isNotEmpty>
+                   </dynamic>    
+		            ORDER BY A.FOLDER_ID
+		        ) E
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) F
+		    WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) G
+		ORDER BY G.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서고관리번호부여(일반)
+		: 서고관리번호부여대상 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfMngNoNomlPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서CD -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm" 			column="ORG_ABBR_NM"/>			<!-- 생산부서명(간략) -->
+		<result property="mngCnt1"				column="MNGCNT1"/>				<!-- 특별관리번호부여 -->
+		<result property="mngCnt2"				column="MNGCNT2"/>				<!-- 일반관리번호부여 -->	
+		<result property="mngCnt0"				column="MNGCNT0"/>				<!-- 부여대상 -->
+	</resultMap>
+	<select id="countBooksfMngNoNomlPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT RECORD_CENTER_ID, ORG_CD, ORG_NM 
+                  ,SUM(acnt) MNGCNT1                   
+                  ,SUM(bcnt) MNGCNT2
+                  ,SUM(ccnt) MNGCNT0
+            FROM                           
+             (SELECT A.RECORD_CENTER_ID, A.ORG_CD           
+                    ,B.ORG_NM                                             
+                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  acnt    <!-- 관리번호부여특별-->
+                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  bcnt    <!-- 관리번호부여일반 -->
+                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ccnt    <!-- 관리번호부여미부여 -->
+                 FROM TB_RDFOLDER A, TB_STORG B
+                WHERE A.ERECORD_FLAG IN ('2','3')
+                  AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+                  AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                  AND A.ORG_CD = B.ORG_CD
+                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+               GROUP BY A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO)
+            GROUP BY RECORD_CENTER_ID, ORG_CD, ORG_NM    
+            ORDER BY RECORD_CENTER_ID, ORG_CD
+        ) C
+	</select>
+	<select id="findBooksfMngNoNomlPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfMngNoNomlPagedList-result">
+		SELECT E.org_cd
+		      ,E.org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = E.record_center_id AND Z.org_cd = E.org_cd) AS org_abbr_nm
+		      ,E.mngcnt1
+		      ,E.mngcnt2
+		      ,E.mngcnt0
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT RECORD_CENTER_ID, ORG_CD, ORG_NM 
+		                  ,SUM(acnt) MNGCNT1                   
+		                  ,SUM(bcnt) MNGCNT2
+		                  ,SUM(ccnt) MNGCNT0
+		            FROM                           
+		             (SELECT A.RECORD_CENTER_ID, A.ORG_CD           
+		                    ,B.ORG_NM                                             
+		                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '1' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  acnt    <!-- 관리번호부여특별-->
+		                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0',0,(DECODE(A.STAKRM_MNG_NO_DIV_CD,  '2' ,COUNT(A.STAKRM_MNG_NO_DIV_CD ),0)))  bcnt    <!-- 관리번호부여일반 -->
+		                    ,DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ccnt    <!-- 관리번호부여미부여 -->
+		                 FROM TB_RDFOLDER A, TB_STORG B
+		                WHERE A.ERECORD_FLAG IN ('2','3')
+		                  AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		                  AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                  AND A.ORG_CD = B.ORG_CD
+		                  AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		               GROUP BY A.RECORD_CENTER_ID, A.ORG_CD, B.ORG_NM, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO)
+		            GROUP BY RECORD_CENTER_ID, ORG_CD, ORG_NM    
+		            ORDER BY RECORD_CENTER_ID, ORG_CD
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서고관리번호부여(특별,일반)
+		: 서고관리번호부여규칙을 조회한다.
+	 -->
+	<resultMap id="findRegistMngNoRuleCheck-result" class="rms.presv.booksf.domain.Booksf" >
+		<result property="nomlMngNoRule" 	column="NOML_MNG_NO_RULE"/>
+		<result property="spclMngNoRule"	column="SPCL_MNG_NO_RULE"/>
+		<result property="presvBoxIdRule"	column="PRESV_BOX_ID_RULE"/>
+	</resultMap>
+	<select id="findRegistMngNoRuleCheck" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findRegistMngNoRuleCheck-result">
+		SELECT NOML_MNG_NO_RULE
+		     , SPCL_MNG_NO_RULE
+		     , PRESV_BOX_ID_RULE
+		FROM  TB_STCONFIG
+		WHERE record_center_id = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_서고관리번호부여(특별)
+		: SELECT(관리번호 일련번호) 
+	-->
+	<resultMap id="booksfMngNoSeq-result"		class="rms.presv.booksf.domain.Booksf" >
+		<result property="mngNoSeq" 			column="MNG_NO_SEQ"/>			<!-- 일련번호 -->		
+	</resultMap>
+	<select id="findBooksfMngNoSeq" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="booksfMngNoSeq-result">
+		SELECT TRIM(TO_CHAR(NVL(MAX(SUBSTR(STAKRM_MNG_NO,LENGTH(STAKRM_MNG_NO)-5,6)),0)+1,'000000')) MNG_NO_SEQ 
+  		  FROM TB_RDFOLDER
+ 		 WHERE STAKRM_MNG_NO_RULE = #stakrmMngNoRule:VARCHAR#
+ 		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+ 		 <dynamic prepend="AND">
+ 		 	<isNotEmpty prepend="AND" property="orgCd">
+			    ORG_CD = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyy">
+				CREAT_YYYY = #creatYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="presvTermCd">
+				PRESV_TERM_CD = #presvTermCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderDetlTypeCd">
+				FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+			</isNotEmpty>
+		 </dynamic>
+	</select>
+	
+	<!-- 
+		서가배치_서고관리번호부여(일반)
+		: 서고관리번호부여대상 수량을 조회한다.
+	 -->
+	<resultMap id="findBooksfMngNoCount-result"	class="rms.presv.booksf.domain.Booksf" >
+		<result property="mngCnt0"		 	column="MNGCNT0"/>				<!-- 부여대상 -->
+	</resultMap>
+	<select id="findBooksfMngNoCount" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfMngNoCount-result">
+		SELECT SUM(ccnt) MNGCNT0
+	  	FROM (
+	  		  SELECT DECODE(NVL(A.STAKRM_MNG_NO,'0'),'0' ,COUNT(NVL(A.STAKRM_MNG_NO,'0')),0) ccnt    
+		 		FROM TB_RDFOLDER A
+		 	   WHERE A.ERECORD_FLAG IN ('2','3')
+		 	     AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		 	     AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   GROUP BY A.ORG_CD, A.STAKRM_MNG_NO_DIV_CD, A.STAKRM_MNG_NO
+			  )
+	</select>
+	
+	<!-- UPDATE(관리번호부여:특별-1,일반-2) -->	
+	<update id="updateBooksfMngNo" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_RDFOLDER   
+		SET STAKRM_MNG_NO 			= #stakrmMngNo:VARCHAR#
+		   ,STAKRM_MNG_NO_DIV_CD 	= #stakrmMngNoDivCd:VARCHAR#
+		   ,STAKRM_MNG_NO_RULE 		= #stakrmMngNoRule:VARCHAR# 			  
+		WHERE RECORD_CENTER_ID 	= #recordCenterId:VARCHAR#
+		AND FOLDER_ID 			= #folderId#
+	</update>
+	
+	
+	<!-- 
+		서가배치_서고관리번호부여(일반)
+		: SELECT(관리번호부여대상철목록)  
+	-->
+	<resultMap id="booksfMngNoFolder-result" 	class="rms.presv.booksf.domain.Booksf" >
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서CD -->
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermCd"			column="PRESV_TERM_CD"/>		<!-- 보존기간 -->	
+		<result property="folderTypeDivCd" 		column="FOLDER_TYPE_DIV_CD"/>	<!-- 기록물형태 -->
+	</resultMap>
+	<select id="findBooksfMngNoFolder" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="booksfMngNoFolder-result">
+		SELECT FOLDER_ID, ORG_CD, CREAT_YYYY, PRESV_TERM_CD, FOLDER_TYPE_DIV_CD
+  		  FROM TB_RDFOLDER
+ 		 WHERE STAKRM_MNG_NO IS NULL
+		   AND ERECORD_FLAG IN ('2','3')
+		   AND FOLDER_KEEP_STATE_CD IN ('01', '04')
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#		  
+<!-- 		 ORDER BY FOLDER_ID  -->
+		 ORDER BY CREAT_SYS_CD||'-'||ORG_CD||'-'||CLSS_ID||'-'||CREAT_YYYY||'-'||FOLDER_REG_SEQ||'-'||HO_NO
+	</select>
+	
+	<!-- 
+		서가배치_서고/서가등록 
+		: 서가 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="stakrmId"			column="stakrm_id"/>
+		<result property="stakrmNm"			column="stakrm_nm"/>
+		<result property="booksfId" 		column="booksf_id"/>
+		<result property="booksfNm" 		column="booksf_nm"/>
+		<result property="shelfCcnt"		column="shelf_c_cnt"/>
+		<result property="shelfRcnt"		column="shelf_r_cnt"/>
+		<result property="maxPresvBoxCnt"	column="max_presv_box_cnt"/>
+		<result property="keepPresvBoxCnt"	column="keep_presv_box_cnt"/>
+		<result property="remk"				column="REMK"/>
+	</resultMap>
+	<select id="countBooksfPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)                    
+        FROM TB_SRSTAKRM A, TB_SRBOOKSF B 
+        WHERE A.STAKRM_ID = B.STAKRM_ID
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+        AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="stakrmNm">
+                A.STAKRM_NM LIKE #stakrmNm:VARCHAR#
+            </isNotEmpty>            
+            <isNotEmpty prepend="AND" property="booksfNm">
+                B.BOOKSF_NM LIKE #booksfNm:VARCHAR#
+            </isNotEmpty>            
+        </dynamic>
+	</select>
+	<select id="findBooksfPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfPagedList-result">
+		SELECT E.stakrm_id
+		      ,E.stakrm_nm
+		      ,E.booksf_id
+		      ,E.booksf_nm
+		      ,E.shelf_c_cnt
+		      ,E.shelf_r_cnt
+		      ,E.max_presv_box_cnt
+		      ,E.keep_presv_box_cnt
+		      ,E.remk
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT  A.STAKRM_ID,A.STAKRM_NM,B.BOOKSF_ID,B.BOOKSF_NM
+		                   ,NVL(B.SHELF_C_CNT,'0') AS SHELF_C_CNT
+		                   ,NVL(B.SHELF_R_CNT, '0') AS SHELF_R_CNT
+		                   ,NVL(B.MAX_PRESV_BOX_CNT, '0') AS MAX_PRESV_BOX_CNT
+		                   ,NVL(B.KEEP_PRESV_BOX_CNT, '0') AS KEEP_PRESV_BOX_CNT
+		                   ,B.REMK                     
+		            FROM TB_SRSTAKRM A, TB_SRBOOKSF B 
+		            WHERE A.STAKRM_ID = B.STAKRM_ID
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		            AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID                
+		            <dynamic>        
+		                <isNotEmpty prepend="AND" property="stakrmNm">
+		                    A.STAKRM_NM LIKE #stakrmNm:VARCHAR#
+		                </isNotEmpty>            
+		                <isNotEmpty prepend="AND" property="booksfNm">
+		                    B.BOOKSF_NM LIKE #booksfNm:VARCHAR#
+		                </isNotEmpty>            
+		            </dynamic>
+		            ORDER BY A.STAKRM_ID, B.BOOKSF_ID
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서고/서가등록 
+		: 서가 목록을 조회한다. 
+	 -->
+	<resultMap id="findStakrmPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="stakrmId" 		column="STAKRM_ID"/>
+		<result property="stakrmNm" 		column="STAKRM_NM"/>
+		<result property="booksfCnt" 		column="BOOKSF_CNT"/>
+		<result property="remk" 			column="REMK"/>
+	</resultMap>
+	<select id="countStakrmPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM  TB_SRSTAKRM  
+        WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+        <dynamic>        
+            <isNotEmpty prepend="AND" property="stakrmNm">
+                STAKRM_NM LIKE #stakrmNm:VARCHAR# 
+            </isNotEmpty>                
+        </dynamic>
+	</select>
+	<select id="findStakrmPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findStakrmPagedList-result">
+		SELECT C.stakrm_id
+		      ,C.stakrm_nm
+		      ,NVL(C.keep_booksf_cnt,'0') AS booksf_cnt
+		      ,C.remk
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT *
+		            FROM  TB_SRSTAKRM  
+		            WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		            <dynamic>        
+		                <isNotEmpty prepend="AND" property="stakrmNm">
+		                    STAKRM_NM LIKE #stakrmNm:VARCHAR# 
+		                </isNotEmpty>                
+		            </dynamic>
+		            ORDER BY STAKRM_ID DESC 
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 서가배치_서고/서가등록
+		: 서고 등록시 최종 서고 ID 를 조회한다.
+	 -->
+	<select id="findMaxStakrmId" parameterClass="string" resultClass="string">
+		SELECT 	MAX(STAKRM_ID) 
+		  FROM  TB_SRSTAKRM
+		 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</select>	
+	
+	<!-- 서가배치_서고/서가등록
+		: 서고를 등록한다.
+	-->
+	<insert id="createStakrm" parameterClass="rms.presv.booksf.domain.Booksf">
+		INSERT INTO TB_SRSTAKRM (
+			RECORD_CENTER_ID, STAKRM_ID, STAKRM_NM, KEEP_BOOKSF_CNT, REMK
+		) VALUES (
+			#recordCenterId:VARCHAR#, #createStakrmId:VARCHAR#, #createStakrmNm:VARCHAR#, #createBooksfCnt:INT#, #createStakrmRemk:VARCHAR#
+		)
+	</insert>
+	
+	<!-- 
+		서가배치_서고/서가등록
+		: 서고를 수정한다. 
+	-->
+	<update id="updateStakrm" parameterClass="rms.presv.booksf.domain.Booksf">
+	  	UPDATE TB_SRSTAKRM 
+	  	   SET STAKRM_NM 	= #createStakrmNm:VARCHAR#
+	  	     , REMK			= #createStakrmRemk:VARCHAR#	  	     
+		 WHERE STAKRM_ID 	= #createStakrmId:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</update>
+	
+	<!--  
+		서가배치_서고/서가등록
+		: 서고를 삭제한다.
+	-->
+	<delete id="deleteStakrm" parameterClass="rms.presv.booksf.domain.Booksf">
+	  	DELETE FROM TB_SRSTAKRM
+		 WHERE STAKRM_ID 		= #stakrmId:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+	</delete>
+	
+	<!-- 
+		서가배치_서고/서가등록
+		: 서고 리스트를 조회한다. 
+	-->
+	<resultMap id="findStakrmIdList-result" class="rms.presv.booksf.domain.Booksf" >
+		<result property="stakrmId" column="STAKRM_ID"/>
+		<result property="stakrmNm" column="STAKRM_NM"/>
+		<result property="booksfCnt" column="BOOKSF_CNT"/>
+		<result property="remk" column="STAKRM_REMK"/>
+	</resultMap>	
+	<select id="findStakrmIdList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findStakrmIdList-result">
+		SELECT 	STAKRM_ID AS STAKRM_ID, 
+	   		   	STAKRM_NM AS STAKRM_NM, 
+	   			NVL(KEEP_BOOKSF_CNT,'0') BOOKSF_CNT,
+	   			(REMK) AS STAKRM_REMK 
+	   	  FROM  TB_SRSTAKRM  
+	   	 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR# 
+		<dynamic>		
+			<isNotEmpty prepend="AND" property="stakrmNm">
+				STAKRM_NM LIKE #stakrmNm:VARCHAR# 
+			</isNotEmpty>				
+		</dynamic>
+		ORDER BY STAKRM_ID ASC 
+	</select>
+	
+	<!-- 
+		서가배치_서고/서가등록
+		: 서가 번호 최고 값을 얻는다. 
+	-->
+	<select id="findMaxBooksfId" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="string">
+		SELECT 	MAX(BOOKSF_ID) 
+		  FROM  TB_SRBOOKSF 	
+		 WHERE  RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND  STAKRM_ID 		 = #stakrmId:VARCHAR#
+	</select>
+	
+	<!--  
+		서가배치_서고/서가등록
+		: 서가를 등록한다.
+	-->
+	<insert id="createBooksf" parameterClass="rms.presv.booksf.domain.Booksf">
+		INSERT INTO TB_SRBOOKSF (
+			RECORD_CENTER_ID, BOOKSF_ID, BOOKSF_NM,  STAKRM_ID, STAKRM_SNO
+		   ,SHELF_C_CNT, SHELF_R_CNT, MAX_PRESV_BOX_CNT, REMK
+		) VALUES (
+			#recordCenterId:VARCHAR#, #createBooksfId:VARCHAR#, #createBooksfNm:VARCHAR#, #createStakrmId:VARCHAR#, (SELECT (COUNT(BOOKSF_ID)+1) AS STAKRMSEQ FROM TB_SRBOOKSF WHERE STAKRM_ID=#createStakrmId:VARCHAR#)
+		   ,#createShelfCcnt:NUMBER#, #createShelfRcnt:NUMBER#, #createMaxPresvBoxCnt:NUMBER#, #createBooksfRemk:VARCHAR#)
+	</insert>
+	
+	<!-- 
+		서가배치_서고/서가등록
+		: 서가등록후 서고정보에 서가수량을 갱신한다.
+	 -->
+	<update id="updateStakrmBooksfCnt" parameterClass="rms.presv.booksf.domain.Booksf">
+	  	UPDATE TB_SRSTAKRM 
+	  	   SET KEEP_BOOKSF_CNT=(SELECT COUNT(STAKRM_ID) FROM TB_SRBOOKSF WHERE STAKRM_ID=#createStakrmId:VARCHAR#)	  	     
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND STAKRM_ID = #createStakrmId:VARCHAR#
+	</update>
+	
+	<!-- 서가를 수정한다. -->
+	<update id="updateBooksf" parameterClass="rms.presv.booksf.domain.Booksf">
+	  	UPDATE TB_SRBOOKSF  
+	  	   SET BOOKSF_NM = #booksfNm:VARCHAR# 
+	  	   	 , REMK	= #remk:VARCHAR# 
+	  	   	 , SHELF_C_CNT = #shelfCcnt:NUMBER# 
+	  	   	 , SHELF_R_CNT = #shelfRcnt:NUMBER# 
+	  	   	 , MAX_PRESV_BOX_CNT = #maxPresvBoxCnt:NUMBER#  
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	 	   AND STAKRM_ID = #stakrmId:VARCHAR#	
+	 	   AND BOOKSF_ID = #booksfId:VARCHAR#
+	</update>
+	
+	<!-- 
+		서가배치_서고/서가등록
+		: 선택한 서가를 삭제한다.
+	 -->
+	<delete id="deleteBooksf" parameterClass="rms.presv.booksf.domain.Booksf">
+		DELETE FROM TB_SRBOOKSF
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND STAKRM_ID = #stakrmId:VARCHAR#
+		AND BOOKSF_ID = #booksfId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		서가배치_서고/서가등록
+		: 서가 번호 서가 정보를 얻는다. 
+	-->
+	<resultMap id="findBooksInfo-result" class="rms.presv.booksf.domain.Booksf" >
+		<result property="booksfId" 		column="BOOKSF_ID"			/>
+		<result property="booksfNm" 		column="BOOKSF_NM"			/>
+		<result property="remk" 			column="REMK"				/>
+		<result property="shelfCcnt" 		column="SHELF_C_CNT"		/>
+		<result property="shelfRcnt" 		column="SHELF_R_CNT"		/>
+		<result property="maxPresvBoxCnt" 	column="MAX_PRESV_BOX_CNT"	/>
+		<result property="stakrmId" 		column="STAKRM_ID"			/>
+		<result property="stakrmNm" 		column="STAKRM_NM"			/>		
+		<result property="keepPresvBoxCnt" 	column="KEEP_PRESV_BOX_CNT"	/>				
+	</resultMap>
+	<select id="findBooksInfo" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksInfo-result">
+		SELECT 	BOOKSF_ID AS BOOKSF_ID, 
+	   			BOOKSF_NM AS BOOKSF_NM, 
+	   			(REMK) AS REMK, 
+	   			NVL(SHELF_C_CNT,'0') SHELF_C_CNT, 
+	   			NVL(SHELF_R_CNT, '0') SHELF_R_CNT, 
+	   			NVL(MAX_PRESV_BOX_CNT, '0') AS MAX_PRESV_BOX_CNT, 
+	   			STAKRM_ID AS STAKRM_ID, 
+	   			(SELECT STAKRM_NM FROM TB_SRSTAKRM WHERE STAKRM_ID = #stakrmId:VARCHAR# AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) AS STAKRM_NM, 
+	   			NVL(KEEP_PRESV_BOX_CNT, '0') AS KEEP_PRESV_BOX_CNT
+		  FROM TB_SRBOOKSF     
+    	 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND STAKRM_ID 		= #stakrmId:VARCHAR#
+		   AND BOOKSF_ID 		= #booksfId:VARCHAR#
+	</select>
+	
+	
+	<!-- 
+		서가배치_서가배치 
+		: 서가배치서 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfArngPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="booksfArngId" 		column="BOOKSF_ARNG_ID"/>		<!-- 배치서번호 -->
+		<result property="planYmd" 				column="PLAN_YMD"/>				<!-- 계획일자 -->
+		<result property="arngYmd"				column="ARNG_YMD"/>				<!-- 배치일자 -->
+		<result property="workUserNm"			column="WORK_USER_NM"/>			<!-- 담당자 -->	
+		<result property="workUserId"			column="WORK_USER_ID"/>			<!-- 담당자 -->	
+		<result property="pageTotal"			column="PAGE_TOTAL"/>			<!-- 기록물철수 -->
+		<result property="finFlag"				column="FIN_FLAG"/>				<!-- 상태 -->
+		<result property="finFlagNm"			column="FIN_FLAG_NM"/>			<!-- 상태 -->
+	</resultMap>
+	<select id="countBooksfArngPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM  TB_SRBOOKSFARNG A                   
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="finFlag">
+                A.FIN_FLAG = #finFlag:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfArngId">
+                A.BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="planYmd">
+                A.PLAN_YMD = #planYmd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="workUserNm">
+                A.WORK_USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND USER_NM LIKE #workUserNm:VARCHAR#)
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findBooksfArngPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngPagedList-result">
+		SELECT D.booksf_arng_id
+		      ,D.plan_ymd
+		      ,D.arng_ymd
+		      ,D.work_user_id
+		      ,(SELECT B.user_nm FROM TB_STUSER B WHERE B.record_center_id=D.record_center_id AND B.user_id=D.work_user_id) AS work_user_nm
+		      ,(SELECT COUNT(1) FROM TB_SRBOOKSFARNGDETL C WHERE C.record_center_id=D.record_center_id AND C.booksf_arng_id=D.booksf_arng_id) AS page_total
+		      ,D.fin_flag
+		      ,DECODE(D.fin_flag, '0', '미배치', '1', '배치','') AS fin_flag_nm
+		FROM (
+		    SELECT C.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,B.*
+		        FROM (
+		            SELECT *
+		            FROM  TB_SRBOOKSFARNG A                   
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="finFlag">
+		                    A.FIN_FLAG = #finFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfArngId">
+		                    A.BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="planYmd">
+		                    A.PLAN_YMD = #planYmd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="workUserNm">
+		                    A.WORK_USER_ID IN (SELECT USER_ID FROM TB_STUSER WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR# AND USER_NM LIKE #workUserNm:VARCHAR#)
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY A.BOOKSF_ARNG_ID
+		        ) B
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) C
+		    WHERE C.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) D
+		ORDER BY D.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서가배치 
+		: 서가배치서 작성 및 수정시 임시테이블의 기록물철 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfArngTempPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo" 			column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="pageTotal" 			column="PAGE_TOTAL"/>			<!-- 총페이지 -->	
+		<result property="arngInfo" 			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+	</resultMap>
+	<select id="countBooksfArngTempPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_ZZREQLISTTEMP A, TB_RDFOLDER B
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND   A.USER_ID = #userId:VARCHAR#
+        AND   A.REMK = 'BOOKSFARNG'
+        AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+        AND   B.FOLDER_ID = A.TRGT_ID
+	</select>
+	<select id="findBooksfArngTempPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngTempPagedList-result">
+		SELECT E.folder_id
+		        ,(SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_nm
+		        ,(SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_abbr_nm
+		        ,E.title
+		        ,E.creat_yyyy
+		        ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		        ,E.stakrm_mng_no
+		        ,(SELECT SUM(D.record_page_cnt) FROM TB_RDRECORD D WHERE D.record_center_id=E.record_center_id AND D.FOLDER_ID=E.folder_id) AS page_total
+		        ,E.arng_info
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT B.RECORD_CENTER_ID, B.FOLDER_ID, B.ORG_CD, B.TITLE, B.CREAT_YYYY
+		                    , B.PRESV_TERM_CD, B.STAKRM_MNG_NO, A.ARNG_INFO
+		            FROM TB_ZZREQLISTTEMP A, TB_RDFOLDER B
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND   A.USER_ID = #userId:VARCHAR#
+		            AND   A.REMK = 'BOOKSFARNG'
+		            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND   B.FOLDER_ID = A.TRGT_ID
+		            ORDER BY B.RECORD_CENTER_ID, B.TITLE
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 작성 및 수정 전 임시 테이블을 삭제한다.
+	 -->
+	<delete id="deleteBooksfTemp" parameterClass="rms.presv.booksf.domain.Booksf">
+		DELETE FROM TB_ZZREQLISTTEMP
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<isNotEmpty prepend="AND" property="trgtId">
+			TRGT_ID = #trgtId:VARCHAR#
+		</isNotEmpty>
+		AND REMK = 'BOOKSFARNG'
+		AND USER_ID = #userId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		서가배치_서가배치 
+		: 서가배치서 작성 기록물철 추가 팝업 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfArngFolderPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo" 			column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="pageTotal" 			column="PAGE_TOTAL"/>			<!-- 총페이지 -->
+	</resultMap>
+	<select id="countBooksfArngFolderPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDFOLDER A
+        WHERE NVL(BOOKSF_ARNG_FLAG,'0') = '0'
+        AND A.ERECORD_FLAG IN ('2','3')
+        AND A.FOLDER_KEEP_STATE_CD IN ('01','04')                
+        AND A.STAKRM_MNG_NO IS NOT NULL
+        AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND NOT EXISTS (SELECT E.TRGT_ID 
+                                    FROM TB_ZZREQLISTTEMP E
+                                    WHERE E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                                    AND E.USER_ID = #userId:VARCHAR#
+                                    AND E.TRGT_ID = A.FOLDER_ID
+                                    AND E.REMK='BOOKSFARNG' 
+                                    AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID) 
+                                    AND NOT EXISTS (SELECT F.FOLDER_ID
+                                                                FROM TB_SRBOOKSFARNGDETL F
+                                                                WHERE F.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+                                                                AND F.FOLDER_ID=A.FOLDER_ID
+                                                                AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID)
+        <dynamic prepend="AND">
+           <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="creatUserOrgCd">
+                A.CREAT_USER_ORG_CD = #creatUserOrgCd:VARCHAR#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="creatYyyyF">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>    
+            <isNotEmpty prepend="AND" property="presvTermCd">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>
+        </dynamic> 
+	</select>
+	<select id="findBooksfArngFolderPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngFolderPagedList-result">
+		SELECT F.folder_id
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id = F.record_center_id AND Z.org_cd = F.org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id = F.record_center_id AND Z.org_cd = F.org_cd) AS org_abbr_nm
+		      ,F.title
+		      ,F.creat_yyyy
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = F.presv_term_cd) AS presv_term_nm
+		      ,F.stakrm_mng_no
+		      ,(SELECT SUM(Z.record_page_cnt) FROM TB_RDRECORD Z WHERE Z.record_center_id = F.record_center_id AND Z.folder_id = F.folder_id) AS page_total
+		FROM (
+		    SELECT E.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,D.*
+		        FROM (
+		            SELECT A.*
+		            FROM TB_RDFOLDER A
+		            WHERE NVL(BOOKSF_ARNG_FLAG,'0') = '0'
+		            AND A.ERECORD_FLAG IN ('2','3')
+		            AND A.FOLDER_KEEP_STATE_CD IN ('01','04')                
+		            AND A.STAKRM_MNG_NO IS NOT NULL
+		            AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND NOT EXISTS (SELECT E.TRGT_ID 
+		                                        FROM TB_ZZREQLISTTEMP E
+		                                        WHERE E.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                                        AND E.USER_ID = #userId:VARCHAR#
+		                                        AND E.TRGT_ID = A.FOLDER_ID
+		                                        AND E.REMK='BOOKSFARNG' 
+		                                        AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID) 
+		                                        AND NOT EXISTS (SELECT F.FOLDER_ID
+		                                                                    FROM TB_SRBOOKSFARNGDETL F
+		                                                                    WHERE F.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		                                                                    AND F.FOLDER_ID=A.FOLDER_ID
+		                                                                    AND F.RECORD_CENTER_ID = A.RECORD_CENTER_ID)
+		            <dynamic prepend="AND">
+		               <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		               </isNotEmpty>
+		               <isNotEmpty prepend="AND" property="creatUserOrgCd">
+           			   	    A.CREAT_USER_ORG_CD = #creatUserOrgCd:VARCHAR#
+           			   </isNotEmpty>
+		               <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>    
+		                <isNotEmpty prepend="AND" property="presvTermCd">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		               </isNotEmpty>
+		               <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>
+		            </dynamic> 
+		            ORDER BY A.STAKRM_MNG_NO
+		        ) D
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) E
+		    WHERE E.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) F
+		ORDER BY F.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 작성시 서가배치대상 기록물철을 임시테이블에 추가한다. 
+	--> 
+	<insert id="createBooksfTemp" parameterClass="rms.presv.booksf.domain.Booksf">
+		INSERT INTO TB_ZZREQLISTTEMP (
+			RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK
+		) VALUES (
+			#recordCenterId#, #userId#, #trgtId:folderId#,'BOOKSFARNG'
+		)
+	</insert>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 작성시 기록물철의 서가배치정보를 임시테이블에 갱신한다.
+	-->
+	<update id="updateBooksfTemp" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_ZZREQLISTTEMP 
+		   SET ARNG_INFO 		= #arngInfo:VARCHAR#
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND TRGT_ID 	= #trgtId:VARCHAR#
+		   AND USER_ID 	= #userId:VARCHAR#
+		   AND REMK		= 'BOOKSFARNG'
+	</update>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 작성완료시 서가배치 일련번호를 조회한다. 
+	-->
+	<resultMap id="booksfArngSno-result"		class="rms.presv.booksf.domain.Booksf" >
+		<result property="sno" 					column="SNO"/>					<!-- 순번 -->
+	</resultMap>
+	<select id="findBooksfArngSno" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="booksfArngSno-result">
+		SELECT NVL(MAX(Sno),0) + 1 SNO
+		  FROM TB_SRBOOKSFARNG
+		 WHERE ARNG_YYYY = #arngYyyy:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_서가배치
+		" 서가배치 작성완료를 한다.
+	-->
+	<insert id="createBooksfArng" parameterClass="rms.presv.booksf.domain.Booksf">
+		INSERT INTO TB_SRBOOKSFARNG (
+			RECORD_CENTER_ID, BOOKSF_ARNG_ID, ARNG_YYYY, SNO, WORK_USER_ID, WORK_DTIME, PLAN_YMD, FIN_FLAG
+		) VALUES (
+			<!--cubrid #recordCenterId:VARCHAR#, #booksfArngId:VARCHAR#, #arngYyyy:VARCHAR#, #sno:NUMBER#, #workUserId:VARCHAR#, (Select to_char(sysdate,'YYYYMMDDHHMMSS') from dual), #planYmd:VARCHAR#, '0'-->
+			#recordCenterId:VARCHAR#, #booksfArngId:VARCHAR#, #arngYyyy:VARCHAR#, #sno:NUMBER#, #workUserId:VARCHAR#, (Select to_char(sys_datetime,'YYYYMMDDHHMMSS') from dual), #planYmd:VARCHAR#, '0'
+		)
+	</insert>
+
+	<!-- 
+		서가배치_서가배치
+		: 서가배치 작성완료시 임시테이블의 철목록을 조회한다.
+	-->
+	<resultMap id="findBooksfArngWriteList-result"		class="rms.presv.booksf.domain.Booksf" >
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 				column="TITLE"/>				<!-- 철제목 -->
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>		<!-- 보존기간 -->
+		<result property="stakrmMngNo" 			column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="pageTotal" 			column="PAGE_TOTAL"/>			<!-- 총페이지 -->	
+		<result property="arngInfo" 			column="ARNG_INFO"/>			<!-- 배치정보 -->			
+	</resultMap>
+	<select id="findBooksfArngWriteList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngWriteList-result">
+		SELECT B.FOLDER_ID
+			, (SELECT C.ORG_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND C.ORG_CD=B.ORG_CD) ORG_NM
+			, (SELECT C.ORG_ABBR_NM FROM TB_STORG C WHERE C.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND C.ORG_CD=B.ORG_CD) ORG_ABBR_NM
+			, B.TITLE
+			, B.CREAT_YYYY
+			, (SELECT Z.COM_CD_NM FROM TB_ZZCOMCD Z WHERE Z.COM_TYPE_CD='RD07' AND Z.COM_CD=B.PRESV_TERM_CD) PRESV_TERM_NM
+			, B.STAKRM_MNG_NO
+			, (SELECT SUM(D.RECORD_PAGE_CNT) FROM TB_RDRECORD D WHERE D.RECORD_CENTER_ID=B.RECORD_CENTER_ID AND D.FOLDER_ID=B.FOLDER_ID) PAGE_TOTAL
+			, A.ARNG_INFO
+		FROM TB_ZZREQLISTTEMP A
+			, TB_RDFOLDER B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   A.USER_ID = #userId:VARCHAR#
+		AND   A.REMK = 'BOOKSFARNG'
+		AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		AND   B.FOLDER_ID = A.TRGT_ID
+		ORDER BY B.RECORD_CENTER_ID, B.TITLE
+	</select>
+
+	<!-- 
+		서가배치_서가배치
+		: 서가배치 작성완료시 서가배치 상세목록을 등록한다.
+	 -->
+	<insert id="createBooksfArngDetl" parameterClass="rms.presv.booksf.domain.Booksf">
+		INSERT INTO TB_SRBOOKSFARNGDETL (
+			RECORD_CENTER_ID, BOOKSF_ARNG_ID, FOLDER_ID, STAKRM_ID, BOOKSF_ID, BOOKSF_SHELF_CNO, BOOKSF_SHELF_RNO
+		) VALUES (
+			#recordCenterId:VARCHAR#, #booksfArngId:VARCHAR#, #folderId:VARCHAR#, #stakrmId:VARCHAR#, #booksfId:VARCHAR#, #booksfShelfCno:VARCHAR#, #booksfShelfRno:VARCHAR#
+		)
+	</insert>
+
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 수정시 임시테이블에 서가배치서 철목록을 등록한다.
+	 -->
+	<insert id="createBooksfArngTemp" parameterClass="rms.presv.booksf.domain.Booksf">
+		INSERT INTO TB_ZZREQLISTTEMP (RECORD_CENTER_ID, USER_ID, TRGT_ID, REMK,ARNG_INFO)
+		(
+			SELECT #recordCenterId# RECORD_CENTER_ID, #userId# USER_ID, B.FOLDER_ID,'BOOKSFARNG', (B.STAKRM_ID||'-'||B.BOOKSF_ID||'-'||B.BOOKSF_SHELF_CNO||'-'||B.BOOKSF_SHELF_RNO) ARNG_INFO
+	 		FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B
+			WHERE A.BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+	  		AND A.BOOKSF_ARNG_ID = B.BOOKSF_ARNG_ID
+	  		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	  		AND A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		)
+	</insert>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 수정시 작성완료한다.
+	 -->
+	<update id="updateBooksfArng" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_SRBOOKSFARNG
+		   SET ARNG_YYYY = #arngYyyy:VARCHAR#
+		      ,WORK_USER_ID = #workUserId:VARCHAR#
+		      <!--cubrid ,WORK_DTIME = (Select to_char(sysdate,'YYYYMMDDHHMMSS') from dual)-->
+		      ,WORK_DTIME = (Select to_char(sys_datetime,'YYYYMMDDHHMMSS') from dual)
+		      ,PLAN_YMD = #planYmd:VARCHAR#
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		  AND BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+	</update>
+
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 수정시 상세목록을 삭제한다.
+	 -->
+	<delete id="deleteBooksfArng" parameterClass="rms.presv.booksf.domain.Booksf">
+		DELETE FROM TB_SRBOOKSFARNG 
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치서 수정시 상세목록을 삭제한다.
+	 -->
+	<delete id="deleteBooksfArngDetl" parameterClass="rms.presv.booksf.domain.Booksf">
+		DELETE FROM TB_SRBOOKSFARNGDETL 
+		WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+	</delete>
+	
+	<!-- 
+		서가배치_서가배치
+		: UPDATE(배치완료) 
+	-->
+	<update id="updateBooksfArngFin" parameterClass="rms.presv.booksf.domain.Booksf">
+	  	UPDATE TB_SRBOOKSFARNG 
+	  	SET 	ARNG_YMD     = #arngYmd:VARCHAR#
+	  	       ,WORK_USER_ID = #workUserId:VARCHAR#
+	  	       ,FIN_FLAG     = '1'     
+		WHERE 	BOOKSF_ARNG_ID 	 = #booksfArngId:VARCHAR#
+		AND 	RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+		
+	<!-- 
+		서가배치_서가배치
+		: UPDATE(배치완료(기록물철)) 
+	-->
+	<update id="updateBooksfArngFolder" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_RDFOLDER
+		   SET BOOKSF_ARNG_FLAG = '1'
+		 WHERE FOLDER_ID IN (SELECT B.FOLDER_ID
+						     FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B
+							 WHERE 	A.RECORD_CENTER_ID 	= #recordCenterId:VARCHAR#
+							 AND 	A.BOOKSF_ARNG_ID 	= #booksfArngId:VARCHAR#
+							 AND 	A.BOOKSF_ARNG_ID 	= B.BOOKSF_ARNG_ID
+							 AND 	A.RECORD_CENTER_ID 	= B.RECORD_CENTER_ID)
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가존재여부 확인  
+	-->
+	<resultMap id="findIsBooksf-result" 		class="rms.presv.booksf.domain.Booksf" >
+		<result property="shelfCcnt"			column="SHELF_C_CNT"/>		
+		<result property="shelfRcnt"			column="SHELF_R_CNT"/>				
+	</resultMap>
+	<select id="findIsBooksf" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findIsBooksf-result">
+	    SELECT SHELF_C_CNT,SHELF_R_CNT
+	    FROM TB_SRBOOKSF
+	    WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	    AND STAKRM_ID=#stakrmId:VARCHAR#
+	    AND BOOKSF_ID=#booksfId:VARCHAR# 	    
+	</select>	
+	
+	<!-- 
+		서가배치_서가배치
+		: 서가배치 바코드등록:서고관리번호의 철목록 
+	-->
+	<select id="countBooksfArngInfoFolder" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="int">
+		SELECT COUNT(1) 
+		  FROM TB_RDFOLDER
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND FOLDER_KEEP_STATE_CD IN ('01','04')
+		   AND REPLACE(STAKRM_MNG_NO,'-','') = #stakrmMngNo:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_서가배치
+		: 서고관리번호의 철목록조회 
+	-->
+	<resultMap id="findBooksfArngInfoFolder-result"		class="rms.presv.booksf.domain.Booksf" >
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 철ID -->
+		<result property="booksfArngFlag"		column="BOOKSF_ARNG_FLAG"/>		<!-- 서가배치 -->
+	</resultMap>
+	<select id="findBooksfArngInfoFolder" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngInfoFolder-result">
+		SELECT FOLDER_ID, BOOKSF_ARNG_FLAG
+		  FROM TB_RDFOLDER
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND REPLACE(STAKRM_MNG_NO,'-','') = #stakrmMngNo:VARCHAR#
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 
+		서가배치_서가배치 (인쇄)
+		: 서가배치서 헤더 정보를 조회한다.
+	 -->
+	<resultMap id="findPrintDocBooksfArngHead-result" 		class="rms.presv.booksf.domain.Booksf" >
+		<result property="arngYmd"				column="arng_ymd"/>				<!-- 배치일자 -->
+		<result property="workUserNm"			column="work_user_nm"/>			<!-- 담당자 -->	
+	</resultMap>	
+	<select id="findPrintDocBooksfArngHead" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocBooksfArngHead-result">
+		SELECT TO_CHAR(TO_DATE(A.arng_ymd,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS arng_ymd
+			, (SELECT B.user_nm FROM TB_STUSER B WHERE B.user_id=A.work_user_id) AS work_user_nm
+		FROM  TB_SRBOOKSFARNG A
+		WHERE A.record_center_id = #recordCenterId:VARCHAR#
+		AND   A.booksf_arng_id = #booksfArngId:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_서가배치 (인쇄)
+		: 서가배치서 데이터 목록을 조회한다.
+	 -->
+	<resultMap id="findPrintDocBooksfArngDataList-result" 	class="rms.presv.booksf.domain.Booksf" >
+		<result property="stakrmId" 			column="stakrm_id"/>			<!-- 서고ID -->
+		<result property="booksfId" 			column="booksf_id"/>			<!-- 서가ID -->
+		<result property="stakrmMngNoF"			column="stakrm_mng_no_f"/>		<!-- 서고관리번호(From) -->
+		<result property="stakrmMngNoT"			column="stakrm_mng_no_t"/>		<!-- 서고관리번호(To) -->
+	</resultMap>	
+	<select id="findPrintDocBooksfArngDataList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocBooksfArngDataList-result">
+		SELECT A.stakrm_id
+			, A.booksf_id	 
+			, MIN(B.stakrm_mng_no) AS stakrm_mng_no_f
+			, MAX(B.stakrm_mng_no) AS stakrm_mng_no_t
+		FROM  TB_SRBOOKSFARNGDETL A
+			, TB_RDFOLDER B
+		WHERE A.BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+		AND   A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND   A.RECORD_CENTER_ID = B.RECORD_CENTER_ID
+		AND   A.FOLDER_ID = B.FOLDER_ID
+		GROUP BY A.STAKRM_ID, A.BOOKSF_ID
+		ORDER BY A.STAKRM_ID, A.BOOKSF_ID
+	</select>
+	
+	<!-- 
+		서가배치_서가배치(재배치) 
+		: 기록물철 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfArngRePagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="recordCenterId"		column="RECORD_CENTER_ID"/>		<!-- 기록관ID -->
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 				column="TITLE"/>				<!-- 철제목 -->
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>		<!-- 보존기간 -->		
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="stakrmMngNo" 			column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="pageTotal"			column="PAGE_TOTAL"/>			<!-- 총페이지 -->
+		<result property="arngInfo" 			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+		<result property="booksfArngId" 		column="BOOKSF_ARNG_ID"/>		<!-- 배치서ID -->	
+		<result property="disuDivCd" 			column="DISU_DIV_CD_NM"/>		<!-- 폐기평가의견 -->
+		<result property="booksfArngFlag" 		column="BOOKSF_ARNG_FLAG"/>		<!-- 서가배치여부 -->
+	</resultMap>
+	<select id="countBooksfArngRePagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')
+        AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')
+        AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+        AND   B.FOLDER_ID = A.FOLDER_ID
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>
+           <isNotEmpty prepend="AND" property="creatYyyyF">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="presvTermCd">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="stakrmMngNo">
+                REPLACE(A.STAKRM_MNG_NO, '-', '') = REPLACE(#stakrmMngNo:VARCHAR#, '-', '')
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="stakrmId">
+                    B.STAKRM_ID = #stakrmId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfId">
+                    B.BOOKSF_ID = #booksfId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="lastEvalYyyy">  <!-- 폐기평가연도, 폐기평가의견 조회 조건 추가 -->
+                    A.LAST_EVAL_YYYY = #lastEvalYyyy:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="disuDivCd">
+                    A.DISU_DIV_CD = #disuDivCd:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findBooksfArngRePagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngRePagedList-result">
+		SELECT E.record_center_id
+		      ,E.folder_id
+		      ,E.org_cd
+		      ,(SELECT C.org_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_nm
+		      ,(SELECT C.org_abbr_nm FROM TB_STORG C WHERE C.record_center_id=E.record_center_id AND C.org_cd=E.org_cd) AS org_abbr_nm
+		      ,E.title
+		      ,E.creat_yyyy
+		      ,E.presv_term_cd
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		      ,E.stakrm_mng_no
+		      ,(E.stakrm_id||'-'||E.booksf_id||'-'||E.booksf_shelf_cno||'-'||E.booksf_shelf_rno ) AS arng_info
+		      ,TO_CHAR(TO_NUMBER(E.record_tot_page_cnt)) AS page_total
+		      ,E.BOOKSF_ARNG_ID
+		      ,(CASE WHEN E.disu_div_cd='3' THEN '재책정' END) AS disu_div_cd_nm    <!-- 폐기평가의견 추가 20130821 -->
+		      ,(CASE WHEN E.booksf_arng_flag='1' THEN '배치'
+		             WHEN E.booksf_arng_flag='2' THEN '재배치'
+		        END) AS booksf_arng_flag         <!-- 서가배치여부 -->
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID, A.FOLDER_ID, A.ORG_CD, A.TITLE, A.CREAT_YYYY
+		                    , DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) PRESV_TERM_CD, A.STAKRM_MNG_NO, B.STAKRM_ID, B.BOOKSF_ID, B.BOOKSF_SHELF_CNO
+		                    , B.BOOKSF_SHELF_RNO, A.RECORD_TOT_PAGE_CNT, B.BOOKSF_ARNG_ID, A.DISU_DIV_CD, A.BOOKSF_ARNG_FLAG
+		            FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')
+		            AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')
+		            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND   B.FOLDER_ID = A.FOLDER_ID
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>
+		               <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+				        <isNotEmpty property="presvTermCd">
+					        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+					            A.PRESV_TERM_CD IN ('20','25')
+				            </isEqual>
+					        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				            </isNotEqual>		            
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="stakrmMngNo">
+		                    REPLACE(A.STAKRM_MNG_NO, '-', '') = REPLACE(#stakrmMngNo:VARCHAR#, '-', '')
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="stakrmId">
+		                        B.STAKRM_ID = #stakrmId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfId">
+		                        B.BOOKSF_ID = #booksfId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="lastEvalYyyy">  <!-- 폐기평가연도, 폐기평가의견 조회 조건 추가 -->
+		                        A.LAST_EVAL_YYYY = #lastEvalYyyy:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="disuDivCd">
+		                        A.DISU_DIV_CD = #disuDivCd:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY A.RECORD_CENTER_ID, B.STAKRM_ID, B.BOOKSF_ID, B.BOOKSF_SHELF_CNO, B.BOOKSF_SHELF_RNO, A.TITLE
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+	<!-- 
+		서가배치_서가배치(재배치) 
+		: 서고선택 팝업창의 서고 목록을 조회한다. 
+	 -->
+	<resultMap id="findBooksfStakrmPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="stakrmId" 			column="STAKRM_ID"/>
+		<result property="stakrmNm" 			column="STAKRM_NM"/>
+	</resultMap>
+	<select id="countBooksfStakrmPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM (
+            SELECT M.STAKRM_ID, M.STAKRM_NM
+                  FROM TB_SRSTAKRM M, TB_SRBOOKSF N
+            WHERE M.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+            <dynamic>
+            	<isNotEmpty prepend="AND" property="stakrmId">
+            		M.STAKRM_ID = #stakrmId:VARCHAR#
+            	</isNotEmpty>
+            </dynamic>
+            AND M.RECORD_CENTER_ID = N.RECORD_CENTER_ID
+            AND M.STAKRM_ID = N.STAKRM_ID
+            GROUP BY M.STAKRM_ID, M.STAKRM_NM
+            ORDER BY M.STAKRM_ID
+        ) A
+	</select>
+	<select id="findBooksfStakrmPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfStakrmPagedList-result">
+		SELECT C.stakrm_id
+		        ,C.stakrm_nm
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT M.STAKRM_ID, M.STAKRM_NM
+                    FROM TB_SRSTAKRM M, TB_SRBOOKSF N
+                    WHERE M.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+                    <dynamic>
+		            	<isNotEmpty prepend="AND" property="stakrmId">
+		            		M.STAKRM_ID = #stakrmId:VARCHAR#
+		            	</isNotEmpty>
+		            </dynamic>
+                    AND M.RECORD_CENTER_ID = N.RECORD_CENTER_ID
+                    AND M.STAKRM_ID = N.STAKRM_ID
+                    GROUP BY M.STAKRM_ID, M.STAKRM_NM
+                    ORDER BY M.STAKRM_ID
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	<!-- 
+		서가배치_서가배치(재배치) 
+		: 서가선택 팝업창의 서가 목록을 조회한다.
+	 -->
+	<resultMap id="findBooksfStakrmBooksfPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="booksfId" 		column="BOOKSF_ID"/>
+		<result property="booksfNm" 		column="BOOKSF_NM"/>
+		<result property="shelfCcnt" 		column="SHELF_C_CNT"/>
+		<result property="shelfRcnt" 		column="SHELF_R_CNT"/>
+	</resultMap>
+	<select id="countBooksfStakrmBooksfPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRBOOKSF
+        WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND STAKRM_ID = #stakrmId:VARCHAR#
+	</select>
+	<select id="findBooksfStakrmBooksfPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfStakrmBooksfPagedList-result">
+		SELECT C.booksf_id
+		        ,C.booksf_nm
+		        ,C.shelf_c_cnt
+		        ,C.shelf_r_cnt
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,A.*
+		        FROM (
+		            SELECT *
+		            FROM TB_SRBOOKSF
+		            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND STAKRM_ID = #stakrmId:VARCHAR#
+		          	ORDER BY BOOKSF_ID
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) C
+		ORDER BY C.rnum
+	</select>
+
+	<!-- 
+		서가배치_서가배치(재배치)
+		: 서가배치서 상세목록에 서가 재배치를 한다. -->
+	<update id="updateBooksfArngReList" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_SRBOOKSFARNGDETL
+		   SET STAKRM_ID = #stakrmId:VARCHAR#
+		     , BOOKSF_ID = #booksfId:VARCHAR#
+		     , BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+		     , BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+		   AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!-- UPDATE(재배치완료(기록물철)) -->
+	<update id="updateBooksfArngReFolder" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_RDFOLDER
+		   SET BOOKSF_ARNG_FLAG = '2'     <!-- 재배치 -->
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		 AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!--
+		서가배치_서가배치(재배치)
+		: 이전 서가배치정보를 조회한다. 
+	-->
+	<resultMap id="findBooksfArngReBarcodeList-result"		class="rms.presv.booksf.domain.Booksf" >
+		<result property="recordCenterId"		column="RECORD_CENTER_ID"/>		<!-- 기록관ID -->
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="stakrmMngNo" 			column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="booksfArngFlag" 		column="BOOKSF_ARNG_FLAG"/>		<!-- 배치여부 -->
+		<result property="booksfArngId" 		column="BOOKSF_ARNG_ID"/>		<!-- 배치서ID -->
+		<result property="stakrmId"				column="STAKRM_ID"/>			<!-- 서고 -->
+		<result property="booksfId"				column="BOOKSF_ID"/>			<!-- 서가 -->
+		<result property="booksfShelfCno"		column="BOOKSF_SHELF_CNO"/>		<!-- 층 -->
+		<result property="booksfShelfRno"		column="BOOKSF_SHELF_RNO"/>		<!-- 열 -->
+	</resultMap>
+	<select id="findBooksfArngReBarcodeList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngReBarcodeList-result">
+		SELECT A.RECORD_CENTER_ID
+			, A.FOLDER_ID
+			<!-- 20150302 REPLACE 추가 이재용 -->
+			, REPLACE(A.STAKRM_MNG_NO,'-','') STAKRM_MNG_NO
+			, A.BOOKSF_ARNG_FLAG
+			, B.BOOKSF_ARNG_ID
+			, B.STAKRM_ID
+			, B.BOOKSF_ID
+			, B.BOOKSF_SHELF_CNO
+			, B.BOOKSF_SHELF_RNO
+		FROM  TB_RDFOLDER A
+			, TB_SRBOOKSFARNGDETL B
+		WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<iterate prepend="AND (REPLACE(A.STAKRM_MNG_NO,'-','') IN" property="stakrmList" open="(" close=")" conjunction=",">
+				#stakrmList[]:VARCHAR#)
+			</iterate>
+		</dynamic>
+		AND  A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)
+		AND  A.FOLDER_ID = B.FOLDER_ID(+)
+	</select>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 보존상자편성 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findPresvBoxTrgtPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="folderId" 				column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 					column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"				column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 					column="TITLE"/>				<!-- 철제목 -->
+		<result property="presvTermNm" 				column="PRESV_TERM_NM"/>		<!-- 보존기간 -->		
+		<result property="creatYyyy" 				column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="stakrmMngNo" 				column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="arngInfo" 				column="ARNG_INFO"/>			<!-- 배치정보 -->					
+		<result property="presvBoxId" 				column="PRESV_BOX_ID"/>			<!-- 보존상자ID -->			
+		<result property="boxId" 					column="BOX_ID"/>				<!-- 보존상자ID -->
+		<result property="disuDivCd" 				column="DISU_DIV_CD_NM"/>		<!-- 폐기평가의견 -->
+		<result property="booksfArngFlag" 			column="BOOKSF_ARNG_FLAG"/>		<!-- 서가배치여부 -->
+		<result property="presvBoxArngFlag" 		column="PRESV_BOX_ARNG_FLAG"/>	<!-- 보존상자편성여부 -->
+		<result property="orgPresvCreat" 			column="ORG_PRESV_CREAT"/>		<!-- 보존상자편성여부 -->
+	</resultMap>
+	<select id="countPresvBoxTrgtPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B
+        WHERE B.record_center_id = #recordCenterId:VARCHAR#
+        AND   B.stakrm_id = #stakrmId:VARCHAR#
+        AND   B.booksf_id = #booksfId:VARCHAR#
+        AND   B.booksf_shelf_cno = #booksfShelfCno:VARCHAR#
+        AND   B.booksf_shelf_rno = #booksfShelfRno:VARCHAR#
+        AND   A.record_center_id = B.record_center_id
+        AND   A.folder_id = B.folder_id
+        AND   A.folder_keep_state_cd IN ('01','04')
+        AND   A.booksf_arng_flag IN ('1', '2')
+        <dynamic prepend="AND">
+            <isEqual prepend="AND" property="presvBoxId" compareValue="0">      <!-- 미편성=0 -->
+                A.PRESV_BOX_ID IS NULL
+            </isEqual>
+            <isEqual prepend="AND" property="presvBoxId" compareValue="1">      <!-- 편성=1 -->
+                A.PRESV_BOX_ID IS NOT NULL
+            </isEqual>
+            <isEqual prepend="AND" property="disuDivCd" compareValue="3">          <!-- 폐기평가의견 = 3 : 보존기간재책정 -->
+                A.DISU_DIV_CD = '3'
+            </isEqual>
+            <isNotEmpty prepend="AND" property="lastEvalYyyy">   <!-- 폐기평가연도 조회 조건 추가 -->
+                A.LAST_EVAL_YYYY = #lastEvalYyyy:VARCHAR#
+            </isNotEmpty>
+        </dynamic>
+	</select>
+	<select id="findPresvBoxTrgtPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPresvBoxTrgtPagedList-result">
+		SELECT E.folder_id
+		      ,E.title
+		      ,E.creat_yyyy
+		      ,E.stakrm_mng_no
+		      ,E.presv_box_id
+		      ,(CASE WHEN LENGTH(E.presv_box_id)=15 THEN SUBSTR(E.presv_box_id,1,3)||'-'||SUBSTR(E.presv_box_id,4,3)||'-'||SUBSTR(E.presv_box_id,7,3)||'-'||SUBSTR(E.presv_box_id,10,3)||'-'||SUBSTR(E.presv_box_id,13,3)
+		             WHEN LENGTH(E.presv_box_id)=19 THEN SUBSTR(E.presv_box_id,1,7)||'-'||SUBSTR(E.presv_box_id,8,2)||'-'||SUBSTR(E.presv_box_id,10,4)||'-'||SUBSTR(E.presv_box_id,14,6)
+		             ELSE E.presv_box_id
+		        END) AS box_id
+		      ,(E.stakrm_id||'-'||E.booksf_id||'-'||E.booksf_shelf_cno||'-'||E.booksf_shelf_rno) AS arng_info
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		      ,(CASE WHEN E.disu_div_cd='3' THEN '재책정' END) AS disu_div_cd_nm    <!-- 폐기평가의견 추가 20130821 -->
+		      ,(CASE WHEN E.booksf_arng_flag='1' THEN '배치' WHEN E.booksf_arng_flag='2' THEN '재배치' END) AS booksf_arng_flag         <!-- 서가배치여부 -->
+		      ,(CASE WHEN E.presv_box_arng_flag='1' THEN '편성' WHEN E.presv_box_arng_flag='2' THEN '재편성' ELSE E.presv_box_arng_flag END) AS presv_box_arng_flag     <!-- 보존상자편성여부 -->
+		      ,E.org_cd || E.presv_term_cd || E.creat_yyyy AS org_presv_creat
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                ,C.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID, A.FOLDER_ID,A.TITLE,A.CREAT_YYYY,A.STAKRM_MNG_NO
+		                  ,A.PRESV_BOX_ID,B.STAKRM_ID,B.BOOKSF_ID,B.BOOKSF_SHELF_CNO,B.BOOKSF_SHELF_RNO
+		                  ,A.ORG_CD,A.PRESV_TERM_CD,A.DISU_DIV_CD,A.BOOKSF_ARNG_FLAG,A.PRESV_BOX_ARNG_FLAG
+		            FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B
+		            WHERE B.record_center_id = #recordCenterId:VARCHAR#
+		            AND   B.stakrm_id = #stakrmId:VARCHAR#
+		            AND   B.booksf_id = #booksfId:VARCHAR#
+		            AND   B.booksf_shelf_cno = #booksfShelfCno:VARCHAR#
+		            AND   B.booksf_shelf_rno = #booksfShelfRno:VARCHAR#
+		            AND   A.record_center_id = B.record_center_id
+		            AND   A.folder_id = B.folder_id
+		            AND   A.folder_keep_state_cd IN ('01','04')
+		            AND   A.booksf_arng_flag IN ('1', '2')
+		            <dynamic prepend="AND">
+		                <isEqual prepend="AND" property="presvBoxId" compareValue="0">      <!-- 미편성=0 -->
+		                    A.PRESV_BOX_ID IS NULL
+		                </isEqual>
+		                <isEqual prepend="AND" property="presvBoxId" compareValue="1">      <!-- 편성=1 -->
+		                    A.PRESV_BOX_ID IS NOT NULL
+		                </isEqual>
+		                <isEqual prepend="AND" property="disuDivCd" compareValue="3">          <!-- 폐기평가의견 = 3 : 보존기간재책정 -->
+		                    A.DISU_DIV_CD = '3'
+		                </isEqual>
+		                <isNotEmpty prepend="AND" property="lastEvalYyyy">   <!-- 폐기평가연도 조회 조건 추가 -->
+		                    A.LAST_EVAL_YYYY = #lastEvalYyyy:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+<!-- 		            ORDER BY A.STAKRM_MNG_NO -->
+		            ORDER BY A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||A.CLSS_ID||'-'||A.CREAT_YYYY||'-'||A.FOLDER_REG_SEQ||'-'||A.HO_NO
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 보존상자목록을 조회한다.
+	 -->
+	<resultMap id="findBooksfPresvBoxPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="presvBoxId" 			column="PRESV_BOX_ID"/>			<!-- 보존상자ID -->
+		<result property="boxId" 				column="BOX_ID"/>				<!-- 보존상자ID:순번부분 -->
+		<result property="useFlag" 				column="USE_FLAG"/>				<!-- 사용여부 -->
+		<result property="useFlagNm" 			column="USE_FLAG_NM"/>			<!--  사용여부명 -->
+	</resultMap>
+	<select id="countBooksfPresvBoxPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(*)
+        FROM TB_SRPRESVBOX
+        WHERE STAKRM_ID 	  = #stakrmId:VARCHAR#
+        AND BOOKSF_ID 		  = #booksfId:VARCHAR#
+        AND BOOKSF_SHELF_CNO  = #booksfShelfCno:VARCHAR#
+        AND BOOKSF_SHELF_RNO  = #booksfShelfRno:VARCHAR#
+        AND RECORD_CENTER_ID  = #recordCenterId:VARCHAR#
+        AND PRESV_BOX_ID_RULE = #presvBoxIdRule:VARCHAR#
+	</select>
+	<select id="findBooksfPresvBoxPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfPresvBoxPagedList-result">
+		SELECT E.*
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT presv_box_id
+		            	  ,use_flag
+					      ,DECODE(use_flag,'0','미사용','사용') AS use_flag_nm
+					      ,(CASE WHEN presv_box_id_rule = '2' THEN SUBSTR(presv_box_id, 14, 6) ELSE SUBSTR(presv_box_id, 13, 3) END) AS box_id
+					      ,presv_box_id_rule
+		            FROM TB_SRPRESVBOX
+		            WHERE RECORD_CENTER_ID  = #recordCenterId:VARCHAR#
+		            AND STAKRM_ID 	  		= #stakrmId:VARCHAR#
+		            AND BOOKSF_ID 		  	= #booksfId:VARCHAR#
+		            AND BOOKSF_SHELF_CNO  	= #booksfShelfCno:VARCHAR#
+		            AND BOOKSF_SHELF_RNO  	= #booksfShelfRno:VARCHAR#
+		            AND PRESV_BOX_ID_RULE 	= #presvBoxIdRule:VARCHAR#
+		            <isEqual prepend="AND" property="presvBoxIdRule" compareValue="2">
+		            	PRESV_BOX_ID LIKE #presvBoxId:VARCHAR#
+		            </isEqual>
+		            ORDER BY USE_FLAG DESC, BOX_ID
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    )D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 보존상자를 추가한다.
+	 -->
+	<insert id="createPresvBox" parameterClass="rms.presv.booksf.domain.Booksf">
+	    <isEqual property="presvBoxIdRule" compareValue="1">   <!-- 보존상자번호부여규칙이 서고+서가+층+열+연번 -->
+			INSERT INTO TB_SRPRESVBOX (
+				RECORD_CENTER_ID
+		  	   ,PRESV_BOX_ID
+		  	   ,STAKRM_ID, BOOKSF_ID
+		  	   ,BOOKSF_SHELF_CNO
+		  	   ,BOOKSF_SHELF_RNO
+		  	   ,SHELF_R_SNO
+		  	   ,ARNG_FOLDER_CNT
+		  	   ,USE_FLAG
+		  	   ,PRESV_BOX_ID_RULE
+		  	   ,WORK_USER_ID
+			) VALUES (
+				#recordCenterId#
+		  	   ,(SELECT #stakrmId:VARCHAR#||#booksfId:VARCHAR#||#booksfShelfCno:VARCHAR#||#booksfShelfRno:VARCHAR#||TRIM(TO_CHAR(NVL(MAX(SHELF_R_SNO),0) + 1,'000')) 
+	 		 	 FROM TB_SRPRESVBOX
+	             WHERE STAKRM_ID = #stakrmId:VARCHAR#
+			   	 AND BOOKSF_ID = #booksfId:VARCHAR#
+			     AND BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+			   	 AND BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+			   	 AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   	 AND PRESV_BOX_ID_RULE = #presvBoxIdRule:VARCHAR#)
+		  	   ,#stakrmId:VARCHAR#
+		  	   ,#booksfId:VARCHAR#
+		  	   ,#booksfShelfCno:VARCHAR#
+		  	   ,#booksfShelfRno:VARCHAR#
+		  	   ,(SELECT NVL(MAX(SHELF_R_SNO),0) + 1 
+	 			 FROM TB_SRPRESVBOX
+	     		 WHERE STAKRM_ID = #stakrmId:VARCHAR#
+			   	 AND BOOKSF_ID = #booksfId:VARCHAR#
+			   	 AND BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+			   	 AND BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+			   	 AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   	 AND PRESV_BOX_ID_RULE = #presvBoxIdRule:VARCHAR#)
+		  	   ,0
+		  	   ,'0'
+		  	   ,#presvBoxIdRule:VARCHAR#
+		  	   ,#workUserId:VARCHR#
+			)
+	  	</isEqual>
+	  	<isEqual property="presvBoxIdRule" compareValue="2">    <!-- 보존상자번호부여규칙이 처리과코드+보존기간+생산연도+연번 -->
+		  	INSERT INTO TB_SRPRESVBOX (
+		  		RECORD_CENTER_ID
+		  	   ,PRESV_BOX_ID
+		  	   ,STAKRM_ID
+		  	   ,BOOKSF_ID
+		  	   ,BOOKSF_SHELF_CNO
+		  	   ,BOOKSF_SHELF_RNO
+		  	   ,PRESV_BOX_SNO
+		  	   ,ARNG_FOLDER_CNT
+		  	   ,USE_FLAG
+		  	   ,PRESV_BOX_ID_RULE
+		  	   ,WORK_USER_ID
+			) VALUES (
+				#recordCenterId#
+		  	   ,(SELECT #orgCd:VARCHAR#||#presvTermCd:VARCHAR#||#creatYyyy:VARCHAR#||TRIM(TO_CHAR(NVL(MAX(PRESV_BOX_SNO),0) + 1,'000000'))
+	 		 	 FROM TB_SRPRESVBOX
+	             WHERE SUBSTR(PRESV_BOX_ID, 1, 7) = #orgCd:VARCHAR#
+			     AND SUBSTR(PRESV_BOX_ID, 8, 2) = #presvTermCd:VARCHAR#
+			   	 AND SUBSTR(PRESV_BOX_ID, 10, 4) = #creatYyyy:VARCHAR#
+			   	 AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   	 AND PRESV_BOX_ID_RULE = #presvBoxIdRule:VARCHAR#)
+		  	   ,#stakrmId#
+		  	   ,#booksfId#
+		  	   ,#booksfShelfCno#
+		  	   ,#booksfShelfRno#
+		  	   ,(SELECT NVL(MAX(PRESV_BOX_SNO),0) + 1
+	 			 FROM TB_SRPRESVBOX
+	             WHERE SUBSTR(PRESV_BOX_ID, 1, 7) = #orgCd:VARCHAR#
+			     AND SUBSTR(PRESV_BOX_ID, 8, 2) = #presvTermCd:VARCHAR#
+			   	 AND SUBSTR(PRESV_BOX_ID, 10, 4) = #creatYyyy:VARCHAR#
+			   	 AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   	 AND PRESV_BOX_ID_RULE = #presvBoxIdRule:VARCHAR#)
+		  	   ,0
+		  	   ,'0'
+		  	   ,#presvBoxIdRule:VARCHAR#
+		  	   ,#workUserId:VARCHR#
+			)
+	  	</isEqual>
+	</insert>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 보존상자를 삭제한다.
+	-->
+	<delete id="deletePresvBox" parameterClass="rms.presv.booksf.domain.Booksf">
+		DELETE FROM TB_SRPRESVBOX
+		WHERE RECORD_CENTER_ID  = #recordCenterId:VARCHAR#
+		AND PRESV_BOX_ID 		= #presvBoxId:VARCHAR#
+		AND USE_FLAG 			= '0'
+	</delete>
+	
+	<!--  
+		서가배치_보존상자편성(재편성)
+		: UPDATE(편성, 취소시 철정보 업데이트-updatePresvBoxFolder) 
+	-->
+	<update id="updatePresvBoxFolder" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_RDFOLDER
+		   SET PRESV_BOX_ID = #presvBoxId:VARCHAR#
+		       , PRESV_BOX_ARNG_FLAG = #presvBoxArngFlag:VARCHAR#
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND FOLDER_ID = #folderId:VARCHAR#
+	</update>
+	
+	<!--  
+		서가배치_보존상자편성(재편성)
+		: UPDATE(편성시 보존상자정보 업데이트-updatePresvBox) 
+	-->
+	<update id="updatePresvBox" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_SRPRESVBOX
+		   SET ARNG_FOLDER_CNT = (SELECT COUNT(1) 
+		                            FROM TB_RDFOLDER 
+		                           WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		                           <dynamic>
+		                           	   <isNotEmpty prepend="AND" property="presvBoxIdUp">
+	                               	   		PRESV_BOX_ID = #presvBoxIdUp:VARCHAR#
+	                               	   </isNotEmpty>
+	                               	   <isEmpty prepend="AND" property="presvBoxIdUp">
+	                               	   		PRESV_BOX_ID = #presvBoxId:VARCHAR#
+	                               	   </isEmpty>
+		                           </dynamic>
+		                             
+		                         )
+		     , USE_FLAG = DECODE((SELECT COUNT(1) 
+		                            FROM TB_RDFOLDER 
+		                           WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	                               <dynamic>
+	                               	   <isNotEmpty prepend="AND" property="presvBoxIdUp">
+	                               	   		PRESV_BOX_ID = #presvBoxIdUp:VARCHAR#
+	                               	   </isNotEmpty>
+	                               	   <isEmpty prepend="AND" property="presvBoxIdUp">
+	                               	   		PRESV_BOX_ID = #presvBoxId:VARCHAR#
+	                               	   </isEmpty>
+		                           </dynamic>
+		                         ), 0, '0','1'
+		                         )
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		 <dynamic>
+         	<isNotEmpty prepend="AND" property="presvBoxIdUp">
+       	   		PRESV_BOX_ID = #presvBoxIdUp:VARCHAR#
+       	   </isNotEmpty>
+       	   <isEmpty prepend="AND" property="presvBoxIdUp">
+       	   		PRESV_BOX_ID = #presvBoxId:VARCHAR#
+       	   </isEmpty>
+         </dynamic>
+	</update>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 서가 보유보존상자를 갱신한다. 
+	-->
+	<update id="updateKeepPresvBoxCnt" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_SRBOOKSF
+		   SET KEEP_PRESV_BOX_CNT = (SELECT COUNT(1) 
+		                               FROM TB_SRPRESVBOX 
+		                              WHERE STAKRM_ID = #stakrmId:VARCHAR#
+		                                AND BOOKSF_ID = #booksfId:VARCHAR#
+		                                AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+		 WHERE STAKRM_ID = #stakrmId:VARCHAR#
+		   AND BOOKSF_ID = #booksfId:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 서가배치_보존상자편성(재편성)
+		: 보존상자존재여부 확인  
+	-->
+	<resultMap id="findIsPresvBox-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="stakrmId"			        column="STAKRM_ID"/>		
+		<result property="booksfId"			        column="BOOKSF_ID"/>
+		<result property="booksfShelfCno"			column="BOOKSF_SHELF_CNO"/>		
+		<result property="booksfShelfRno"			column="BOOKSF_SHELF_RNO"/>				
+	</resultMap>
+	<select id="findIsPresvBox" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findIsPresvBox-result">
+	    SELECT STAKRM_ID,BOOKSF_ID,BOOKSF_SHELF_CNO,BOOKSF_SHELF_RNO
+	    FROM TB_SRPRESVBOX
+	    WHERE RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+	    AND PRESV_BOX_ID=#presvBoxId:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 기록물의 서고관리번호부여여부를 조회한다..
+	-->
+	<resultMap id="findFolderMngInfo-result" 		class="rms.presv.booksf.domain.Booksf" >
+		<result property="stakrmId"			        column="STAKRM_ID"/>		
+		<result property="booksfId"			        column="BOOKSF_ID"/>
+		<result property="booksfShelfCno"			column="BOOKSF_SHELF_CNO"/>		
+		<result property="booksfShelfRno"			column="BOOKSF_SHELF_RNO"/>	
+		<result property="presvBoxId"			    column="PRESV_BOX_ID"/>
+		<result property="orgCd"			    	column="ORG_CD"/>
+		<result property="presvTermCd"			    column="PRESV_TERM_CD"/>
+		<result property="creatYyyy"			    column="CREAT_YYYY"/>				
+	</resultMap>
+	
+	<select id="findFolderMngInfo" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findFolderMngInfo-result">
+		SELECT B.STAKRM_ID
+				, B.BOOKSF_ID
+		        , B.BOOKSF_SHELF_CNO
+		        , B.BOOKSF_SHELF_RNO
+		        , A.PRESV_BOX_ID
+		        , A.ORG_CD
+		        , A.PRESV_TERM_CD
+		        , A.CREAT_YYYY
+		FROM TB_RDFOLDER A,TB_SRBOOKSFARNGDETL B 
+		WHERE A.RECORD_CENTER_ID=#recordCenterId:VARCHAR#
+		AND A.RECORD_CENTER_ID=B.RECORD_CENTER_ID
+		AND A.FOLDER_ID=B.FOLDER_ID 
+		AND A.FOLDER_KEEP_STATE_CD IN ('01','04') 
+		AND REPLACE(A.STAKRM_MNG_NO,'-','')=#stakrmMngNo:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 서고관리번호로 기록물철 보존상자ID를 갱신한다.
+	-->
+	<update id="updatePresvBoxBarcode" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_RDFOLDER
+		   SET PRESV_BOX_ID = #presvBoxIdUp:VARCHAR#
+		       , PRESV_BOX_ARNG_FLAG = '1'
+		 WHERE REPLACE(STAKRM_MNG_NO,'-','') = #stakrmMngNo:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 보존상자에 배치된 기록물철 수를 갱신한다.
+	 -->
+	<update id="updatePresvBoxBarcodeCnt" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE TB_SRPRESVBOX
+		   SET ARNG_FOLDER_CNT = (SELECT COUNT(1) 
+		                            FROM TB_RDFOLDER 
+		                           WHERE PRESV_BOX_ID = #presvBoxIdUp:VARCHAR#
+		                             AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#)
+		     , USE_FLAG = '1'
+		 WHERE PRESV_BOX_ID = #presvBoxIdUp:VARCHAR#
+		   AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</update>
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		: 
+	 -->
+	<resultMap id="findPresvBoxPrintPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="presvBoxId" 			column="PRESV_BOX_ID"/>			<!-- 보존상자ID -->
+		<result property="boxId" 				column="BOX_ID"/>				<!-- 보존상자ID -->
+		<result property="arngFolderCnt"		column="ARNG_FOLDER_CNT"/>		<!-- 기록물철수 -->
+	</resultMap>
+	<select id="countPresvBoxPrintPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_SRPRESVBOX
+        WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        <![CDATA[AND ARNG_FOLDER_CNT > 0]]> 
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="stakrmId">
+                    STAKRM_ID = #stakrmId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfId">
+                    BOOKSF_ID = #booksfId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfShelfCno">
+                    BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfShelfRno">
+                    BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+            </isNotEmpty>
+        </dynamic> 
+	</select>
+	<select id="findPresvBoxPrintPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPresvBoxPrintPagedList-result">
+		SELECT C.*
+		FROM (
+		    SELECT B.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		                    ,A.*
+		        FROM (
+		            SELECT PRESV_BOX_ID
+		                 , (CASE WHEN LENGTH(PRESV_BOX_ID)=15 THEN SUBSTR(PRESV_BOX_ID,1,3)||'-'||SUBSTR(PRESV_BOX_ID,4,3)||'-'||SUBSTR(PRESV_BOX_ID,7,3)||'-'||SUBSTR(PRESV_BOX_ID,10,3)||'-'||SUBSTR(PRESV_BOX_ID,13,3)
+		                          WHEN LENGTH(PRESV_BOX_ID)=19 THEN SUBSTR(PRESV_BOX_ID,1,7)||'-'||SUBSTR(PRESV_BOX_ID,8,2)||'-'||SUBSTR(PRESV_BOX_ID,10,4)||'-'||SUBSTR(PRESV_BOX_ID,14,6)
+		                          ELSE PRESV_BOX_ID
+		                  END) BOX_ID
+		                 , ARNG_FOLDER_CNT
+		            FROM TB_SRPRESVBOX
+		            WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            <![CDATA[AND ARNG_FOLDER_CNT > 0]]> 
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="stakrmId">
+		                        STAKRM_ID = #stakrmId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfId">
+		                        BOOKSF_ID = #booksfId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfShelfCno">
+		                        BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfShelfRno">
+		                        BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+		                </isNotEmpty>
+		            </dynamic>
+		            ORDER BY BOX_ID
+		        ) A
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) B
+		    WHERE B.rnum <![CDATA[>=]]> #pagedStart:NUMBNER#
+		) C
+		ORDER BY C.rnum
+	</select>
+	
+	
+	<!-- 
+		서가배치_보존상자편성(재편성)
+		보존상자 라벨인쇄 데이터를 조회한다.
+	 -->
+	<resultMap id="findPresvDocBoxLabelCreateYyyys-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+	</resultMap>	
+	<select id="findPresvDocBoxLabelCreateYyyys" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPresvDocBoxLabelCreateYyyys-result">
+		SELECT 
+			  DISTINCT C.CREAT_YYYY
+		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.PRESV_BOX_ID = #presvBoxId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID
+		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		   AND C.ORG_CD = D.ORG_CD
+	</select>	
+	<resultMap id="findPrintDocboxLabelOrgNms-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 기록물 생산부서 Name -->
+	</resultMap>	
+	<select id="findPrintDocboxLabelOrgNms" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocboxLabelOrgNms-result">
+		SELECT 
+			  DISTINCT D.ORG_NM
+		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.PRESV_BOX_ID = #presvBoxId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID
+		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		   AND C.ORG_CD = D.ORG_CD
+	</select>		
+	<resultMap id="findPrintDocboxLabelUnitNms-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="clssNm" 				column="CLSS_NM"/>				<!-- 분류체계명 -->
+	</resultMap>	
+	<select id="findPrintDocboxLabelUnitNms" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocboxLabelUnitNms-result">
+		SELECT 
+			   C.CLSS_NM
+		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.PRESV_BOX_ID = #presvBoxId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID
+		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		   AND C.ORG_CD = D.ORG_CD
+		ORDER BY C.CLSS_NM, C.TITLE, C.FOLDER_ID
+	</select>		
+	<resultMap id="findPrintDocboxLabel-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="stakrmMngNo"			column="STAKRM_MNG_NO"/>		<!-- 서고관리번호 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+	</resultMap>	
+	<select id="findPrintDocboxLabel" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocboxLabel-result">
+		SELECT 
+			   C.STAKRM_MNG_NO,
+			   C.TITLE
+		  FROM TB_SRPRESVBOX A, TB_RDFOLDER C, TB_STORG D
+		 WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.PRESV_BOX_ID = #presvBoxId:VARCHAR#
+		   AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID
+		   AND A.PRESV_BOX_ID = C.PRESV_BOX_ID
+		   AND C.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		   AND C.ORG_CD = D.ORG_CD
+		ORDER BY C.CLSS_NM, C.TITLE, C.FOLDER_ID
+	</select>
+	
+	<!-- 
+		서가배치_라벨인쇄
+		: 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findBooksfLabelPagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgCd" 				column="ORG_CD"/>				<!-- 생산부서CD -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title"				column="TITLE"/>				<!-- 철제목 -->
+		<result property="presvTermNm"			column="PRESV_TERM_NM"/>		<!-- 보존기간명 -->	
+		<result property="creatYyyy"			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="batchNo"				column="PRESV_BOX_NO"/>			<!-- 서가배치정보 -->
+		<result property="stakrmMngNo"			column="STAKRM_MNG_NO"/>		<!-- 서고관리번호 -->
+		<result property="folderDetlTypeNm" 	column="FOLDER_DETL_TYPE_NM"/>	<!-- 기록물형태 -->
+		<result property="labelFlag" 			column="LABEL_FLAG"/>			<!-- 기록물형태 -->
+	</resultMap>
+	<select id="countBooksfLabelPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND A.STAKRM_MNG_NO IS NOT NULL
+        AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')
+        AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+        AND A.ORG_CD = D.ORG_CD
+        AND A.FOLDER_KEEP_STATE_CD IN ('01','04')
+        AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+        <dynamic prepend="AND">
+           <isNotEmpty prepend="AND" property="curKeepOrgCd">
+               A.CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+           </isNotEmpty>
+           <isNotEmpty property="presvTermCd">
+	           <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+	               A.PRESV_TERM_CD IN ('20','25')
+               </isEqual>
+	           <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+               A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+               </isNotEqual>		            
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="takeYyyyF">
+               (A.TAKE_YYYY BETWEEN #takeYyyyF:VARCHAR# AND #takeYyyyT:VARCHAR#)
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="orgCd">
+               A.ORG_CD = #orgCd:VARCHAR#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="folderDetlTypeCd">
+               A.FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="creatSysCd">
+               A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+           </isNotEmpty>                    
+           <isNotEmpty prepend="AND" property="title">
+               (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="stakrmMngNoF">
+               (A.STAKRM_MNG_NO BETWEEN #stakrmMngNoF:VARCHAR# AND #stakrmMngNoT#)
+           </isNotEmpty>
+           <isNotEmpty prepend="AND" property="labelFlag">
+           	   A.LABEL_FLAG = #labelFlag:VARCHAR#
+           </isNotEmpty>            
+           <isNotEmpty prepend="AND" property="stakrmId">
+        <!--CUBRID
+				(A.RECORD_CENTER_ID, A.FOLDER_ID) IN  
+			       (SELECT Z.RECORD_CENTER_ID, Z.FOLDER_ID 
+			  -->
+			  EXISTS (SELECT 1
+			         FROM TB_SRBOOKSFARNGDETL Z 
+			        WHERE A.RECORD_CENTER_ID=Z.RECORD_CENTER_ID 
+			              AND A.FOLDER_ID = Z.FOLDER_ID 
+			              AND Z.STAKRM_ID = #stakrmId:VARCHAR#
+			              <isNotEmpty prepend="AND" property="booksfId">
+			               Z.BOOKSF_ID = #booksfId:VARCHAR#
+				               <isNotEmpty prepend="AND" property="booksfShelfCno">
+				               		Z.BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+				               </isNotEmpty>
+				               <isNotEmpty prepend="AND" property="booksfShelfRno">
+				               		Z.BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+				               </isNotEmpty>
+			              </isNotEmpty>
+			              AND A.BOOKSF_ARNG_FLAG IN ('1','2')
+			              AND A.RECORD_CENTER_ID = Z.RECORD_CENTER_ID AND A.FOLDER_ID = Z.FOLDER_ID
+			       )
+			</isNotEmpty>           
+        </dynamic>
+	</select>
+	<select id="findBooksfLabelPagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfLabelPagedList-result">
+		SELECT G.folder_id
+		      ,G.org_cd
+		      ,G.org_nm
+		      ,G.org_abbr_nm
+		      ,G.title
+		      ,G.presv_term_nm
+		      ,G.creat_yyyy
+		      ,G.stakrm_mng_no
+		      ,G.folder_detl_type_nm
+		      ,DECODE(G.label_flag, '1', '유', '무') AS label_flag
+		      ,G.presv_box_no
+		FROM (
+		    SELECT F.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,E.*
+		        FROM (
+		            SELECT A.FOLDER_ID, A.ORG_CD, D.ORG_NM, D.ORG_ABBR_NM, A.TITLE
+		                  ,B.COM_CD_NM PRESV_TERM_NM, A.CREAT_YYYY, A.STAKRM_MNG_NO, C.COM_CD_NM AS FOLDER_DETL_TYPE_NM, A.LABEL_FLAG
+		                  ,(SELECT BATCH_NO 
+		                    FROM (SELECT ROW_NUMBER() OVER (PARTITION BY B.RECORD_CENTER_ID, B.FOLDER_ID ORDER BY A.ARNG_YMD DESC, SNO DESC) AS SORT_NUM
+		                                ,A.RECORD_CENTER_ID
+		                                ,B.FOLDER_ID
+		                                ,B.STAKRM_ID||'/'|| B.BOOKSF_ID||'/'|| B.BOOKSF_SHELF_CNO||'/'|| B.BOOKSF_SHELF_RNO AS BATCH_NO 
+		                          FROM TB_SRBOOKSFARNG A, TB_SRBOOKSFARNGDETL B 
+		                          WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID 
+		                          AND A.BOOKSF_ARNG_ID = B.BOOKSF_ARNG_ID 
+		                          AND A.FIN_FLAG = '1' )E 
+		                    WHERE SORT_NUM = '1' 
+		                    AND E.RECORD_CENTER_ID = A.RECORD_CENTER_ID 
+		                    AND E.FOLDER_ID = A.FOLDER_ID) AS PRESV_BOX_NO
+		             FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D
+		             WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		             AND A.STAKRM_MNG_NO IS NOT NULL
+		             AND (DECODE(A.PRESV_TERM_CD, '20', '25', A.PRESV_TERM_CD) = B.COM_CD and B.COM_TYPE_CD = 'RD07')
+		             AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+		             AND A.ORG_CD = D.ORG_CD
+		             AND A.FOLDER_KEEP_STATE_CD IN ('01','04')
+		             AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		             <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="curKeepOrgCd">
+		                    A.CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+		                </isNotEmpty>
+				        <isNotEmpty property="presvTermCd">
+					        <isEqual prepend="AND" property="presvTermCd" compareValue="25">
+					            A.PRESV_TERM_CD IN ('20','25')
+				            </isEqual>
+					        <isNotEqual prepend="AND" property="presvTermCd" compareValue="25">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				            </isNotEqual>		            
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="takeYyyyF">
+		                    (A.TAKE_YYYY BETWEEN #takeYyyyF:VARCHAR# AND #takeYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="folderDetlTypeCd">
+		                    A.FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatSysCd">
+		                    A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+		                </isNotEmpty>                    
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="stakrmMngNoF">
+		                    (A.STAKRM_MNG_NO BETWEEN #stakrmMngNoF:VARCHAR# AND #stakrmMngNoT#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="labelFlag">
+		                	A.LABEL_FLAG = #labelFlag:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="stakrmId">
+		          <!--CUBRID
+							(A.RECORD_CENTER_ID, A.FOLDER_ID) IN  
+						       (SELECT Z.RECORD_CENTER_ID, Z.FOLDER_ID 
+						  -->
+						  EXISTS (SELECT 1
+						         FROM TB_SRBOOKSFARNGDETL Z 
+						        WHERE A.RECORD_CENTER_ID=Z.RECORD_CENTER_ID 
+						              AND A.FOLDER_ID = Z.FOLDER_ID 
+						              AND Z.STAKRM_ID = #stakrmId:VARCHAR#
+						              <isNotEmpty prepend="AND" property="booksfId">
+						               Z.BOOKSF_ID = #booksfId:VARCHAR#
+							               <isNotEmpty prepend="AND" property="booksfShelfCno">
+							               		Z.BOOKSF_SHELF_CNO = #booksfShelfCno:VARCHAR#
+							               </isNotEmpty>
+							               <isNotEmpty prepend="AND" property="booksfShelfRno">
+							               		Z.BOOKSF_SHELF_RNO = #booksfShelfRno:VARCHAR#
+							               </isNotEmpty>
+						              </isNotEmpty>
+						              AND A.BOOKSF_ARNG_FLAG IN ('1','2')
+						       )
+						</isNotEmpty>
+		             </dynamic>
+		             ORDER BY PRESV_BOX_NO, STAKRM_MNG_NO
+		        ) E
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) F
+		    WHERE F.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) G
+		ORDER BY G.rnum
+	</select>
+	
+	<!-- 
+		서가배치_라벨인쇄
+		: 관리번호라벨인쇄데이터를 조회한다.  
+	-->
+	<resultMap id="findPrintDocBooksfLabelList-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="stakrmMngNo"			column="STAKRM_MNG_NO"/>		<!-- 서고관리번호 -->
+		<result property="stakrmMngNoF"			column="STAKRM_MNG_NO_F"/>		<!-- 서고관리번호 -->
+	</resultMap>
+	<select id="findPrintDocBooksfLabelList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocBooksfLabelList-result">
+		SELECT FOLDER_ID
+		     , replace(STAKRM_MNG_NO,'-','') AS STAKRM_MNG_NO
+		     , STAKRM_MNG_NO AS STAKRM_MNG_NO_F
+		  FROM TB_RDFOLDER
+		 WHERE RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND FOLDER_ID = #folderId:VARCHAR#
+	</select>
+	
+	<!-- 
+		서가배치_라벨인쇄
+		: 관리번호라벨인쇄데이터를 조회한다. (일괄라벨인쇄)
+	 -->
+	<resultMap id="findPrintDocBooksfLabelBatchList-result" 			class="rms.presv.booksf.domain.Booksf" >
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="stakrmMngNo"			column="STAKRM_MNG_NO"/>		<!-- 서고관리번호 -->
+	</resultMap>
+	<select id="findPrintDocBooksfLabelBatchList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findPrintDocBooksfLabelBatchList-result">
+		SELECT A.FOLDER_ID
+			 , A.STAKRM_MNG_NO
+		  FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D
+		 WHERE A.STAKRM_MNG_NO IS NOT NULL
+		   AND (A.PRESV_TERM_CD = B.COM_CD and B.COM_TYPE_CD = 'RD07')
+		   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+		   AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+		   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		   AND A.ORG_CD = D.ORG_CD
+		   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="curKeepOrgCd">
+				A.CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="presvTermCd">
+				A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="takeYyyyF">
+				(A.TAKE_YYYY BETWEEN #takeYyyyF:VARCHAR# AND #takeYyyyT:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="orgCd">
+				A.ORG_CD = #orgCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="folderDetlTypeCd">
+				A.FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+			</isNotEmpty>					
+			<isNotEmpty prepend="AND" property="title">
+				(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="stakrmMngNoF">
+				(A.STAKRM_MNG_NO BETWEEN #stakrmMngNoF:VARCHAR# AND #stakrmMngNoT#)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="labelFlag">
+				A.LABEL_FLAG = #labelFlag:VARCHAR#
+			</isNotEmpty>
+		</dynamic>
+		ORDER BY A.CREAT_SYS_CD||'-'||A.ORG_CD||'-'||A.CLSS_ID||'-'||A.CREAT_YYYY||'-'||A.FOLDER_REG_SEQ||'-'||A.HO_NO
+	</select>
+	
+	<!-- 
+		서가배치_라벨인쇄
+		: 기록물철 라벨인쇄상태를 갱신한다. (일괄라벨인쇄)
+	 -->
+	<update id="updateBooksfLabelPrintBatch" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE  TB_RDFOLDER Z
+		SET 	LABEL_FLAG = '1'
+		<!--cubrid WHERE 	(RECORD_CENTER_ID, FOLDER_ID) IN (
+			SELECT A.RECORD_CENTER_ID
+				 , A.FOLDER_ID-->
+		WHERE 	EXISTS (
+			SELECT 1
+			  FROM TB_RDFOLDER A, TB_ZZCOMCD B, TB_ZZCOMCD C, TB_STORG D
+			 WHERE A.STAKRM_MNG_NO IS NOT NULL
+			   AND (A.PRESV_TERM_CD = B.COM_CD and B.COM_TYPE_CD = 'RD07')
+			   AND (A.FOLDER_TYPE_DIV_CD = C.COM_CD and C.COM_TYPE_CD = 'RD01')
+			   AND A.FOLDER_KEEP_STATE_CD IN ('01', '04')
+			   AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+			   AND A.ORG_CD = D.ORG_CD
+			   AND A.RECORD_CENTER_ID = D.RECORD_CENTER_ID
+			   <!--cubrid-->
+			   AND A.RECORD_CENTER_ID = Z.RECORD_CENTER_ID
+			   AND  A.FOLDER_ID = Z.FOLDER_ID
+			<dynamic prepend="AND">
+				<isNotEmpty prepend="AND" property="curKeepOrgCd">
+					A.CUR_KEEP_ORG_CD = #curKeepOrgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="presvTermCd">
+					A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="takeYyyyF">
+					(A.TAKE_YYYY BETWEEN #takeYyyyF:VARCHAR# AND #takeYyyyT:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="orgCd">
+					A.ORG_CD = #orgCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="folderDetlTypeCd">
+					A.FOLDER_TYPE_DIV_CD = #folderDetlTypeCd:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="creatSysCd">
+					A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+				</isNotEmpty>					
+				<isNotEmpty prepend="AND" property="title">
+					(A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+				</isNotEmpty>
+				<isNotEmpty prepend="AND" property="stakrmMngNoF">
+					(A.STAKRM_MNG_NO BETWEEN #stakrmMngNoF:VARCHAR# AND #stakrmMngNoT#)
+				</isNotEmpty>
+			</dynamic>
+		)
+	</update>
+	
+	<!-- 
+		서가배치_라벨인쇄
+		: 기록물철 라벨인쇄상태를 갱신한다. (라벨인쇄)
+	 -->
+	<update id="updateBooksfLabelPrint" parameterClass="rms.presv.booksf.domain.Booksf">
+		UPDATE  TB_RDFOLDER
+		SET 	LABEL_FLAG = '1'
+		WHERE 	RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND 	FOLDER_ID 		 = #folderId:VARCHAR#
+	</update>
+	
+	<!-- 
+		서가배치_서가배치현황
+		: 기록물철 목록을 조회한다.
+	 -->
+	<resultMap id="findBooksfArngStatePagedList-result" class="rms.presv.booksf.domain.Booksf">
+		<result property="folderId" 			column="FOLDER_ID"/>			<!-- 기록물철ID -->
+		<result property="orgNm" 				column="ORG_NM"/>				<!-- 생산부서명 -->
+		<result property="folderClssNo" 		column="FOLDER_CLSS_NO"/>		<!-- 철분류번호 -->
+		<result property="orgAbbrNm"			column="ORG_ABBR_NM"/>			<!-- 생산부서명 -->
+		<result property="title" 				column="TITLE"/>				<!-- 철제목 -->
+		<result property="presvTermNm" 			column="PRESV_TERM_NM"/>		<!-- 보존기간 -->		
+		<result property="creatYyyy" 			column="CREAT_YYYY"/>			<!-- 생산년도 -->
+		<result property="stakrmMngNo" 			column="STAKRM_MNG_NO"/>		<!-- 관리번호 -->
+		<result property="arngInfo" 			column="ARNG_INFO"/>			<!-- 배치정보 -->	
+		<result property="arngInfoNm" 			column="ARNG_INFO_NM"/>			<!-- 배치정보 육군 서가배치 명칭으로 보여주기위해 추가-->					
+		<result property="presvBoxId" 			column="PRESV_BOX_ID"/>			<!-- 보존상자ID -->			
+		<result property="boxId" 				column="BOX_ID"/>				<!-- 보존상자ID -->
+	</resultMap>
+	<select id="countBooksfArngStatePagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+        FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B
+        WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+        AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')
+        AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')
+        AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+        AND   B.FOLDER_ID = A.FOLDER_ID
+        <dynamic prepend="AND">
+            <isNotEmpty prepend="AND" property="orgCd">
+                A.ORG_CD = #orgCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="creatYyyyF">
+                (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="presvTermCd">
+                A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="title">
+                (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="clssId">
+                (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="stakrmId">
+                B.STAKRM_ID = #stakrmId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfId">
+                B.BOOKSF_ID = #booksfId:VARCHAR#
+            </isNotEmpty>
+            <isNotEmpty prepend="AND" property="booksfArngId">
+                B.BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+            </isNotEmpty> 
+        </dynamic>
+	</select>
+	<select id="findBooksfArngStatePagedList" parameterClass="rms.presv.booksf.domain.Booksf" resultMap="findBooksfArngStatePagedList-result">
+		SELECT E.folder_id
+		      ,E.title
+		      ,E.creat_yyyy
+		      ,E.stakrm_mng_no
+		      ,E.presv_box_id
+		      ,(CASE WHEN LENGTH(E.presv_box_id)=15 
+		             THEN (SELECT Z.stakrm_nm FROM TB_SRSTAKRM Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = SUBSTR (E.presv_box_id, 1, 3)) || '-' || 
+		                  (SELECT Z.booksf_nm FROM TB_SRBOOKSF Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = SUBSTR (E.presv_box_id, 1, 3) AND Z.booksf_id = SUBSTR (E.presv_box_id, 4, 3)) || '-' || 
+		                  TO_NUMBER(SUBSTR (E.presv_box_id, 7, 3)) || '층-' || 
+		                  TO_NUMBER(SUBSTR (E.presv_box_id, 10, 3)) || '열-' || 
+		                   SUBSTR (E.presv_box_id, 13, 3)
+		             WHEN LENGTH(E.presv_box_id)=19 
+		             THEN SUBSTR(E.presv_box_id,1,7)||'-'||SUBSTR(E.presv_box_id,8,2)||'-'||SUBSTR(E.presv_box_id,10,4)||'-'||SUBSTR(E.presv_box_id,14,6)
+		             ELSE E.presv_box_id
+		        END) AS box_id 
+		      ,(E.stakrm_id||'-'||E.booksf_id||'-'||E.booksf_shelf_cno||'-'||E.booksf_shelf_rno) AS arng_info
+		      ,(SELECT Z.stakrm_nm FROM TB_SRSTAKRM Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = E.stakrm_id)||'-'||
+		       (SELECT Z.booksf_nm FROM TB_SRBOOKSF Z WHERE Z.record_center_id = E.record_center_id AND Z.stakrm_id = E.stakrm_id AND Z.booksf_id = E.booksf_id)||'-'||
+		       TO_NUMBER(E.booksf_shelf_cno)||'층-'||
+		       TO_NUMBER(E.booksf_shelf_rno)||'열' AS arng_info_nm
+		      ,(SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm
+		      ,(SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm
+		      ,(SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		      ,CREAT_SYS_CD || '-' || ORG_CD || '-' || CLSS_ID || '-' || CREAT_YYYY || '-' || FOLDER_REG_SEQ AS folder_clss_no
+		FROM (
+		    SELECT D.*
+		    FROM (
+		        SELECT ROWNUM AS rnum
+		              ,C.*
+		        FROM (
+		            SELECT A.RECORD_CENTER_ID, A.ORG_CD, A.FOLDER_ID, A.TITLE, A.CREAT_YYYY
+		                  ,A.STAKRM_MNG_NO, A.PRESV_BOX_ID, B.STAKRM_ID, B.BOOKSF_ID, B.BOOKSF_SHELF_CNO
+		                  ,B.BOOKSF_SHELF_RNO, A.PRESV_TERM_CD
+		                  ,A.CREAT_SYS_CD, A.CLSS_ID, A.FOLDER_REG_SEQ
+		            FROM  TB_RDFOLDER A, TB_SRBOOKSFARNGDETL B
+		            WHERE A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		            AND   A.FOLDER_KEEP_STATE_CD IN ('01','04')
+		            AND   A.BOOKSF_ARNG_FLAG IN ('1', '2')
+		            AND   B.RECORD_CENTER_ID = A.RECORD_CENTER_ID
+		            AND   B.FOLDER_ID = A.FOLDER_ID
+		            <dynamic prepend="AND">
+		                <isNotEmpty prepend="AND" property="orgCd">
+		                    A.ORG_CD = #orgCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="creatYyyyF">
+		                    (A.CREAT_YYYY BETWEEN #creatYyyyF:VARCHAR# AND #creatYyyyT:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="presvTermCd">
+		                    A.PRESV_TERM_CD = #presvTermCd:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="title">
+		                    (A.TITLE LIKE #title:VARCHAR# OR A.SUB_TITLE LIKE #title:VARCHAR# OR A.CORCT_TITLE LIKE #title:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="clssId">
+		                    (A.CLSS_DIV_CD= #clssDivCd:VARCHAR# AND A.CLSS_ID = #clssId:VARCHAR#)
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="stakrmId">
+		                    B.STAKRM_ID = #stakrmId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfId">
+		                    B.BOOKSF_ID = #booksfId:VARCHAR#
+		                </isNotEmpty>
+		                <isNotEmpty prepend="AND" property="booksfArngId">
+		                    B.BOOKSF_ARNG_ID = #booksfArngId:VARCHAR#
+		                </isNotEmpty> 
+		            </dynamic>
+		            ORDER BY A.PRESV_BOX_ID,A.STAKRM_MNG_NO
+		        ) C
+		        WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+		    ) D
+		    WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	
+</sqlMap>

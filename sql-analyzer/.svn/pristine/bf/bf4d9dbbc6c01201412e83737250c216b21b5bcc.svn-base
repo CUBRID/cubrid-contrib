@@ -1,0 +1,137 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakovrSetPlanPagedList
+
+		SELECT C.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.take_takovr_snd_rep_cd			      	  ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd) take_takovr_snd_rep_nm				      ,A.take_takovr_yyyy				      ,A.take_takovr_sno				      ,LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str				      ,A.record_center_id				      ,A.take_takovr_rcv_rep_cd				      ,(SELECT Z.record_center_id FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) rcv_record_center_id				      ,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) take_takovr_rcv_rep_nm				      ,A.take_state_snd_div_cd				      ,(SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD88' AND com_cd = A.take_state_snd_div_cd) take_state_snd_div_nm				      ,A.take_takovr_rsn				FROM tb_rdmultitakovrplan A				WHERE A.record_center_id = '1'				 AND 					A.take_takovr_yyyy = '1'					  AND 					A.take_state_snd_div_cd = '1'					  AND 					A.take_takovr_rcv_rep_cd = (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')				 				ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : countMultiTakovrSetPlanPagedList
+
+		SELECT COUNT(1)		FROM tb_rdmultitakovrplan A		WHERE A.record_center_id = '1'		 AND 			A.take_takovr_yyyy = '1'			  AND 			A.take_state_snd_div_cd = '1'			  AND 			A.take_takovr_rcv_rep_cd = (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')		 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakovrMaxSno
+
+	 	SELECT NVL(MAX(take_takovr_sno), 0)+1 		FROM   tb_rdmultitakovrplan		WHERE take_takovr_snd_rep_cd = (SELECT record_center_cd FROM tb_strecordcenter where record_center_id = '1')		AND   take_takovr_yyyy 		 = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : insert
+-- Query Id : createMultiTakovrSetPlan
+
+		INSERT INTO tb_rdmultitakovrplan 					(take_takovr_snd_rep_cd					,take_takovr_yyyy					,take_takovr_sno					,record_center_id					,take_takovr_rcv_rep_cd					,take_state_snd_div_cd					,take_state_flag					,take_takovr_snd_user_id					,non_elect_take_plan_yyyy					,take_takovr_rsn					,reg_dtime)		VALUES( (SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')				,'1'				,'1'				,'1'				,(SELECT record_center_cd FROM tb_strecordcenter WHERE record_center_id = '1')				,'1'				,'1'				,'1'				,'1'				,'1'				,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : update
+-- Query Id : updateMultiTakovrSetPlan
+
+		UPDATE tb_rdmultitakovrplan A		   SET A.take_takovr_yyyy = '1'		      ,A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1')		      ,A.take_takovr_rsn = '1'		 WHERE A.take_takovr_yyyy = '1'		   AND A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1')		   AND A.take_takovr_sno = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : delete
+-- Query Id : deleteMultiTakovrList
+
+		DELETE tb_rdmultitakovrlist 		 WHERE take_takovr_yyyy = '1'		   AND take_takovr_snd_rep_cd = '1'		   AND take_takovr_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : delete
+-- Query Id : deleteMultiTakovrPlan
+
+		DELETE tb_rdmultitakovrplan 		 WHERE take_takovr_yyyy = '1'		   AND take_takovr_snd_rep_cd = '1'		   AND take_takovr_sno = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakovrPlanMngNoList
+
+		SELECT A.take_takovr_snd_rep_cd			,A.take_takovr_rcv_rep_cd			,A.record_center_id			,A.take_takovr_yyyy			,A.take_takovr_sno			,LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str			,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_snd_rep_cd) take_takovr_snd_rep_nm			,(SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) take_takovr_rcv_rep_nm			,A.take_takovr_rsn			,(SELECT COUNT(1) FROM tb_rdmultitakovrlist Z WHERE Z.take_takovr_snd_rep_cd = A.take_takovr_snd_rep_cd AND Z.take_takovr_yyyy = A.take_takovr_yyyy AND Z.take_takovr_sno = A.take_takovr_sno) take_takovr_folder_cnt			,A.take_state_snd_div_cd		FROM tb_rdmultitakovrplan A		WHERE record_center_id = '1'		AND A.take_state_snd_div_cd IN ('01', '02')		ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakovrOrgTrgtPagedList
+
+		SELECT C.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT RECORD_CENTER_ID,				       ORG_CD,				       ORG_NM || '(' || ORG_CD || ')' AS ORG_NM,				       ALL_FOLDER_CNT - MINUS_FOLDER_CNT AS FOLDER_CNT,				       ALL_FOLDER_CNT - MINUS_FOLDER_CNT - FIXED_FOLDER_CNT AS NON_FIXED_FOLDER_CNT,				       FIXED_FOLDER_CNT				  FROM				  (				       SELECT A.RECORD_CENTER_ID,				              A.ORG_CD,				              (SELECT Z.FULL_ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.ORG_CD) AS ORG_NM,				              COUNT(1) AS ALL_FOLDER_CNT,				              SUM(CASE WHEN C.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS MINUS_FOLDER_CNT,				              SUM(CASE WHEN B.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS FIXED_FOLDER_CNT				         FROM TB_RDFOLDER A,				              (				                   SELECT T.RECORD_CENTER_ID,				                          T.FOLDER_ID				                     FROM TB_RDMULTITAKOVRLIST T				                    WHERE T.TAKE_TAKOVR_SND_REP_CD = '1'				                      AND T.TAKE_TAKOVR_YYYY = '1'				                      AND T.TAKE_TAKOVR_SNO = '1'				                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID				               ) B,				              (				                   SELECT T.RECORD_CENTER_ID,				                          T.FOLDER_ID				                     FROM TB_RDMULTITAKOVRLIST T				                    WHERE T.TAKE_TAKOVR_SND_REP_CD != '1'				                       OR T.TAKE_TAKOVR_YYYY != '1'				                       OR T.TAKE_TAKOVR_SNO != '1'				                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID				               ) C				        WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)				          AND A.FOLDER_ID = B.FOLDER_ID(+)				          AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)				          AND A.FOLDER_ID = C.FOLDER_ID(+)				          AND A.RECORD_CENTER_ID = '1'				          AND A.FOLDER_KEEP_STATE_CD != '05' AND 				          		A.ORG_CD = '1'				           				       GROUP BY A.RECORD_CENTER_ID, A.ORG_CD				   )				 WHERE ALL_FOLDER_CNT - MINUS_FOLDER_CNT != 0				ORDER BY ORG_NM			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : countMultiTakovrOrgTrgtPagedList
+
+		 		 SELECT COUNT(1)		  FROM		  (		       SELECT A.RECORD_CENTER_ID,		              A.ORG_CD,		              (SELECT Z.FULL_ORG_NM FROM TB_STORG Z WHERE Z.RECORD_CENTER_ID = A.RECORD_CENTER_ID AND Z.ORG_CD = A.ORG_CD) AS ORG_NM,		              COUNT(1) AS ALL_FOLDER_CNT,		              SUM(CASE WHEN C.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS MINUS_FOLDER_CNT,		              SUM(CASE WHEN B.FOLDER_ID IS NOT NULL THEN 1 ELSE 0 END) AS FIXED_FOLDER_CNT		         FROM TB_RDFOLDER A,		              (		                   SELECT T.RECORD_CENTER_ID,		                          T.FOLDER_ID		                     FROM TB_RDMULTITAKOVRLIST T		                    WHERE T.TAKE_TAKOVR_SND_REP_CD = '1'		                      AND T.TAKE_TAKOVR_YYYY = '1'		                      AND T.TAKE_TAKOVR_SNO = '1'		                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID		               ) B,		              (		                   SELECT T.RECORD_CENTER_ID,		                          T.FOLDER_ID		                     FROM TB_RDMULTITAKOVRLIST T		                    WHERE T.TAKE_TAKOVR_SND_REP_CD != '1'		                       OR T.TAKE_TAKOVR_YYYY != '1'		                       OR T.TAKE_TAKOVR_SNO != '1'		                   GROUP BY T.RECORD_CENTER_ID, T.FOLDER_ID		               ) C		        WHERE A.RECORD_CENTER_ID = B.RECORD_CENTER_ID(+)		          AND A.FOLDER_ID = B.FOLDER_ID(+)		          AND A.RECORD_CENTER_ID = C.RECORD_CENTER_ID(+)		          AND A.FOLDER_ID = C.FOLDER_ID(+)		          AND A.RECORD_CENTER_ID = '1'		          AND A.FOLDER_KEEP_STATE_CD != '05' AND 		          		A.ORG_CD = '1'		           		       GROUP BY A.RECORD_CENTER_ID, A.ORG_CD		   )		 WHERE ALL_FOLDER_CNT - MINUS_FOLDER_CNT != 0	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : insert
+-- Query Id : createMultiTakovrTrgtFixReg
+
+		INSERT INTO tb_rdmultitakovrlist(take_takovr_snd_rep_cd		                                ,take_takovr_yyyy		                                ,take_takovr_sno		                                ,folder_id		                                ,record_center_id		                                ,take_takovr_rcv_rep_cd		                                ,take_fin_flag		                                ,reg_dtime) 		(   SELECT '1'		          ,'1'		          ,'1'		          ,A.folder_id		          ,A.record_center_id		          ,'1'		          ,'0'		          		          ,TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		      FROM tb_rdfolder A		     WHERE A.record_center_id = '1'		     		       AND A.folder_keep_state_cd != '05'		       AND NOT EXISTS (SELECT Z.folder_id FROM tb_rdmultitakovrlist Z		                        WHERE Z.record_center_id = A.record_center_id		                          AND Z.folder_id = A.folder_id		       )		);
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : delete
+-- Query Id : deleteMultiTakovrTrgtFixBatchReg
+
+	 	DELETE FROM tb_rdmultitakovrlist A 	 	 WHERE A.take_takovr_snd_rep_cd = '1'	 	   AND A.take_takovr_yyyy       = '1'	 	   AND A.take_takovr_sno 		= '1'                   AND 	 	    EXISTS (SELECT 1	 	          FROM tb_rdfolder Z 	 	         WHERE Z.record_center_id = '1'	 	           AND Z.record_center_id = A.record_center_id	 	    	   AND Z.org_cd = '1'                           AND Z.record_center_id = A.record_center_id                           AND Z.folder_id = A.folder_id	 	    )	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : delete
+-- Query Id : deleteMultiTakovrTrgtFixReg
+
+	 	DELETE FROM tb_rdmultitakovrlist A 	 	 WHERE A.take_takovr_snd_rep_cd = '1'	 	   AND A.take_takovr_yyyy		= '1'	 	   AND A.take_takovr_sno 		= '1'	 	   AND A.record_center_id 		= '1'	 	   AND A.folder_id 				= '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakovrFixedCnt
+
+	 	SELECT COUNT(1) 		FROM TB_RDMULTITAKOVRLIST		WHERE take_takovr_snd_rep_cd = '1'		AND   take_takovr_yyyy       = '1'    		AND   take_takovr_sno        = '1'	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : update
+-- Query Id : updateMultiTakovrState
+
+		UPDATE tb_rdmultitakovrplan A		   SET A.take_state_snd_div_cd 	= '1' ,  		   	   A.take_takovr_folder_cnt = (SELECT COUNT(1) 		       								 FROM tb_rdmultitakovrlist B 		       								WHERE B.take_takovr_snd_rep_cd 	= A.take_takovr_snd_rep_cd 		       								  AND B.take_takovr_yyyy 		= A.take_takovr_yyyy 		       								  AND B.take_takovr_sno 		= A.take_takovr_sno)			  ,A.take_takovr_record_cnt = (SELECT COUNT(1) 		          						  	 FROM tb_rdrecord B 		          						  			          						  	WHERE 		          						  	   EXISTS (SELECT 1		          						  	         FROM tb_rdmultitakovrlist C 		          						  	        WHERE C.take_takovr_snd_rep_cd 	= A.take_takovr_snd_rep_cd 		          						  	          AND C.take_takovr_yyyy 		= A.take_takovr_yyyy 		          						  	          AND C.take_takovr_sno 		= A.take_takovr_sno                                                                                          AND C.record_center_id = B.record_center_id                                                                                          AND C.folder_id = B.folder_id)) 		 WHERE A.take_takovr_snd_rep_cd = '1'		   AND A.take_takovr_yyyy 		= '1'		   AND A.take_takovr_sno 		= '1'	 	 ;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakovrTrgtFolderPagedList
+
+ 	 	SELECT E.*	 	FROM (	 		SELECT ROWNUM AS rnum	 			,D.*	 		FROM (			 	SELECT B.record_center_id			 		, B.folder_id			 		, B.clss_div_cd			 		, B.clss_id			 		, B.clss_nm				    , B.title				    , B.org_cd				    , B.org_nm				    , B.creat_yyyy				    , B.creat_sys_cd				    , B.creat_sys_nm				    , B.presv_term_cd				    , B.presv_term_nm				    , B.erecord_flag				    , B.erecord_flag_nm				    , B.fixed_flag				    , C.take_takovr_snd_rep_cd				    , C.take_takovr_yyyy				    , C.take_takovr_sno				FROM (				    SELECT A.record_center_id				          ,A.folder_id				          ,A.clss_div_cd				          ,A.clss_id				          ,A.clss_nm				          ,A.title				          ,A.org_cd				          ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm				          ,A.creat_yyyy				          ,A.creat_sys_cd				          ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = A.creat_sys_cd) creat_sys_nm				          ,A.presv_term_cd				          ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = A.presv_term_cd) presv_term_nm				          ,A.erecord_flag				          ,(CASE WHEN A.erecord_flag = '1' THEN '전자'				                 WHEN A.erecord_flag = '2' THEN '비전자'				                 ELSE '혼용'				            END) erecord_flag_nm				          ,NVL ((SELECT DISTINCT '1' FROM tb_rdmultitakovrlist Z WHERE Z.record_center_id = A.record_center_id AND Z.folder_id = A.folder_id), '0') fixed_flag				          ,'1' take_takovr_snd_rep_cd				          ,'1' take_takovr_yyyy				          ,'1' take_takovr_sno				      FROM tb_rdfolder A				      WHERE record_center_id 	= '1'				      AND A.org_cd 				= '1'			      	 AND 						A.clss_id = '1'					  AND 						A.title like '1'					 					  AND A.folder_keep_state_cd != '05'				) B, tb_rdmultitakovrlist C				WHERE B.record_center_id   		= C.record_center_id (+)				AND   B.folder_id 				= C.folder_id  (+)				AND   B.take_takovr_snd_rep_cd 	= C.take_takovr_snd_rep_cd 				AND   B.take_takovr_yyyy 		= C.take_takovr_yyyy 				AND   B.take_takovr_sno 		= C.take_takovr_sno				UNION 				SELECT A.record_center_id				      ,A.folder_id				      ,A.clss_div_cd				      ,A.clss_id				      ,A.clss_nm				      ,A.title				      ,A.org_cd				      ,(SELECT Z.org_nm FROM tb_storg Z WHERE Z.record_center_id = A.record_center_id AND Z.org_cd = A.org_cd) org_nm				      ,A.creat_yyyy				      ,A.creat_sys_cd				      ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD17' AND Z.com_cd = A.creat_sys_cd) creat_sys_nm				      ,A.presv_term_cd				      ,(SELECT com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD07' AND Z.com_cd = A.presv_term_cd) presv_term_nm				      ,A.erecord_flag				      ,(CASE WHEN A.erecord_flag = '1' THEN '전자'				             WHEN A.erecord_flag = '2' THEN '비전자'				             ELSE '혼용'				        END) erecord_flag_nm				      ,NVL ((SELECT DISTINCT '1' FROM tb_rdmultitakovrlist Z WHERE Z.record_center_id = A.record_center_id AND Z.folder_id = A.folder_id), '0') fixed_flag				      ,'' take_takovr_snd_rep_cd				      ,'' take_takovr_yyyy				      ,0 take_takovr_sno				FROM tb_rdfolder A				WHERE A.record_center_id = '1'				AND A.org_cd 			 = '1'				 AND 					A.clss_id = '1'							  AND 					A.title like '1'				 				AND A.folder_keep_state_cd != '05'				AND NOT EXISTS (SELECT Z.folder_id 							    FROM tb_rdmultitakovrlist Z							    WHERE Z.record_center_id 	= A.record_center_id							    AND   Z.folder_id 			= A.folder_id)                                				ORDER BY 1, 6			) D			WHERE ROWNUM <= '1'		) E		WHERE E.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : countMultiTakovrTrgtFolderPagedList
+
+	 	SELECT SUM(row_cnt)		FROM (		    SELECT COUNT(1) row_cnt		    FROM (		        SELECT A.record_center_id		              ,A.folder_id		              ,'1' take_takovr_snd_rep_cd		              ,'1' take_takovr_yyyy		              ,'1' take_takovr_sno		        FROM tb_rdfolder A		        WHERE record_center_id = '1'		        AND A.org_cd 			 = '1'				AND A.folder_keep_state_cd != '05'				) B, tb_rdmultitakovrlist C		    WHERE b.record_center_id   	 = C.record_center_id (+)		    AND B.folder_id 		  	 = C.folder_id  (+)		    AND B.take_takovr_snd_rep_cd = C.take_takovr_snd_rep_cd 		    AND B.take_takovr_yyyy 		 = C.take_takovr_yyyy 		    AND B.take_takovr_sno 		 = C.take_takovr_sno		    UNION 		    SELECT COUNT(1) 		    FROM tb_rdfolder A		    WHERE A.record_center_id = '1'		    AND A.org_cd 			 = '1'			AND A.folder_keep_state_cd != '05'		    AND NOT EXISTS (SELECT Z.folder_id 					        FROM tb_rdmultitakovrlist Z					        WHERE Z.record_center_id = A.record_center_id					        AND   Z.folder_id = A.folder_id))	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : findMultiTakeTakovrProcPagedList
+
+		SELECT C.*		FROM (			SELECT ROWNUM AS rnum				, B.*			FROM (				SELECT A.take_takovr_snd_rep_cd					, (SELECT Z.record_center_nm FROM tb_strecordcenter Z WHERE Z.record_center_cd = A.take_takovr_rcv_rep_cd) take_takovr_rcv_rep_nm				    , A.take_takovr_yyyy				    , A.take_takovr_sno				    , LPAD(A.take_takovr_sno, 6, '0') take_takovr_sno_str				    , A.take_takovr_folder_cnt				    , A.take_takovr_record_cnt				    , A.take_state_snd_div_cd				    , (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD88' AND Z.com_cd = A.take_state_snd_div_cd) take_state_snd_div_nm				    , A.take_state_flag				    , (CASE WHEN A.take_state_snd_div_cd = '02' THEN '미처리'				            WHEN A.take_state_snd_div_cd = '03' THEN (CASE WHEN A.take_state_flag = '1' THEN '인계처리중'				                                                           WHEN A.take_state_flag = '2' THEN '인계완료'				                                                           ELSE '미처리'				                                                      END)				            WHEN A.take_state_snd_div_cd = '04' THEN '인계완료'				       END) take_state_flag_nm				    , A.take_state_rcv_div_cd		        	, (SELECT Z.com_cd_nm FROM tb_zzcomcd Z WHERE Z.com_type_cd = 'RD89' AND Z.com_cd = A.take_state_rcv_div_cd) take_state_rcv_div_nm				FROM tb_rdmultitakovrplan A				WHERE A.take_state_snd_div_cd IN ('02', '03', '04') AND 			 		A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1') 					  	  AND 		 			A.take_takovr_yyyy = '1'			 		  AND 					A.take_state_rcv_div_cd IS NOT NULL				  AND 					A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1')				 				ORDER BY A.take_takovr_snd_rep_cd, A.take_takovr_yyyy, A.take_takovr_sno			) B			WHERE ROWNUM <= '1'		) C		WHERE C.rnum >= '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml
+-- Query    : select
+-- Query Id : countMultiTakeTakovrProcPagedList
+
+		SELECT COUNT(1)		FROM tb_rdmultitakovrplan A		WHERE A.take_state_snd_div_cd IN ('02', '03', '04')		 AND 	 		A.take_takovr_snd_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1') 			  	  AND  			A.take_takovr_yyyy = '1'	 		  AND 		   	A.take_state_rcv_div_cd IS NOT NULL		  AND 			A.take_takovr_rcv_rep_cd = (SELECT Z.record_center_cd FROM tb_strecordcenter Z WHERE Z.record_center_id = '1')		 ;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\transf\multiTakvor\MultiTakovr.xml

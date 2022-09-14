@@ -1,0 +1,102 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findMaxFolderId
+
+		SELECT NVL(TO_CHAR(MAX(folder_id)),'00000000000000') AS max_folder_id FROM TB_RDFOLDER	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : insert
+-- Query Id : createNewOpenList
+
+		INSERT INTO TB_OPOPENLIST		(			record_center_id, open_sys_cd, open_state, open_dtime, org_cd, folder_id, record_id, creat_sys_cd, creat_yyyy, reg_dtime		)		(			SELECT C.record_center_id				, '01' AS open_sys_cd				 				, (CASE WHEN C.oper_read_range_cd='03' THEN '2' ELSE '0' END) AS open_state				 				, '' AS open_dtime				, C.org_cd				, C.folder_id				, C.record_id				, C.creat_sys_cd				, C.creat_yyyy				, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS') AS reg_dtime			FROM (				SELECT /*+ use_merge(B)*/					B.record_center_id, B.org_cd, B.folder_id, A.record_id, A.creat_sys_cd, SUBSTR(A.creat_reg_dtime,1,4) AS creat_yyyy, A.oper_read_range_cd				FROM  TB_RDRECORD A					, TB_RDFOLDER B				WHERE B.folder_id > '1'				AND   B.folder_id <= '1'				AND   B.folder_keep_state_cd IN ('01','04')			    AND   A.record_center_id = B.record_center_id			    AND   A.folder_id = B.folder_id			    AND   SUBSTR(A.creat_reg_dtime,1,4) >= '2000'			    AND   NOT EXISTS (SELECT 1 FROM TB_OPOPENLIST Z WHERE Z.record_center_id=A.record_center_id AND Z.open_sys_cd='01' AND Z.folder_id=A.folder_id AND Z.record_id=A.record_id)				ORDER BY B.record_center_id, B.org_cd, B.folder_id, A.record_id			) C		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListChngGroup
+
+		SELECT record_center_id			, list_type_cd			, COUNT(1) AS choice_cnt		FROM  TB_OPOPENLISTCHNG		WHERE open_sys_cd = '01'		AND   (open_dtime IS NULL OR open_dtime = '')		GROUP BY record_center_id, list_type_cd	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : insert
+-- Query Id : createOpenListChngGroup
+
+		INSERT INTO TB_OPOPENGROUP		(			record_center_id, open_sys_cd, open_dtime, choice_cnt, except_cnt, append_cnt, list_type_cd, list_prov_flag, list_prov_dtime, reg_dtime		)		(			SELECT '1'				, '01'				, '1'				, '1'				, 0				, 0				, '1'				, '0'				, ''				, TO_CHAR(sys_datetime,'YYYYMMDDHH24MISS')			FROM  DUAL		)	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : update
+-- Query Id : updateOpenListChngDtime
+
+		UPDATE TB_OPOPENLISTCHNG		SET   open_dtime = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   (open_dtime IS NULL OR open_dtime = '')		AND   list_type_cd = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenGroup
+
+		SELECT A.record_center_id			, (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd		    , A.open_dtime		    , A.list_type_cd		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='OP02' AND Z.com_cd=A.list_type_cd) AS list_type_nm		FROM  TB_OPOPENGROUP A		WHERE A.open_sys_cd = '01'		AND   A.list_prov_flag = '0'		ORDER BY A.record_center_id, A.open_sys_cd, A.open_dtime	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListRecord
+
+		SELECT R.record_center_id			, A.open_sys_cd			, A.open_dtime			, R.record_id			, R.orign_id		    , R.creat_sys_cd||'-'||R.org_cd||'-'||R.creat_yyyy||'-'||R.creat_reg_no||'-'||R.dtch_reg_no AS record_key		    , R.clss_id		    , R.clss_nm		    , F.title AS folder_title		    , R.title AS record_title		    , R.creat_reg_dtime		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=R.record_center_id) AS record_center_cd		    , (SELECT Z.record_center_nm FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=R.record_center_id) AS record_center_nm		    , F.org_cd		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=F.record_center_id AND Z.org_cd=F.org_cd) AS org_nm		    , (CASE WHEN (R.record_detl_type_cd='01' AND R.prod_type_cd='1')		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='28'))		            WHEN (R.record_detl_type_cd='02' OR R.record_detl_type_cd='03')		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='06'))		            WHEN R.record_detl_type_cd='04'		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='07'))		            WHEN R.creat_sys_cd='03'		                THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='01'))		            ELSE		                (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02'))		        END) AS draft_user_nm		    , (CASE WHEN (R.creat_sys_cd='02' OR R.creat_sys_cd='05' OR R.creat_sys_cd='06')		                THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=R.record_center_id AND Z.org_cd=SUBSTR(R.creat_reg_no,1,7)),SUBSTR(R.creat_reg_no,1,7)) ||'-'|| TO_NUMBER(SUBSTR(R.creat_reg_no,8))		            WHEN (R.creat_sys_cd='01' OR R.creat_sys_cd='04')		                THEN ( CASE WHEN R.record_detl_type_cd='01' THEN NVL((SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=R.record_center_id AND Z.org_cd=R.org_cd),R.org_cd) ||'-'|| TO_NUMBER(R.doc_no)		                            ELSE R.doc_no END)		            ELSE R.doc_no		        END) AS doc_no_nm		    , F.presv_term_cd		    , R.open_div_cd||R.open_grade AS open_gubun		    , R.part_open_rsn		    , R.record_detl_type_cd		    , (CASE WHEN R.creat_sys_cd IN ('01','04') THEN '02' ELSE '01' END) AS info_type_cd		    , (CASE WHEN (R.record_detl_type_cd='01' AND R.prod_type_cd='0' AND R.close_type_cd = '0'		                AND (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02')) is not null		                AND (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05')) is null		                )		            THEN (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02'))		         ELSE (SELECT Z.agent_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05'))		    END ) AS sign_user_nm		    , (CASE WHEN (R.record_detl_type_cd='01' AND R.prod_type_cd='0' AND R.close_type_cd = '0'		                AND (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02')) is not null		                AND (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05')) is null		                )		            THEN (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MIN(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='02'))		         ELSE (SELECT Z.agent_pos_rank_nm FROM TB_RDRECORDCREAT Z WHERE Z.record_center_id=R.record_center_id AND Z.record_id=R.record_id AND Z.agent_sno=(SELECT MAX(Y.agent_sno) FROM TB_RDRECORDCREAT Y WHERE Y.record_center_id=Z.record_center_id AND Y.record_id=Z.record_id AND Y.agent_type_cd='05'))		    END ) AS sign_user_pos_rank_nm		    , F.creat_sys_cd||'-'||F.org_cd||'-'||F.clss_id||'-'||F.creat_yyyy||'-'||F.folder_reg_seq||'-'||F.ho_no AS folder_key		    , R.creat_reg_no		FROM  TB_OPOPENLIST A		    , TB_RDRECORD R		    , TB_RDFOLDER F		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.open_dtime = '1'		AND   A.record_center_id = R.record_center_id		AND   A.record_id = R.record_id		AND   R.record_center_id = F.record_center_id		AND   R.folder_id = F.folder_id	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListOrignFile
+
+		SELECT orign_file_id		    , doc_type_cd		    , doc_type_sno		    , file_nm		    , file_size		    , ver		FROM  TB_STORIGNFILE		WHERE record_center_id = '1'		AND   orign_id = '1'		AND   doc_type_cd NOT IN ('10','S1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListChng02
+
+		SELECT A.record_key		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd		    , A.open_gubun		    , A.part_open_rsn		FROM  TB_OPOPENLISTCHNG A		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.open_dtime = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListChng03
+
+		SELECT A.folder_key		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd		    , A.presv_term_cd		    , A.chng_rsn		FROM  TB_OPOPENLISTCHNG A		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.open_dtime = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListChng04
+
+		SELECT A.folder_key		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd		    , (SELECT Z.record_center_nm FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_nm		    , A.takovr_org_cd		    , A.takovr_org_nm		    , A.take_org_cd		    , A.take_org_nm		FROM  TB_OPOPENLISTCHNG A		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.open_dtime = '1'	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListChng05
+
+		SELECT A.folder_key		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd		    , A.transf_ymd		    , A.chng_rsn		FROM  TB_OPOPENLISTCHNG A		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.open_dtime = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : select
+-- Query Id : findOpenListChng06
+
+		SELECT A.folder_key		    , (SELECT Z.record_center_cd FROM TB_STRECORDCENTER Z WHERE Z.record_center_id=A.record_center_id) AS record_center_cd		    , A.disuse_ymd		    , A.chng_rsn		FROM  TB_OPOPENLISTCHNG A		WHERE A.record_center_id = '1'		AND   A.open_sys_cd = '01'		AND   A.open_dtime = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml
+-- Query    : update
+-- Query Id : updateOpenGroupProv
+
+		UPDATE TB_OPOPENGROUP		SET   list_prov_flag = '1'			, list_prov_dtime = '1'		WHERE record_center_id = '1'		AND   open_sys_cd = '01'		AND   open_dtime = '1';
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid_daemon\rmsMakeOpenList\conf\sqlMap\sql\sqlMap-OpenList.xml

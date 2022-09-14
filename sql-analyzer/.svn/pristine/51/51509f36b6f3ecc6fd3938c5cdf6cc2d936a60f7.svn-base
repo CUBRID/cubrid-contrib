@@ -1,0 +1,46 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+-- Query    : select
+-- Query Id : findStndMng
+
+		SELECT E.STND_MNG_TYPE_CD			,(SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ07' AND USE_FLAG='1' AND COM_CD = E.CD_DIV ) CD_DIV_NM			, E.APPLY_TRGT_NM			, E.VER			, E.RECV_DTIME			, (SELECT USER_NM FROM TB_STUSER WHERE USER_ID = E.WORK_USER_ID AND RECORD_CENTER_ID = '1' ) USER_NM			, E.RECV_FILE_NM			, E.ESTB_YMD			, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ02' AND USE_FLAG='1' AND COM_CD = E.APPLY_FLAG ) as  APPLY_FLAG_NM			, E.INFO_FILE_ID		FROM (			SELECT D.*			FROM (				SELECT ROWNUM AS rnum					, C.*				FROM (					SELECT A.STND_MNG_TYPE_CD						, B.CD_DIV						, B.APPLY_TRGT_NM						, A.VER						, A.RECV_DTIME						, A.WORK_USER_ID						, A.RECV_FILE_NM						, A.ESTB_YMD						, A.APPLY_FLAG						, INFO_FILE_ID					FROM TB_ZZSTNDMNG A, TB_ZZSTNDMNGTYPE B 					WHERE A.RECORD_CENTER_ID = '1'					AND B.RECORD_CENTER_ID = A.RECORD_CENTER_ID					AND B.STND_MNG_TYPE_CD = A.STND_MNG_TYPE_CD					ORDER BY A.RECV_DTIME				) C				WHERE ROWNUM <= '1'			) D			WHERE D.rnum >= '1'		) E		ORDER BY E.rnum	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+-- Query    : select
+-- Query Id : countStndMng
+
+		SELECT COUNT(1)		FROM TB_ZZSTNDMNG A, TB_ZZSTNDMNGTYPE B 		WHERE A.STND_MNG_TYPE_CD = B.STND_MNG_TYPE_CD 		AND A.RECORD_CENTER_ID = '1' 		AND B.RECORD_CENTER_ID = '1' 		;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+-- Query    : insert
+-- Query Id : createStndMng
+
+		INSERT INTO TB_ZZSTNDMNG(STND_MNG_TYPE_CD, VER, RECV_DTIME, WORK_USER_ID, RECV_FILE_NM, INFO_FILE_ID, ESTB_YMD, APPLY_FLAG, RECORD_CENTER_ID) 		VALUES ('1' ,'1'		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		, '1', '1', '1', '1', '0', '1');
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+-- Query    : delete
+-- Query Id : deleteStndMng
+
+	  DELETE 	  FROM TB_ZZSTNDMNG	  WHERE STND_MNG_TYPE_CD = '1' 	  AND VER = '1'	  AND RECORD_CENTER_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+-- Query    : update
+-- Query Id : updateStndMng
+
+	  UPDATE TB_ZZSTNDMNG	  SET  APPLY_FLAG = '1'	  WHERE STND_MNG_TYPE_CD = '1' 	  AND VER = '1'	  AND RECORD_CENTER_ID = '1' 	;
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml
+-- Query    : select
+-- Query Id : findComCd
+
+		SELECT COM_CD    AS CODE, 			   COM_CD_NM AS NAME		FROM TB_ZZCOMCD		 WHERE  				COM_TYPE_CD = '1'			  AND 				COM_TYPE_CD = '1'			  AND 				USE_FLAG = '1'			  AND 				COM_CD = '1'			  AND 				COM_CD_NM = '1'			  		ORDER BY COM_CD	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\stnd\stndinfo\StndMng.xml

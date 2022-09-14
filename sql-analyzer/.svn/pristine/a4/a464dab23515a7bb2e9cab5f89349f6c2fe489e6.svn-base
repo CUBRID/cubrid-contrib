@@ -1,0 +1,11 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\open\Open.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\open\Open.xml
+-- Query    : insert
+-- Query Id : createOpenFolder
+
+		INSERT INTO TB_OPOPENLIST		(		    record_center_id, open_sys_cd, open_state, open_dtime, org_cd		    , folder_id, record_id, creat_sys_cd, creat_yyyy, reg_dtime		)		(		    SELECT B.record_center_id, '01'		        , (CASE WHEN '0' = '1' THEN (CASE WHEN B.oper_read_range_cd = '01' THEN '0' ELSE '2' END) ELSE '0' END)		        , '', A.org_cd, B.folder_id, B.record_id, A.creat_sys_cd, SUBSTR(B.creat_reg_dtime,1,4), TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')		    FROM  TB_RDFOLDER A		        , TB_RDRECORD B		    WHERE A.record_center_id = '1'		    AND   A.folder_id = '1'		    AND   B.record_center_id = A.record_center_id		    AND   B.folder_id = A.folder_id		    AND   SUBSTR(B.creat_reg_dtime,1,4) >= '2014'		)	;
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\open\Open.xml

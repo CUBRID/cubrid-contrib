@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="accs.trace.RecordTrace">
+	
+		<resultMap id="accs-recordtrace-result" class="rms.accs.trace.domain.RecordTrace" >
+		<result property="recordId" 	column="RECORD_ID"/>
+		<result property="userNm" 		column="USER_NM"/>
+		<result property="deptNm" 		column="DEPT_NM"/>
+		<result property="workTypeCd" 	column="WORK_TYPE_CD"/>
+		<result property="workDtime" 	column="WORK_DTIME"/>
+		<result property="title" 		column="TITLE"/>
+		<result property="orgNm" 		column="ORG_NM"/>
+		<result property="orgAbbrNm" 		column="ORG_ABBR_NM"/>
+		<result property="creatYyyy"	column="CREAT_YYYY"/>
+	</resultMap>
+
+	
+	<!--
+		COUNT
+	-->
+	<select id="countRecordTrace" parameterClass="rms.accs.trace.domain.RecordTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.RECORD_ID AND A.TRGT_DIV_CD='2'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>
+			<isNotEmpty prepend="AND" property="recordId">
+				 A.TRGT_ID = #recordId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="title">
+				(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyStart">
+				<![CDATA[
+					C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyEnd">
+				<![CDATA[
+					C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="userDiv" compareValue="1">
+				B.USER_DIV ='3'
+			</isEqual>
+			<isEqual prepend="AND" property="userDiv" compareValue="2">
+				B.USER_DIV != '3'
+			</isEqual>
+			<isNotEmpty prepend="AND" property="recordDetlTypeCd">
+				<![CDATA[
+					C.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+				]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findRecordTrace" parameterClass="rms.accs.trace.domain.RecordTrace" resultMap="accs-recordtrace-result">
+		SELECT A.TRGT_ID AS RECORD_ID
+		, B.USER_NM
+		, (SELECT DEPT_ABBR_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.WORK_DTIME
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		, C.TITLE
+		, (SELECT ORG_NM FROM TB_STORG WHERE ORG_CD = C.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_NM
+		, (SELECT ORG_ABBR_NM FROM TB_STORG WHERE ORG_CD = C.ORG_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) ORG_ABBR_NM
+		, C.CREAT_YYYY
+		FROM TB_ZZTRACE A, TB_STUSER B, TB_RDRECORD C
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = C.RECORD_ID AND A.TRGT_DIV_CD='2'	
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND C.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		<dynamic>			
+			<isNotEmpty prepend="AND" property="recordId">
+				A.TRGT_ID = #recordId:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="title">
+				(C.TITLE LIKE #title:VARCHAR# OR C.SUB_TITLE LIKE #title:VARCHAR# OR C.CORCT_TITLE LIKE #title:VARCHAR#) 
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyStart">
+				<![CDATA[
+					C.CREAT_YYYY >= #creatYyyyStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyyEnd">
+				<![CDATA[
+					C.CREAT_YYYY <= #creatYyyyEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeStart">
+				<![CDATA[
+					A.WORK_DTIME >= #workDtimeStart:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workDtimeEnd">
+				<![CDATA[
+					A.WORK_DTIME <= #workDtimeEnd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="workTypeCd">
+				A.WORK_TYPE_CD = #workTypeCd:VARCHAR#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="userDiv" compareValue="1">
+				B.USER_DIV = '3'
+			</isEqual>
+			<isEqual prepend="AND" property="userDiv" compareValue="2">
+				B.USER_DIV != '3'
+			</isEqual>
+			<isNotEmpty prepend="AND" property="recordDetlTypeCd">
+				<![CDATA[
+					C.RECORD_DETL_TYPE_CD = #recordDetlTypeCd:VARCHAR#
+				]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="docFlag">
+				DOC_FLAG = '0'
+		        AND    
+		        <![CDATA[
+		            TRACE_YMD < TO_CHAR(SYSDATE,'YYYY')-2||'0101'
+		        ]]>
+			</isNotEmpty>		
+			ORDER BY A.WORK_DTIME
+			<!-- 		
+			<isNotEqual property="order" compareValue="2">
+				ORDER BY C.TITLE
+			</isNotEqual>
+			<isEqual property="order" compareValue="2">
+				ORDER BY A.WORK_DTIME
+			</isEqual>
+			 -->
+		</dynamic>		
+	</select>	
+	
+	<!--
+		COUNT
+	-->
+	<select id="countRecordTraceDetl" parameterClass="rms.accs.trace.domain.RecordTrace" resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = #recordId:VARCHAR# AND A.TRGT_DIV_CD='2'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>	
+	
+	<!-- 
+		SELECT
+	 -->
+	<select id="findRecordTraceDetl" parameterClass="rms.accs.trace.domain.RecordTrace" resultMap="accs-recordtrace-result">
+		SELECT '' RECORD_ID
+		, B.USER_NM
+		, (SELECT DEPT_NM FROM TB_STDEPT WHERE DEPT_CD = B.DEPT_CD AND RECORD_CENTER_ID = #recordCenterId:VARCHAR#) DEPT_NM
+		, A.WORK_DTIME
+		, (SELECT COM_CD_NM	FROM TB_ZZCOMCD	WHERE COM_TYPE_CD = 'ZZ13' AND USE_FLAG='1' AND COM_CD = A.WORK_TYPE_CD ) WORK_TYPE_CD 
+		, '' TITLE
+		, '' ORG_NM
+		, '' ORG_ABBR_NM
+		, '' CREAT_YYYY
+		FROM TB_ZZTRACE A, TB_STUSER B
+		WHERE A.USER_ID = B.USER_ID AND A.TRGT_ID = #recordId:VARCHAR# AND A.TRGT_DIV_CD='2'
+		AND A.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+		AND B.RECORD_CENTER_ID = #recordCenterId:VARCHAR#
+	</select>
+	
+</sqlMap>

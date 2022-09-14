@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="orign.fileTakeTakovr">
+
+	<!-- 기관간인수인계 파일 목록 조회 (기록물철 장기보존포맷파일) -->
+	<resultMap id="findTakeTakovrFolderNeoFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="folderNeoFileId" column="folder_neo_file_id" />
+		<result property="folderId" column="folder_id" />
+		<result property="chngSno" column="chng_sno" />
+		<result property="fileNm" column="file_nm" />
+		<result property="neoFileTypeCd" column="neo_file_type_cd" />
+		<result property="fileSize" column="file_size" />
+		<result property="storeFileId" column="store_file_id" />
+		<result property="neoTransState" column="neo_trans_state" />
+		<result property="delFlag" column="del_flag" />
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="mediumId" column="medium_id" />
+		<result property="virusFlag" column="virus_flag" />
+		<result property="virusDtime" column="virus_dtime" />
+		<result property="transReqDtime" column="trans_req_dtime" />
+		<result property="transFinDtime" column="trans_fin_dtime" />
+		<result property="regDtime" column="reg_dtime" />
+		<result property="filePath" column="file_path" />
+		<result property="creatYyyy" column="creat_yyyy" />
+	</resultMap>
+	<select id="findTakeTakovrFolderNeoFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findTakeTakovrFolderNeoFileList-result">
+		SELECT A.folder_neo_file_id, A.rd_folder_id AS folder_id,
+		A.chng_sno, A.file_nm, A.neo_file_type_cd
+		, A.file_size, A.store_file_id, A.neo_trans_state, A.del_flag,
+		A.record_center_id
+		, A.medium_id, A.virus_flag, A.virus_dtime, A.trans_req_dtime,
+		A.trans_fin_dtime
+		, A.reg_dtime, A.file_path
+		, (SELECT F.creat_yyyy FROM TB_RCFOLDER F WHERE
+		F.record_center_id=A.record_center_id AND F.folder_id=A.folder_id) AS
+		creat_yyyy
+		FROM (
+		SELECT B.*
+		, '$rdFolderId$' AS rd_folder_id
+		FROM TB_RCFOLDERNEOFILE B
+		, TB_RCTAKEFOLDERLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.folder_id = #folderId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND B.folder_id = C.folder_id
+		ORDER BY B.record_center_id, B.folder_id, B.chng_sno
+		) A
+	</select>
+
+	<!-- 기관간인수인계 파일 등록 (기록물철 장기보존포맷파일) -->
+	<insert id="createTakeTakovrFolderNeoFile" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT INTO TB_STFOLDERNEOFILE
+		(
+		folder_neo_file_id, folder_id, chng_sno, file_nm, neo_file_type_cd
+		, file_size, store_file_id, neo_trans_state, del_flag, record_center_id
+		, medium_id, virus_flag, virus_dtime, trans_req_dtime, trans_fin_dtime
+		, reg_dtime
+		) VALUES (
+		#folderNeoFileId:VARCHAR#, #folderId:VARCHAR#, #chngSno:NUMBER#, #fileNm:VARCHAR#,
+		#neoFileTypeCd:VARCHAR#
+		, #fileSize:NUMBER#, #storeFileId:VARCHAR#, #neoTransState:VARCHAR#,
+		#delFlag:CHAR#, #recordCenterId:VARCHAR#
+		, #mediumId:VARCHAR#, #virusFlag:VARCHAR#, #virusDtime:VARCHAR#,
+		#transReqDtime:VARCHAR#, #transFinDtime:VARCHAR#
+		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+
+	<!-- 기관간인수인계 기록물건의 전자기록물여부를 조회한다. -->
+	<select id="findTakeTakovrRecordErecordFlag" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultClass="string">
+		SELECT B.erecord_flag
+		FROM TB_RCRECORD B
+		, TB_RCTAKERECORDLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND
+		C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND
+		C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.record_id =
+		#recordId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND
+		B.record_id = C.record_id
+	</select>
+
+	<!-- 기관간인수인계 기록물건원문 등록 -->
+	<insert id="createTakeTakovrRecordOrign" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT
+		INTO TB_STRECORDORIGN
+		(
+		record_center_id, orign_id, record_id, erecord_flag, del_flag
+		, reg_dtime
+		) VALUES (
+		#recordCenterId:VARCHAR#, #orignId:VARCHAR#, #rdRecordId:VARCHAR#, #erecordFlag:VARCHAR#, '0'
+		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS')
+		)
+	</insert>
+	<update id="updateTakeTakovrRecordOrign" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		UPDATE
+		TB_STRECORDORIGN
+		SET orign_id = #orignId:VARCHAR#
+		WHERE record_center_id
+		= #recordCenterId:VARCHAR#
+		AND record_id = #rdRecordId:VARCHAR#
+	</update>
+	<select id="countTakeTakovrRecordOrign" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultClass="int">
+		SELECT COUNT(1)
+		FROM TB_STRECORDORIGN
+		WHERE record_center_id
+		= #recordCenterId:VARCHAR#
+		AND record_id = #rdRecordId:VARCHAR#
+	</select>
+
+	<!-- 기관간인수인계 파일 목록 조회 (기록물건 원문파일) -->
+	<resultMap id="findTakeTakovrOrignFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="docTypeCd" column="doc_type_cd" />
+		<result property="docTypeSno" column="doc_type_sno" />
+		<result property="orignId" column="orign_id" />
+		<result property="orignFileId" column="orign_file_id" />
+		<result property="fileNm" column="file_nm" />
+		<result property="storeFileNm" column="store_file_nm" />
+		<result property="dataFormatCd" column="data_format_cd" />
+		<result property="fileSize" column="file_size" />
+		<result property="storeFileId" column="store_file_id" />
+		<result property="mediumId" column="medium_id" />
+		<result property="agentNm" column="agent_nm" />
+		<result property="ver" column="ver" />
+		<result property="pageCnt" column="page_cnt" />
+		<result property="pdfA1TransState" column="pdf_a1_trans_state" />
+		<result property="pdfA1TransReqDtime" column="pdf_a1_trans_req_dtime" />
+		<result property="pdfA1TransFinDtime" column="pdf_a1_trans_fin_dtime" />
+		<result property="delFlag" column="del_flag" />
+		<result property="virusFlag" column="virus_flag" />
+		<result property="virusDtime" column="virus_dtime" />
+		<result property="regDtime" column="reg_dtime" />
+		<result property="attachFileSeq" column="attach_file_seq" />
+		<result property="relFileKey" column="rel_file_key" />
+		<result property="attachFileMngInfo" column="attach_file_mng_info" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findTakeTakovrOrignFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findTakeTakovrOrignFileList-result">
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.doc_type_cd,
+		A.doc_type_sno, A.rd_orign_id AS orign_id
+		, A.orign_file_id, A.file_nm, A.store_file_nm, A.data_format_cd,
+		A.file_size
+		, A.store_file_id, A.medium_id, A.agent_nm, A.ver, A.page_cnt
+		, A.pdf_a1_trans_state, A.pdf_a1_trans_req_dtime,
+		A.pdf_a1_trans_fin_dtime, A.del_flag, A.virus_flag
+		, A.virus_dtime, A.reg_dtime, A.attach_file_seq, A.rel_file_key,
+		A.attach_file_mng_info
+		, A.file_path
+		FROM (
+		SELECT B.*
+		, '$rdRecordId$' AS rd_record_id
+		, '$orignId$' AS rd_orign_id
+		FROM TB_RCORIGNFILE B
+		, TB_RCTAKERECORDLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.record_id = #recordId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND B.record_id = C.record_id
+		ORDER BY B.record_center_id, B.record_id, B.doc_type_cd, B.doc_type_sno
+		) A
+	</select>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 원문파일) -->
+	<insert id="createTakeTakovrOrignFile" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT
+		INTO TB_STORIGNFILE
+		(
+		orign_file_id, record_center_id, orign_id, doc_type_cd, doc_type_sno
+		, file_nm, store_file_nm, data_format_cd, file_size, store_file_id
+		, medium_id, agent_nm, ver, page_cnt, pdf_a1_trans_state
+		, pdf_a1_trans_req_dtime, pdf_a1_trans_fin_dtime, del_flag, virus_flag,
+		virus_dtime
+		, reg_dtime, attach_file_seq, rel_file_key, attach_file_mng_info,
+		file_path_rule
+		) VALUES (
+		#orignFileId:VARCHAR#, #recordCenterId:VARCHAR#, #orignId:VARCHAR#, #docTypeCd:VARCHAR#,
+		#docTypeSno:NUMBER#
+		, #fileNm:VARCHAR#, #storeFileNm:VARCHAR#, #dataFormatCd:VARCHAR#,
+		#fileSize:NUMBER#, #storeFileId:VARCHAR#
+		, #mediumId:VARCHAR#, #agentNm:VARCHAR#, #ver:VARCHAR#,
+		#pageCnt:VARCHAR#, #pdfA1TransState:VARCHAR#
+		, #pdfA1TransReqDtime:VARCHAR#, #pdfA1TransFinDtime:VARCHAR#,
+		#delFlag:CHAR#, #virusFlag:VARCHAR#, #virusDtime:VARCHAR#
+		, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), #attachFileSeq:VARCHAR#,
+		#relFileKey:VARCHAR#, #attachFileMngInfo:VARCHAR#, '1'
+		)
+	</insert>
+
+	<!-- 기관간인수인계 파일 목록 조회 (기록물건 문서보존포맷파일) -->
+	<resultMap id="findTakeTakovrOrignPdfA1FileList-result"
+		class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="docTypeCd" column="doc_type_cd" />
+		<result property="docTypeSno" column="doc_type_sno" />
+		<result property="orignId" column="orign_id" />
+		<result property="pdfA1FileId" column="pdf_a1_file_id" />
+		<result property="fileNm" column="file_nm" />
+		<result property="dataFormatCd" column="data_format_cd" />
+		<result property="fileSize" column="file_size" />
+		<result property="storeFileId" column="store_file_id" />
+		<result property="mediumId" column="medium_id" />
+		<result property="delFlag" column="del_flag" />
+		<result property="virusFlag" column="virus_flag" />
+		<result property="virusDtime" column="virus_dtime" />
+		<result property="regDtime" column="reg_dtime" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findTakeTakovrOrignPdfA1FileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findTakeTakovrOrignPdfA1FileList-result">
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.doc_type_cd,
+		A.doc_type_sno, A.rd_orign_id AS orign_id
+		, A.pdf_a1_file_id, A.file_nm, A.data_format_cd, A.file_size,
+		A.store_file_id
+		, A.medium_id, A.del_flag, A.virus_flag, A.virus_dtime, A.reg_dtime
+		, A.file_path
+		FROM (
+		SELECT B.*
+		, '$rdRecordId$' AS rd_record_id
+		, '$orignId$' AS rd_orign_id
+		FROM TB_RCORIGNPDFA1FILE B
+		, TB_RCTAKERECORDLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.record_id = #recordId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND B.record_id = C.record_id
+		ORDER BY B.record_center_id, B.record_id, B.doc_type_cd, B.doc_type_sno
+		) A
+	</select>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 문서보존포맷파일) -->
+	<insert id="createTakeTakovrOrignPdfA1File" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT INTO TB_STORIGNPDFA1FILE
+		(
+		pdf_a1_file_id, record_center_id, orign_id, doc_type_cd, doc_type_sno
+		, file_nm, data_format_cd, file_size, store_file_id, medium_id
+		, del_flag, virus_flag, virus_dtime, reg_dtime, file_path_rule
+		) VALUES
+		(
+		#pdfA1FileId:VARCHAR#, #recordCenterId:VARCHAR#, #orignId:VARCHAR#, #docTypeCd:VARCHAR#,
+		#docTypeSno:NUMBER#
+		, #fileNm:VARCHAR#, #dataFormatCd:VARCHAR#, #fileSize:NUMBER#,
+		#storeFileId:VARCHAR#, #mediumId:VARCHAR#
+		, #delFlag:CHAR#, #virusFlag:VARCHAR#, #virusDtime:VARCHAR#,
+		TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), '1'
+		)
+	</insert>
+
+	<!-- 기관간인수인계 파일 목록 조회 (기록물건 장기보존포맷파일) -->
+	<resultMap id="findTakeTakovrOrignNeoFileList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="chngSno" column="chng_sno" />
+		<result property="orignId" column="orign_id" />
+		<result property="orignNeoFileId" column="orign_neo_file_id" />
+		<result property="fileNm" column="file_nm" />
+		<result property="neoFileTypeCd" column="neo_file_type_cd" />
+		<result property="fileSize" column="file_size" />
+		<result property="storeFileId" column="store_file_id" />
+		<result property="mediumId" column="medium_id" />
+		<result property="delFlag" column="del_flag" />
+		<result property="virusFlag" column="virus_flag" />
+		<result property="virusDtime" column="virus_dtime" />
+		<result property="regDtime" column="reg_dtime" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findTakeTakovrOrignNeoFileList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findTakeTakovrOrignNeoFileList-result">
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.chng_sno,
+		A.rd_orign_id AS orign_id, A.orign_neo_file_id
+		, A.file_nm, A.neo_file_type_cd, A.file_size, A.store_file_id,
+		A.medium_id
+		, A.del_flag, A.virus_flag, A.virus_dtime, A.reg_dtime, A.file_path
+		FROM (
+		SELECT B.*
+		, '$rdRecordId$' AS rd_record_id
+		, '$orignId$' AS rd_orign_id
+		FROM TB_RCORIGNNEOFILE B
+		, TB_RCTAKERECORDLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.record_id = #recordId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND B.record_id = C.record_id
+		ORDER BY B.record_center_id, B.record_id, B.chng_sno
+		) A
+	</select>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 장기보존포맷파일) -->
+	<insert id="createTakeTakovrOrignNeoFile" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT
+		INTO TB_STORIGNNEOFILE
+		(
+		orign_neo_file_id, record_center_id, orign_id, chng_sno, file_nm
+		, neo_file_type_cd, file_size, store_file_id, medium_id, del_flag
+		, virus_flag, virus_dtime, reg_dtime
+		) VALUES (
+		#orignNeoFileId:VARCHAR#, #recordCenterId:VARCHAR#, #orignId:VARCHAR#,
+		#chngSno:NUMBER#, #fileNm:VARCHAR#
+		, #neoFileTypeCd:VARCHAR# , #fileSize:NUMBER#, #storeFileId:VARCHAR#,
+		#mediumId:VARCHAR#, #delFlag:CHAR#
+		, #virusFlag:VARCHAR#, #virusDtime:VARCHAR#, TO_CHAR(sys_datetime,
+		'YYYYMMDDHH24MISS')
+		)
+	</insert>
+
+	<!-- 기관간인수인계 파일 목록 조회 (기록물건 스캐닝파일) -->
+	<resultMap id="findTakeTakovrOrignPageList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="docTypeCd" column="doc_type_cd" />
+		<result property="docTypeSno" column="doc_type_sno" />
+		<result property="sno" column="sno" />
+		<result property="orignId" column="orign_id" />
+		<result property="orignPageId" column="orign_page_id" />
+		<result property="orignFileId" column="orign_file_id" />
+		<result property="orignPageFileNm" column="orign_page_file_nm" />
+		<result property="storePageFileNm" column="store_page_file_nm" />
+		<result property="storeFileId" column="store_file_id" />
+		<result property="dataFormatCd" column="data_format_cd" />
+		<result property="fileSize" column="file_size" />
+		<result property="delFlag" column="del_flag" />
+		<result property="virusFlag" column="virus_flag" />
+		<result property="virusDtime" column="virus_dtime" />
+		<result property="regDtime" column="reg_dtime" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findTakeTakovrOrignPageList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findTakeTakovrOrignPageList-result">
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.doc_type_cd,
+		A.doc_type_sno, A.sno
+		, A.rd_orign_id AS orign_id, A.orign_page_id, A.orign_file_id,
+		A.orign_page_file_nm, A.store_page_file_nm
+		, A.store_file_id, A.data_format_cd, A.file_size, A.del_flag,
+		A.virus_flag
+		, A.virus_dtime, A.reg_dtime, A.file_path
+		FROM (
+		SELECT B.*
+		, '$rdRecordId$' AS rd_record_id
+		, '$orignId$' AS rd_orign_id
+		FROM TB_RCORIGNPAGE B
+		, TB_RCTAKERECORDLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.record_id = #recordId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND B.record_id = C.record_id
+		ORDER BY B.record_center_id, B.record_id, B.doc_type_cd, B.doc_type_sno,
+		B.sno
+		) A
+	</select>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 스캐닝파일) -->
+	<insert id="createTakeTakovrOrignPage" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT
+		INTO TB_STORIGNPAGE
+		(
+		orign_page_id, orign_file_id, sno, orign_page_file_nm, store_page_file_nm
+		, store_file_id, data_format_cd, file_size, del_flag, virus_flag
+		, virus_dtime, reg_dtime, file_path_rule
+		) VALUES (
+		#orignPageId:VARCHAR#, #orignFileId:VARCHAR#, #sno:NUMBER#,
+		#orignPageFileNm:VARCHAR#, #storePageFileNm:VARCHAR#
+		, #storeFileId:VARCHAR#, #dataFormatCd:VARCHAR#, #fileSize:NUMBER#,
+		#delFlag:VARCHAR#, #virusFlag:VARCHAR#
+		, #virusDtime:VARCHAR#, TO_CHAR(sys_datetime, 'YYYYMMDDHH24MISS'), '1'
+		)
+	</insert>
+
+	<!-- 기관간인수인계 파일 목록 조회 (기록물건 스캐닝이력파일) -->
+	<resultMap id="findTakeTakovrOrignPageHistList-result" class="rms.orign.server.domain.FileTakeTakovr">
+		<result property="recordCenterId" column="record_center_id" />
+		<result property="recordId" column="record_id" />
+		<result property="orignId" column="orign_id" />
+		<result property="orignPageId" column="orign_page_id" />
+		<result property="orignFileId" column="orign_file_id" />
+		<result property="orignPageFileNm" column="orign_page_file_nm" />
+		<result property="storePageFileNm" column="store_page_file_nm" />
+		<result property="storeFileId" column="store_file_id" />
+		<result property="dataFormatCd" column="data_format_cd" />
+		<result property="fileSize" column="file_size" />
+		<result property="chngUserId" column="chng_user_id" />
+		<result property="chngRsn" column="chng_rsn" />
+		<result property="chngDtime" column="chng_dtime" />
+		<result property="filePath" column="file_path" />
+	</resultMap>
+	<select id="findTakeTakovrOrignPageHistList" parameterClass="rms.orign.server.domain.FileTakeTakovr"
+		resultMap="findTakeTakovrOrignPageHistList-result">
+		SELECT A.record_center_id, A.rd_record_id AS record_id, A.rd_orign_id AS
+		orign_id, A.orign_page_id, A.orign_file_id
+		, A.orign_page_file_nm, A.store_page_file_nm, A.store_file_id,
+		A.data_format_cd, A.file_size
+		, A.chng_user_id, A.chng_rsn, A.chng_dtime, A.file_path
+		FROM (
+		SELECT B.*
+		, '$rdRecordId$' AS rd_record_id
+		, '$orignId$' AS rd_orign_id
+		FROM TB_RCORIGNPAGEHIST B
+		, TB_RCTAKERECORDLIST C
+		WHERE C.take_rep_cd = #takeRepCd:VARCHAR#
+		AND C.take_yyyy = #takeYyyy:VARCHAR#
+		AND C.take_sno = #takeSno:NUMBER#
+		AND C.record_center_id = #recordCenterId:VARCHAR#
+		AND C.record_id = #recordId:VARCHAR#
+		AND B.record_center_id = C.record_center_id
+		AND B.record_id = C.record_id
+		ORDER BY B.record_center_id, B.record_id, B.chng_dtime
+		) A
+	</select>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 스캐닝이력파일-1.건원문이력 등록) -->
+	<insert id="createTakeTakovrRecordOrignHist" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT INTO TB_STRECORDORIGNHIST
+		(
+		record_center_id, orign_id, record_id, chng_dtime
+		) VALUES (
+		#recordCenterId:VARCHAR#, #orignId:VARCHAR#, #recordId:VARCHAR#, #chngDtime:VARCHAR#
+		)
+	</insert>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 스캐닝이력파일-2.원문파일이력 등록) -->
+	<insert id="createTakeTakovrOrignFileHist" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT INTO TB_STORIGNFILEHIST
+		(
+		orign_file_id, record_center_id, orign_id, doc_type_cd, file_nm
+		, store_file_nm, file_size, medium_id, page_cnt, chng_dtime
+		) VALUES (
+		#orignFileId:VARCHAR#, #recordCenterId:VARCHAR#, #orignId:VARCHAR#,
+		#docTypeCd:VARCHAR#, #fileNm:VARCHAR#
+		, #storeFileNm:VARCHAR#, #fileSize:NUMBER#, #mediumId:VARCHAR#,
+		#pageCnt:VARCHAR#, #chngDtime:VARCHAR#
+		)
+	</insert>
+
+	<!-- 기관간인수인계 파일 등록 (기록물건 스캐닝이력파일-3.스캐닝이력파일 등록) -->
+	<insert id="createTakeTakovrOrignPageHist" parameterClass="rms.orign.server.domain.FileTakeTakovr">
+		INSERT INTO TB_STORIGNPAGEHIST
+		(
+		orign_page_id, orign_file_id, orign_page_file_nm, store_page_file_nm, store_file_id
+		, data_format_cd, file_size, chng_user_id, chng_rsn, chng_dtime
+		, file_path_rule
+		) VALUES (
+		#orignPageId:VARCHAR#, #orignFileId:VARCHAR#, #orignPageFileNm:VARCHAR#,
+		#storePageFileNm:VARCHAR#, #storeFileId:VARCHAR#
+		, #dataFormatCd:VARCHAR#, #fileSize:NUMBER#, #chngUserId:VARCHAR#,
+		#chngRsn:VARCHAR#, #chngDtime:VARCHAR#
+		, '1'
+		)
+	</insert>
+
+</sqlMap>

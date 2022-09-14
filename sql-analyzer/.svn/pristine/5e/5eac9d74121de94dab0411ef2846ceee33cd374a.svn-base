@@ -1,0 +1,18 @@
+-- File Open : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailPublications.xml
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailPublications.xml
+-- Query    : select
+-- Query Id : findPublicationsHead
+
+		SELECT A.record_center_id		    , A.publ_reg_id		    , A.publ_slt_flag		    , A.org_div		    , A.org_cd		    , A.title		    , A.content		    , TO_CHAR(TO_DATE(A.publ_ymd, 'YYYYMMDD'), 'YYYY-MM-DD') AS publ_ymd		    , A.page_cnt		    , A.deposit_flag		    , A.remk		    , A.publ_prd		    , A.publ_type		    , A.publ_media		    , A.shap_mat		    , A.stakrm_id		    , A.booksf_id		    , A.first_keep_cnt		    , A.cur_keep_cnt		    , A.destry_rsn1		    , A.destry_rsn2		    , A.destry_rsn3		    , A.open_div_cd		    , A.open_grade		    , SUBSTR(A.open_grade,1,1) AS grade1		    , SUBSTR(A.open_grade,2,1) AS grade2		    , SUBSTR(A.open_grade,3,1) AS grade3		    , SUBSTR(A.open_grade,4,1) AS grade4		    , SUBSTR(A.open_grade,5,1) AS grade5		    , SUBSTR(A.open_grade,6,1) AS grade6		    , SUBSTR(A.open_grade,7,1) AS grade7		    , SUBSTR(A.open_grade,8,1) AS grade8		    , A.part_open_rsn		    , A.publ_prog_stat		    , A.cr_report_ymd		    , A.destry_flag		    , A.creat_org_nm		    , (CASE WHEN A.destry_flag='0' THEN 'º¸Á¸' ELSE 'Æó±â' END) AS destry_flag_nm		    , (CASE WHEN A.deposit_flag='1' THEN 'O' ELSE 'X' END) AS deposit_flag_nm		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD05' AND Z.com_cd=A.open_div_cd) AS open_div_cd_nm		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV01' AND Z.com_cd=A.org_div) AS org_div_nm		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV02' AND Z.com_cd=A.publ_prd) AS publ_prd_nm		    , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='GV03' AND Z.com_cd=A.publ_type) AS publ_type_nm		    , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=A.record_center_id AND Z.org_cd=A.org_cd) AS org_nm		FROM  TB_GVPUBL A		WHERE A.record_center_id = '1'		AND   A.publ_reg_id = '1'		AND   A.publ_reg_seq = '1';
+
+
+-- Filename : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailPublications.xml
+-- Query    : select
+-- Query Id : findPublicationsAttachFileList
+
+		SELECT record_center_id			, publ_reg_id			, publ_file_req			, publ_reg_seq			, publ_file_id			, publfile_path			, store_file_nm		FROM  TB_GVPUBL_FILE		WHERE record_center_id = '1'		AND   publ_reg_id = '1'		AND   publ_reg_seq = '1'		ORDER BY record_center_id, publ_reg_id, TO_NUMBER(publ_file_req);
+
+
+-- File Close : C:\eclipse\workspace\SqlMapXMLParser\rmsCubrid\rms\default\rms\common\detail\DetailPublications.xml

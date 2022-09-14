@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="srch.srch">
+
+	<!-- 
+		분류체계검색_단위과제검색
+		: 단위과제트리 조회 (기능별)
+	 -->
+	<select id="findClssSrchTree" parameterClass="rms.srch.srch.domain.ClssSrchTree" resultClass="rms.srch.srch.domain.ClssSrchTree">
+		SELECT B.*
+		FROM (
+			SELECT (CASE WHEN A.levl = 6 THEN '2' ELSE '1' END) AS treeType
+				, A.bis_clss_id AS id
+				, A.bis_clss_nm AS text
+                , (CASE WHEN EXISTS (SELECT 1 FROM TB_ZZBISCLSS B WHERE B.upper_bis_clss_id = A.bis_clss_id) THEN 'closed'
+                        ELSE 'open'
+                    END) AS state 
+				, (CASE WHEN A.levl = 6 THEN (CASE WHEN A.del_flag = '1' THEN 'icon-file_full_delete' ELSE 'icon-file_full_accept' END)
+						ELSE (CASE WHEN A.del_flag = '1' THEN 'icon-folder_full_delete' ELSE 'icon-folder_full_accept' END)
+					END) AS iconCls
+			FROM  TB_ZZBISCLSS A
+			<dynamic prepend="WHERE">
+				<isEmpty prepend="AND" property="id">
+					A.levl = 1
+				</isEmpty>
+				<isNotEmpty prepend="AND" property="id">
+					<isEqual property="id" compareValue="ROOT">
+						A.levl = 1
+					</isEqual>
+					<isNotEqual property="id" compareValue="ROOT">
+						A.upper_bis_clss_id = #id:VARCHAR#
+					</isNotEqual>
+				</isNotEmpty>
+				<isEmpty prepend="AND" property="delFlag">
+					(A.del_flag IS NULL OR A.del_flag = '0')
+				</isEmpty>
+			</dynamic>
+			ORDER BY A.levl, A.sort_sno
+		) B
+	</select>
+	
+	<!-- 
+		분류체계검색_단위과제검색
+		: 단위과제트리 조회 (조직별)
+	 -->
+	<select id="findOrgClssSrchTree" parameterClass="rms.srch.srch.domain.ClssSrchTree" resultClass="rms.srch.srch.domain.ClssSrchTree">
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, C.bis_clss_id AS id
+					, C.bis_clss_nm AS text
+					, 'open' AS state
+					, (CASE WHEN B.del_flag = '1' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+					, TB_ZZBISORG B
+					, TB_ZZBISCLSS C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.org_cd = #id:VARCHAR#
+				AND   B.org_cd = A.org_cd
+				AND   C.bis_clss_id = B.bis_clss_id
+				<isEmpty prepend="AND" property="delFlag">
+					(C.del_flag IS NULL OR C.del_flag = '0')
+				</isEmpty>
+				ORDER BY C.levl, C.sort_sno
+			) D
+		)
+		UNION ALL
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.org_cd AS id
+					, A.org_abbr_nm AS text
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+				<dynamic>
+					<isEqual prepend="AND" property="treeType" compareValue="0">
+						NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+					</isEqual>
+					<isNotEqual prepend="AND" property="treeType" compareValue="0">
+						A.upper_org_cd = #id:VARCHAR#
+					</isNotEqual>
+					<isEmpty prepend="AND" property="delFlag">
+						(A.close_flag IS NULL OR A.close_flag = '0')
+					</isEmpty>
+				</dynamic>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+			) D
+		)
+	</select>
+
+	<!-- 
+		분류체계검색_단위과제검색
+		: 기록물철 검색
+	 -->
+	<resultMap id="findClssSrchFolderPagedList-result" class="rms.srch.srch.domain.ClssFolder">
+		<result property="folderId" 		   column="FOLDER_ID"		     />
+		<result property="clssNm"			   column="CLSS_NM"			     />
+		<result property="title" 			   column="TITLE"			     />
+		<result property="creatYyyy" 		   column="CREAT_YYYY"		     />
+		<result property="orgNm" 			   column="ORG_NM"			     />
+		<result property="orgAbbrNm" 		   column="ORG_ABBR_NM"          />
+		<result property="folderKeepStateNm"   column="FOLDER_KEEP_STATE_NM" />
+		<result property="creatSysNm" 	       column="CREAT_SYS_NM"         />
+		<result property="erecordFlagNm" 	   column="ERECORD_FLAG_NM"      />
+		<result property="presvTermNm" 	       column="PRESV_TERM_NM"        />
+		<result property="operReadRangeCd"     column="OPER_READ_RANGE_CD"   />
+		<result property="operReadRangeNm"     column="OPER_READ_RANGE_NM"   />		
+		<result property="accsFlag" 		   column="ACCS_FLAG"            />
+	</resultMap>
+	<select id="countClssSrchFolderPagedList" parameterClass="rms.srch.srch.domain.ClssFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM   TB_RDFOLDER A
+		WHERE  A.record_center_id = #recordCenterId:VARCHAR#
+		AND	   A.clss_id = #clssId:VARCHAR#
+        AND    A.clss_div_cd = '1'
+		<dynamic>
+			<isNotEqual property="readRangType" compareValue="1">
+				<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+				    A.oper_read_range_cd != '03'
+				</isNotEqual>
+			</isNotEqual>
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyy">
+				A.creat_yyyy = #creatYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="arrTitle">
+				<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="innerTitle">
+				A.title LIKE #innerTitle:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="arrFolderKeepStateCd">
+				A.folder_keep_state_cd IN <iterate property="arrFolderKeepStateCd" open="(" close=")" conjunction=",">#arrFolderKeepStateCd[]:VARCHAR#</iterate>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findClssSrchFolderPagedList" parameterClass="rms.srch.srch.domain.ClssFolder" resultMap="findClssSrchFolderPagedList-result">
+		SELECT 
+		     E.folder_id
+		   , E.clss_nm
+		   , E.title
+		   , E.creat_yyyy
+		   , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm
+		   , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) AS folder_keep_state_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) AS creat_sys_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		   , E.oper_read_range_cd
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm
+			   , (CASE WHEN '3'=#sesUserDiv:VARCHAR# AND E.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = #sesUserId:VARCHAR#) THEN 1 
+					<isEqual property="orgUserAccsType" compareValue="1">
+					WHEN (E.oper_read_range_cd='02' AND E.cur_keep_org_cd=#sesOrgCd:VARCHAR#) THEN 1
+					</isEqual>
+					<isEqual property="orgUserAccsType" compareValue="2">
+					WHEN E.cur_keep_org_cd=#sesOrgCd:VARCHAR# THEN 1
+					</isEqual>
+	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd=#sesOrgCd:VARCHAR#) > 0 THEN 1 
+	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='1' AND Z.accs_user_id=#sesUserId:VARCHAR#) > 0 THEN 1
+	               ELSE 0
+	          END) accs_flag
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.record_center_id
+						, A.folder_id
+						, A.clss_id
+						, A.clss_nm
+						, A.title
+						, A.creat_yyyy
+						, A.org_cd
+						, A.folder_keep_state_cd
+						, A.creat_sys_cd
+						, A.erecord_flag
+						, A.presv_term_cd
+						, A.oper_read_range_cd
+						, A.cur_keep_org_cd
+					FROM  TB_RDFOLDER A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					AND	  A.clss_id = #clssId:VARCHAR#
+			        AND   A.clss_div_cd = '1'
+					<dynamic>
+						<isNotEqual property="readRangType" compareValue="1">
+							<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+							    A.oper_read_range_cd != '03' 
+							</isNotEqual>
+						</isNotEqual>
+						<isNotEmpty prepend="AND" property="creatSysCd">
+							A.creat_sys_cd = #creatSysCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyy">
+							A.creat_yyyy = #creatYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="arrTitle">
+							<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="innerTitle">
+							A.title LIKE #innerTitle:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="arrFolderKeepStateCd">
+							A.folder_keep_state_cd IN <iterate property="arrFolderKeepStateCd" open="(" close=")" conjunction=",">#arrFolderKeepStateCd[]:VARCHAR#</iterate>
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY A.record_center_id, A.title
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+	<!-- 
+		분류체계검색_단위업무검색
+		: 단위업무트리 조회 (기능별)
+	-->
+	<select id="findUnitSrchTree" parameterClass="rms.srch.srch.domain.ClssSrchTree" resultClass="rms.srch.srch.domain.ClssSrchTree">
+		<isEqual property="levl" compareValue="0">
+			SELECT MAX(A.record_center_id) AS recordCenterId
+				, '1' AS treeType
+				, 1 AS levl
+                , A.lrg_cd AS lrgCd
+                , '' AS midCd
+                , '' AS smlCd
+                , NVL(A.lrg_cd,'EMPTY_LRG') AS id
+				, NVL(MAX(A.lrg_nm),'{대분류:알수없음}') AS text
+				, 'closed' AS state
+				, (CASE WHEN MIN(A.state_cd) = '2' THEN 'icon-folder_full_delete'
+						ELSE 'icon-folder_full_accept'
+					END) AS iconCls
+			FROM  TB_ZZUNIT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			GROUP BY A.lrg_cd
+			ORDER BY text
+		</isEqual>
+		<isEqual property="levl" compareValue="1">
+			SELECT MAX(A.record_center_id) AS recordCenterId
+				, '1' AS treeType
+				, 2 AS levl
+                , A.lrg_cd AS lrgCd
+                , A.mid_cd AS midCd
+                , '' AS smlCd
+                , NVL(A.lrg_cd,'EMPTY_LRG')||'^'||NVL(A.mid_cd,'EMPTY_MID') AS id
+				, NVL(MAX(A.mid_nm),'{중분류:알수없음}') AS text
+				, 'closed' AS state
+				, (CASE WHEN MIN(A.state_cd) = '2' THEN 'icon-folder_full_delete'
+						ELSE 'icon-folder_full_accept'
+					END) AS iconCls
+			FROM  TB_ZZUNIT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<isEmpty prepend="AND" property="lrgCd">
+				(A.lrg_cd IS NULL OR A.lrg_cd = '')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="lrgCd">
+				A.lrg_cd = #lrgCd:VARCHAR#
+			</isNotEmpty>
+			GROUP BY A.lrg_cd, A.mid_cd
+			ORDER BY text
+		</isEqual>
+		<isEqual property="levl" compareValue="2">
+			SELECT MAX(A.record_center_id) AS recordCenterId
+				, '1' AS treeType
+				, 3 AS levl
+                , A.lrg_cd AS lrgCd
+                , A.mid_cd AS midCd
+                , A.sml_cd AS smlCd
+                , NVL(A.lrg_cd,'EMPTY_LRG')||'^'||NVL(A.mid_cd,'EMPTY_MID')||'^'||NVL(A.sml_cd,'EMPTY_SML') AS id
+				, NVL(MAX(A.sml_nm),'{소분류:알수없음}') AS text
+				, 'closed' AS state
+				, (CASE WHEN MIN(A.state_cd) = '2' THEN 'icon-folder_full_delete'
+						ELSE 'icon-folder_full_accept'
+					END) AS iconCls
+			FROM  TB_ZZUNIT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<isEmpty prepend="AND" property="lrgCd">
+				(A.lrg_cd IS NULL OR A.lrg_cd = '')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="lrgCd">
+				A.lrg_cd = #lrgCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="midCd">
+				(A.mid_cd IS NULL OR A.mid_cd = '')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="midCd">
+				A.mid_cd = #midCd:VARCHAR#
+			</isNotEmpty>
+			GROUP BY A.lrg_cd, A.mid_cd, A.sml_cd
+			ORDER BY text
+		</isEqual>
+		<isEqual property="levl" compareValue="3">
+			SELECT A.record_center_id AS recordCenterId
+				, '2' AS treeType
+				, 4 AS levl
+                , A.lrg_cd AS lrgCd
+                , A.mid_cd AS midCd
+                , A.sml_cd AS smlCd
+				, A.unit_cd AS id
+				, A.unit_nm AS text
+				, 'open' AS state
+				, (CASE WHEN A.state_cd = '2' THEN 'icon-file_full_delete'
+						ELSE 'icon-file_full_accept'
+					END) AS iconCls
+			FROM  TB_ZZUNIT A
+			WHERE A.record_center_id = #recordCenterId:VARCHAR#
+			<isEmpty prepend="AND" property="delFlag">
+				(A.state_cd IS NULL OR A.state_cd IN ('1','3'))
+			</isEmpty>
+			<isEmpty prepend="AND" property="lrgCd">
+				(A.lrg_cd IS NULL OR A.lrg_cd = '')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="lrgCd">
+				A.lrg_cd = #lrgCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="midCd">
+				(A.mid_cd IS NULL OR A.mid_cd = '')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="midCd">
+				A.mid_cd = #midCd:VARCHAR#
+			</isNotEmpty>
+			<isEmpty prepend="AND" property="smlCd">
+				(A.sml_cd IS NULL OR A.sml_cd = '')
+			</isEmpty>
+			<isNotEmpty prepend="AND" property="smlCd">
+				A.sml_cd = #smlCd:VARCHAR#
+			</isNotEmpty>
+			ORDER BY text
+		</isEqual>
+	</select>
+	
+	<!-- 
+		분류체계검색_단위업무검색
+		: 단위업무트리 조회 (조직별)
+	-->
+	<select id="findOrgUnitSrchTree" parameterClass="rms.srch.srch.domain.ClssSrchTree" resultClass="rms.srch.srch.domain.ClssSrchTree">
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '2' AS treeType
+					, C.unit_cd AS id
+					, C.unit_nm AS text
+					, 'open' AS state
+					, (CASE WHEN B.use_flag = '0' THEN 'icon-file_full_delete'
+							ELSE 'icon-file_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+					, TB_ZZORGUNIT B
+					, TB_ZZUNIT C
+				WHERE A.record_center_id = #recordCenterId:VARCHAR#
+				AND   A.org_cd = #id:VARCHAR#
+				AND   B.record_center_id = A.record_center_id
+				AND   B.org_cd = A.ORG_CD
+				AND   C.record_center_id = B.record_center_id
+				AND   C.unit_cd = B.unit_cd
+				<isEmpty prepend="AND" property="delFlag">
+					B.use_flag = '1'
+				</isEmpty>
+				ORDER BY A.levl, A.org_seq
+			) D
+		)
+		UNION ALL
+		(
+			SELECT D.*
+			FROM (
+				SELECT A.record_center_id AS recordCenterId
+					, '1' AS treeType
+					, A.org_cd AS id
+					, A.org_abbr_nm AS text
+					, (CASE WHEN EXISTS (SELECT 1 FROM TB_STORG B WHERE B.upper_org_cd = A.org_cd) THEN 'closed'
+							WHEN EXISTS (SELECT 1 FROM TB_ZZORGUNIT B WHERE B.org_cd = A.org_cd) THEN 'closed'
+							ELSE 'open'
+						END) AS state 
+					, (CASE WHEN A.close_flag = '1' THEN 'icon-folder_full_delete'
+							ELSE 'icon-folder_full_accept'
+						END) AS iconCls
+				FROM TB_STORG A
+				WHERE A.record_center_id = #recordCenterId:VARCHAR# 
+				<dynamic>
+					<isEqual prepend="AND" property="treeType" compareValue="0">
+						NOT EXISTS (SELECT 1 FROM TB_STORG B WHERE B.record_center_id=A.record_center_id AND B.org_cd=A.upper_org_cd)
+					</isEqual>
+					<isNotEqual prepend="AND" property="treeType" compareValue="0">
+						A.upper_org_cd = #id:VARCHAR#
+					</isNotEqual>
+					<isEmpty prepend="AND" property="delFlag">
+						(A.close_flag IS NULL OR A.close_flag = '0')
+					</isEmpty>
+				</dynamic>
+				ORDER BY A.close_flag, A.record_center_id, A.levl, A.org_cd, A.apply_start_ymd, A.org_abbr_nm
+			) D
+		)
+	</select>
+
+	<!-- 
+		분류체계검색_단위업무검색
+		: 기록물철 검색
+	-->
+	<resultMap id="findUnitSrchFolderPagedList-result" class="rms.srch.srch.domain.UnitFolder">
+		<result property = "folderId" 		   column = "FOLDER_ID"			  />
+		<result property = "clssNm"			   column = "CLSS_NM"			  />
+		<result property = "title" 			   column = "TITLE"			      />
+		<result property = "creatYyyy" 		   column = "CREAT_YYYY"		  />
+		<result property = "orgNm" 			   column = "ORG_NM"			  />
+		<result property = "orgAbbrNm" 		   column = "ORG_ABBR_NM"         />
+		<result property = "folderKeepStateNm" column = "FOLDER_KEEP_STATE_NM"/>
+		<result property = "creatSysNm" 	   column = "CREAT_SYS_NM"        />
+		<result property = "erecordFlagNm" 	   column = "ERECORD_FLAG_NM"     />
+		<result property = "presvTermNm" 	   column = "PRESV_TERM_NM"       />
+		<result property = "operReadRangeNm"   column = "OPER_READ_RANGE_NM"  />
+		<result property = "operReadRangeCd"   column = "OPER_READ_RANGE_CD"  />
+		<result property = "accsFlag" 		   column = "ACCS_FLAG"           />
+	</resultMap>
+	<select id="countUnitSrchFolderPagedList" parameterClass="rms.srch.srch.domain.UnitFolder" resultClass="java.lang.Long">
+		SELECT COUNT(1)
+		FROM   TB_RDFOLDER A
+		WHERE  A.record_center_id = #recordCenterId:VARCHAR#
+		AND    A.clss_id = #clssId:VARCHAR#  
+        AND    A.clss_div_cd = '2'
+		<dynamic>	
+			<isNotEqual property="readRangType" compareValue="1">
+				<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+				    A.oper_read_range_cd != '03' 
+				</isNotEqual>
+			</isNotEqual>	
+			<isNotEmpty prepend="AND" property="creatSysCd">
+				A.creat_sys_cd = #creatSysCd:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="creatYyyy">
+				A.creat_yyyy = #creatYyyy:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="arrTitle">
+				<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="innerTitle">
+				A.title LIKE #innerTitle:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="arrFolderKeepStateCd">
+				A.folder_keep_state_cd IN <iterate property="arrFolderKeepStateCd" open="(" close=")" conjunction=",">#arrFolderKeepStateCd[]:VARCHAR#</iterate>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<select id="findUnitSrchFolderPagedList" parameterClass="rms.srch.srch.domain.UnitFolder" resultMap="findUnitSrchFolderPagedList-result">
+		SELECT 
+		     E.folder_id
+		   , E.clss_nm
+		   , E.title
+		   , E.creat_yyyy
+		   , (SELECT Z.org_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_nm
+		   , (SELECT Z.org_abbr_nm FROM TB_STORG Z WHERE Z.record_center_id=E.record_center_id AND Z.org_cd=E.org_cd) AS org_abbr_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD32' AND Z.com_cd=E.folder_keep_state_cd) AS folder_keep_state_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD17' AND Z.com_cd=E.creat_sys_cd) AS creat_sys_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD23' AND Z.com_cd=E.erecord_flag) AS erecord_flag_nm
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD07' AND Z.com_cd=E.presv_term_cd) AS presv_term_nm
+		   , E.oper_read_range_cd
+		   , (SELECT Z.com_cd_nm FROM TB_ZZCOMCD Z WHERE Z.com_type_cd='RD53' AND Z.com_cd=E.oper_read_range_cd) AS oper_read_range_nm
+			   , (CASE WHEN '3'=#sesUserDiv:VARCHAR# AND E.record_center_id = (SELECT Z.record_center_id FROM TB_STUSER Z WHERE Z.USER_ID = #sesUserId:VARCHAR#) THEN 1 
+					<isEqual property="orgUserAccsType" compareValue="1">
+					WHEN (E.oper_read_range_cd='02' AND E.cur_keep_org_cd=#sesOrgCd:VARCHAR#) THEN 1
+					</isEqual>
+					<isEqual property="orgUserAccsType" compareValue="2">
+					WHEN E.cur_keep_org_cd=#sesOrgCd:VARCHAR# THEN 1
+					</isEqual>
+	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='2' AND Z.accs_dept_cd=#sesOrgCd:VARCHAR#) > 0 THEN 1 
+	               WHEN (SELECT COUNT(1) FROM TB_RDFOLDERACCS Z WHERE Z.record_center_id=E.record_center_id AND Z.folder_id=E.folder_id AND Z.accs_type_cd='1' AND Z.accs_user_id=#sesUserId:VARCHAR#) > 0 THEN 1
+	               ELSE 0
+	          END) accs_flag
+		FROM (
+			SELECT D.*
+			FROM (
+				SELECT ROWNUM AS rnum
+					, C.*
+				FROM (
+					SELECT A.record_center_id
+						, A.folder_id
+						, A.clss_id
+						, A.clss_nm
+						, A.title
+						, A.creat_yyyy
+						, A.org_cd
+						, A.folder_keep_state_cd
+						, A.creat_sys_cd
+						, A.erecord_flag
+						, A.presv_term_cd
+						, A.oper_read_range_cd
+						, A.cur_keep_org_cd
+					FROM  TB_RDFOLDER A
+					WHERE A.record_center_id = #recordCenterId:VARCHAR#
+					AND   A.clss_id = #clssId:VARCHAR#
+					AND   A.clss_div_cd = '2'
+					<dynamic>
+						<isNotEqual property="readRangType" compareValue="1">
+							<isNotEqual prepend="AND" property="sesUserDiv" compareValue="3">
+							    A.oper_read_range_cd != '03' 
+							</isNotEqual>
+						</isNotEqual>
+						<isNotEmpty prepend="AND" property="creatSysCd">
+							A.CREAT_SYS_CD = #creatSysCd:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="creatYyyy">
+							A.CREAT_YYYY = #creatYyyy:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="arrTitle">
+							<iterate property="arrTitle" open="(" close=")" conjunction=" AND ">A.title LIKE #arrTitle[]:VARCHAR#</iterate>
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="innerTitle">
+							A.title LIKE #innerTitle:VARCHAR#
+						</isNotEmpty>
+						<isNotEmpty prepend="AND" property="arrFolderKeepStateCd">
+							A.folder_keep_state_cd IN <iterate property="arrFolderKeepStateCd" open="(" close=")" conjunction=",">#arrFolderKeepStateCd[]:VARCHAR#</iterate>
+						</isNotEmpty>
+					</dynamic>
+					ORDER BY A.record_center_id, A.title
+				) C
+				WHERE ROWNUM <![CDATA[<=]]> #pagedEnd:NUMBER#
+			) D
+			WHERE D.rnum <![CDATA[>=]]> #pagedStart:NUMBER#
+		) E
+		ORDER BY E.rnum
+	</select>
+	
+</sqlMap>

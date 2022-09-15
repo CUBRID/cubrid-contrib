@@ -117,7 +117,7 @@ SqlMapXMLParser.analyze () -> SAXParser.parse () -> SqlXmlHandler ->
 | comment | Overriding by LexicalHandler interface. It is empty. |
 | **saveStartTag** | Save the attribute information of the XML tag in the instance of SqlMapXMLTag class. |
 | pttrnMtchBlank | Pattern matching to handle the end of the buffer when processing the content of the XML tag |
-| pttrnMtchSQL | Pattern matching for parameter binding. <br> - iBATIS: #value# (PreparedStatement), \$\$value\$\$ (Statement) <br> - MyBatis: #\{value\} (PreparedStatement), \$\{value\} (Statement) |
+| pttrnMtchSQL | Pattern matching for parameter binding. <br> - iBATIS: #value# (PreparedStatement), \$value\$ (Statement) <br> - MyBatis: #\{value\} (PreparedStatement), \$\{value\} (Statement) |
 
 ```
 SqlXmlHandler -> startDocument ()

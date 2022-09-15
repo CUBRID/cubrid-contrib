@@ -6,6 +6,7 @@ This repository contains small scripts or projects that help to develop CUBRID.
 |Name|Description|Contributors|
 |------|---|---|
 |[sandbox](sandbox)|A virtual build platform for CUBRID developers|Leesoo Ahn ([memnoth](https://github.com/memnoth))|
+|[sql-analyzer](sql-analyzer)|Check query compatibility for Mapper XML file of MyBatis (iBATIS)|Youngjin Joo ([youngjinj](https://github.com/youngjinj))|
 
 ## Contributing
 

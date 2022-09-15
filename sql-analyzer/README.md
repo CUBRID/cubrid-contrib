@@ -16,7 +16,7 @@ When migrating from another DBMS to CUBRID, it is necessary to check how compati
 # Build in eclipse
 
 ### 1. Clone git repository in eclipse
-- Window -> Preferences -> Java -> Installed JREs -> Add... -> Standard VM -> Directory... -> %JAVA_HOME%/jre -> Finish -> OK
+- Window -> Preferences -> Java -> Installed JREs -> Add... -> Standard VM -> Directory... -> %JAVA\_HOME%/jre -> Finish -> OK
 - Window -> Perspective -> Open Perspective -> Other... -> Git
 - Git Repositories -> Clone a Git repository -> Next -> Next -> Finish
   - URI: https://github.com/CUBRID/cubrid-contrib.git
@@ -45,12 +45,12 @@ When migrating from another DBMS to CUBRID, it is necessary to check how compati
 # Implementation
 - Parse Mapper XML file of MyBatis (iBATIS) using SAX (Simple API for XML) in java.
   - To extract dynamic queries, SAX (Simple API for XML) is better than DOM (Document Object Model).
-- Summary information is output to the sumary.log (default) file in the execution path, and detailed information is output to the *.log file with the same name in the path where the Mappter XML file of MyBatis (iBATIS) is located.
+- Summary information is output to the sumary.log (default) file in the execution path, and detailed information is output to the \*.log file with the same name in the path where the Mappter XML file of MyBatis (iBATIS) is located.
 
 ### 1. SQLAnalyzer (com/cubrid/analyzer/SQLAnalyzer.java)
 
 | Function | Content |
-|:---|:---|
+|:---------|:--------|
 | main | Create an instance of the SQLAnalyzer class and call the start function. |
 | SQLAnalyzer | Create an instance of the DatabaseManager class and open a file to write summary information. |
 | openSummary | Prints a message when the program starts. |
@@ -62,8 +62,8 @@ When migrating from another DBMS to CUBRID, it is necessary to check how compati
 | appendTotalSummary | Prints all aggregated results. |
 | closeSummary | Prints a message when the program ends. |
 | start | Call the traverseDirectory function and the appendTotalSummary function. |
-| *traverseDirectory* | The parse function is called for the *.xml file while searching the subdirectories of the sqlmap (default) directory of the execution path. |
-| *parse* | The analyze function of the SqlMapXMLParser class is called for the *.xml file. |
+| **traverseDirectory** | The parse function is called for the \*.xml file while searching the subdirectories of the sqlmap (default) directory of the execution path. |
+| **parse** | The analyze function of the SqlMapXMLParser class is called for the \*.xml file. |
 
 ```
 start () -> traverseDirectory () -> isDirectory: true -+
@@ -77,9 +77,9 @@ start () -> traverseDirectory () -> isDirectory: true -+
 ### 2. SqlMapXMLParser (com/cubrid/parser/SqlMapXMLParser.java)
 
 | Function | Content |
-|:---|:---|
+|:---------|:--------|
 | SqlMapXMLParser | Create instances of SAXParser class and XMLReader class. |
-| *analyze* | Create an instance of the SqlXmlHandler class, add the LexicalHandler, and call the parse function of the SAXParser instance. |
+| **analyze** | Create an instance of the SqlXmlHandler class, add the LexicalHandler, and call the parse function of the SAXParser instance. |
 
 ```
 SqlMapXMLParser.analyze () -> SAXParser.parse () -> SqlXmlHandler ->
@@ -92,22 +92,22 @@ SqlMapXMLParser.analyze () -> SAXParser.parse () -> SqlXmlHandler ->
 - Extracts and executes dynamic queries from Mapper XML files in MyBatis (iBATIS).
 - An instance of the SQLAnalyzerForCUBRID class is needed to print summary information.
 - An instance of the DatabaseManager class is needed to prepare a query in CUBRID.
-- The detailed result of the query file is printed in *.log file in the same path.
+- The detailed result of the query file is printed in \*.log file in the same path.
 - The opened tag is created as an instance of the SqlMapXMLTag class and stored in the stack.
 
 | Function | Content |
-|:---|:---|
+|:---------|:--------|
 | SqlXmlHandler | Create instances necessary for parsing the query file. |
 | openLog | Prints a message when parsing a query file starts. |
-| appendQueryId | Prints a message when parsing a query begins.
-| appendQuery | Prints a query when parsing a query begins.
+| appendQueryId | Prints a message when parsing a query begins. |
+| appendQuery | Prints a query when parsing a query begins. |
 | appendResult | Call the closeLog function, and call the appendResultSummary function in the instance of the SQLAnalyzerForCUBRID class. |
 | closeLog | Prints a message when parsing a query file ends. |
 | startDocument |  Call the openLog function. |
 | endDocument | Call the closeLog function and the appendTotalSummary function. |
-| *startElement* | Creates an instance of the SqlMapXMLTag class and stores it on the stack. Parse only DML queries. |
-| *characters* | It stores the content in the current tag on the stack if the content of the XML tag is not empty. |
-| *endElement* | Complete the creation of the dynamic query and prepare the query in CUBRID. |
+| **startElement** | Creates an instance of the SqlMapXMLTag class and stores it on the stack. Parse only DML queries. |
+| **characters** | It stores the content in the current tag on the stack if the content of the XML tag is not empty. |
+| **endElement** | Complete the creation of the dynamic query and prepare the query in CUBRID. |
 | startDTD | Overriding by LexicalHandler interface. It is empty. |
 | endDTD | Overriding by LexicalHandler interface. It is empty. |
 | startEntity | Overriding by LexicalHandler interface. It is empty. |
@@ -115,9 +115,11 @@ SqlMapXMLParser.analyze () -> SAXParser.parse () -> SqlXmlHandler ->
 | startCDATA | Overriding by LexicalHandler interface. It is empty. |
 | endCDATA | Overriding by LexicalHandler interface. It is empty. |
 | comment | Overriding by LexicalHandler interface. It is empty. |
-| *saveStartTag* | Save the attribute information of the XML tag in the instance of SqlMapXMLTag class. |
+| **saveStartTag** | Save the attribute information of the XML tag in the instance of SqlMapXMLTag class. |
 | pttrnMtchBlank | Pattern matching to handle the end of the buffer when processing the content of the XML tag |
-| pttrnMtchSQL | Pattern matching for parameter binding. <br> - iBATIS: #value# (PreparedStatement), $value$ (Statement) <br> - MyBatis: #\{value\} (PreparedStatement), $\{value\} (Statement)|
+| pttrnMtchSQL | Pattern matching for parameter binding. |
+|              | - iBATIS: #value# (PreparedStatement), \$value\$ (Statement) |
+|              | - MyBatis: #\{value\} (PreparedStatement), \$\{value\} (Statement) |
 
 ```
 SqlXmlHandler -> startDocument ()
@@ -142,17 +144,17 @@ SqlXmlHandler -> startDocument ()
 ### 5. DatabaseManager (com/cubrid/database/DatabaseManager.java)
 
 | Function | Content |
-|:---|:---|
+|:---------|:--------|
 | DatabaseManager | Create an error buffer. Saves error messages that occur in the Mapper XML file. |
-| *initConnect* | Call the connect function. Set onlyCheckValidation to false. |
-| *initPseudoConnect* | Create instances of SQLValidator class. Set onlyCheckValidation to true. |
-| *connect* | Connect to CUBRID using db.properties in the execution path. |
+| **initConnect** | Call the connect function. Set onlyCheckValidation to false. |
+| **initPseudoConnect** | Create instances of SQLValidator class. Set onlyCheckValidation to true. |
+| **connect** | Connect to CUBRID using db.properties in the execution path. |
 | close | Close the CUBRID connection. |
 | getErrorBuffer | Returns the error buffer to store error messages. |
 | resetErrorBuffer | Reset the error buffer. |
-| *checkQuery* | If onlyCheckValidation is true, the validateQuery function is called, and if it is false, the prepareQuery function is called. |
-| *prepareQuery* | Execute the query by wrapping it in PREPARE statement. |
-| *validateQuery* | Using JNI, only the syntax check is executed, not the semantic check. |
+| **checkQuery** | If onlyCheckValidation is true, the validateQuery function is called, and if it is false, the prepareQuery function is called. |
+| **prepareQuery** | Execute the query by wrapping it in PREPARE statement. |
+| **validateQuery** | Using JNI, only the syntax check is executed, not the semantic check. |
 
 ```
 initPseudoConnect () -> checkQuery () -> onlyCheckValidation : true -> validateQuery () -> SQLValidator.validateSQL () ->

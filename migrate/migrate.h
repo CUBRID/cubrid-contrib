@@ -51,6 +51,129 @@
           (ptr) = NULL; \
         } while (0)
 
+#define SM_CLASSFLAG_SYSTEM 1
+
+typedef enum au_fetchmode
+{
+  AU_FETCH_READ,
+  AU_FETCH_SCAN,		/* scan that does not allow write */
+  AU_FETCH_EXCLUSIVE_SCAN,	/* scan that does allow neither write nor other exclusive scan, i.e, scan for load
+				 * index. */
+  AU_FETCH_WRITE,
+  AU_FETCH_UPDATE
+} AU_FETCHMODE;
+
+typedef enum
+{
+  SM_META_ROOT,			/* the object is the root class */
+  SM_META_CLASS			/* the object is a normal class */
+} SM_METATYPE;
+
+typedef struct ws_object_header WS_OBJECT_HEADER;
+
+struct ws_object_header
+{
+  int chn;
+};
+
+typedef struct hfid HFID;	/* FILE HEAP IDENTIFIER */
+struct hfid
+{
+  VFID vfid;			/* Volume and file identifier */
+  int hpgid;			/* First page identifier (the header page) */
+};
+
+typedef struct sm_class_header SM_CLASS_HEADER;
+struct sm_class_header
+{
+  WS_OBJECT_HEADER ch_obj_header;	/* always have the object header (chn) */
+
+  SM_METATYPE ch_type;		/* doesn't need to be a full word */
+  const char *ch_name;
+
+  OID ch_rep_dir;		/* representation directory record OID */
+  HFID ch_heap;
+};
+
+typedef enum
+{
+  SM_CLASS_CT,			/* default CSQL class */
+  SM_VCLASS_CT,			/* component db virtual class */
+  SM_ADT_CT			/* Abstract data type-pseudo class */
+} SM_CLASS_TYPE;
+
+typedef struct sm_class SM_CLASS;
+struct sm_class
+{
+  SM_CLASS_HEADER header;
+
+  void *users;		/* immediate sub classes */
+  SM_CLASS_TYPE class_type;	/* what kind of class variant is this? */
+  int repid;			/* current representation id */
+
+  void *representations;	/* list of old representations */
+
+  void *inheritance;	/* immediate super classes */
+  int object_size;		/* memory size in bytes */
+  int att_count;		/* number of instance attributes */
+  void *attributes;	/* list of instance attribute definitions */
+  void *shared;		/* list of shared attribute definitions */
+  int shared_count;		/* number of shared attributes */
+  int class_attribute_count;	/* number of class attributes */
+  void *class_attributes;	/* list of class attribute definitions */
+
+  void *method_files;	/* list of method files */
+  const char *loader_commands;	/* command string to the dynamic loader */
+
+  void *methods;		/* list of method definitions */
+  int method_count;		/* number of instance methods */
+  int class_method_count;	/* number of class methods */
+  void *class_methods;	/* list of class method definitions */
+
+  void *resolutions;	/* list of instance and class resolutions */
+
+  int fixed_count;		/* number of fixed size attributes */
+  int variable_count;		/* number of variable size attributes */
+  int fixed_size;		/* byte size of fixed attributes */
+
+  int att_ids;			/* attribute id counter */
+  int method_ids;		/* method id counter */
+  int unused;			/* formerly repid counter, delete */
+
+  void *query_spec;	/* virtual class query_spec information */
+  void *new_;		/* temporary structure */
+  void *stats;		/* server statistics, loaded on demand */
+
+  MOP owner;			/* authorization object */
+  int collation_id;		/* class collation */
+  void *auth_cache;		/* compiled cache */
+
+  void *ordered_attributes;	/* see classobj_fixup_loaded_class () */
+  void *properties;		/* property list */
+  struct parser_context *virtual_query_cache;
+  struct tr_schema_cache *triggers;	/* Trigger cache */
+  void *constraints;	/* Constraint cache */
+  const char *comment;		/* table comment */
+  void *fk_ref;	/* fk ref cache */
+  void *partition;	/* partition information */
+
+  unsigned int flags;
+  unsigned int virtual_cache_local_schema_id;
+  unsigned int virtual_cache_global_schema_id;
+  unsigned int virtual_cache_snapshot_version;
+
+  int tde_algorithm;
+
+  unsigned methods_loaded:1;	/* set when dynamic linking was performed */
+  unsigned post_load_cleanup:1;	/* set if post load cleanup has occurred */
+
+  unsigned triggers_validated:1;	/* set when trigger cache is validated */
+  unsigned has_active_triggers:1;	/* set if trigger processing is required */
+  unsigned dont_decache_constraints_or_flush:1;	/* prevent decaching class constraint and flushing. */
+  unsigned recache_constraints:1;	/* class constraints need recache. */
+  unsigned load_index_from_heap:1;	/* load index from its heap if there are records. If false, create a new empty regardless of the heap when allocating an index. e.g. TRUNCATE */
+};
+
 typedef struct list_mops LIST_MOPS;
 struct list_mops
 {
@@ -73,6 +196,8 @@ const char *CUBRID_ENV = NULL;
 void *dl_handle = NULL;
 
 /* CUBRID function pointer */
+typedef void (*LOCATOR_FREE_LIST) (LIST_MOPS * mops);
+typedef void (*SM_MARK_SYSTEM_CLASSES) (void);
 typedef void (*AU_DISABLE_PASSWORDS) (void);
 typedef int (*DB_RESTART_EX) (const char *, const char *, const char *, const char *, const char *, int);
 typedef int (*ER_ERRID) (void);
@@ -97,7 +222,11 @@ typedef int (*EXTRACT_CLASSES_TO_FILE) (extract_context & ctxt, const char *outp
 typedef LIST_MOPS *(*LOCATOR_GET_ALL_MOPS) (MOP class_mop, DB_FETCH_MODE class_purpose,
 					    LC_FETCH_VERSION_TYPE * force_fetch_version_type);
 typedef int (*AU_FETCH_CLASS) (MOP op, void **class_ptr, int fetchmode, int type);
+typedef int (*AU_FETCH_FORCE) (MOP op, SM_CLASS ** class_, AU_FETCHMODE fetchmode);
 
+SM_MARK_SYSTEM_CLASSES cub_sm_mark_system_classes;
+AU_FETCH_FORCE cub_au_fetch_class_force;
+LOCATOR_FREE_LIST cub_locator_free_list_mops;
 AU_DISABLE_PASSWORDS cub_au_disable_passwords;
 DB_RESTART_EX cub_db_restart_ex;
 ER_ERRID cub_er_errid;
@@ -122,8 +251,7 @@ DB_ERROR_STRING cub_db_error_string;
 LOCATOR_FIND_CLASS cub_locator_find_class;
 EXTRACT_CLASSES_TO_FILE cub_extract_classes_to_file;
 LOCATOR_GET_ALL_MOPS cub_locator_get_all_mops;
-AU_FETCH_CLASS cub_au_fetch_class;
-
+AU_FETCH_CLASS cub_au_fetch_class; 
 /* CUBRID global variable */
 int *cub_Au_disable;
 

@@ -1606,7 +1606,7 @@ main (int argc, char *argv[])
   *cub_Au_disable = 1;
 
   printf ("\n");
-  printf ("Phase 4: Extracting Viewws\n");
+  printf ("Phase 4: Extracting Views\n");
 
   /* get view list from database by query related to view */
   view_cnt = migrate_get_view_list (&view_list);

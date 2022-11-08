@@ -4,7 +4,8 @@ RUN yum install -y openssh-server openssh-clients vim
 
 RUN     ssh-keygen -q -b 4096 -N '' -t rsa -f /etc/ssh/ssh_host_rsa_key && \
         ssh-keygen -q -b 1024 -N '' -t dsa -f /etc/ssh/ssh_host_dsa_key && \
-        ssh-keygen -q -b 521 -N '' -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key
+        ssh-keygen -q -b 521 -N '' -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key && \
+        ssh-keygen -q -b 521 -N '' -t ed25519 -f /etc/ssh/ssh_host_ed25519_key
 
 RUN echo /usr/sbin/sshd >> /root/.bashrc && source /root/.bashrc
 
@@ -12,7 +13,6 @@ RUN     sed -i \
         -e 's~^#PermitRootLogin yes~PermitRootLogin yes~g' \
         /etc/ssh/sshd_config
 
-CMD service sshd restart
 EXPOSE 22
 
 # Need package for test
@@ -83,4 +83,9 @@ ADD ctp_config/HA.properties /home/ha_repl_01/CTP/shell/init_path
 
  
 USER root
+
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod a+x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/sbin/init"]
 

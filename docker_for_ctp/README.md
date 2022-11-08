@@ -15,6 +15,10 @@ $ cd cubrid-contrib/docker_for_ctp
 $ sh make_for_container.sh
 $ ssh ctp@172.200.1.2
 $ ctp.sh [test scenario] -c [ctp config file]
+
+# if exists the ctp container
+$ docker start docker_for_ctp_01(or docker_for_ctp_02)
+$ ssh ctp@172.200.1.2
 ```
 
 ## What is the CTP?
@@ -67,4 +71,10 @@ https://www.cubrid.org/manual/en/11.2/install.html#installing-and-running-cubrid
       ```
       cp $CUBRID/cci/include/* $CUBRID/include/
       cp $CUBRID/cci/lib/libcascci.so* lib/
+      ```
+5. If rebooted the machine OR stop the container.
+   - please try to this
+      ```
+      docker start docker_for_ctp_01
+      ssh ctp@172.200.1.2
       ```

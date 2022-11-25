@@ -435,9 +435,10 @@ static const char *rename_query = "select \
       'rename view [' || class_name || '] to [' || lower (owner.name) || '.' || class_name || '] ' \
      end as q \
    from \
-     _db_class \
+     _db_class c \
    where \
-     is_system_class % 8 = 0";
+         c.is_system_class % 8 = 0 and [partition] is null \
+     or exists (select pname from _db_partition p where p.class_of = c and p.pname is null)";
 
 /* update class_name and unique_name except for system classes. */
 static const char *update_db_class_not_for_system_classes =

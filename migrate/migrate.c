@@ -470,6 +470,19 @@ static const char *index_query[] = {
 static const char *update_db_class_for_system_classes =
   "update _db_class set unique_name = class_name where is_system_class % 8 != 0";
 
+/* create synonym for granted table */
+static const char *synonym_query = "select 'create synonym ' || class_name || ' for [' || owner_name || '.' || class_name || '] \
+		   from db_class \
+		   where owner_name = 'PUBLIC' \
+  			union \
+		   select 'create synonym ' || class_name || ' for [' || grantor_name || '.' || class_name || ']' \
+		   from db_auth \
+		   where class_name in ( \
+  		   	select class_name \
+  		   	from db_class \
+  		   	where is_system_class = 'NO' \
+		   )";
+
 static char db_path[PATH_MAX];
 
 FILE *out = NULL;
@@ -1273,6 +1286,72 @@ end:
 }
 
 static int
+migrate_create_synonyms (char *dbname)
+{
+  DB_QUERY_RESULT *result;
+  const char *synonym;
+  int error;
+  FILE *f_synonym;
+
+  char synonym_file[256];
+
+  /* make view list file as like unload schema */
+  sprintf (synonym_file, "%s_synonym", dbname);
+
+  error = cub_db_execute_query (synonym_query, &result);
+  if (error < 0)
+    {
+      fprintf (out, "synonym: execute query failed\n \"%s\"\n", synonym_query);
+      return -1;
+    }
+
+  f_synonym = fopen (synonym_file, "w");
+  if (f_synonym == NULL)
+    {
+      printf ("migrate: encountered error while opening synonym file\n");
+      return -1;
+    }
+
+  if ((error = cub_db_query_first_tuple (result)) == DB_CURSOR_SUCCESS)
+    {
+      do
+	{
+	  DB_VALUE value;
+
+	  /* from query */
+	  error = cub_db_query_get_tuple_value (result, 0, &value);
+	  if (error < 0)
+	    {
+	      fprintf (out, "synonym: can not get a tuple for \"%s\"\n", synonym_query);
+	      return -1;
+	    }
+
+	  synonym = value.data.ch.medium.buf;
+	  if (synonym == NULL)
+	    {
+	      goto end;
+	    }
+
+	  fprintf(f_synonym, "%s;\n", synonym);
+
+	  error = cub_db_query_next_tuple (result);
+	}
+      while (error != DB_CURSOR_END && error != DB_CURSOR_ERROR);
+    }
+
+end:
+  cub_db_query_end (result);
+
+  if (error < 0)
+    {
+      fprintf (out, "synonym: can not get a next tuple for \"%s\"\n", synonym_query);
+      return -1;
+    }
+
+  return 0;
+}
+
+static int
 migrate_generated (const char *generated, int col_num)
 {
   DB_QUERY_RESULT *gen_result;
@@ -1670,7 +1749,12 @@ main (int argc, char *argv[])
     }
 
   printf ("\n");
-  printf ("Phase 5: Executing the mirgate queries\n");
+  printf ("Phase 5: Creating synonyms\n");
+
+  error = migrate_create_synonyms (dbname);
+
+  printf ("\n");
+  printf ("Phase 6: Executing the mirgate queries\n");
 
   error = migrate_queries ();
   if (error < 0)
@@ -1701,7 +1785,7 @@ end:
     }
 
   printf ("\n");
-  printf ("Phase 6: Updating version info for log volume\n");
+  printf ("Phase 7: Updating version info for log volume\n");
 
   /* finalizing: update volume info. to 11.2 */
   migrate_update_log_volume (dbname);

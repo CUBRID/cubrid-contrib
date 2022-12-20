@@ -9,17 +9,28 @@ Installing Ubuntu on WSL2 on Windows 10 is recommended.
 Please refer to [the details](https://github.com/CUBRID/cubrid-contrib/pull/3#issuecomment-1223908324)
 
 ## Quick Start
+### How to startup CTP containers?
 ```shell
 $ git clone https://github.com/CUBRID/cubrid-contrib.git
 $ cd cubrid-contrib/docker_for_ctp
 $ sh make_for_container.sh
-$ ssh ctp@172.200.1.2
+```
+
+### How to start an existing CTP container?
+```shell
+# If the CTP container already exists.
+$ docker start docker_for_ctp_01(or docker_for_ctp_02)
+```
+
+### How to start testing with CTP?
+```shell
+$ ssh ctp@172.200.1.2(or 172.200.1.3)
 $ ctp.sh [test scenario] -c [ctp config file]
 
-# if exists the ctp container
-$ docker start docker_for_ctp_01(or docker_for_ctp_02)
-$ ssh ctp@172.200.1.2
+# e.g.) ctp.sh sql -c ${CTP_HOME}/conf/sql.conf -- for sql test
 ```
+The detail is followed URL
+https://github.com/CUBRID/cubrid-testtools
 
 ## What is the CTP?
 CTP(= CUBRID Test Progam)  

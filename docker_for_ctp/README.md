@@ -27,10 +27,10 @@ The goal of this tool is to execute test cases already written in [cubrid-testca
 For more details, please refer to [the link](https://github.com/CUBRID/cubrid-testtools/tree/develop/CTP)
 
 ### How to use ctp?
-ctp.sh [Test scenario] -c [CTP/conf/*.conf]
-(ex : ctp.sh sql -c ~/CTP/conf/sql.conf )
+ctp.sh [Test scenario] -c [${CTP_HOME}/conf/*.conf]
+(ex : ctp.sh sql -c ~/${CTP_HOME}/conf/sql.conf )
 
-If you want to change the 'test scenario path', open the 'CTP/conf/*.conf'.  
+If you want to change the 'test scenario path', open the '${CTP_HOME}/conf/*.conf'.  
 and change the 'scenario' variable.    
 
 The detail is followed URL  
@@ -60,10 +60,10 @@ https://www.cubrid.org/manual/en/11.2/install.html#installing-and-running-cubrid
 
 ### Q&A
 1. If can not work 'ctp.sh'
-   - please execute 'sh ctp_config/ctp_env_export.sh'
+   - please execute 'sh test_repo/ctp_config/ctp_env_export.sh'
 2. Where do I put the test build?
-   - ctp_config/test_build/
-   - 'ctp_config' dir is shared dir by the parent machine.
+   - ./test_repo
+   - The 'test_repo' dir is shared dir with the parent machine.
 3. How to debug a core file that was created during the test?
    - You can use the GDB command in the container.
 4. Can not CCI driver test

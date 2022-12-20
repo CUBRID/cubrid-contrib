@@ -28,58 +28,34 @@ RUN echo 'ctp:1234' | chpasswd
 RUN useradd ha_repl_01
 RUN echo 'ha_repl_01:1234' | chpasswd
 
-WORKDIR /home/ctp
-
-# change to permission by ctp
-CMD chown -R ctp ctp_config
-CMD chgrp -R ctp ctp_config
-
-
-# copy & change to permission by ha_repl
-COPY ctp_config /home/ha_repl_01/ctp_config
-CMD chown -R ha_repl_01 /home/ha_repl_01/ctp_config
-CMD chgrp -R ha_repl_01 /home/ha_repl_01/ctp_config
-
-
-# change user
-USER ctp
-
+# git clone from CTP & testcase
 RUN git clone https://github.com/CUBRID/cubrid-testtools
 RUN git clone https://github.com/CUBRID/cubrid-testcases
-RUN cp -rf cubrid-testtools/CTP ./
 
+ADD test_repo/ctp_config/*.conf cubrid-testtools/CTP/conf/
+ADD test_repo/ctp_config/HA.properties cubrid-testtools/CTP/shell/init_path/
 
-WORKDIR /home/ctp/ctp_config
 
 # set the ctp env
+USER ctp
+RUN ln -s /opt/test_repo ${HOME}/test_repo
 RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0" >> ${HOME}/.bash_profile
-RUN echo "export CTP_HOME=${HOME}/CTP" >> ${HOME}/.bash_profile
-RUN echo "export init_path=${HOME}/CTP/shell/init_path" >> ${HOME}/.bash_profile
-RUN sed -i 's@:$HOME/bin@:$HOME/bin:$HOME/CTP/bin:$HOME/CTP/common/script@' ${HOME}/.bash_profile
-
-# copy to ctp config
-ADD ctp_config/*.conf /home/ctp/CTP/conf/
+RUN echo "export CTP_HOME=${HOME}/test_repo/cubrid-testtools/CTP" >> ${HOME}/.bash_profile
+RUN echo "export init_path=${HOME}/test_repo/cubrid-testtools/CTP/shell/init_path" >> ${HOME}/.bash_profile
+RUN sed -i '/PATH=/d' ${HOME}/.bash_profile
+RUN echo "PATH=$PATH:$HOME/.local/bin:$HOME/bin:$HOME/test_repo/cubrid-testtools/CTP/bin:$HOME/test_repo/cubrid-testtools/CTP/common/script" >> ${HOME}/.bash_profile
 
 
 # change user
 USER ha_repl_01
 
-WORKDIR /home/ha_repl_01
-
-RUN git clone https://github.com/CUBRID/cubrid-testtools
-RUN cp -rf cubrid-testtools/CTP ./
-
-WORKDIR /home/ha_repl_01/ctp_config
-
 # set the ctp env
+RUN ln -s /opt/test_repo ${HOME}/test_repo
 RUN echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0" >> ${HOME}/.bash_profile
-RUN echo "export CTP_HOME=${HOME}/CTP" >> ${HOME}/.bash_profile
-RUN echo "export init_path=${HOME}/CTP/shell/init_path" >> ${HOME}/.bash_profile
-RUN sed -i 's@:$HOME/bin@:$HOME/bin:$HOME/CTP/bin:$HOME/CTP/common/script@' ${HOME}/.bash_profile
-
-# copy to ctp config
-ADD ctp_config/*.conf /home/ha_repl_01/CTP/conf/
-ADD ctp_config/HA.properties /home/ha_repl_01/CTP/shell/init_path
+RUN echo "export CTP_HOME=${HOME}/test_repo/cubrid-testtools/CTP" >> ${HOME}/.bash_profile
+RUN echo "export init_path=${HOME}/test_repo/cubrid-testtools/CTP/shell/init_path" >> ${HOME}/.bash_profile
+RUN sed -i '/PATH=/d' ${HOME}/.bash_profile
+RUN echo "PATH=$PATH:$HOME/.local/bin:$HOME/bin:$HOME/test_repo/cubrid-testtools/CTP/bin:$HOME/test_repo/cubrid-testtools/CTP/common/script" >> ${HOME}/.bash_profile
 
  
 USER root

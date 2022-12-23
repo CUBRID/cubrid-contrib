@@ -471,17 +471,14 @@ static const char *update_db_class_for_system_classes =
   "update _db_class set unique_name = class_name where is_system_class % 8 != 0";
 
 /* create synonym for granted table */
-static const char *synonym_query = "select 'create synonym ' || class_name || ' for [' || owner_name || '.' || class_name || '] \
-		   from db_class \
-		   where owner_name = 'PUBLIC' \
-  			union \
-		   select 'create synonym ' || class_name || ' for [' || grantor_name || '.' || class_name || ']' \
-		   from db_auth \
-		   where class_name in ( \
-  		   	select class_name \
-  		   	from db_class \
-  		   	where is_system_class = 'NO' \
-		   )";
+static const char *synonym_query = " \
+	select 'create synonym [' \
+		|| grantee.name || '].[' \
+		|| c.class_name || '] for [' \
+		|| owner.name || '].[' || c.class_name || ']' \
+	from _db_auth a, _db_class c \
+	where a.class_of.class_name = c.class_name \
+	  and is_system_class = 0";
 
 static char db_path[PATH_MAX];
 
@@ -1752,6 +1749,11 @@ main (int argc, char *argv[])
   printf ("Phase 5: Creating synonyms\n");
 
   error = migrate_create_synonyms (dbname);
+  if (error < 0)
+    {
+      printf ("migrate: error encountered while creating synonyms\n");
+      return -1;
+    }
 
   printf ("\n");
   printf ("Phase 6: Executing the mirgate queries\n");

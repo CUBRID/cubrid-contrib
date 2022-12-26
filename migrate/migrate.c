@@ -1710,7 +1710,7 @@ main (int argc, char *argv[])
 	}
 
       /* make view query file for drop view queries */
-      sprintf (view_query_file, "%s.view", dbname);
+      sprintf (view_query_file, "%s_view", dbname);
       f_query = fopen (view_query_file, "w");
       if (f_query == NULL)
 	{

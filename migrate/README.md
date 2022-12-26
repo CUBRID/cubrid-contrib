@@ -18,7 +18,7 @@ $ ./migrate your-database-name
 ```
 
 # Files
-You can get a upgrade disk image which is 11.2 compatible. In addition, you can get the files as like view-file and synonym-file. A view-file is a kind of sql command script file to create view used at old version. A synonym-file is also a kind of sql command script to create synonym for convinience. The synonym only includes tables grated at old version.
+You can get a upgrade disk image which is 11.2 compatible. In addition, you can get the files as like view-file and synonym-file. A view-file is a kind of sql command script file to create view used at old version. A synonym-file is also a kind of sql command script to create synonym for convinience. The synonym only includes tables granted at old version.
 
 # Usage
 ```sh

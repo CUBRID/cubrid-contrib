@@ -89,3 +89,6 @@ https://www.cubrid.org/manual/en/11.2/install.html#installing-and-running-cubrid
       docker start docker_for_ctp_01
       ssh ctp@172.200.1.2
       ```
+6. Where are the test cases & CTP dir?
+   - They are in '/home/(ctp or ha_repl_01)/test_repo/*'.
+   - This dir is shared with all ctp containers & parent machine.

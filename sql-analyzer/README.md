@@ -45,7 +45,7 @@ When migrating from another DBMS to CUBRID, it is necessary to check how compati
 # Implementation
 - Parse Mapper XML file of MyBatis (iBATIS) using SAX (Simple API for XML) in java.
   - To extract dynamic queries, SAX (Simple API for XML) is better than DOM (Document Object Model).
-- Summary information is output to the sumary.log (default) file in the execution path, and detailed information is output to the \*.log file with the same name in the path where the Mappter XML file of MyBatis (iBATIS) is located.
+- Summary information is output to the summary.log (default) file in the execution path, and detailed information is output to the \*.log file with the same name in the path where the Mappter XML file of MyBatis (iBATIS) is located.
 
 ### 1. SQLAnalyzer (com/cubrid/analyzer/SQLAnalyzer.java)
 

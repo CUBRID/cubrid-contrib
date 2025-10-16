@@ -17,6 +17,6 @@ This is due to the limitation of the current GitHub Actions CI setup of CUBRID.
 
 ### Supported Editors and IDEs
 
-- [x] neovim
-- [ ] vscode
-- [ ] clion
+- [x] Neovim
+- [x] VS Code
+- [ ] CLion

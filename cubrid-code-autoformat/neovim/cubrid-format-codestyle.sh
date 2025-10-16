@@ -1,57 +1,60 @@
-#!/bin/bash
-#
-#  Copyright 2016 CUBRID Corporation
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
-
-f=$1
+#!/usr/bin/env bash
+set -o errexit -o nounset -o pipefail
 
 show_help() {
-    echo "Usage: $(basename "$0") <source_file>"
-    echo
-    echo "Automatically formats a source file based on its extension."
-    echo
-    echo "Supported file types:"
-    echo "  .c, .h, .i     - formatted with indent"
-    echo "  .cpp, .hpp, .ipp - formatted with astyle"
-    echo "  .java          - formatted with google-java-format"
-    echo
-    echo "Examples:"
-    echo "  $(basename "$0") main.c"
-    echo "  $(basename "$0") src/MyClass.java"
-    echo
-    echo "Options:"
-    echo "  -h, --help     Show this help message and exit"
+  cat <<EOF
+Usage: $(basename "$0") <source_file>
+
+Formats a single source file based on its extension.
+
+  .c, .h, .i        -> indent
+  .cpp, .hpp, .ipp  -> astyle
+  .java             -> google-java-format
+
+Options:
+  -h, --help        Show this help.
+EOF
 }
 
-if [[ -z "$f" || "$f" == "-h" || "$f" == "--help" ]]; then
-    show_help
-    exit 0
+if [[ $# -lt 1 || "$1" == "-h" || "$1" == "--help" ]]; then
+  show_help
+  exit 0
 fi
 
-ext=$(expr $f : ".*\(\..*\)")
+f=$1
+[[ -f "$f" ]] || { echo "error: not a file: $f" >&2; exit 2; }
 
-case $ext in
-.c | .h | .i)
-    # install indent <= 2.2.11
-    indent -l120 -lc120 ${f}
+case "$f" in
+  *.c|*.h|*.i)
+    command -v indent >/dev/null || { echo "error: indent not found" >&2; exit 127; }
+    exec indent -l120 -lc120 "$f"
     ;;
-.cpp | .hpp | .ipp)
-    # fix add brackets -> -j for compatibility with latest astyle
-    astyle --style=gnu --mode=c --indent-namespaces --indent=spaces=2 -xT8 -xt4 -j --max-code-length=120 --align-pointer=name --indent-classes --pad-header --pad-first-paren-out ${f}
+
+  *.cpp|*.hpp|*.ipp)
+    command -v astyle >/dev/null || { echo "error: astyle not found" >&2; exit 127; }
+    # avoid backup suffixes; format in place
+    exec astyle \
+      --style=gnu --mode=c \
+      --indent-namespaces --indent=spaces=2 \
+      -xT8 -xt4 -j \
+      --max-code-length=120 \
+      --align-pointer=name --indent-classes \
+      --pad-header --pad-first-paren-out \
+      --suffix=none "$f"
     ;;
-.java)
-    java -jar .github/workflows/google-java-format-1.7-all-deps.jar -a -r ${f}
+
+  *.java)
+    [[ -f .github/workflows/google-java-format-1.7-all-deps.jar ]] || {
+      echo "error: google-java-format jar not found" >&2; exit 127;
+    }
+    # google-java-format: use --aosp (if desired) and -i to write in place
+    # Remove --aosp if you don't want AOSP style.
+    exec java -jar .github/workflows/google-java-format-1.7-all-deps.jar --aosp -i "$f"
+    ;;
+
+  *)
+    echo "error: unsupported extension for: $f" >&2
+    exit 3
     ;;
 esac
+

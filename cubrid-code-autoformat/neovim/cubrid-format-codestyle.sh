@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+#  Copyright 2016 CUBRID Corporation
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+f=$1
+
+show_help() {
+    echo "Usage: $(basename "$0") <source_file>"
+    echo
+    echo "Automatically formats a source file based on its extension."
+    echo
+    echo "Supported file types:"
+    echo "  .c, .h, .i     - formatted with indent"
+    echo "  .cpp, .hpp, .ipp - formatted with astyle"
+    echo "  .java          - formatted with google-java-format"
+    echo
+    echo "Examples:"
+    echo "  $(basename "$0") main.c"
+    echo "  $(basename "$0") src/MyClass.java"
+    echo
+    echo "Options:"
+    echo "  -h, --help     Show this help message and exit"
+}
+
+if [[ -z "$f" || "$f" == "-h" || "$f" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+ext=$(expr $f : ".*\(\..*\)")
+
+case $ext in
+.c | .h | .i)
+    # install indent <= 2.2.11
+    indent -l120 -lc120 ${f}
+    ;;
+.cpp | .hpp | .ipp)
+    # fix add brackets -> -j for compatibility with latest astyle
+    astyle --style=gnu --mode=c --indent-namespaces --indent=spaces=2 -xT8 -xt4 -j --max-code-length=120 --align-pointer=name --indent-classes --pad-header --pad-first-paren-out ${f}
+    ;;
+.java)
+    java -jar .github/workflows/google-java-format-1.7-all-deps.jar -a -r ${f}
+    ;;
+esac

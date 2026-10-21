@@ -7,6 +7,7 @@ This repository contains small scripts or projects that help to develop CUBRID.
 |------|---|---|
 |[sandbox](sandbox)|A virtual build platform for CUBRID developers|Leesoo Ahn ([memnoth](https://github.com/memnoth))|
 |[docker for ctp](docker_for_ctp)|Provides to test env to CUBRID|Won-ryong Song ([swi0110](https://github.com/swi0110))|
+|[volmap](volmap)|Volume file mapping viewer - shows sector/page layout of CUBRID volumes without touching the server|Hiclass ([hiclass](https://github.com/hiclass))|
 
 ## Contributing
 

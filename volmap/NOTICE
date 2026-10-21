@@ -1,0 +1,35 @@
+volmap — CUBRID volume file mapping viewer
+==========================================
+
+Copyright 2016 CUBRID Corporation
+
+Licensed under the Apache License, Version 2.0 (see LICENSE) — the same license
+as the CUBRID engine and this repository.
+
+유래 / Provenance
+-----------------
+
+src/storage_ondisk_layout.hpp 는 CUBRID 엔진 소스(disk_manager.c,
+file_manager.c/h, slotted_page.h)의 온디스크 구조체 정의를 모은 **사본**입니다.
+소스 체크아웃 없이 볼륨 파일을 해석하기 위해 두었습니다. 엔진 코드의 사본이므로
+원본의 저작권 표기(Copyright 2008 Search Solution Corporation 포함)를 그대로 유지합니다.
+
+  사본이므로 엔진에서 구조체가 바뀌어도 컴파일 단계에서 드러나지 않습니다.
+  포맷 변경은 docs/ondisk-format.md 의 버전표와 대조해 확인해야 합니다.
+
+링크 방식 / Linking
+-------------------
+
+빌드 산출물(cub_volmap)의 링크 방식은 빌드 호스트에 따라 다르며, 빌드 끝에
+어느 쪽인지 출력됩니다(직접 확인: ldd cub_volmap).
+
+  완전 정적   glibc-static 이 있을 때. glibc(LGPL-2.1)가 바이너리에 들어가므로,
+              제3자에게 배포할 때는 LGPL-2.1 §6 의 의무가 따릅니다.
+  동적 폴백   glibc-static 이 없을 때. glibc 를 실행 시점에 대상 시스템에서
+              불러오므로 위 의무는 해당하지 않습니다. 대신 빌드 호스트의 glibc
+              이상이 필요합니다(docs/build.md "구 환경에서 실행하기").
+
+Third-party
+-----------
+
+이 프로젝트는 외부 프로젝트의 코드를 포함하지 않습니다.

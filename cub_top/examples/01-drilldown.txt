@@ -1,0 +1,77 @@
+옵션 -t   ·   실시간 화면: cub_top -b · 시계열: -p · 모니터링 연동: -d · 도움말: -h
+
+CUBRID 메모리 드릴다운 (C)  db=cbench  pid=1177276  ⏱ 2026-10-26 01:54:20
+  인스턴스 8개: ▶cbench 1.1G · chkdb 1022.5M · demodb 1.3G · demodb 942.8M · demodb 882.3M · jiradb 1.1G · samedb_2388779w 996K · samedb_2395116w 952K   (상세는 cbench — 다른 DB 는 'cub_top <db명>')
+설정으로 설명: cubrid.conf 파라미터 87% (833.8M) / 설명 안 되는 영역 13% — 후자는 아래 동적 메모리 상세(B=정확, A=크기 추정)로 분해
+기호  ● 측정  ◐ 예약  ◌ 추정  ? 미귀속(아래 동적 메모리 상세가 분해)
+OS RAM  188.0G
+├─ used  129.0G (69%)
+├─ cached  74.9G
+├─ avail  59.1G
+├─ swap  off
+├─ CUBRID engine  1.2G (0.64% of RAM)
+│  ├─ ● server+master  986.5M  (VmSize 6.4G, worker 117)
+│  │  ├─ ● data_buffer    575.8M / alloc 575.9M  (설정 512.0M, 할당 112% 정상)
+│  │  ├─ ● log_buffer     258.0M / alloc 264.1M  (설정 256.0M, 할당 103% 정상)
+│  │  ├─ ? dynamic-heap   118.7M / alloc 407.3M
+│  │  │  ├─ ● [B] plan cache (xcache)    27K   (entries=7, engine-tracked)
+│  │  │  ├─ ◌ [B] plan clones (est)      190K   (엔진 추정치: 클론당 stream 크기 x3)
+│  │  │  ├─ ● [B] result cache (query)   0B   (비활성 (max_query_cache_entries=0) — 미사용)
+│  │  │  ├─ ● [B] filter pred cache      0B   (counter=0 x120 — 미사용)
+│  │  │  ├─ ● [B] lock table (tran)      15K   (num_trans=102 x152B (객체락 아님))
+│  │  │  ├─ ● [B] lock resources (obj)   117K   (alloc_cnt=1000 x120B)
+│  │  │  ├─ ● [B] lock entries (obj)     125K   (alloc_cnt=1000 x128B)
+│  │  │  ├─ ● [B] session table          67K   (alloc_cnt=220 x312B, 한도 800)
+│  │  │  ├─ ● [B] catalog cache          9K   (alloc_cnt=200 x48)
+│  │  │  ├─ ● [B] conn entries (css)     97K   (max=204 act=0 x488)
+│  │  ├─ ◐ thread stacks  1.6M / alloc 896.1M  (thread_stacksize 1.0M 는 HA 경로 전용 — 워커는 OS 기본 8MB)
+│  │  ├─ ● code (.so)     7.0M / alloc 27.5M
+│  │  ├─ ● bin/shm etc    124K / alloc 7.3M
+│  │  ├─ ◐ glibc arena    0B / alloc 4.3G  (가상 예약 — 물리 메모리 0)
+│  │  └─ ◐ PL server(JVM) — 서버가 기동하는 별도 프로세스  198.8M
+│  └─ ● broker+CAS (3-tier 별도 계층)  55.2M
+├─ ◌ 용량 (수요 대비 상한, 3ms)
+│  ├─ ● 수요  장치 24 IOPS · 이 서버 285 IOPS · 읽기 0B/s 쓰기 31K/s
+│  ├─ ● 지연  요청당 0.08ms (읽기 0.00 / 쓰기 0.08) · 큐 0.00 · 사용률 1%
+│  ├─ ● 프로파일  평균 요청 7.3KB · 읽기 0% → 상한 칸 [<8KB / write-heavy]
+│  ├─ ? 상한  이 칸은 미관측 (이 실행 중 같은 프로파일에서 포화 순간 필요)
+│  ├─ ◌ 버퍼  히트 0.0% (출처: perfmon-cum) · 적재 초당 0페이지 · 재적재 -
+│  ├─ ● 엔진  fetch 0/s ioread 0/s iowrite 0/s 로그쓰기 0/s 커밋 0/s
+│  └─ 판정  · sda: IOPS 24, 대기 0.1ms, 장치 1% — 상한 미관측(큐 4 이상 순간이 필요)
+├─ ◌ 버퍼풀 (페이지 슬롯 6ms)  상주 32768/32768 (100%)  dirty 0 (상주의 0.0%)  flushing 0  → 아직 안 쓴 페이지 0
+│  ├─ DWB 사용: DWB 에 복사된 페이지는 flush 완료로 처리 — "clean" 중 최대 128 페이지는 아직 볼륨 쓰기 대기일 수 있음
+│  ├─ 존  hot 13088 · warm 1632 · cold 18048 · void 0 · free 0   (victim 은 cold 에서, dirty 는 건너뜀)
+│  ├─ vol 6   상주 9994 (156.2M)  dirty 0
+│  ├─ vol 3   상주 8196 (128.1M)  dirty 0
+│  ├─ vol 1   상주 7422 (116.0M)  dirty 0
+│  ├─ vol 4   상주 7110 (111.1M)  dirty 0
+│  ├─ vol 0   상주 39 (624K)  dirty 0
+│  ├─ vol 7   상주 3 (48K)  dirty 0
+│  ├─ 로그  append 4059233|10128  flushed(nxio) 4059233|10128  → 아직 디스크에 안 내려간 로그 0 페이지
+│  └─ dirty 없음 — 버퍼는 전부 내보냄 (마지막 몇 페이지는 아직 DWB 에 있을 수 있음)
+└─ CPU · I/O (cub_server + device)
+   ├─ ● cpu  2%  (코어 1개=100%, 호스트 64코어)
+   ├─ ● disk read  0B/s  (누적 153.7G)
+   ├─ ● disk write  31K/s  (누적 26.9G)
+   ├─ ● iops  read 146/s  write 140/s
+   ├─ ◌ cache absorb  idle (rchar 13K/s — 판단하기엔 요청 읽기가 너무 적음)
+   ├─ ● blkio wait  0.00%  (전 스레드 합 — 100%를 넘을 수 있음; 비동기 대기는 안 잡힘)
+   └─ ● dev sda  util 1% (정상 <90%)  r 0B/s
+
+메모리 파라미터 (cubrid.conf)   ● 사용량까지 관측   ◐ 설정만 — 사용량은 dynamic-heap 에 합산됨
+  ● data_buffer_size                     512.0M   페이지 버퍼
+  ● log_buffer_size                      256.0M   로그 버퍼
+  ◐ double_write_buffer_size               2.0M   DWB(이중 쓰기 버퍼)
+  ◐ sort_buffer_size                       2.0M   정렬 버퍼 — 세션·연산당
+  ◐ temp_file_memory_size_in_pages          4 p   임시파일 메모리
+  ◐ max_plan_cache_entries                 1000   질의계획 캐시 항목 수
+  ◐ max_query_cache_entries                   0   질의결과 캐시 항목 수
+  ◐ max_filter_pred_cache_entries          1000   필터술어 캐시 항목 수
+  ◐ index_scan_oid_buffer_size              64K   인덱스 스캔 OID 버퍼
+  ◐ index_scan_key_buffer_size             320K   인덱스 스캔 키 버퍼
+  ◐ thread_stacksize                       1.0M   스레드 스택 — HA 경로 전용
+  ◐ max_clients                             100   최대 접속 수
+
+등급  ● 측정(OS·엔진 직접 보고)  ◐ 예약(매핑만 확인)  ◌ 추정(패턴)  ? 미귀속
+
+----------------------------------------------------------------------

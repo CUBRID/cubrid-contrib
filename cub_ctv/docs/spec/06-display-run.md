@@ -633,20 +633,20 @@ usage: cub_ctv [options] [<db-name> | <pid>]
 
 | 필드 | 식 |
 |---|---|
-| `de` | `counter_delta(c->nenter, p->nenter)` |
-| `dw` | `counter_delta(c->nwait, p->nwait)` |
+| `de` | `counter_delta(c->nenter, p->nenter, reset)` |
+| `dw` | `counter_delta(c->nwait, p->nwait, reset)` |
 | `enter_s` | `dt > 0 ? r->de / dt : 0.0` (u32 ÷ double → 실수 나눗셈) |
 | `wait_s` | `dt > 0 ? r->dw / dt : 0.0` |
 | `occ_pct` | `samples > 0 ? 100.0 * occ / samples : 0.0` |
 | `wait_pct` | `samples > 0 ? 100.0 * wai / samples : 0.0` |
 
-`counter_delta(now, before)`(static): `d = (uint32_t)(now - before)`; `d > UINT32_MAX / 2` 이면 엔진 통계 리셋(`;info csstat`)으로 보고 `now` 를, 아니면 `d`(32bit 넘침 포함)를 돌려준다.
+`reset = stats_reset(c, p)` = `c->total_ms < p->total_ms ∧ c->nenter < p->nenter`. 진입 수는 리셋과 32bit 넘침 모두에서 줄고, 누적 획득 시간(넘침 없음)은 리셋에서만 준다. 둘 다 줄어야 리셋으로 보므로 누적 시간만 찢겨 작게 읽힌 경우는 리셋이 아니다. `counter_delta(now, before, reset)`(static): `reset` 이면 `now`, 아니면 `(uint32_t)(now - before)`(32bit 넘침 포함). 리셋 직전 값이 2^31 을 넘었어도 리셋으로 판정한다.
 
 **나눗셈 규칙(이 절과 §6.3·§6.7 전체)**: 백분율·비율은 모두 `100.0`(double) 리터럴로 시작하므로 C 의 왼쪽 결합에 따라 첫 곱셈부터 double 로 승격되어 **실수 나눗셈**이다. 정수 나눗셈은 판정 수치 어디에도 없다. 예: occ 2, samples 3 → 66.666…(`%5.1f` 로 ` 66.7`, JSON `%.2f` 로 `66.67`).
 
 ### 6.3 CS 수치 (`cs_figures(i, dt)`) 와 심각도
 
-`c = view.rows[i]`, `p = view.prev[i]`, `dms = c->total_ms >= p->total_ms ? c->total_ms - p->total_ms : c->total_ms` (double; 감소는 통계 리셋).
+`c = view.rows[i]`, `p = view.prev[i]`, `dms = stats_reset(c, p) ? c->total_ms : c->total_ms - p->total_ms` (double).
 
 | 필드 | 식 |
 |---|---|

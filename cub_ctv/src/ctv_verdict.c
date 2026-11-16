@@ -96,22 +96,32 @@ cs_hint (const char *name)
 							    cs_info[i].hint_ko);
 }
 
-/* growth of a u32 engine counter: a drop of more than half the range is a
- * reset (;info csstat clears the statistics), not a wrap */
-static uint32_t
-counter_delta (uint32_t now, uint32_t before)
+/* the statistics were reset (;info csstat clears them) between two rows:
+ * nenter falls on a reset and on a u32 wrap, total_elapsed (a time sum that
+ * does not wrap) only on a reset; both falling also rules out a torn read
+ * of total_elapsed alone */
+static int
+stats_reset (const CS_ROW * c, const CS_ROW * p)
 {
-  uint32_t d = now - before;
+  return c->total_ms < p->total_ms && c->nenter < p->nenter;
+}
 
-  return d > UINT32_MAX / 2 ? now : d;
+/* growth of a u32 engine counter: the new value after a reset, else the
+ * difference modulo 2^32 (a wrap counts) */
+static uint32_t
+counter_delta (uint32_t now, uint32_t before, int reset)
+{
+  return reset ? now : now - before;
 }
 
 void
 cs_rates (const CS_ROW * c, const CS_ROW * p, int occ, int wai, int samples,
 	  double dt, CS_RATES * r)
 {
-  r->de = counter_delta (c->nenter, p->nenter);
-  r->dw = counter_delta (c->nwait, p->nwait);
+  int reset = stats_reset (c, p);
+
+  r->de = counter_delta (c->nenter, p->nenter, reset);
+  r->dw = counter_delta (c->nwait, p->nwait, reset);
   r->enter_s = dt > 0 ? r->de / dt : 0.0;
   r->wait_s = dt > 0 ? r->dw / dt : 0.0;
   r->occ_pct = samples > 0 ? 100.0 * occ / samples : 0.0;
@@ -124,8 +134,7 @@ cs_figures (int i, double dt, CS_FIG * f)
   const CS_ROW *c = &view.rows[i], *p = &view.prev[i];
   CS_RATES rt;
   uint32_t de, dwt;
-  /* total_elapsed only falls when the statistics were reset */
-  double dms = c->total_ms >= p->total_ms ? c->total_ms - p->total_ms : c->total_ms;
+  double dms = stats_reset (c, p) ? c->total_ms : c->total_ms - p->total_ms;
 
   cs_rates (c, p, view.st.occ[i], view.st.wai[i], view.st.samples, dt, &rt);
   de = rt.de;

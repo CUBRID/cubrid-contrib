@@ -150,7 +150,7 @@ ix  name                      state     waitR waitW  tran   nenter   nwait  reen
 |---|---|
 | occ% / occ-bar | 윈도우 중 점유 상태로 관측된 샘플 비율 (`#` 10칸 = 100%) |
 | wait% | 대기자가 있던 샘플 비율 |
-| enter/s, wait/s | 누적 카운터의 구간 미분 (u32 wrap 보정, 값이 줄면 엔진 리셋으로 보고 새 값을 증분으로); 대기 발생 행은 `<-- WAIT` |
+| enter/s, wait/s | 누적 카운터의 구간 미분 (u32 wrap 보정, 누적 획득 시간(total_elapsed)과 진입 수가 함께 줄면 리셋으로 보고 새 값을 증분으로); 대기 발생 행은 `<-- WAIT` |
 | 소유자 블록 | 윈도우 중 **목격된** writer 소유자·대기 큐를 기억해 표시 — µs 점유도 포착. 체인 끝은 현재 큐면 `[n of N waiting]`, 지금 큐가 비어 구간 중 목격한 체인을 보이거나 큐가 waitW 보다 길면 `[n seen]`. 목격한 클라이언트가 구간 중 접속을 끊어 슬롯이 다른 클라이언트에게 넘어갔으면 현재 클라이언트가 아니라 목격한 클라이언트를 `disconnected` 로 표시(신원을 모르면 `pid N`) |
 
 위는 파이프 출력이다. tty에서는 대체 화면에 **요약 화면**을 제자리 갱신한다(맨 위 그림 `t9-replay.gif` 가 그 실제 화면이다): `[판정]`(심각도가 가장 높은 CS — 같으면 손실이 큰 순, 쥔 쪽,
@@ -291,7 +291,7 @@ MVCC 이전 버전을 읽는 경우는 LOG 를 reader 로 지난다).
   writer만 설정(reader 주체 불명), RWLOCK/RMUTEX는 nwait 미집계, 누적 카운터는 u32. 엔진의 `nenter` 증가는
   잠금 밖이라 경합 시 일부 유실되며, demote·promote 도 진입으로 센다.
 - `;info csstat` 는 엔진 누적 통계를 0으로 리셋한다(CS·RWLOCK·RMUTEX; 그 출력은 Total Wait 와 Total Reenter 열이
-  뒤바뀌어 찍히는 엔진 결함도 있다). cub_ctv 는 감소를 리셋으로 보고 그 구간 증분을 새 값으로 계산하지만, 스냅샷의
+  뒤바뀌어 찍히는 엔진 결함도 있다). cub_ctv 는 누적 획득 시간(total_elapsed)과 진입 수가 함께 줄면 리셋으로 보고 그 구간 증분을 새 값으로 계산하지만, 스냅샷의
   누적값(nenter·nwait·max_ms 등)은 리셋 이후 값이다.
 - 무락 판독: 카운터 ±1, total/max 대기시간은 찢긴 판독에서 일시적으로 최대 +1,000ms. occ%는 100Hz 격자라 µs
   점유에선 잡음(장기 점유 판정에만 사용). 개별 enter 이벤트는 미포착.

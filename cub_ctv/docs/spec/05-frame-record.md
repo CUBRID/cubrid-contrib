@@ -372,7 +372,7 @@
 | 빈 줄 | 토큰 0개 줄은 건너뛴다(프레임 안팎 모두, 색인도 무시) |
 | 정수 | 쓰기 `%d`/`%u`/`%ld`/`%llu`(10진). 읽기 `atoi`/`atol`/`strtoul(…,10)`/`strtoull(…,10)` — **문법 검증 없음**: 숫자가 아닌 토큰은 0, `strtoul("-1")` 은 `UINT32` 로 잘려 `0xFFFFFFFF` |
 | 16진 | 쓰기 `%llx`(소문자, `0x` 없음). 읽기 `strtoull(s, NULL, 16)` |
-| 실수 | 쓰기 `%.17g`(왕복 정확; 0 은 `0`, 정수값은 소수점 없이 예 `3.5`, `22`). 읽기 `strtod` |
+| 실수 | 쓰기 `%.17g`(왕복 정확; 0 은 `0`, 정수값은 소수점 없이 예 `3.5`, `22`). 읽기 `rec_real` = `strtod` 후 `isfinite` 가 아니면(nan·inf) `rec_bad`(그 줄 번호). 도구가 쓰는 값은 모두 유한하므로 손상·수정된 기록만 해당 |
 | 문자열 | `rec_str`: **먼저 구분 공백 1개(`' '`)를 쓰고**, 빈 문자열은 `~`. 아니면 각 바이트 `c` 가 `c <= 0x20`, `c >= 0x7f`, `'%'`, `'~'` 이면 `%XX`(대문자 16진 2자리), 그 외는 그대로. 따라서 UTF-8 다바이트 문자는 모두 `%XX` 로 나간다 |
 | `rec_str` 와 공백 | 이 문서에서 `"… %u" + rec_str(x)` 처럼 적은 형식은 `rec_str` 가 앞 공백을 스스로 쓰므로 서식 문자열 쪽에는 공백이 없다. 예: `fprintf("I %d %d %d", …)` + `rec_str(info)` → `I 1 2 3 ~` |
 | 문자열 읽기 | `rec_unescape`: 토큰이 정확히 `~` 이면 빈 문자열. 아니면 `%` 뒤 두 글자가 모두 16진수면 1바이트로 복원(대소문자 무관), 아니면 `%` 를 글자 그대로 둔다(거부하지 않음). 대상 버퍼 크기 −1 바이트에서 자르고, 마지막에 `text_sanitize`(제어문자·C1·깨진 UTF-8 을 `?` 로)를 적용한다. `%00` 은 문자열을 거기서 끝낸다 |
@@ -431,7 +431,7 @@ F … (프레임 2) …
 | 1 | `pid` | `%d` | `atoi` |
 | 2 | `live` | `%d` 0/1 | `atoi` |
 | 3 | `hz` | `%d` | `atoi` |
-| 4 | `interval` | `%.17g` | `strtod` |
+| 4 | `interval` | `%.17g` | `rec_real` |
 | 5 | `thr_count` | `%d` | `atoi` |
 | 6 | `degraded` | `%u` | `strtoul(…,10)` |
 | 7 | `lo.stride` | `%d` | `atoi` |
@@ -471,7 +471,7 @@ F … (프레임 2) …
 읽기(`rd_F`):
 1. 이미 프레임 안이면 bad(프레임 안의 프레임).
 2. `view.seq = VERDICT_HISTORY + rec_seq++` (§8).
-3. 위 필드를 `view` 에 넣고(`ts` 는 `atol`, `dt` 는 `strtod`, 나머지는 `atoi` — 문법 검증 없음) 검증한다. 조건식은 정확히 다음과 같다:
+3. 위 필드를 `view` 에 넣고(`ts` 는 `atol`, `dt` 는 `rec_real`(유한값만), 나머지는 `atoi` — 문법 검증 없음) 검증한다. 조건식은 정확히 다음과 같다:
    ```c
    if (view.count != rec_count
        || view.st.samples < 0 || view.st.samples > REC_SAMPLES_MAX
@@ -558,13 +558,13 @@ F … (프레임 2) …
 쓰기: `"O %d %d %d %d %d %d %ld %ld"` (slot, tid, samples, run, dsk, oth, ticks0, ticks1) + `rec_str(comm)` + `" %d\n"` (span_ms). 읽기: 0 으로 채운 뒤 넣고(`t_first`/`t_last` = 0; ticks 는 `atol`, 나머지 `atoi`), `comm` 은 16 B, `nos < 64` 일 때만 저장. 값 검증 없음.
 
 #### `D` — 로그 장치 (4/4)
-쓰기 `fprintf(f, "D %.17g %.17g", await_ms, util_pct)` + `rec_str(dev)` + `fputc('\n')` — `disk_avail` 일 때만. 읽으면 `disk_avail = 1`, 두 값 `strtod`, dev 는 32 B.
+쓰기 `fprintf(f, "D %.17g %.17g", await_ms, util_pct)` + `rec_str(dev)` + `fputc('\n')` — `disk_avail` 일 때만. 읽으면 `disk_avail = 1`, 두 값 `rec_real`, dev 는 32 B.
 
 #### `R` — 대기 사유 히스토그램 (31/31)
 쓰기 `fprintf(f, "R %d %d", wait_live, THR_RESUME_MAX)` → `i = 0..27` 마다 `fprintf(f, " %d", wait_cnt[i])` → `fputc('\n')` — `wait_avail` 일 때만. 읽기 `R live 28 c0 … c27`. 검증: **`atoi(tok2) != 28` 이면 bad** — 문법 검증이 아니라 `atoi` 값 비교이므로 `28x`, `028`, `+28` 도 통과한다. 토큰 수는 줄 규칙표가 정확히 31 로 강제. `wait_avail = 1`, `wait_live = atoi(tok1)`, `wait_cnt[k] = atoi(tok(3+k))`.
 
 #### `G` — 풀 그룹 (6/6)
-쓰기 `fprintf(f, "G %d %d %llu %.17g", type, cnt, nenter, max_ms)` + `rec_str(name)` + `fputc('\n')`. 읽기: type·cnt `atoi`, nenter `strtoull(…,10)`, max_ms `strtod`, name 64 B. `npool < 1024` 일 때만 저장. 쓰기는 `pool_state == 1` 일 때 `view.pool[0..npool)`.
+쓰기 `fprintf(f, "G %d %d %llu %.17g", type, cnt, nenter, max_ms)` + `rec_str(name)` + `fputc('\n')`. 읽기: type·cnt `atoi`, nenter `strtoull(…,10)`, max_ms `rec_real`, name 64 B. `npool < 1024` 일 때만 저장. 쓰기는 `pool_state == 1` 일 때 `view.pool[0..npool)`.
 
 #### `E` — 프레임 끝 (1/1)
 쓰기 `fputs("E\n", f)` 후 `fflush(f)`. 검증: 받은 `C` 행 수 = `count`(아니면 bad). 이어서 `idents_settle(rd.keyframe)`(§7.2), 프레임 완료.

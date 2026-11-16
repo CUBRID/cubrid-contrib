@@ -469,6 +469,19 @@ rec_bad (void)
   die ("malformed record file at %s", "기록 파일 형식 오류: %s", where);
 }
 
+/* a real number token: nan or inf is a damaged record (JSON has neither) */
+static double
+rec_real (const char *tok)
+{
+  double v = strtod (tok, NULL);
+
+  if (!isfinite (v))
+    {
+      rec_bad ();
+    }
+  return v;
+}
+
 
 static void
 rec_unescape (const char *in, char *out, size_t n)
@@ -560,7 +573,7 @@ view_replay_open (const char *path, VIEW_HDR * h)
   h->pid = atoi (tok[1]);
   h->live = atoi (tok[2]);
   h->hz = atoi (tok[3]);
-  h->interval = strtod (tok[4], NULL);
+  h->interval = rec_real (tok[4]);
   h->thr_count = atoi (tok[5]);
   h->degraded = (unsigned) strtoul (tok[6], NULL, 10);
   h->lo.stride = atoi (tok[7]);
@@ -633,7 +646,7 @@ rd_F (char **tok, int n, REC_RD * rd)
   view.ts = atol (tok[1]);
   view.count = atoi (tok[2]);
   view.st.samples = atoi (tok[3]);
-  view.dt = strtod (tok[4], NULL);
+  view.dt = rec_real (tok[4]);
   view.tran_avail = atoi (tok[5]);
   view.cid_locked = atoi (tok[6]);
   view.has_trid = atoi (tok[7]);
@@ -697,8 +710,8 @@ rd_C (char **tok, int n, REC_RD * rd)
   r->nenter = (uint32_t) strtoul (tok[9], NULL, 10);
   r->nwait = (uint32_t) strtoul (tok[10], NULL, 10);
   r->nreenter = (uint32_t) strtoul (tok[11], NULL, 10);
-  r->total_ms = strtod (tok[12], NULL);
-  r->max_ms = strtod (tok[13], NULL);
+  r->total_ms = rec_real (tok[12]);
+  r->max_ms = rec_real (tok[13]);
   view.st.occ[i] = atoi (tok[14]);
   view.st.wai[i] = atoi (tok[15]);
   view.st.seen_tran[i] = atoi (tok[16]);
@@ -710,7 +723,7 @@ rd_C (char **tok, int n, REC_RD * rd)
   view.prev[i] = *r;    /* as view_capture builds it */
   view.prev[i].nenter = pn;
   view.prev[i].nwait = pw;
-  view.prev[i].total_ms = strtod (tok[22], NULL);
+  view.prev[i].total_ms = rec_real (tok[22]);
   view.st.seen_cpid[i] = atoi (tok[23]);
   rd->seen[i] = 1;
   rd->nrows++;
@@ -959,8 +972,8 @@ rd_D (char **tok, int n, REC_RD * rd)
   (void) rd;
 
   view.disk_avail = 1;
-  view.disk_await_ms = strtod (tok[1], NULL);
-  view.disk_util_pct = strtod (tok[2], NULL);
+  view.disk_await_ms = rec_real (tok[1]);
+  view.disk_util_pct = rec_real (tok[2]);
   rec_unescape (tok[3], view.disk_dev, sizeof (view.disk_dev));
 }
 
@@ -1012,7 +1025,7 @@ rd_G (char **tok, int n, REC_RD * rd)
   g->type = atoi (tok[1]);
   g->cnt = atoi (tok[2]);
   g->nenter = strtoull (tok[3], NULL, 10);
-  g->max_ms = strtod (tok[4], NULL);
+  g->max_ms = rec_real (tok[4]);
   rec_unescape (tok[5], g->name, sizeof (g->name));
   if (view.npool < POOL_MAX_GROUPS)
     {

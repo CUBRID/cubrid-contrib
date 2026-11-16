@@ -35,4 +35,25 @@ for f in "$s" "$l"; do
     | python3 -c "import sys,json; n=[json.loads(x) for x in sys.stdin if x.strip()]; sys.exit(0 if n else 1)" \
     && echo "t5 PASS: $(basename "$f") json" || { echo "t5 FAIL: $(basename "$f") json"; rc=1; }
 done
+# a real number token that is nan / inf is refused with its line (JSON has
+# neither): H interval, F dt, C total/max/prev total, D await/util, G max_ms
+bad=$(mktemp); trap 'rm -f "$bad"' EXIT
+nonfinite () {   # file, awk edit, label
+  awk "$2" "$1" > "$bad"
+  ln=$(awk "$2" "$1" | diff - "$1" | sed -n 's/^\([0-9]*\)c.*/\1/p' | head -1)
+  out=$(env -u COLUMNS "$TOOL" --replay "$bad" --replay-speed 0 --json 2>&1 >/dev/null)
+  case "$out" in
+    *"malformed record file at $bad:$ln") ;;
+    *) echo "t5 FAIL: $3 accepted or wrong line: $out"; rc=1; return ;;
+  esac
+}
+nonfinite "$l" '$1=="H"&&!d{$5="inf";d=1}{print}' "H interval inf"
+nonfinite "$l" '$1=="F"&&!d{$5="nan";d=1}{print}' "F dt nan"
+nonfinite "$s" '$1=="C"&&!d{$13="nan";d=1}{print}' "C total_ms nan"
+nonfinite "$s" '$1=="C"&&!d{$14="inf";d=1}{print}' "C max_ms inf"
+nonfinite "$l" '$1=="C"&&!d{$23="-inf";d=1}{print}' "C prev total_ms -inf"
+nonfinite "$l" '$1=="B"&&!d{$0="D nan 1.0 sda";d=1}{print}' "D await nan"
+nonfinite "$l" '$1=="B"&&!d{$0="D 1.0 inf sda";d=1}{print}' "D util inf"
+nonfinite "$s" '$1=="G"&&!d{$5="nan";d=1}{print}' "G max_ms nan"
+[ $rc -eq 0 ] && echo "t5 PASS: nan / inf real tokens refused with their line"
 exit $rc

@@ -129,23 +129,67 @@ os_sample (LIVE_WIN * w, int k)
     }
 }
 
-/* count one sighting of tran holding / waiting for CS cs */
+/* client pid of a tran's slot, read at most every OS_SAMPLE_MIN_S: a slot
+ * that changes hands in the window keeps each client's sightings apart */
+static int
+client_pid (int tran)
+{
+  static int *pid = NULL;
+  static double *at = NULL;
+  static int n = 0;
+  double t;
+
+  if (tran < 1 || tran_geom.ntran <= 0)
+    {
+      return -1;
+    }
+  if (n != tran_geom.ntran)
+    {
+      free (pid);
+      free (at);
+      n = tran_geom.ntran;
+      pid = malloc ((size_t) n * sizeof (int));
+      at = calloc ((size_t) n, sizeof (double));
+      if (pid == NULL || at == NULL)
+	{
+	  free (pid);
+	  free (at);
+	  pid = NULL;
+	  at = NULL;
+	  n = 0;
+	  return -1;
+	}
+    }
+  if (tran >= n)
+    {
+      return -1;
+    }
+  t = mono_s ();
+  if (at[tran] == 0.0 || t - at[tran] >= OS_SAMPLE_MIN_S)
+    {
+      pid[tran] = tran_client_pid (tran);
+      at[tran] = t;
+    }
+  return pid[tran];
+}
+
+/* count one sighting of tran (client pid cpid) holding / waiting for CS cs */
 static void
-act_add (LIVE_WIN * w, int cs, int kind, int tran, int thr)
+act_add (LIVE_WIN * w, int cs, int kind, int tran, int thr, int cpid)
 {
   /* engine threads all count as tran 0: keep them apart by thread so the
    * verdict names the one that held most */
   int key_thr = tran == 0 ? thr : -1;
   unsigned h = ((unsigned) cs * 31u + (unsigned) kind * 7u
-		+ (unsigned) tran * 2654435761u + (unsigned) (key_thr + 1) * 40503u)
-    & (ACT_HASH - 1);
+		+ (unsigned) tran * 2654435761u + (unsigned) (key_thr + 1) * 40503u
+		+ (unsigned) (cpid + 1) * 97u) & (ACT_HASH - 1);
 
   /* open addressing over act[]: slot = index + 1, 0 = empty */
   for (; w->act_ix[h] != 0; h = (h + 1) & (ACT_HASH - 1))
     {
       ACT *a = &w->st.act[w->act_ix[h] - 1];
 
-      if (a->cs == cs && a->kind == kind && a->tran == tran
+      if (a->cs == cs && a->kind == kind && a->tran == tran && a->cpid == cpid
 	  && (tran != 0 || a->thr == key_thr))
 	{
 	  a->samples++;
@@ -166,6 +210,7 @@ act_add (LIVE_WIN * w, int cs, int kind, int tran, int thr)
       a->tran = tran;
       a->thr = thr;
       a->samples = 1;
+      a->cpid = cpid;
       w->act_ix[h] = (unsigned short) w->st.nact;
     }
   else
@@ -200,15 +245,17 @@ live_accumulate (LIVE_WIN * w, const CS_LAYOUT * lo)
 	  tran = 0;
 	}
       /* prefer a client tran (>=1) over the system tran (0) */
-      if (rwlock < 0 && (tran >= 1 || (tran == 0 && w->st.seen_tran[i] < 0)))
-	{
-	  w->st.seen_tran[i] = tran;
-	  w->st.seen_owner[i] = rd_u64 (w->blob, off + lo->off_owner);
-	}
       if (rwlock < 0)
 	{
 	  uint64_t owner = rd_u64 (w->blob, off + lo->off_owner);
-	  int k;
+	  int k, cpid = client_pid (tran);
+
+	  if (tran >= 1 || (tran == 0 && w->st.seen_tran[i] < 0))
+	    {
+	      w->st.seen_tran[i] = tran;
+	      w->st.seen_cpid[i] = cpid;
+	      w->st.seen_owner[i] = owner;
+	    }
 
 	  /* the owner's slot is looked up once per distinct owner tid; a torn
 	   * sample may still read owner 0 */
@@ -225,7 +272,7 @@ live_accumulate (LIVE_WIN * w, const CS_LAYOUT * lo)
 		}
 	      k = w->own_slot[i];
 	    }
-	  act_add (w, i, ACT_HELD, tran, k);
+	  act_add (w, i, ACT_HELD, tran, k, cpid);
 	  if (k >= 0)
 	    {
 	      os_sample (w, k);
@@ -255,6 +302,10 @@ live_accumulate (LIVE_WIN * w, const CS_LAYOUT * lo)
 		  w->ch_n[i] = thr_waiters_mem2 (head, head2,
 						 w->ch_slot[i], w->ch_tran[i],
 						 THR_WAITERS_MAX, fresh ? at : 0);
+		  for (q = 0; q < w->ch_n[i]; q++)
+		    {
+		      w->ch_cpid[i][q] = client_pid (w->ch_tran[i][q]);
+		    }
 		  /* a head not walked (throttled, or no hop accepted) is
 		   * retried at the next chance */
 		  w->wq_last[i] = w->ch_n[i] > 0 ? head : 0;
@@ -267,12 +318,15 @@ live_accumulate (LIVE_WIN * w, const CS_LAYOUT * lo)
 			      (size_t) w->ch_n[i] * sizeof (int));
 		      memcpy (w->st.seen_tran_of[i], w->ch_tran[i],
 			      (size_t) w->ch_n[i] * sizeof (int));
+		      memcpy (w->st.seen_cpid_of[i], w->ch_cpid[i],
+			      (size_t) w->ch_n[i] * sizeof (int));
 		    }
 		}
 	      /* only the chain of the current head is charged */
 	      for (q = 0; head == w->wq_last[i] && q < w->ch_n[i]; q++)
 		{
-		  act_add (w, i, ACT_WAIT, w->ch_tran[i][q], w->ch_slot[i][q]);
+		  act_add (w, i, ACT_WAIT, w->ch_tran[i][q], w->ch_slot[i][q],
+			   w->ch_cpid[i][q]);
 		}
 	    }
 	  else

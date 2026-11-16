@@ -75,9 +75,11 @@
 | `ntran` | `int` | 트랜잭션 디스크립터 수(가용 아니면 0) | 같음 · `F` tok8 |
 | `ident` | `VIEW_IDENT *` | 신원 배열, `idx` 오름차순(이진 탐색 전제). 힙, 용량 64 에서 2배씩 증가 | `view_add_ident` · `I` + 키프레임 병합 |
 | `nident`, `ident_cap` | `int` | 개수, 용량 | 같음 |
+| `gone` | `VIEW_IDENT *` | 구간에 목격됐으나 프레임 순간에는 그 슬롯을 떠난 클라이언트(`idx` = tran, `id.cpid` = 목격 pid). 직전 캡처의 신원 그대로. 순서 = 발견 순(정렬 없음). 힙, 용량 16 에서 2배씩 | `view_capture_gone`(§4.1a) · `J` |
+| `ngone`, `gone_cap` | `int` | 개수, 용량 | 같음. `view_capture_trans`·`rd_F` 가 `ngone = 0` |
 | `tid[VIEW_MAX_TIDS]`, `tid_slot[]`, `ntid` | `uint64_t`, `int` | 소유자 스레드 id(pthread_t) → 칸(모르면 −1) | `view_add_tid` · `T` |
 | `chain[VIEW_MAX_CHAINS]`, `nchain` | `VIEW_CHAIN` | 현재 대기 큐 머리별 체인 | `view_add_chain` · `Q` |
-| `slot[VIEW_MAX_SLOTS]`, `slot_tran[]`, `nslot` | `int` | 칸 → 그 칸이 기다릴 때의 tran index | `view_add_slot_tran` · `S` |
+| `slot[VIEW_MAX_SLOTS]`, `slot_tran[]`, `slot_cpid[]`, `nslot` | `int` | 칸 → 그 칸이 기다릴 때의 tran index 와 그 tran 의 클라이언트 pid(−1 모름) | `view_add_slot_tran` · `S` |
 | `os[OS_MAX]`, `nos` | `OS_THR` | 스레드 OS 상태(샘플된 writer 스레드 먼저, 그다음 소유자 이름만) | `view_add_os` · `O` |
 | `disk_avail` | `int` | 로그 장치 수치 있음 | `view_disk_end` · `D` 유무 |
 | `disk_await_ms`, `disk_util_pct` | `double` | 쓰기 1건 평균 대기 ms, 장치 사용률 % | 같음 · `D` tok1,2 |
@@ -94,7 +96,7 @@
 | `hist_back[VERDICT_HISTORY]` | `int` | 몇 구간 전인지(1..9) | 같음 · `V` 쌍 첫째 |
 | `hist_top[VERDICT_HISTORY]` | `int` | 그 구간의 최상위 CS 인덱스, −1 = 경합 없음 | 같음 · `V` 쌍 둘째 |
 
-`view` 는 정적 전역이며 크기가 크다(`st.act` 만 4096×20 B). 프레임 사이에 해제하지 않는다.
+`view` 는 정적 전역이며 크기가 크다(`st.act` 만 4096×24 B). 프레임 사이에 해제하지 않는다.
 
 ### 3.2 `WIN_STATS` (구간이 본 것)
 
@@ -106,18 +108,20 @@
 | `occ[MAX_CS]` | `int` | `rwlock != 0` 이었던 샘플 수 | 샘플마다 |
 | `wai[MAX_CS]` | `int` | `wr != 0 \|\| ww != 0` 이었던 샘플 수 | 샘플마다 |
 | `seen_tran[MAX_CS]` | `int` | 구간 중 목격한 writer 의 tran. −1 = 없음 | `rwlock < 0` 일 때: tran<0 이면 0(엔진 스레드)로 보고, `tran >= 1` 이면 항상 덮어쓰고, `tran == 0` 은 아직 −1 일 때만 기록(클라이언트 tran 우선) |
+| `seen_cpid[MAX_CS]` | `int` | `seen_tran` 의 클라이언트 pid(그 샘플에서 `client_pid(tran)`, 06 §11.2a). −1 = 모름 | `seen_tran` 과 같은 순간에 |
 | `seen_owner[MAX_CS]` | `uint64_t` | 위 `seen_tran` 을 기록한 샘플의 owner thread id | `seen_tran` 과 같은 순간에 |
 | `seen_wq[MAX_CS]` | `uint64_t` | 구간 최초의(비어 있지 않게 걸어진) 대기 큐 머리. 0 = 없음 | 큐를 걸었고(`ch_n > 0`) `seen_wq == 0` 또는 같은 머리일 때 설정 |
 | `seen_n[MAX_CS]` | `int` | 그 머리의 체인 칸 수(같은 머리를 다시 걸으면 최신 걷기로 갱신). −1 = 없음 | 위와 같은 조건 |
 | `seen_slot[MAX_CS][64]` | `int` | 그 체인의 칸들 | 위와 같은 조건 |
 | `seen_tran_of[MAX_CS][64]` | `int` | 그 체인 각 칸의 tran(링크와 같은 읽기에서) | 위와 같은 조건. **기록되지 않는다**(재생은 `S` 줄로 대신) |
+| `seen_cpid_of[MAX_CS][64]` | `int` | 각 칸 tran 의 클라이언트 pid(걷기 직후 `client_pid`) | 위와 같은 조건(`ch_cpid` 복사). **기록되지 않는다**(`S` tok3 으로 대신) |
 | `act[ACT_MAX]` | `ACT` | 누가 어떤 CS 를 보유/대기했는지와 목격 샘플 수 | `act_add` |
 | `nact` | `int` | `act` 사용 수 | 같음 |
 | `act_dropped` | `int` | 표가 차서 보관하지 못한 목격 수 | 같음 |
 
 `win_stats_clear(st)`:
 1. `st` 의 시작부터 `act` 직전까지 0 으로 채운다(`samples`, `occ`, `wai`, `seen_*` 모두).
-2. 모든 CS `i` 에 `seen_tran[i] = -1`, `seen_n[i] = -1`.
+2. 모든 CS `i` 에 `seen_tran[i] = -1`, `seen_cpid[i] = -1`, `seen_n[i] = -1`.
 3. `nact = act_dropped = 0`. `act[]` 배열 내용은 지우지 않는다(`nact` 만 의미).
 
 ### 3.3 `ACT`
@@ -129,8 +133,9 @@
 | `tran` | tran index. 0 = 시스템(엔진 스레드 포함: writer 의 tran 이 음수면 0 으로 셈) |
 | `thr` | 칸. 모르면 −1. `tran != 0` 항목은 처음 알려진 칸으로 채워짐 |
 | `samples` | 목격 샘플 수 |
+| `cpid` | 목격 당시 그 tran 슬롯의 클라이언트 pid(`client_pid`, 06 §11.2a). −1 = 모름(tran 0 포함) |
 
-동일 항목 판정(샘플러 `act_add`): `(cs, kind, tran)` 이 같고, `tran == 0` 이면 `thr` 까지 같아야 같은 항목(엔진 스레드끼리는 스레드별로 나눔). 해시 `h = (cs*31 + kind*7 + tran*2654435761 + (key_thr+1)*40503) & (ACT_HASH-1)`(unsigned 산술, `key_thr = tran==0 ? thr : -1`), 선형 탐사. 새 항목은 `kind == ACT_HELD` 면 `nact < ACT_MAX`, 대기면 `nact < ACT_MAX - ACT_HELD_RESERVE` 일 때만 추가, 아니면 `act_dropped++`. 항목 순서 = 최초 목격 순서이며 이것이 `W` 줄 순서다.
+동일 항목 판정(샘플러 `act_add`): `(cs, kind, tran, cpid)` 가 같고, `tran == 0` 이면 `thr` 까지 같아야 같은 항목(엔진 스레드끼리는 스레드별로 나눔). 같은 슬롯이라도 구간 중 클라이언트가 바뀌면(pid 다름) 다른 항목이다. 해시 `h = (cs*31 + kind*7 + tran*2654435761 + (key_thr+1)*40503 + (cpid+1)*97) & (ACT_HASH-1)`(unsigned 산술, `key_thr = tran==0 ? thr : -1`), 선형 탐사. 새 항목은 `kind == ACT_HELD` 면 `nact < ACT_MAX`, 대기면 `nact < ACT_MAX - ACT_HELD_RESERVE` 일 때만 추가, 아니면 `act_dropped++`. 항목 순서 = 최초 목격 순서이며 이것이 `W` 줄 순서다.
 
 ### 3.4 `OS_THR`
 
@@ -212,7 +217,7 @@
 | `st` | `WIN_STATS` | 구간이 본 것(§3.2). 프레임이 통째 복사 | `win_stats_clear` |
 | `wq_last[MAX_CS]` | `uint64_t` | 직전 샘플에서 걸은 큐 머리(걷기 실패면 0) | 0 |
 | `ch_n[MAX_CS]` | `int` | 그 머리 아래 체인 칸 수 | 0 |
-| `ch_slot[MAX_CS][64]`, `ch_tran[MAX_CS][64]` | `int` | 체인 칸과 각 칸의 tran | 안 함(`ch_n` 만 의미) |
+| `ch_slot[MAX_CS][64]`, `ch_tran[MAX_CS][64]`, `ch_cpid[MAX_CS][64]` | `int` | 체인 칸, 각 칸의 tran, 걷기 직후 읽은 그 tran 의 클라이언트 pid | 안 함(`ch_n` 만 의미) |
 | `ch_walked[MAX_CS]` | `double` | 마지막 걷기 시각(mono s). `every()` 스로틀 기준 | **안 함**(구간을 넘어 유지) |
 | `own_last[MAX_CS]` | `uint64_t` | 직전 샘플의 owner tid(칸 해석 캐시 키) | 0 |
 | `own_slot[MAX_CS]` | `int` | 그 tid 의 칸(−1 = 모름) | −1 |
@@ -246,7 +251,8 @@
    1. `rows[i].rwlock < 0` 이면 `view_add_tid(rows[i].owner)` (아니면 owner 필드는 낡은 값이므로 추가하지 않음).
    2. `view_add_tid(view.st.seen_owner[i])`.
    3. `view_add_chain(rows[i].wq, rows[i].wq2, w, i)`.
-10. 구간 중 이전 목격: 각 CS `i`, `k < view.st.seen_n[i]` 에 대해 `view_add_slot_tran(seen_slot[i][k], seen_tran_of[i][k])`. 이미 현재 큐(9단계)에서 추가된 칸은 무시되므로 **현재 큐의 tran 이 우선**한다.
+10. 구간 중 이전 목격: 각 CS `i`, `k < view.st.seen_n[i]` 에 대해 `view_add_slot_tran(seen_slot[i][k], seen_tran_of[i][k], seen_cpid_of[i][k])`. 이미 현재 큐(9단계)에서 추가된 칸은 무시되므로 **현재 큐의 tran 이 우선**한다.
+10a. `view_capture_gone()` (§4.1a) — 판독 없음(7단계 신원과 직전 캡처 신원 비교).
 11. OS 측: `view.nos = 0`. 먼저 `w->os[0..w->nos)` 를 순서대로 `view_add_os(w->os[i].slot, &w->os[i])`(샘플러 기록 복사), 그다음 `view.tid_slot[0..ntid)` 를 순서대로 `view_add_os(tid_slot[i], NULL)`(이름만 실시간 판독).
 12. 대기 사유: `readers = Σ rows[i].wr`(i < count). `view.wait_avail = thr_wait_counts(view.wait_cnt, &view.wait_live, readers) == 0` — **실시간 판독**(스레드 엔트리 `resume_status`/`m_status`). `wait_cnt[7]` 은 `readers` 로 채워진다.
 13. `view_disk_end(w, dt)` (§4.5) — **실시간 판독**(`/proc/diskstats`).
@@ -258,11 +264,24 @@
 | 함수 | 규칙 |
 |---|---|
 | `view_add_tid(tid)` | `tid == 0` 또는 `ntid >= 128` 이면 무시. 이미 있으면 무시. 아니면 `tid[ntid] = tid`, `tid_slot[ntid] = thr_index_of_tid_mem(tid)`(실시간 tid 정렬표 이진 탐색, 없으면 −1), `ntid++` |
-| `view_add_chain(head, head2, w, cs)` | `head == 0` 또는 `nchain >= 128` 이면 무시. 같은 `head` 체인이 이미 있으면 무시(먼저 나온 CS 가 이김). 새 체인 `c` 를 추가하고 `c->head = head`. **재사용 조건** `w != NULL && w->wq_last[cs] == head && mono_s() − w->ch_walked[cs] < OS_SAMPLE_MIN_S` 이면 샘플러 걷기(`ch_n`, `ch_slot`, `ch_tran`)를 복사, 아니면 `thr_waiters_mem2(head, head2, c->slot, tran, 64, 0)` 로 새로 걷는다(앵커 0 = 불변식 표결 안 함). 이어서 모든 칸 `k` 에 `view_add_slot_tran(c->slot[k], tran[k])` |
-| `view_add_slot_tran(slot, tran)` | `nslot >= 8192`, `slot < 0`, `slot >= THR_MAX`, 또는 이번 프레임에 이미 표시된 칸(`slot_seen[slot]`)이면 무시. 아니면 표시하고 `slot[nslot] = slot`, `slot_tran[nslot] = tran`, `nslot++` |
+| `view_add_chain(head, head2, w, cs)` | `head == 0` 또는 `nchain >= 128` 이면 무시. 같은 `head` 체인이 이미 있으면 무시(먼저 나온 CS 가 이김). 새 체인 `c` 를 추가하고 `c->head = head`. **재사용 조건** `w != NULL && w->wq_last[cs] == head && mono_s() − w->ch_walked[cs] < OS_SAMPLE_MIN_S` 이면 샘플러 걷기(`ch_n`, `ch_slot`, `ch_tran`, `ch_cpid`)를 복사, 아니면 `thr_waiters_mem2(head, head2, c->slot, tran, 64, 0)` 로 새로 걷고(앵커 0 = 불변식 표결 안 함) 모든 칸 `cpid = -1`(이번 캡처 신원이 곧 현재 클라이언트). 이어서 모든 칸 `k` 에 `view_add_slot_tran(c->slot[k], tran[k], cpid[k])` |
+| `view_add_slot_tran(slot, tran, cpid)` | `nslot >= 8192`, `slot < 0`, `slot >= THR_MAX`, 또는 이번 프레임에 이미 표시된 칸(`slot_seen[slot]`)이면 무시. 아니면 표시하고 `slot[nslot] = slot`, `slot_tran[nslot] = tran`, `slot_cpid[nslot] = cpid`, `nslot++` |
 | `view_add_os(slot, src)` | `slot < 0` 또는 `nos >= 64` 면 무시. 같은 칸이 이미 있으면 무시. `src != NULL` 이면 통째 복사. 아니면 0 으로 채우고 `slot`, `tid = thr_tid_of(slot)`, `tid > 0` 이면 `os_task_comm` 으로 `comm`. **`tid > 0` 인 경우에만** `nos++`(확정) |
 
 `thr_waiters_mem2` 는 첫 큐(`head`)를 걷고, `head2 != 0` 이고 자리가 남으면 둘째 큐를 이어 걷되 첫 부분에 이미 있는 칸을 만나면 거기서 둘째 부분을 끊는다(찢긴 읽기 방지). 자세한 것은 04 문서.
+
+### 4.1a `view_capture_gone()` — 슬롯을 떠난 클라이언트
+
+슬롯은 재사용된다(엔진은 해제된 가장 낮은 슬롯부터 다시 준다: `log_tran_table.c` `hint_free_index`). 구간에 목격한 (tran, cpid) 가 프레임 순간에는 그 슬롯에 없으면, 그 클라이언트의 신원을 **직전 캡처의 신원**(모듈 정적 `prev_ident[0..prev_n)`, = 구간 시작 시점 신원)에서 찾아 `view.gone` 에 남긴다.
+
+1. `ngone = 0`.
+2. 차례로 `gone_note(tran, cpid)`: `st.act[0..nact)` 의 `(tran, cpid)`, CS `i < count` 의 `(seen_tran[i], seen_cpid[i])`, `k < nslot` 의 `(slot_tran[k], slot_cpid[k])`.
+3. `gone_note(tran, cpid)`: `tran < 1`, `cpid < 0`, 또는 `view_identity(tran)` 가 있고 그 `id.cpid == cpid`(현재 클라이언트)면 무시. `gone` 에 같은 `(idx, id.cpid)` 가 이미 있으면 무시. `prev_ident` 에서 `idx == tran && id.cpid == cpid` 인 첫 항목이 있으면 `view_add_gone(tran, trid, &id)`. 없으면 아무것도 남기지 않는다(렌더러는 pid 만 보임, `view_identity_seen` 2).
+4. 끝으로 이번 `view.ident` 를 `prev_ident` 로 복사(`prev_n = nident`; 용량은 `nident` 로 `realloc`, 실패하면 `prev_n = 0` 후 반환) — 다음 구간의 시작 신원.
+
+`view_add_gone(idx, trid, id)`: `ngone == gone_cap` 이면 용량 `gone_cap ? 2*gone_cap : 16` 으로 `realloc`(실패 시 "out of memory" 로 종료), 끝에 추가. 재생은 `J` 줄이 부른다.
+
+한계: 라이브 실행의 첫 구간은 `prev_ident` 가 비어 신원이 없다. 한 구간 안에 접속했다 떠난 클라이언트도 직전 캡처에 없으므로 신원이 없다(둘 다 pid 만).
 
 ### 4.2 `view_capture_trans(dt)` — 트랜잭션 표만
 
@@ -272,7 +291,8 @@
 2. `view.ts = time(NULL)`, `view.seq++`.
 3. `view.st.samples = 0`, `view.dt = dt`.
 4. `view_capture_idents()`.
-5. `view.degraded = degraded`.
+5. `view.ngone = 0`.
+6. `view.degraded = degraded`.
 
 이 경로는 기록이 없을 때만 쓰이므로(`[r]` 도 이 모드에서는 거부) 이 프레임이 기록 파일에 쓰이는 일은 없다.
 
@@ -332,8 +352,10 @@
 | `view_os_of(slot)` | `view.os[0..nos)` 에서 `slot` 이 같은 첫 항목 포인터, 없으면 `NULL` |
 | `resume_name(v)` | 코드 → 대기 사유 이름(언어 `use_ko` 반영): 3 page latch/페이지 래치, 5 job queue/작업 큐, 7·9·11 critical section/크리티컬 섹션, 13 connection queue/접속 큐, 15 class repr/클래스 표현, 17 lock/락, 19 log writer/로그 writer, 21 free buffer/빈 버퍼, 23 DWB queue/DWB 큐, 25 sleep/sleep, 26 concurrency slot/동시성 슬롯, 그 외 `""` |
 | `view_identity(tran, &id, &trid)` | `nident == 0` 이면 −1. `view.ident` 를 `idx` 로 이진 탐색(비교는 뺄셈 없이 `<`/`>`: 재생 값은 임의 int). 찾으면 `*id` 복사, `trid != NULL` 이면 `*trid`, 0 반환. 없으면 −1. **전제: `ident` 는 `idx` 오름차순** |
+| `view_identity_seen(tran, cpid, &id, &trid)` | (tran, cpid) 로 목격된 클라이언트에 보일 신원. `view_identity(tran)` 가 있고 `cpid < 0 \|\| id.cpid == cpid` 면 0(현재 클라이언트, 또는 pid 모름). 아니면 `tran < 1 \|\| cpid < 0` 이면 −1(없음). `gone` 에서 `idx == tran && id.cpid == cpid` 를 찾으면 그 신원·trid 로 1(떠난 클라이언트). 없으면 `*id` 를 0 으로 채우고 `id->cpid = cpid` 로 2(떠났고 신원 없음, pid 만). 2 일 때 `trid` 는 쓰지 않는다 |
 | `view_slot_of_tid(tid)` | `tid != 0` 이고 `view.tid[k] == tid` 인 첫 `k` 의 `tid_slot[k]`, 없으면 −1 |
 | `view_tran_of(slot)` | `view.slot[k] == slot` 인 첫 `k` 의 `slot_tran[k]`, 없으면 −1 |
+| `view_tran_cpid_of(slot)` | 같은 `k` 의 `slot_cpid[k]`, 없으면 −1 |
 | `view_waiters(head, idx, max)` | `head != 0` 이고 `chain[k].head == head` 인 첫 체인의 칸을 `min(n, max)` 개 `idx` 에 복사하고 그 수 반환, 없으면 0 |
 | `view_seen_chain(cs, idx, max)` | `cs` 가 `[0, count)` 밖이거나 `st.seen_n[cs] < 0` 이면 0. 아니면 `st.seen_slot[cs]` 를 `min(seen_n, max)` 개 복사하고 그 수 반환(구간 중 그 CS 큐 머리를 처음 본 때의 체인) |
 
@@ -367,6 +389,7 @@ C 0 … C count-1          ← CS 행, 인덱스 순
 K 0|1
 I …*                     ← 신원(키프레임: 전부 / 아니면 바뀐 것만), idx 오름차순
 X …*                     ← 사라진 신원 (K 0 일 때만), idx 오름차순
+J …*                     ← 구간에 슬롯을 떠난 클라이언트, view.gone 순 (매 프레임 전부)
 T …*                     ← view.tid 순
 Q …*                     ← view.chain 순
 P …*                     ← CS 인덱스 순, seen_n >= 0 인 CS 만
@@ -381,7 +404,7 @@ E                        ← 프레임 끝
 F … (프레임 2) …
 ```
 
-읽기는 `F` 로 시작해 `E` 로 끝나는 것만 요구하며 프레임 안 줄 순서는 자유다(아래 검증의 상호 의존: `W` 의 samples 상한, `P`/`W`/`V`/`C` 의 CS 범위는 모두 이미 읽은 `F` 값만 쓴다). 같은 종류가 두 번 나오면 `B`/`D`/`R`/`V`/`K`/`A` 는 나중 값이 이기고, `C` 같은 인덱스 중복과 `I` 비증가는 거부된다.
+읽기는 `F` 로 시작해 `E` 로 끝나는 것만 요구하며 프레임 안 줄 순서는 자유다(아래 검증의 상호 의존: `W` 의 samples 상한, `P`/`W`/`V`/`C` 의 CS 범위는 모두 이미 읽은 `F` 값만 쓴다). 같은 종류가 두 번 나오면 `B`/`D`/`R`/`V`/`K`/`A` 는 나중 값이 이기고, `C` 같은 인덱스 중복과 `I` 비증가는 거부된다. `J` 는 순서·중복 검증 없이 쌓인다.
 
 ### 6.3 매직 줄
 
@@ -459,8 +482,8 @@ F … (프레임 2) …
    - `count` 는 `atoi` 이므로 `18x` 도 18 로 통과한다(헤더 `count` 와 같기만 하면 됨).
    - **스냅샷 헤더(`live == 0`)는 `dt` 를 전혀 검사하지 않는다**: 음수·`nan`·`inf` 도 그대로 `view.dt` 에 들어간다. samples 는 0..`REC_SAMPLES_MAX` 범위만 검사(≥1 요구 없음).
    - `rec_seq++` 는 검증보다 먼저 일어나지만, 실패하면 곧바로 종료하므로 관측되지 않는다.
-4. 초기화: `nident = ntid = nchain = nslot = npool = 0`, `st.nact = nos = 0`, `disk_avail = wait_avail = 0`, `st.act_dropped = 0`, `hist_known = hist_n = 0`, 제거 목록 `nrm = 0`, `rd.keyframe = 1`(`K` 없는 프레임은 키프레임), `rows`·`st.occ`·`st.wai`·`st.seen_tran`·`st.seen_owner`·`st.seen_wq` 전부 0, 모든 `st.seen_n[k] = -1`, 행 수신 표시·수 0, `in_frame = 1`.
-5. **초기화되지 않는 것**: `view.degraded`(그 프레임에 `B` 가 없으면 직전 값 유지), `wait_cnt`·`disk_*` 값(가용 플래그만 0), `prev`(모든 `C` 가 덮음), `st.seen_slot`·`st.seen_tran_of`.
+4. 초기화: `nident = ntid = nchain = nslot = npool = 0`, `st.nact = nos = 0`, `disk_avail = wait_avail = 0`, `st.act_dropped = 0`, `hist_known = hist_n = 0`, 제거 목록 `nrm = 0`, `rd.keyframe = 1`(`K` 없는 프레임은 키프레임), `rows`·`st.occ`·`st.wai`·`st.seen_tran`·`st.seen_owner`·`st.seen_wq` 전부 0, 모든 `st.seen_n[k] = -1`·`st.seen_cpid[k] = -1`, `ngone = 0`(`J` 는 프레임마다 새로), 행 수신 표시·수 0, `in_frame = 1`.
+5. **초기화되지 않는 것**: `view.degraded`(그 프레임에 `B` 가 없으면 직전 값 유지), `wait_cnt`·`disk_*` 값(가용 플래그만 0), `prev`(모든 `C` 가 덮음), `st.seen_slot`·`st.seen_tran_of`·`st.seen_cpid_of`.
 
 #### `B` — 강등 비트 (2/2)
 쓰기: `fprintf(f, "B %u\n", view.degraded)` — 모든 프레임에 정확히 1개, `F` 바로 뒤. 읽기: `view.degraded = (unsigned) strtoul(tok1, NULL, 10)`.
@@ -469,8 +492,8 @@ F … (프레임 2) …
 쓰기(`hist_known` 일 때만): `fprintf(f, "V %d", hist_n)` → `i = 0..hist_n−1` 마다 `fprintf(f, " %d %d", hist_back[i], hist_top[i])` → `fputc('\n')`. `hist_known && hist_n == 0` 이면 `V 0` 한 줄을 쓴다(이력은 쌓고 있으나 앞 9 구간이 비어 있음). 예 `V 3 1 2 2 2 3 -1`.
 읽기 검증(`n` = `atoi(tok1)`): 토큰 수 = `2 + 2n`, `n < VERDICT_HISTORY`(≤9), 각 `back` ∈ [1, 9], 각 `top` ∈ [−1, count−1]. 통과하면 `hist_known = 1`, `hist_n = n`, 배열 채움. `V` 가 없는 프레임은 `hist_known = 0` → 재생 화면은 이력을 가져오지 않고 재생 중 쌓은 이력을 쓴다.
 
-#### `C` — CS 한 행 (23/23)
-쓰기: `"C %d %d %u %u %d %llx %llx %d %u %u %u %.17g %.17g %d %d %d %llx %llx %u %u"` + `rec_str(name)`(앞 공백 포함) + `" %.17g"`(prev total_ms) + `fputc('\n')`. CS 인덱스 `0..count−1` 순서, 모든 CS 를 쓴다.
+#### `C` — CS 한 행 (24/24)
+쓰기: `"C %d %d %u %u %d %llx %llx %d %u %u %u %.17g %.17g %d %d %d %llx %llx %u %u"` + `rec_str(name)`(앞 공백 포함) + `" %.17g %d"`(prev total_ms, seen_cpid) + `fputc('\n')`. CS 인덱스 `0..count−1` 순서, 모든 CS 를 쓴다.
 
 | tok | 필드 | 형식 |
 |---|---|---|
@@ -496,8 +519,9 @@ F … (프레임 2) …
 | 20 | `prev[i].nwait` | `%u` |
 | 21 | `rows[i].name` | 문자열(64 B) |
 | 22 | `prev[i].total_ms` | `%.17g` |
+| 23 | `st.seen_cpid[i]` | `%d` (−1 모름) |
 
-읽기 검증: `0 <= i < count`, 같은 프레임에서 `i` 가 처음. 읽은 뒤 `prev[i] = rows[i]` 로 복사하고 `nenter`/`nwait`/`total_ms` 만 tok19/20/22 로 바꾼다(캡처 6단계와 같은 모양). `rows[i].wq2` 는 기록되지 않아 재생에서는 0(체인은 `Q` 가 이미 두 큐를 합친 결과를 담음). 행 수신 수 +1.
+읽기 검증: `0 <= i < count`, 같은 프레임에서 `i` 가 처음. 읽은 뒤 `prev[i] = rows[i]` 로 복사하고 `nenter`/`nwait`/`total_ms` 만 tok19/20/22 로 바꾼다(캡처 6단계와 같은 모양). `st.seen_cpid[i] = atoi(tok23)`. `rows[i].wq2` 는 기록되지 않아 재생에서는 0(체인은 `Q` 가 이미 두 큐를 합친 결과를 담음). 행 수신 수 +1.
 
 #### `K` — 신원 키프레임 플래그 (2/2)
 `K 1` 또는 `K 0`. tok1 이 정확히 `"0"` 또는 `"1"` 이 아니면 bad(색인 중에도 같은 검사). 쓰기 `fprintf(f, "K %d\n", key)` — 모든 프레임에 정확히 1개를 C 행 뒤에 쓴다.
@@ -505,6 +529,9 @@ F … (프레임 2) …
 #### `I` — 신원 (10/10)
 쓰기: `fprintf(f, "I %d %d %d", idx, trid, cpid)` + `rec_str` × 6 (info, user, program, login, host, ip; 각자 앞 공백) + `fputc('\n')`.
 읽기: 이 프레임에서 이미 읽은 마지막 `I` 의 idx 보다 tok1 이 **엄격히 커야** 한다(아니면 bad). `TRAN_IDENT` 를 0 으로 채우고 cpid, 6 문자열(각 64 B)을 넣어 `view_add_ident(idx, trid, &id)`.
+
+#### `J` — 슬롯을 떠난 클라이언트 (10/10)
+토큰은 `I` 와 같다(`rec_ident_line(f, tag, v)` 가 태그만 바꿔 씀): `J idx trid cpid info user program login host ip`. 쓰기: `rec_idents`(`K`/`I`/`X`) 직후 `view.gone[0..ngone)` 순으로 — 키프레임과 무관하게 매 프레임 그 프레임의 전부. 읽기(`rd_J`): `TRAN_IDENT` 를 0 으로 채우고 cpid, 6 문자열을 넣어 `view_add_gone(idx, trid, &id)`. 순서·범위·중복 검증 없음. 신원 병합(§7.2)에 참여하지 않는다.
 
 #### `X` — 사라진 신원 (2/2)
 쓰기 `fprintf(f, "X %d\n", i)`. 읽기: `X idx`(`atoi`). 제거 목록 `rm` 에 추가(64 에서 2배 증가). 순서·범위 검증 없음. `K 1` 프레임의 `X` 는 효과가 없다(§7.2).
@@ -518,14 +545,14 @@ F … (프레임 2) …
 #### `P` — 구간 최초 대기 큐 (3/68)
 쓰기 `fprintf(f, "P %d %d", i, seen_n[i])` → `k < seen_n[i]` 마다 `fprintf(f, " %d", seen_slot[i][k])` → `fputc('\n')`. 읽기 `P cs n slot…`(모두 `atoi`). 검증: `0 <= cs < count`, `0 <= n <= 64`, 토큰 수 = `3 + n`. `st.seen_n[cs] = n`, `st.seen_slot[cs][*]`. 쓰기는 `seen_n >= 0` 인 CS 만(`P cs 0` 도 가능).
 
-#### `S` — 칸 → tran (3/3)
-쓰기 `fprintf(f, "S %d %d\n", slot, slot_tran)`. 읽기 `S slot tran`(`atoi`). `nslot < 8192` 일 때만 저장.
+#### `S` — 칸 → tran (4/4)
+쓰기 `fprintf(f, "S %d %d %d\n", slot, slot_tran, slot_cpid)`. 읽기 `S slot tran cpid`(`atoi`, cpid −1 = 모름). `nslot < 8192` 일 때만 저장.
 
 #### `A` — 보관 못한 활동 목격 수 (2/2)
 쓰기 `fprintf(f, "A %d\n", act_dropped)` — `act_dropped > 0` 일 때만. 읽기 `A n` → `st.act_dropped = atoi(tok1)`.
 
-#### `W` — 활동 목격 (6/6)
-쓰기 `fprintf(f, "W %d %d %d %d %d\n", cs, kind, tran, thr, samples)` (`st.act[0..nact)` 순). 읽기 `W cs kind tran thr samples`(모두 `atoi`). 검증(이 순서, 둘 다 bad): `0 <= samples <= F 의 samples`, `0 <= cs < count`, `kind ∈ {0, 1}`. `nact < 4096` 일 때만 저장. 스냅샷(samples 0)은 `nact == 0` 이므로 `W` 가 없다.
+#### `W` — 활동 목격 (7/7)
+쓰기 `fprintf(f, "W %d %d %d %d %d %d\n", cs, kind, tran, thr, samples, cpid)` (`st.act[0..nact)` 순). 읽기 `W cs kind tran thr samples cpid`(모두 `atoi`, cpid −1 = 모름). 검증(이 순서, 둘 다 bad): `0 <= samples <= F 의 samples`, `0 <= cs < count`, `kind ∈ {0, 1}`. `nact < 4096` 일 때만 저장. 스냅샷(samples 0)은 `nact == 0` 이므로 `W` 가 없다.
 
 #### `O` — 스레드 OS 상태 (11/11)
 쓰기: `"O %d %d %d %d %d %d %ld %ld"` (slot, tid, samples, run, dsk, oth, ticks0, ticks1) + `rec_str(comm)` + `" %d\n"` (span_ms). 읽기: 0 으로 채운 뒤 넣고(`t_first`/`t_last` = 0; ticks 는 `atol`, 나머지 `atoi`), `comm` 은 16 B, `nos < 64` 일 때만 저장. 값 검증 없음.
@@ -561,12 +588,13 @@ typedef struct { const char *tag; int min_tok, max_tok, mark;
 | tag | min | max | mark | handler |
 |---|---|---|---|---|
 | `F` | 11 | 11 | `REC_FRAME_START`(1) | `rd_F` |
-| `C` | 23 | 23 | 0 | `rd_C` |
+| `C` | 24 | 24 | 0 | `rd_C` |
 | `I` | 10 | 10 | 0 | `rd_I` |
+| `J` | 10 | 10 | 0 | `rd_J` |
 | `T` | 3 | 3 | 0 | `rd_T` |
 | `Q` | 3 | 68 | 0 | `rd_Q` |
 | `P` | 3 | 68 | 0 | `rd_P` |
-| `W` | 6 | 6 | 0 | `rd_W` |
+| `W` | 7 | 7 | 0 | `rd_W` |
 | `O` | 11 | 11 | 0 | `rd_O` |
 | `V` | 2 | 20 | 0 | `rd_V` |
 | `K` | 2 | 2 | `REC_FRAME_KEY`(2) | `rd_K` |
@@ -575,7 +603,7 @@ typedef struct { const char *tag; int min_tok, max_tok, mark;
 | `B` | 2 | 2 | 0 | `rd_B` |
 | `D` | 4 | 4 | 0 | `rd_D` |
 | `R` | 31 | 31 | 0 | `rd_R` |
-| `S` | 3 | 3 | 0 | `rd_S` |
+| `S` | 4 | 4 | 0 | `rd_S` |
 | `G` | 6 | 6 | 0 | `rd_G` |
 | `E` | 1 | 1 | `REC_FRAME_END`(3) | `rd_E` |
 
@@ -729,10 +757,10 @@ H 3912964 1 100 0.5 4314 0 160 18 152 demodb /opt/cubrid/lib/libcubrid.so.11.5 ~
 
 F 1793193213 18 46 0.50033167004585266 1 1 1 102 0 0
 B 0
-C 0 0 0 0 -1 0 0 1 0 0 0 0 0 0 0 -1 0 0 0 0 WFG 0
-C 1 -1 0 0 0 7f7badffb640 0 1 3450205 823841 19872 529156.09199999995 232.00200000000001 29 15 29 7f7b61feb640 7f7bf59ada40 3448962 823479 LOG 528854.09100000001
+C 0 0 0 0 -1 0 0 1 0 0 0 0 0 0 0 -1 0 0 0 0 WFG 0 -1
+C 1 -1 0 0 0 7f7badffb640 0 1 3450205 823841 19872 529156.09199999995 232.00200000000001 29 15 29 7f7b61feb640 7f7bf59ada40 3448962 823479 LOG 528854.09100000001 -1
 I 1 13985814 3214132 ~ DBA csql cubrid dbhost01 10.0.0.79
-W 1 0 0 4300 24
+W 1 0 0 4300 24 -1
 O 4300 3913067 9 6 3 0 20464 20472 log-flush 450
 ```
 
@@ -754,17 +782,17 @@ CTVREC 5
 H 4242 1 100 0.5 512 0 160 2 152 demodb /opt/cubrid/lib/libcubrid.so.11.5 ~
 F 1793193213 2 50 0.50033167004585266 1 1 1 4 0 0
 B 0
-C 0 0 0 0 -1 0 0 1 120 0 0 3.5 1 0 0 -1 0 0 100 0 WFG 3
-C 1 -1 0 1 3 7f7badffb640 7f7bf59ada40 1 3450205 823841 19872 529156.09199999995 232.00200000000001 29 15 3 7f7badffb640 7f7bf59ada40 3448962 823479 LOG 528854.09100000001
+C 0 0 0 0 -1 0 0 1 120 0 0 3.5 1 0 0 -1 0 0 100 0 WFG 3 -1
+C 1 -1 0 1 3 7f7badffb640 7f7bf59ada40 1 3450205 823841 19872 529156.09199999995 232.00200000000001 29 15 3 7f7badffb640 7f7bf59ada40 3448962 823479 LOG 528854.09100000001 3214140
 K 1
 I 1 13985814 3214132 ~ DBA csql cubrid dbhost01 10.0.0.79
 I 3 13985820 3214140 ~ DBA my%20app cubrid dbhost01 10.0.0.80
 T 7f7badffb640 4300
 Q 7f7bf59ada40 1 4227
 P 1 1 4227
-S 4227 1
-W 1 0 3 4300 29
-W 1 1 1 4227 15
+S 4227 1 3214132
+W 1 0 3 4300 29 3214140
+W 1 1 1 4227 15 3214132
 O 4300 3913067 9 6 3 0 20464 20472 log-flush 450
 D 1.25 12.5 sda
 R 143 28 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0
@@ -772,19 +800,21 @@ E
 F 1793193214 2 49 0.50688785314559937 1 1 1 4 0 0
 B 0
 V 1 1 1
-C 0 0 0 0 -1 0 0 1 130 0 0 3.5 1 0 0 -1 0 0 120 0 WFG 3.5
-C 1 0 0 0 -1 0 0 1 3460000 823900 19872 529400 232.00200000000001 10 2 3 7f7badffb640 0 3450205 823841 LOG 529156.09199999995
+C 0 0 0 0 -1 0 0 1 130 0 0 3.5 1 0 0 -1 0 0 120 0 WFG 3.5 -1
+C 1 0 0 0 -1 0 0 1 3460000 823900 19872 529400 232.00200000000001 10 2 3 7f7badffb640 0 3450205 823841 LOG 529156.09199999995 3214140
 K 0
 I 3 13985821 3214140 ~ DBA batch cubrid dbhost01 10.0.0.80
 X 1
-W 1 0 3 4300 10
+J 1 13985814 3214132 ~ DBA csql cubrid dbhost01 10.0.0.79
+W 1 0 3 4300 10 3214140
+W 1 1 1 4227 2 3214132
 R 140 28 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 E
 ```
 
 해석:
-- 프레임 1(키프레임): CS 1(`LOG`)을 tran 3 의 칸 4300 이 writer 로 보유(`rwlock -1`, owner `7f7badffb640` → `T` 로 칸 4300), writer 1명 대기(`ww 1`), 큐 머리 `7f7bf59ada40` 에 칸 4227(`Q`), 칸 4227 은 tran 1 을 위해 대기(`S`). 구간 50 샘플 중 29 샘플 보유, 15 샘플 대기(`W`). 프로그램 이름의 공백은 `%20`. `R` 은 코드 17(lock) 대기 1. 로그 장치 `sda` await 1.25 ms, 사용률 12.5 %.
-- 프레임 2(`K 0`): 이어받은 신원 {1, 3} 에서 tran 3 은 `I` 로 갱신(program `batch`, trid 변경), tran 1 은 `X 1` 로 제거 → 결과 {3}. `V 1 1 1` = 1 구간 전 최상위 CS 는 1. `P`·`Q`·`D` 가 없으므로 그 CS 의 구간 큐 없음, 디스크 수치 없음(`disk_avail 0`).
+- 프레임 1(키프레임): CS 1(`LOG`)을 tran 3 의 칸 4300 이 writer 로 보유(`rwlock -1`, owner `7f7badffb640` → `T` 로 칸 4300), writer 1명 대기(`ww 1`), 큐 머리 `7f7bf59ada40` 에 칸 4227(`Q`), 칸 4227 은 tran 1 을 위해 대기(`S`). 구간 50 샘플 중 29 샘플 보유, 15 샘플 대기(`W`; 끝 토큰은 목격 당시 그 슬롯의 클라이언트 pid). 프로그램 이름의 공백은 `%20`. `R` 은 코드 17(lock) 대기 1. 로그 장치 `sda` await 1.25 ms, 사용률 12.5 %.
+- 프레임 2(`K 0`): 이어받은 신원 {1, 3} 에서 tran 3 은 `I` 로 갱신(program `batch`, trid 변경), tran 1 은 `X 1` 로 제거 → 결과 {3}. 구간 중 tran 1(pid 3214132)이 대기했으나 지금은 슬롯을 떠났으므로 `J 1 …` 이 그 클라이언트의 신원을 남긴다(`view_identity_seen(1, 3214132)` = 1). `V 1 1 1` = 1 구간 전 최상위 CS 는 1. `P`·`Q`·`D` 가 없으므로 그 CS 의 구간 큐 없음, 디스크 수치 없음(`disk_avail 0`).
 - 재생 seq: 프레임 1 = 10, 프레임 2 = 11.
 
 ---

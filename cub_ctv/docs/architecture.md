@@ -21,7 +21,7 @@
                   (터미널: view_replay_index()로 프레임 위치를 색인해 임의 구간으로 이동)
 ```
 
-렌더러는 서버도 샘플러 상태(`LIVE_WIN`)도 읽지 않고 프레임(`VIEW_FRAME`)에서만 답을 받는다(행·직전 행·점유/대기 집계·활동은 필드로, 신원·스레드·체인은 `view_identity`, `view_slot_of_tid`, `view_waiters`, `view_tran_of`). 예외는 트랜잭션 표의 거부 사유로, 전역 `tran_refused` 를 읽는다. `LIVE_WIN` 은 샘플러가 채우고(디스크 기준값 `dk0`/`dk_ok` 만 프레임의 `view_disk_begin` 이 씀) 구간 끝에 `view_capture` 가 프레임으로 한 방향 복사한다. 그래서 라이브 실행과 재생이 같은 출력 코드를 지나며, 같은 보기 옵션이면 출력이 바이트 단위로
+렌더러는 서버도 샘플러 상태(`LIVE_WIN`)도 읽지 않고 프레임(`VIEW_FRAME`)에서만 답을 받는다(행·직전 행·점유/대기 집계·활동은 필드로, 신원·스레드·체인은 `view_identity`, `view_identity_seen`, `view_slot_of_tid`, `view_waiters`, `view_tran_of`, `view_tran_cpid_of`). 예외는 트랜잭션 표의 거부 사유로, 전역 `tran_refused` 를 읽는다. `LIVE_WIN` 은 샘플러가 채우고(디스크 기준값 `dk0`/`dk_ok` 만 프레임의 `view_disk_begin` 이 씀) 구간 끝에 `view_capture` 가 프레임으로 한 방향 복사한다. 그래서 라이브 실행과 재생이 같은 출력 코드를 지나며, 같은 보기 옵션이면 출력이 바이트 단위로
 같다(tests/t7). 디테일 덤프는 재생용이 아니며 `--replay` 가 첫 줄의 형식 표시로 알아보고 거부한다.
 
 대상 메모리 판독은 `ctv_mem.c` 한 곳을 지난다(단건 `/proc/<pid>/mem` pread, 묶음은 `process_vm_readv`; 둘 다 같은 ptrace 읽기 권한). 큰 영역(스레드 엔트리 배열 5.2MB, TDES)은 이미지로 읽고 버퍼에서 검사한다. 스레드 배열은 시작 시 한 번 읽어 개수 세기·검증·첫 m_id 표에 함께 쓰고, 라이브에서는 `/proc/<pid>/task` 목록이 바뀐 초에만 m_id·tid 표를 gather 2회로 재구성한다(m_id 는 스레드가 나고 들 때만 바뀐다). 이미지는 미확정 필드가 있을 때만 재프로빙 일정대로 다시 읽는다(§4). 작은 범위 여럿(CS stats 블록 64B × 18, 대기 사유·`m_status` 4B × 실스레드, tid 4B × 실스레드)은 `mem_gather_ok`(`process_vm_readv`, 호출 1회에 최대 1,024개 범위, 불가 시 pread)로 모아 읽는다. 트랜잭션 신원은 구간마다 디스크립터 포인터 배열을 1회, trid 배열을 gather 1회로 읽고 사용 중인 칸만 CLIENTIDS 구간을 gather 1회로 읽어 (trid, CLIENTIDS) 가 지난 해독과 같으면 재사용하고, 바뀐 칸(또는 3구간 경과)만 문자열을 다시 해독한다(판독량은 PR.md 부록 B.2). libcubrid.so 는 읽기 전용 mmap 1회로 심볼을 찾는다.
@@ -88,7 +88,8 @@
 ## 4. 라이브 샘플링
 
 - 100Hz 로 CS 배열(18 × 160B)을 pread. 대기자가 있으면 큐 홉도 읽는다(새 머리는 CS당 최대 20Hz, 같은 머리는 0.25초마다 재순회, 새 머리는 닻 재확인 8B 포함). 윈도우마다 occ%/wait% (샘플 비율), enter/s·wait/s (u32 wrap 보정 미분).
-- 윈도우 중 목격된 writer 소유자(tran·thr)와 대기 큐 머리를 기억해 표시한다. 샘플마다 "누가 쥐고/기다리나"를 (cs, tran) 단위로 세어(`ACT`) 요약 화면의 세션 블록과 판정에 쓴다; 대기자의 tran 은 목격 즉시 읽는다.
+- 윈도우 중 목격된 writer 소유자(tran·thr)와 대기 큐 머리를 기억해 표시한다. 샘플마다 "누가 쥐고/기다리나"를 (cs, kind, tran, 클라이언트 pid) 단위로 세어(`ACT`) 요약 화면의 세션 블록과 판정에 쓴다; 대기자의 tran 은 목격 즉시 읽는다.
+- 트랜잭션 슬롯은 재사용된다(엔진은 해제된 가장 낮은 슬롯부터 재배정). 그래서 목격한 클라이언트 tran(보유는 샘플마다, 대기 홉은 걷기 때)마다 그 슬롯 CLIENTIDS 의 pid 4B 를 tran 당 최대 0.05초에 1회 읽어 함께 남긴다(`client_pid` → `tran_client_pid`). 구간 끝 캡처는 목격한 (tran, pid) 가 지금 그 슬롯에 없으면 직전 캡처(= 구간 시작)의 신원을 프레임의 `gone` 목록(기록 `J` 줄)으로 옮기고, 렌더러는 `view_identity_seen` 으로 현재 클라이언트 대신 그 신원(`disconnected` 표시)을 보인다. 측정(같은 경합 부하, 동시 실행): read 시스템 호출 301 → 328회/s(+27), 판독량 약 305KB/s 그대로, 유휴는 100회/s 그대로.
 - 스레드 `m_id`·tid 캐시는 1초에 1회 procfs 의 task 목록과 비교한다. 두 동작은 서로 독립이다.
 
   | 동작 | 조건 | 판독 |

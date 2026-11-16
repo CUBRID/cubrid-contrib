@@ -327,6 +327,7 @@ typedef struct
 typedef struct
 {
   int cs, kind, tran, thr, samples;
+  int cpid;			/* client pid of tran when seen, -1 unknown */
 } ACT;
 
 /* OS state of one engine thread over a window: scheduler state samples
@@ -347,10 +348,12 @@ typedef struct
   int samples;
   int occ[MAX_CS], wai[MAX_CS];	/* samples seen held / with waiters */
   int seen_tran[MAX_CS];	/* writer tran seen during the window */
+  int seen_cpid[MAX_CS];	/* its client pid when seen, -1 unknown */
   uint64_t seen_owner[MAX_CS];	/* writer thread id seen during the window */
   uint64_t seen_wq[MAX_CS];	/* the window's first waiter-queue head */
   int seen_n[MAX_CS];		/* its chain at sighting, -1 = none */
   int seen_slot[MAX_CS][THR_WAITERS_MAX], seen_tran_of[MAX_CS][THR_WAITERS_MAX];
+  int seen_cpid_of[MAX_CS][THR_WAITERS_MAX];	/* client pid of each hop */
   ACT act[ACT_MAX];		/* who held / waited on which CS, how often */
   int nact;
   int act_dropped;		/* sightings not kept: table full */
@@ -364,6 +367,7 @@ typedef struct
   uint64_t wq_last[MAX_CS];	/* queue head of the last sample */
   int ch_n[MAX_CS];		/* the queue under that head: slots and trans */
   int ch_slot[MAX_CS][THR_WAITERS_MAX], ch_tran[MAX_CS][THR_WAITERS_MAX];
+  int ch_cpid[MAX_CS][THR_WAITERS_MAX];	/* client pid of each hop at the walk */
   double ch_walked[MAX_CS];	/* when it was last walked (mono s) */
   uint64_t own_last[MAX_CS];	/* owner tid of the last sample */
   int own_slot[MAX_CS];		/* its resolved entry slot */
@@ -412,12 +416,15 @@ typedef struct
   int tran_avail, cid_locked, has_trid, ntran;
   VIEW_IDENT *ident;
   int nident, ident_cap;
+  VIEW_IDENT *gone;		/* clients seen in the window that left their slot,
+				 * as last identified (idx = tran, id.cpid = pid) */
+  int ngone, gone_cap;
   /* threads */
   uint64_t tid[VIEW_MAX_TIDS];
   int tid_slot[VIEW_MAX_TIDS], ntid;
   VIEW_CHAIN chain[VIEW_MAX_CHAINS];
   int nchain;
-  int slot[VIEW_MAX_SLOTS], slot_tran[VIEW_MAX_SLOTS], nslot;
+  int slot[VIEW_MAX_SLOTS], slot_tran[VIEW_MAX_SLOTS], slot_cpid[VIEW_MAX_SLOTS], nslot;
   /* OS side: thread names / states, log device, wait reasons */
   OS_THR os[OS_MAX];
   int nos;
@@ -558,6 +565,7 @@ typedef struct
   int has_second;		/* a second CS also waiting */
   int same, span;		/* persistence: windows with this top / known */
   int holder;			/* -2 none (readers or not seen), 0 engine, >0 tran */
+  int holder_cpid;		/* client pid seen with it, -1 unknown */
   int one_thr;			/* an engine holder named by one thread */
   double held_pct, thr_pct;	/* the holder's share; that one thread's own */
   int nwaiters;			/* client sessions seen waiting on it */
@@ -675,7 +683,7 @@ void cs_figures (int i, double dt, CS_FIG * f);
 const char *daemon_name (int i);
 int holder_thread_of (int i, int *samples);
 void cs_figures_ranked (int count, double dt, CS_FIG * fig);
-int holder_of (int i, int *samples);
+int holder_of (int i, int *samples, int *cpid);
 void history_push (long seq, int top_ix);
 int history_export (long seq, int *back, int *top);
 void history_import (long seq, int n, const int *back, const int *top);
@@ -712,11 +720,13 @@ const char *tran_probe (uint64_t log_gl);
 int tran_lock_clientids (int ntran, int budget);
 void tran_geom_refresh (void);
 void tran_identity_prefetch (void);
+int tran_client_pid (int tran_index);
 int tran_identity_cached (int tran_index, TRAN_IDENT * id, int32_t * trid);
 void tran_dump (FILE * f);
 
 /* ctv_frame.c: frame - one screen's answers captured at one moment (VIEW_FRAME), and the queries the renderers ask of it */
 void view_disk_begin (LIVE_WIN * w);
+void view_add_gone (int idx, int32_t trid, const TRAN_IDENT * id);
 void view_add_ident (int idx, int32_t trid, const TRAN_IDENT * id);
 void view_capture_trans (double dt);
 void win_stats_clear (WIN_STATS * st);
@@ -725,7 +735,9 @@ void view_capture_pool (uint64_t pool_addr);
 const OS_THR *view_os_of (int slot);
 const char *resume_name (int v);
 int view_identity (int tran_index, TRAN_IDENT * id, int32_t * trid);
+int view_identity_seen (int tran, int cpid, TRAN_IDENT * id, int32_t * trid);
 int view_slot_of_tid (uint64_t tid);
+int view_tran_cpid_of (int slot);
 int view_tran_of (int slot);
 int view_waiters (uint64_t head, int *idx, int max);
 int view_seen_chain (int cs, int *idx, int max);
@@ -761,9 +773,9 @@ const char *clock_hms (long ts, char *buf, size_t n);
 
 /* ctv_rows.c: text rows - CS table rows, owner blocks, vertical records and the transaction table of a frame */
 int print_trans (void);
-char *tran_text (int tran, int style, char *buf, size_t n);
+char *tran_text (int tran, int cpid, int style, char *buf, size_t n);
 int owner_is_system (int tran, int thr);
-int chain_of (uint64_t wq, int seen_cs, int *widx, int *tran);
+int chain_of (uint64_t wq, int seen_cs, int *widx, int *tran, int *cpid);
 int32_t row_tran (const CS_ROW * r);
 uint64_t row_owner (const CS_ROW * r);
 void print_detail_row (int i, const CS_ROW * r);

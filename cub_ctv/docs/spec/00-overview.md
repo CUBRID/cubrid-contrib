@@ -85,6 +85,7 @@
 | `tests/t11_ident_delta.sh` | 신원 키프레임·변화분 재생, 구간 이동 | 불필요 |
 | `tests/t12_field_sched.sh` | FIELD·SCHED 규칙 | 불필요 |
 | `tests/t13_verdict.sh` | 판정 수치 골든 | 불필요 |
+| `tests/t14_slot_reuse.sh` | 구간 중 재사용된 슬롯: 소유자·대기 홉·세션이 목격된 클라이언트(떠난 클라이언트) 표시 | 불필요 |
 | `tests/t2_show_compare.py` | 엔진 `SHOW CRITICAL SECTIONS` 값이 전후 판독 사이 + 자기영향 0 | 필요 |
 | `tests/t4_trans_check.sh` | 트랜잭션 표 == `cubrid tranlist` | 필요 |
 | `tests/t7_record_equiv.sh` | 라이브 화면 == 그 기록의 재생 | 필요 |

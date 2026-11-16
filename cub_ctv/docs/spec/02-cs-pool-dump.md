@@ -718,7 +718,7 @@ main 의 스냅샷 경로에서: 레이아웃 프로브 성공 → 트랜잭션 
 |---|---|
 | 캡처 | `view_capture` 가 CS `i` 순서로 `view_add_chain(rows[i].wq, rows[i].wq2, NULL, i)`. 같은 머리 주소의 체인이 이미 있으면 다시 걷지 않는다(먼저 나온 CS 의 걷기를 공유). 체인 수 상한 128 (`VIEW_MAX_CHAINS`), 넘치면 그 머리는 체인 없음 |
 | 걷기 | 스냅샷은 `w == NULL` 이므로 항상 `thr_waiters_mem2(head, head2, slot, tran, 64, 0)`: promoter 큐를 걷고, 자리가 남으면 writer 큐를 이어 걷는다. 홉 상한 64 (`THR_WAITERS_MAX`), 모든 홉은 엔트리 배열 안이어야 하며 이미 방문한 슬롯을 다시 만나면 거기서 멈춘다(순환 = 찢긴 판독). 두 번째 큐에서 첫 부분의 슬롯을 만나면 거기서 자른다(중복 제거) |
-| 조회 | `chain_of(r->wq, −1, widx, wt)` → `view_waiters(wq)` 가 머리 주소가 같은 체인의 슬롯을 최대 64개 복사. 머리 0 또는 일치 체인 없음 → 0개 → `"wq":[]` |
+| 조회 | `chain_of(r->wq, −1, widx, wt, NULL)`(홉 cpid 는 쓰지 않음) → `view_waiters(wq)` 가 머리 주소가 같은 체인의 슬롯을 최대 64개 복사. 머리 0 또는 일치 체인 없음 → 0개 → `"wq":[]` |
 | 원소 | `{"thr":%d,"tran":%d}` = `THR_INDEX(widx[k])` (= 슬롯+1), `view_tran_of(widx[k])` (걷기에서 그 홉과 같은 판독으로 읽은 tran, 05 §5). 구분자 `,`, 공백·줄바꿈 없음 |
 
 `cs` 배열 뒤에 `json_os` (ctv_json.c) 가 같은 객체 수준에 두 키를 붙인다(앞에 `,`, 줄바꿈 없음):

@@ -137,10 +137,12 @@ wr_grow (int idx)
   return 0;
 }
 
+/* I: an identity of the transaction table; J: a client seen in the window
+ * that has left its slot (same tokens) */
 static void
-rec_ident_line (FILE * f, const VIEW_IDENT * v)
+rec_ident_line (FILE * f, char tag, const VIEW_IDENT * v)
 {
-  fprintf (f, "I %d %d %d", v->idx, v->trid, v->id.cpid);
+  fprintf (f, "%c %d %d %d", tag, v->idx, v->trid, v->id.cpid);
   rec_str (f, v->id.info);
   rec_str (f, v->id.user);
   rec_str (f, v->id.program);
@@ -173,7 +175,7 @@ rec_idents (FILE * f)
 
       if (key || wr_hash[v->idx] != h)
 	{
-	  rec_ident_line (f, v);
+	  rec_ident_line (f, 'I', v);
 	}
       if (wr_grow (v->idx) == 0)
 	{
@@ -284,10 +286,14 @@ view_record_frame (void)
 	       (unsigned long long) view.st.seen_wq[i], view.prev[i].nenter,
 	       view.prev[i].nwait);
       rec_str (f, r->name);
-      fprintf (f, " %.17g", view.prev[i].total_ms);
+      fprintf (f, " %.17g %d", view.prev[i].total_ms, view.st.seen_cpid[i]);
       fputc ('\n', f);
     }
   rec_idents (f);
+  for (i = 0; i < view.ngone; i++)
+    {
+      rec_ident_line (f, 'J', &view.gone[i]);
+    }
   for (i = 0; i < view.ntid; i++)
     {
       fprintf (f, "T %llx %d\n", (unsigned long long) view.tid[i],
@@ -318,7 +324,7 @@ view_record_frame (void)
     }
   for (i = 0; i < view.nslot; i++)
     {
-      fprintf (f, "S %d %d\n", view.slot[i], view.slot_tran[i]);
+      fprintf (f, "S %d %d %d\n", view.slot[i], view.slot_tran[i], view.slot_cpid[i]);
     }
   if (view.st.act_dropped > 0)
     {
@@ -326,8 +332,9 @@ view_record_frame (void)
     }
   for (i = 0; i < view.st.nact; i++)
     {
-      fprintf (f, "W %d %d %d %d %d\n", view.st.act[i].cs, view.st.act[i].kind,
-	       view.st.act[i].tran, view.st.act[i].thr, view.st.act[i].samples);
+      fprintf (f, "W %d %d %d %d %d %d\n", view.st.act[i].cs, view.st.act[i].kind,
+	       view.st.act[i].tran, view.st.act[i].thr, view.st.act[i].samples,
+	       view.st.act[i].cpid);
     }
   for (i = 0; i < view.nos; i++)
     {
@@ -657,7 +664,9 @@ rd_F (char **tok, int n, REC_RD * rd)
   for (k = 0; k < MAX_CS; k++)
     {
       view.st.seen_n[k] = -1;      /* no P line: no queue seen */
+      view.st.seen_cpid[k] = -1;
     }
+  view.ngone = 0;
   memset (rd->seen, 0, sizeof (rd->seen));
   rd->nrows = 0;
   rd->in_frame = 1;
@@ -702,6 +711,7 @@ rd_C (char **tok, int n, REC_RD * rd)
   view.prev[i].nenter = pn;
   view.prev[i].nwait = pw;
   view.prev[i].total_ms = strtod (tok[22], NULL);
+  view.st.seen_cpid[i] = atoi (tok[23]);
   rd->seen[i] = 1;
   rd->nrows++;
 }
@@ -789,6 +799,26 @@ rd_P (char **tok, int n, REC_RD * rd)
     }
 }
 
+/* J: a client seen in the window that has left its slot */
+static void
+rd_J (char **tok, int n, REC_RD * rd)
+{
+  TRAN_IDENT id;
+
+  (void) n;
+  (void) rd;
+
+  memset (&id, 0, sizeof (id));
+  id.cpid = atoi (tok[3]);
+  rec_unescape (tok[4], id.info, sizeof (id.info));
+  rec_unescape (tok[5], id.user, sizeof (id.user));
+  rec_unescape (tok[6], id.program, sizeof (id.program));
+  rec_unescape (tok[7], id.login, sizeof (id.login));
+  rec_unescape (tok[8], id.host, sizeof (id.host));
+  rec_unescape (tok[9], id.ip, sizeof (id.ip));
+  view_add_gone (atoi (tok[1]), atoi (tok[2]), &id);
+}
+
 /* W: one activity sighting */
 static void
 rd_W (char **tok, int n, REC_RD * rd)
@@ -803,6 +833,7 @@ rd_W (char **tok, int n, REC_RD * rd)
   a.tran = atoi (tok[3]);
   a.thr = atoi (tok[4]);
   a.samples = atoi (tok[5]);
+  a.cpid = atoi (tok[6]);
   if (a.samples < 0 || a.samples > view.st.samples)
     {
       rec_bad ();       /* a sighting count beyond the window's samples */
@@ -964,7 +995,8 @@ rd_S (char **tok, int n, REC_RD * rd)
   if (view.nslot < VIEW_MAX_SLOTS)
     {
       view.slot[view.nslot] = atoi (tok[1]);
-      view.slot_tran[view.nslot++] = atoi (tok[2]);
+      view.slot_tran[view.nslot] = atoi (tok[2]);
+      view.slot_cpid[view.nslot++] = atoi (tok[3]);
     }
 }
 
@@ -1006,12 +1038,13 @@ rd_E (char **tok, int n, REC_RD * rd)
 
 static const REC_LINE rec_lines[] = {
   {"F", 11, 11, REC_FRAME_START, rd_F},
-  {"C", 23, 23, 0, rd_C},
+  {"C", 24, 24, 0, rd_C},
   {"I", 10, 10, 0, rd_I},
+  {"J", 10, 10, 0, rd_J},
   {"T", 3, 3, 0, rd_T},
   {"Q", 3, REC_TOKENS_MAX, 0, rd_Q},
   {"P", 3, REC_TOKENS_MAX, 0, rd_P},
-  {"W", 6, 6, 0, rd_W},
+  {"W", 7, 7, 0, rd_W},
   {"O", 11, 11, 0, rd_O},
   {"V", 2, 2 + 2 * (VERDICT_HISTORY - 1), 0, rd_V},
   {"K", 2, 2, REC_FRAME_KEY, rd_K},
@@ -1020,7 +1053,7 @@ static const REC_LINE rec_lines[] = {
   {"B", 2, 2, 0, rd_B},
   {"D", 4, 4, 0, rd_D},
   {"R", 3 + THR_RESUME_MAX, 3 + THR_RESUME_MAX, 0, rd_R},
-  {"S", 3, 3, 0, rd_S},
+  {"S", 4, 4, 0, rd_S},
   {"G", 6, 6, 0, rd_G},
   {"E", 1, 1, REC_FRAME_END, rd_E},
 };

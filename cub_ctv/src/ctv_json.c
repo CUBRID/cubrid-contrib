@@ -131,7 +131,7 @@ json_cs_rows (FILE * f, const CS_LAYOUT * lo, const CS_ROW * rows,
 	int wt[THR_WAITERS_MAX];
 	int seen_cs = !raw && r->wq == 0 && view.st.seen_wq[i] != 0 ? i : -1;
 
-	nw = chain_of (r->wq, seen_cs, widx, wt);
+	nw = chain_of (r->wq, seen_cs, widx, wt, NULL);
 	fprintf (f, ",\"wq\":[");
 	for (k = 0; k < nw; k++)
 	  {

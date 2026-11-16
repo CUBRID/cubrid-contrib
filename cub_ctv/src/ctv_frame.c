@@ -51,7 +51,7 @@ view_add_tid (uint64_t tid)
 static unsigned char slot_seen[THR_MAX];	/* slots already in this frame */
 
 static void
-view_add_slot_tran (int slot, int tran)
+view_add_slot_tran (int slot, int tran, int cpid)
 {
   if (view.nslot >= VIEW_MAX_SLOTS || slot < 0 || slot >= THR_MAX
       || slot_seen[slot])
@@ -61,6 +61,7 @@ view_add_slot_tran (int slot, int tran)
   slot_seen[slot] = 1;
   view.slot[view.nslot] = slot;
   view.slot_tran[view.nslot] = tran;
+  view.slot_cpid[view.nslot] = cpid;
   view.nslot++;
 }
 
@@ -170,7 +171,7 @@ static void
 view_add_chain (uint64_t head, uint64_t head2, const LIVE_WIN * w, int cs)
 {
   VIEW_CHAIN *c;
-  int k, tran[THR_WAITERS_MAX];
+  int k, tran[THR_WAITERS_MAX], cpid[THR_WAITERS_MAX];
 
   if (head == 0 || view.nchain >= VIEW_MAX_CHAINS)
     {
@@ -191,16 +192,116 @@ view_add_chain (uint64_t head, uint64_t head2, const LIVE_WIN * w, int cs)
       c->n = w->ch_n[cs];
       memcpy (c->slot, w->ch_slot[cs], (size_t) c->n * sizeof (int));
       memcpy (tran, w->ch_tran[cs], (size_t) c->n * sizeof (int));
+      memcpy (cpid, w->ch_cpid[cs], (size_t) c->n * sizeof (int));
     }
   else
     {
+      /* read now, with the identities of this capture */
       c->n = thr_waiters_mem2 (head, head2, c->slot, tran, THR_WAITERS_MAX, 0);
+      for (k = 0; k < c->n; k++)
+	{
+	  cpid[k] = -1;
+	}
     }
   /* each hop with the tran read in the same read as its link */
   for (k = 0; k < c->n; k++)
     {
-      view_add_slot_tran (c->slot[k], tran[k]);
+      view_add_slot_tran (c->slot[k], tran[k], cpid[k]);
     }
+}
+
+/* identities of the previous capture: who held each slot when the window
+ * began, where a client that has left since is found */
+static VIEW_IDENT *prev_ident = NULL;
+static int prev_n = 0, prev_cap = 0;
+
+void
+view_add_gone (int idx, int32_t trid, const TRAN_IDENT * id)
+{
+  if (view.ngone == view.gone_cap)
+    {
+      int cap = view.gone_cap ? view.gone_cap * 2 : 16;
+      VIEW_IDENT *p = realloc (view.gone, (size_t) cap * sizeof (*p));
+
+      if (p == NULL)
+	{
+	  die ("out of memory", "메모리 부족", NULL);
+	}
+      view.gone = p;
+      view.gone_cap = cap;
+    }
+  view.gone[view.ngone].idx = idx;
+  view.gone[view.ngone].trid = trid;
+  view.gone[view.ngone].id = *id;
+  view.ngone++;
+}
+
+/* a client seen as (tran, cpid) that no longer holds the slot: keep its
+ * identity from the window start, once */
+static void
+gone_note (int tran, int cpid)
+{
+  TRAN_IDENT id;
+  int k;
+
+  if (tran < 1 || cpid < 0 || (view_identity (tran, &id, NULL) == 0 && id.cpid == cpid))
+    {
+      return;
+    }
+  for (k = 0; k < view.ngone; k++)
+    {
+      if (view.gone[k].idx == tran && view.gone[k].id.cpid == cpid)
+	{
+	  return;
+	}
+    }
+  for (k = 0; k < prev_n; k++)
+    {
+      if (prev_ident[k].idx == tran && prev_ident[k].id.cpid == cpid)
+	{
+	  view_add_gone (tran, prev_ident[k].trid, &prev_ident[k].id);
+	  return;
+	}
+    }
+}
+
+/* every client the window saw that has left its slot; then this capture
+ * becomes the next window's start */
+static void
+view_capture_gone (void)
+{
+  int i, k;
+
+  view.ngone = 0;
+  for (k = 0; k < view.st.nact; k++)
+    {
+      gone_note (view.st.act[k].tran, view.st.act[k].cpid);
+    }
+  for (i = 0; i < view.count; i++)
+    {
+      gone_note (view.st.seen_tran[i], view.st.seen_cpid[i]);
+    }
+  for (k = 0; k < view.nslot; k++)
+    {
+      gone_note (view.slot_tran[k], view.slot_cpid[k]);
+    }
+  if (prev_cap < view.nident)
+    {
+      VIEW_IDENT *p = realloc (prev_ident, (size_t) view.nident * sizeof (*p));
+
+      if (p == NULL)
+	{
+	  prev_n = 0;
+	  return;
+	}
+      prev_ident = p;
+      prev_cap = view.nident;
+    }
+  if (view.nident > 0)
+    {
+      memcpy (prev_ident, view.ident, (size_t) view.nident * sizeof (*prev_ident));
+    }
+  prev_n = view.nident;
 }
 
 void
@@ -259,6 +360,7 @@ view_capture_trans (double dt)
   view.st.samples = 0;
   view.dt = dt;
   view_capture_idents ();
+  view.ngone = 0;
   view.degraded = degraded;
 }
 
@@ -272,6 +374,7 @@ win_stats_clear (WIN_STATS * st)
   for (i = 0; i < MAX_CS; i++)
     {
       st->seen_tran[i] = -1;
+      st->seen_cpid[i] = -1;
       st->seen_n[i] = -1;
     }
   st->nact = st->act_dropped = 0;
@@ -330,9 +433,11 @@ view_capture (const CS_LAYOUT * lo, const CS_ROW * rows, const LIVE_WIN * w,
     {
       for (k = 0; k < view.st.seen_n[i]; k++)
 	{
-	  view_add_slot_tran (view.st.seen_slot[i][k], view.st.seen_tran_of[i][k]);
+	  view_add_slot_tran (view.st.seen_slot[i][k], view.st.seen_tran_of[i][k],
+			      view.st.seen_cpid_of[i][k]);
 	}
     }
+  view_capture_gone ();
   /* OS side: sampled writer threads first, then names of every owner seen */
   view.nos = 0;
   for (i = 0; w != NULL && i < w->nos; i++)
@@ -453,6 +558,40 @@ view_identity (int tran_index, TRAN_IDENT * id, int32_t * trid)
   return 0;
 }
 
+/* the identity to show for a client seen as (tran, cpid): 0 the slot's
+ * current client (or cpid not known), 1 a client that has left the slot
+ * (identity from the window start), 2 left and not identified (only the
+ * pid in id->cpid), -1 none */
+int
+view_identity_seen (int tran, int cpid, TRAN_IDENT * id, int32_t * trid)
+{
+  int k;
+
+  if (view_identity (tran, id, trid) == 0 && (cpid < 0 || id->cpid == cpid))
+    {
+      return 0;
+    }
+  if (tran < 1 || cpid < 0)
+    {
+      return -1;
+    }
+  for (k = 0; k < view.ngone; k++)
+    {
+      if (view.gone[k].idx == tran && view.gone[k].id.cpid == cpid)
+	{
+	  *id = view.gone[k].id;
+	  if (trid != NULL)
+	    {
+	      *trid = view.gone[k].trid;
+	    }
+	  return 1;
+	}
+    }
+  memset (id, 0, sizeof (*id));
+  id->cpid = cpid;
+  return 2;
+}
+
 int
 view_slot_of_tid (uint64_t tid)
 {
@@ -463,6 +602,22 @@ view_slot_of_tid (uint64_t tid)
       if (view.tid[k] == tid)
 	{
 	  return view.tid_slot[k];
+	}
+    }
+  return -1;
+}
+
+/* client pid seen with the tran of a slot, -1 unknown */
+int
+view_tran_cpid_of (int slot)
+{
+  int k;
+
+  for (k = 0; k < view.nslot; k++)
+    {
+      if (view.slot[k] == slot)
+	{
+	  return view.slot_cpid[k];
 	}
     }
   return -1;

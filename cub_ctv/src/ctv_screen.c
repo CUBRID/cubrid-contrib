@@ -120,7 +120,7 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
   else if (v.holder > 0)
     {
       snprintf (judge, sizeof (judge), M ("client session %s", "클라이언트 세션 %s"),
-		tran_text (v.holder, TRAN_TEXT_LABEL, hb, sizeof (hb)));
+		tran_text (v.holder, v.holder_cpid, TRAN_TEXT_LABEL, hb, sizeof (hb)));
     }
   else
     {
@@ -337,11 +337,12 @@ client_kind (const char *program, char *buf, size_t n)
 /* sessions: every tran seen holding or waiting, longest wait first */
 typedef struct
 {
-  int tran, waits, holds;
+  int tran, cpid, waits, holds;
   int first, n;			/* its sightings: act_by_tran[first ..+n) */
 } SESS;
 
-/* sightings of client trans ordered by (tran, position in the window) */
+/* sightings of client trans ordered by (tran, client pid, position in the
+ * window): a slot that changed hands gives one session per client */
 static int act_by_tran[ACT_MAX];
 
 static int
@@ -352,6 +353,10 @@ cmp_act_tran (const void *a, const void *b)
   if (view.st.act[x].tran != view.st.act[y].tran)
     {
       return view.st.act[x].tran < view.st.act[y].tran ? -1 : 1;
+    }
+  if (view.st.act[x].cpid != view.st.act[y].cpid)
+    {
+      return view.st.act[x].cpid < view.st.act[y].cpid ? -1 : 1;
     }
   return x - y;
 }
@@ -377,7 +382,7 @@ print_sessions (int panel_rows)
 {
   static SESS sess[ACT_MAX];
   static int strans[ACT_MAX];
-  int ns = 0, m = 0, k, j, shown = 0;
+  int ns = 0, nst = 0, m = 0, k, j, shown = 0;
   char pad[128], cpad[64];
 
   /* one sort, then each session is a run of the same tran */
@@ -394,9 +399,11 @@ print_sessions (int panel_rows)
       SESS *sp = &sess[ns++];
 
       sp->tran = view.st.act[act_by_tran[k]].tran;
+      sp->cpid = view.st.act[act_by_tran[k]].cpid;
       sp->waits = sp->holds = 0;
       sp->first = k;
-      for (; k < m && view.st.act[act_by_tran[k]].tran == sp->tran; k++)
+      for (; k < m && view.st.act[act_by_tran[k]].tran == sp->tran
+	   && view.st.act[act_by_tran[k]].cpid == sp->cpid; k++)
 	{
 	  const ACT *a = &view.st.act[act_by_tran[k]];
 
@@ -410,7 +417,15 @@ print_sessions (int panel_rows)
 	    }
 	}
       sp->n = k - sp->first;
-      strans[ns - 1] = sp->tran;	/* ascending: runs come in tran order */
+      {
+	TRAN_IDENT cur;
+
+	/* the slot's current client counts as active (ascending tran order) */
+	if (view_identity_seen (sp->tran, sp->cpid, &cur, NULL) == 0)
+	  {
+	    strans[nst++] = sp->tran;
+	  }
+      }
     }
   qsort (sess, (size_t) ns, sizeof (sess[0]), cmp_sess);
 
@@ -438,16 +453,22 @@ print_sessions (int panel_rows)
       TRAN_IDENT id;
       char line[512], pidb[16], kind[IDENT_LEN + 8], kpad[64];
       size_t o = 0;
-      int have = view_identity (sp->tran, &id, NULL) == 0;
+      int r = view_identity_seen (sp->tran, sp->cpid, &id, NULL);
+      int have = r >= 0;
 
-      client_kind (have ? id.program : "", kind, sizeof (kind));
+      client_kind (r == 0 || r == 1 ? id.program : "", kind, sizeof (kind));
 
       line[0] = '\0';
+      if (r == 1 || r == 2)
+	{
+	  /* the client that did this has left the slot since */
+	  buf_cat (line, sizeof (line), &o, "%s", M ("(disconnected) ", "(접속 종료) "));
+	}
       for (k = sp->first; k < sp->first + sp->n && o + 2 < sizeof (line); k++)
 	{
 	  const ACT *a = &view.st.act[act_by_tran[k]];
 
-	  buf_cat (line, sizeof (line), &o, "%s", o > 0 ? ", " : "");
+	  buf_cat (line, sizeof (line), &o, "%s", k > sp->first ? ", " : "");
 	  buf_cat (line, sizeof (line), &o,
 		   a->kind == ACT_WAIT
 		   ? M ("waits %s (%d samples)", "%s 대기 (%d샘플)")
@@ -492,7 +513,7 @@ print_sessions (int panel_rows)
     for (k = 0; k < view.nident; k++)
       {
 	idle += view.ident[k].idx >= 1
-	  && bsearch (&view.ident[k].idx, strans, (size_t) ns, sizeof (int),
+	  && bsearch (&view.ident[k].idx, strans, (size_t) nst, sizeof (int),
 		      cmp_int) == NULL;
       }
     if (idle > 0)
@@ -578,7 +599,7 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
     {
       const CS_FIG *f = &fig[i];
       const CS_ROW *c = &view.rows[f->ix];
-      int hs, holder;
+      int hs, holder, hcpid;
 
       if (f->severity == 0)
 	{
@@ -587,7 +608,7 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 	}
       char avg[16], who[96];
 
-      holder = holder_of (f->ix, &hs);
+      holder = holder_of (f->ix, &hs, &hcpid);
       dw_pad (d1, sizeof (d1), cs_desc (c->name), 24);
       if (f->avg_ms > 0)
 	{
@@ -603,7 +624,7 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 	}
       else if (holder != -2)
 	{
-	  tran_text (holder, TRAN_TEXT_LABEL, who, sizeof (who));
+	  tran_text (holder, hcpid, TRAN_TEXT_LABEL, who, sizeof (who));
 	}
       else
 	{

@@ -12,7 +12,7 @@
 |---|---|
 | 정의 | 실행 중인 `cub_server` 메모리에서 `log_Gl.trantable.all_tdes` 를 찾아(TDES 포인터 배열), 각 트랜잭션 디스크립터(LOG_TDES)의 `tran_index`·`trid`·`CLIENTIDS`(클라이언트 신원 문자열 6개 + pid) 위치를 **심볼·헤더 없이 값 패턴으로 프로브**하고, 구간(window)마다 슬롯별 신원을 읽어 캐시한다. |
 | 입력 | `log_Gl` 의 런타임 주소(호출자가 ELF 심볼 + 로드 bias 로 계산) |
-| 출력 | 전역 `tran_geom`(기하), 슬롯별 `TRAN_IDENT`+trid 질의 API, JSON 덤프 |
+| 출력 | 전역 `tran_geom`(기하), 슬롯별 `TRAN_IDENT`+trid 질의 API, 슬롯의 클라이언트 pid 단건 질의(`tran_client_pid`), JSON 덤프 |
 | 접근 방식 | 읽기 전용. 단건은 `mem_read`(`/proc/<pid>/mem` pread), 묶음은 `mem_gather_field`/`mem_gather_ok`(`process_vm_readv`, 불가 시 pread). 대상 프로세스에 쓰기 없음. |
 | 하지 않는 것 | 표시(행 구성, 텍스트 정렬)·기록/재생·강등 비트 이름 출력. 이들은 `ctv_frame.c`·`ctv_rows.c`·`ctv_json.c`·`cub_ctv.c` 가 담당. |
 
@@ -615,6 +615,17 @@ CLIENTIDS 잠금 후 첫 호출에서 한 번 구성되며, `ntran` 이 고정�
 | 실패 캐시 | `rc = -1` 도 같은 규칙으로 재사용 |
 | SPAN | 문자열 객체·pid 는 이미지에서, COW `_Rep`/데이터·SSO 힙 데이터는 대상에서 판독 |
 
+#### `tran_client_pid(tran_index)` → pid / -1 (공개)
+
+샘플러가 목격마다 "어느 클라이언트였는지"를 남기려고 부른다(06 §11.2a, tran 당 최대 0.05 초에 1회). 슬롯은 재사용되므로(엔진이 해제된 가장 낮은 슬롯부터 재배정: `log_tran_table.c` `hint_free_index`) tran index 만으로는 구간 중 바뀐 클라이언트를 구분하지 못한다.
+
+1. `cid_stride == 0 ∨ tran_index < 1 ∨ tran_index ≥ ntran` → -1.
+2. `tdes`: `tdes_ptrs != NULL ∧ tran_index < ptrs_n ∧ VALID_PTR(tdes_ptrs[tran_index])` 면 그 값(마지막 포인터 배열 이미지), 아니면 `tdes_at(tran_index)`; 실패 → -1.
+3. `mem_read(tdes + cid_off + CLIENTIDS_NSTR × cid_stride, 4)` = §4.1 의 pid 주소. 판독 실패 ∨ `pid < 0` ∨ `pid ≥ PID_MAX_LIMIT` → -1.
+4. pid 반환.
+
+새 불변식은 없다: 위치는 I-9 로 잠긴 CLIENTIDS 기하 그대로이고, 값 검사는 I-9 의 pid 범위와 같다. 신원 캐시(`ident_cache`)를 거치지 않는 4 바이트 단건 판독이다.
+
 ### 8.5 COW 표현 캐시 (`rep_cache`)
 
 | 항목 | 내용 |
@@ -637,6 +648,7 @@ CLIENTIDS 잠금 후 첫 호출에서 한 번 구성되며, `ntran` 이 고정�
 | `void tran_geom_refresh(void)` | — | §7.4 |
 | `void tran_identity_prefetch(void)` | — | §8.4 |
 | `int tran_identity_cached(int, TRAN_IDENT*, int32_t*)` | 0 = 클라이언트 신원 있음 / -1 | §8.4 |
+| `int tran_client_pid(int)` | 슬롯의 현재 클라이언트 pid / -1 | §8.4 |
 | `void tran_dump(FILE *f)` | — | §10 |
 
 거부 사유 문자열 전체:

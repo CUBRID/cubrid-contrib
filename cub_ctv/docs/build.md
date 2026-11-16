@@ -22,6 +22,7 @@
 | `tests/t11_ident_delta.sh` | 신원 변화분 기록(`K`/`X`) 재생 = 전체 기록 재생, 구간 이동 신원 = 순차 | 불필요 |
 | `tests/t12_field_sched.sh` | FIELD·SCHED 규칙 단위 시험 | 불필요 |
 | `tests/t13_verdict.sh` | 판정 수치 골든 비교 | 불필요 |
+| `tests/t14_slot_reuse.sh` | 구간 중 슬롯 재사용(`J` 신원·`W`/`S`/`C` cpid 주입): 소유자 블록·대기 홉·세션 패널이 슬롯의 현재 클라이언트가 아닌 목격된 클라이언트를 `disconnected` 로 표시 | 불필요 |
 | `tests/t7_record_equiv.sh` | 실서버에서 라이브 화면 = 기록 재생 화면, 디테일 덤프 JSON·재생 거부 | 필요 |
 | `tests/t8_replay_keys.py` | pty 에서 재생 키(일시정지·구간·속도·종료), 요약 화면 세션 강조, 색상·`--plain` | 불필요 |
 | `tests/t10_os_probe.sh` | OS tid·스레드 이름·대기 사유를 `/proc` 과 대조 (I-17/I-18) | 필요 |

@@ -189,10 +189,10 @@ cmp_fig (const void *a, const void *b)
 /* per CS of the frame: the tran seen holding most (samples summed per tran;
  * engine threads share tran 0) and the engine thread that held most;
  * built once per frame */
-static int hold_tran[MAX_CS], hold_thr0[MAX_CS], hold_thr0_samples[MAX_CS];
+static int hold_tran[MAX_CS], hold_cpid[MAX_CS], hold_thr0[MAX_CS], hold_thr0_samples[MAX_CS];
 static long long hold_samples[MAX_CS];	/* sums of sighting counts */
 
-/* held sightings ordered by (cs, tran, position in the window) */
+/* held sightings ordered by (cs, tran, client pid, position in the window) */
 static int
 cmp_held (const void *a, const void *b)
 {
@@ -205,6 +205,10 @@ cmp_held (const void *a, const void *b)
   if (x->tran != y->tran)
     {
       return x->tran < y->tran ? -1 : 1;
+    }
+  if (x->cpid != y->cpid)
+    {
+      return x->cpid < y->cpid ? -1 : 1;
     }
   return *(const int *) a - *(const int *) b;
 }
@@ -225,6 +229,7 @@ holders_build (void)
   for (i = 0; i < MAX_CS; i++)
     {
       hold_tran[i] = -2;
+      hold_cpid[i] = -1;
       hold_samples[i] = 0;
       hold_thr0[i] = -1;
       hold_thr0_samples[i] = 0;
@@ -248,8 +253,8 @@ holders_build (void)
 	  hold_thr0_samples[a->cs] = a->samples;
 	}
     }
-  /* samples summed per (cs, tran); the most wins, a tie goes to the tran
-   * seen first in the window */
+  /* samples summed per (cs, tran, client pid); the most wins, a tie goes
+   * to the one seen first in the window */
   qsort (idx, (size_t) m, sizeof (int), cmp_held);
   for (i = 0; i < m;)
     {
@@ -258,7 +263,8 @@ holders_build (void)
       int j = i;
 
       for (; j < m && view.st.act[idx[j]].cs == a->cs
-	   && view.st.act[idx[j]].tran == a->tran; j++)
+	   && view.st.act[idx[j]].tran == a->tran
+	   && view.st.act[idx[j]].cpid == a->cpid; j++)
 	{
 	  sum += view.st.act[idx[j]].samples;
 	}
@@ -267,6 +273,7 @@ holders_build (void)
 	{
 	  hold_samples[a->cs] = sum;
 	  hold_tran[a->cs] = a->tran;
+	  hold_cpid[a->cs] = a->cpid;
 	  first[a->cs] = idx[i];
 	}
       i = j;
@@ -307,12 +314,14 @@ cs_figures_ranked (int count, double dt, CS_FIG * fig)
   qsort (fig, (size_t) count, sizeof (fig[0]), cmp_fig);
 }
 
-/* the tran seen holding CS i most often in the window, -2 if none */
+/* the tran seen holding CS i most often in the window, -2 if none; *cpid
+ * its client pid when seen */
 int
-holder_of (int i, int *samples)
+holder_of (int i, int *samples, int *cpid)
 {
   holders_build ();
   *samples = hold_samples[i] > INT_MAX ? INT_MAX : (int) hold_samples[i];
+  *cpid = hold_cpid[i];
   return hold_tran[i];
 }
 
@@ -422,7 +431,7 @@ verdict_compute (const CS_FIG * top, const CS_FIG * second, VERDICT * v)
       v->second = *second;
     }
   v->same = history_count (view.seq, top->ix, &v->span);
-  v->holder = holder_of (top->ix, &hs);
+  v->holder = holder_of (top->ix, &hs, &v->holder_cpid);
   v->held_pct = view.st.samples > 0 ? 100.0 * hs / view.st.samples : 0.0;
   /* an engine holder is named by one thread: its own share, the engine
    * threads together as evidence */

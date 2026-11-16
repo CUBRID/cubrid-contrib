@@ -93,19 +93,26 @@ int layout_detail = 0;
 
 const char *detail_filter = NULL;	/* --detail NAME|IX, NULL = all */
 
-/* one transaction as text: SHORT " user program" / " system" (after a
- * "tran N"), LABEL "tran N (program pid P)" / "engine (system tran 0)" */
+/* one transaction seen with client pid cpid as text: SHORT " user program"
+ * / " system" (after a "tran N"), LABEL "tran N (program pid P)" / "engine
+ * (system tran 0)"; a client that has left the slot is marked */
 char *
-tran_text (int tran, int style, char *buf, size_t n)
+tran_text (int tran, int cpid, int style, char *buf, size_t n)
 {
   TRAN_IDENT id;
-  int have = tran >= 1 && view_identity (tran, &id, NULL) == 0;
+  int r = tran >= 1 ? view_identity_seen (tran, cpid, &id, NULL) : -1;
+  int have = r == 0 || r == 1;
+  const char *gone = r == 1 || r == 2 ? M (", disconnected", ", 접속 종료") : "";
 
   if (style == TRAN_TEXT_SHORT)
     {
-      if (have)
+      if (r == 2)
 	{
-	  snprintf (buf, n, " %s %s", id.user, id.program);
+	  snprintf (buf, n, " pid %d%s", id.cpid, gone);
+	}
+      else if (have)
+	{
+	  snprintf (buf, n, " %s %s%s", id.user, id.program, gone);
 	}
       else
 	{
@@ -117,9 +124,13 @@ tran_text (int tran, int style, char *buf, size_t n)
     {
       snprintf (buf, n, M ("engine (system tran 0)", "엔진 (system tran 0)"));
     }
+  else if (r == 2)
+    {
+      snprintf (buf, n, "tran %d (pid %d%s)", tran, id.cpid, gone);
+    }
   else if (have)
     {
-      snprintf (buf, n, "tran %d (%s pid %d)", tran, id.program, id.cpid);
+      snprintf (buf, n, "tran %d (%s pid %d%s)", tran, id.program, id.cpid, gone);
     }
   else if (tran > 0)
     {
@@ -143,7 +154,7 @@ owner_is_system (int tran, int thr)
 /* the writer queue to show and the tran each hop waits for: the current
  * queue, or (seen_cs >= 0: empty now) its chain as first seen */
 int
-chain_of (uint64_t wq, int seen_cs, int *widx, int *tran)
+chain_of (uint64_t wq, int seen_cs, int *widx, int *tran, int *cpid)
 {
   int nw = seen_cs >= 0 ? view_seen_chain (seen_cs, widx, THR_WAITERS_MAX)
     : view_waiters (wq, widx, THR_WAITERS_MAX), i;
@@ -151,6 +162,10 @@ chain_of (uint64_t wq, int seen_cs, int *widx, int *tran)
   for (i = 0; i < nw; i++)
     {
       tran[i] = view_tran_of (widx[i]);
+      if (cpid != NULL)
+	{
+	  cpid[i] = view_tran_cpid_of (widx[i]);
+	}
     }
   return nw;
 }
@@ -177,19 +192,20 @@ chain_count (int nw, uint32_t waitw, int seen, char *buf, size_t n)
  *   l2  : "wq     thr=A(tran 1 user prog) -> thr=B(..)  [n of waitW waiting]"
  * every string is "" when nothing is known */
 static void
-owner_block (int tran_index, uint64_t owner_tid, uint64_t wq, int seen_cs,
+owner_block (int tran_index, int cpid, uint64_t owner_tid, uint64_t wq, int seen_cs,
 	     uint32_t waitw, char *one, size_t onen, char *l1, size_t l1n,
 	     char *l2, size_t l2n)
 {
   TRAN_IDENT id;
   int32_t trid = 0;
-  int thr = view_slot_of_tid (owner_tid), have_id = 0;
-  int widx[THR_WAITERS_MAX], wtran[THR_WAITERS_MAX], nw, i;
+  int thr = view_slot_of_tid (owner_tid), have_id = 0, r;
+  int widx[THR_WAITERS_MAX], wtran[THR_WAITERS_MAX], wcpid[THR_WAITERS_MAX], nw, i;
   size_t o = 0, a = 0, b = 0;
   char cnt[48];
 
   one[0] = l1[0] = l2[0] = '\0';
-  if (tran_index >= 1 && view_identity (tran_index, &id, &trid) == 0)
+  r = tran_index >= 1 ? view_identity_seen (tran_index, cpid, &id, &trid) : -1;
+  if (r == 0 || r == 1)
     {
       have_id = 1;
     }
@@ -210,6 +226,11 @@ owner_block (int tran_index, uint64_t owner_tid, uint64_t wq, int seen_cs,
       buf_cat (l1, l1n, &a, "owner  %s@%s %s pid=%d login=%s ip=%s",
 		     id.user, id.host, id.program, id.cpid, id.login, id.ip);
     }
+  else if (r == 2)
+    {
+      buf_cat (one, onen, &o, "  [tran %d pid=%d", tran_index, id.cpid);
+      buf_cat (l1, l1n, &a, "owner  tran %d pid=%d", tran_index, id.cpid);
+    }
   else if (tran_index >= 1)
     {
       buf_cat (one, onen, &o, "  [tran %d", tran_index);
@@ -222,14 +243,19 @@ owner_block (int tran_index, uint64_t owner_tid, uint64_t wq, int seen_cs,
 	  buf_cat (one, onen, &o, " thr=%d", THR_INDEX (thr));
 	  buf_cat (l1, l1n, &a, "  thr=%d", THR_INDEX (thr));
 	}
-      if (have_id && view.has_trid)
+      if (r == 0 && view.has_trid)
 	{
 	  buf_cat (one, onen, &o, " trid=%d", trid);
 	  buf_cat (l1, l1n, &a, "  trid=%d", trid);
 	}
+      if (r == 1 || r == 2)
+	{
+	  buf_cat (one, onen, &o, "%s", M (" disconnected", " 접속 종료"));
+	  buf_cat (l1, l1n, &a, "  %s", M ("disconnected", "접속 종료"));
+	}
       buf_cat (one, onen, &o, "]");
     }
-  nw = chain_of (wq, seen_cs, widx, wtran);
+  nw = chain_of (wq, seen_cs, widx, wtran, wcpid);
   for (i = 0; i < nw; i++)
     {
       int t = wtran[i];
@@ -245,7 +271,7 @@ owner_block (int tran_index, uint64_t owner_tid, uint64_t wq, int seen_cs,
 
 	  snprintf (h1 + n1, sizeof (h1) - n1, "(tran %d)", t);
 	  snprintf (h2 + n2, sizeof (h2) - n2, "(tran %d%s)", t,
-		    tran_text (t, TRAN_TEXT_SHORT, ts, sizeof (ts)));
+		    tran_text (t, wcpid[i], TRAN_TEXT_SHORT, ts, sizeof (ts)));
 	}
       /* a hop is added whole or not at all; the count still closes the line */
       if (o + strlen (h1) + TAG_TAIL_RESERVE >= onen
@@ -362,7 +388,7 @@ print_detail_row (int i, const CS_ROW * r)
   char sb[32], ts[160];
   int thr = view_slot_of_tid (row_owner (r));
   int32_t tran = row_tran (r);
-  int widx[THR_WAITERS_MAX], wtran[THR_WAITERS_MAX], nw, k, seen_cs;
+  int widx[THR_WAITERS_MAX], wtran[THR_WAITERS_MAX], wcpid[THR_WAITERS_MAX], nw, k, seen_cs;
   char cnt[48];
 
   printf ("%s*************************** %d. %s ***************************%s\n",
@@ -403,7 +429,7 @@ print_detail_row (int i, const CS_ROW * r)
       printf ("owner thread     : %d\n", THR_INDEX (thr));
     }
   seen_cs = r->wq == 0 && view.st.seen_wq[i] != 0 ? i : -1;	/* as the row */
-  nw = chain_of (r->wq, seen_cs, widx, wtran);
+  nw = chain_of (r->wq, seen_cs, widx, wtran, wcpid);
   if (nw > 0)
     {
       for (k = 0; k < nw; k++)
@@ -414,7 +440,7 @@ print_detail_row (int i, const CS_ROW * r)
 		  THR_INDEX (widx[k]));
 	  if (t >= 0)
 	    {
-	      printf (" (tran %d%s)", t, tran_text (t, TRAN_TEXT_SHORT, ts, sizeof (ts)));
+	      printf (" (tran %d%s)", t, tran_text (t, wcpid[k], TRAN_TEXT_SHORT, ts, sizeof (ts)));
 	    }
 	  printf ("\n");
 	}
@@ -517,7 +543,7 @@ print_snapshot (const CS_LAYOUT * lo, const CS_ROW * rows)
 		i, r->name, r->rwlock < 0 ? clr (CLR_WRITER) : "",
 		state_str (r->rwlock, sb, sizeof (sb)),
 		r->rwlock < 0 ? clr (CLR_OFF) : "", r->wr, r->ww, tr, st);
-      owner_block (row_tran (r), row_owner (r), r->wq, -1, r->ww, one, sizeof (one),
+      owner_block (row_tran (r), -1, row_owner (r), r->wq, -1, r->ww, one, sizeof (one),
 		   l1, sizeof (l1), l2, sizeof (l2));
       print_row_tagged (row, one, l1, l2);
     }
@@ -531,6 +557,7 @@ live_print_row (int i, double dt)
   double de, dw, occ_pct;
   int fill, b;
   int tg = c->rwlock < 0 ? c->tran : view.st.seen_tran[i];
+  int tg_cpid = c->rwlock < 0 ? -1 : view.st.seen_cpid[i];
   uint64_t owner = c->rwlock < 0 ? c->owner : view.st.seen_owner[i];
   uint64_t wq = c->wq;
   int seen_cs = c->wq == 0 && view.st.seen_wq[i] != 0 ? i : -1;
@@ -563,7 +590,7 @@ live_print_row (int i, double dt)
 	      waiting ? clr (CLR_WAIT) : "", waiting ? "  <-- WAIT" : "",
 	      (idle || waiting || c->rwlock < 0) ? clr (CLR_OFF) : "");
   }
-  owner_block (tg, owner, wq, seen_cs, c->ww, one, sizeof (one), l1, sizeof (l1),
+  owner_block (tg, tg_cpid, owner, wq, seen_cs, c->ww, one, sizeof (one), l1, sizeof (l1),
 	       l2, sizeof (l2));
   print_row_tagged (row, one, l1, l2);
 }

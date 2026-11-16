@@ -881,6 +881,35 @@ tran_identity_prefetch (void)
     }
 }
 
+/* the client pid in a slot's CLIENTIDS now (-1: not known): which client a
+ * sighting belongs to when the slot changes hands */
+int
+tran_client_pid (int tran_index)
+{
+  uint64_t tdes;
+  int32_t pid;
+
+  if (tran_geom.cid_stride == 0 || tran_index < 1 || tran_index >= tran_geom.ntran)
+    {
+      return -1;
+    }
+  if (tdes_ptrs != NULL && tran_index < ptrs_n && VALID_PTR (tdes_ptrs[tran_index]))
+    {
+      tdes = tdes_ptrs[tran_index];
+    }
+  else if (tdes_at (tran_index, &tdes) != 0)
+    {
+      return -1;
+    }
+  if (mem_read (tdes + (uint64_t) tran_geom.cid_off
+		+ (uint64_t) CLIENTIDS_NSTR * (uint64_t) tran_geom.cid_stride, &pid, 4) != 0
+      || pid < 0 || pid >= PID_MAX_LIMIT)
+    {
+      return -1;
+    }
+  return pid;
+}
+
 int
 tran_identity_cached (int tran_index, TRAN_IDENT * id, int32_t * trid)
 {

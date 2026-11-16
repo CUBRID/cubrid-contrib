@@ -39,7 +39,7 @@ detail_dump_write (const char *path, const VIEW_HDR * h, uint64_t bias,
   char exe[4096], link[64];
   ssize_t n;
   unsigned i;
-  int first = 1, nthr_now, *tids = NULL;
+  int first = 1, nthr_now, *tids = NULL, bad;
 
   if (f == NULL)
     {
@@ -106,7 +106,9 @@ detail_dump_write (const char *path, const VIEW_HDR * h, uint64_t bias,
       fprintf (f, "\"pool\":null");
     }
   fprintf (f, "\n}\n");
-  if (ferror (f) | (fclose (f) != 0))
+  bad = ferror (f) != 0;
+  bad = fclose (f) != 0 || bad;	/* closed even after a write error */
+  if (bad)
     {
       die ("cannot write detail dump %s", "디테일 덤프 %s 쓰기 실패", path);
     }

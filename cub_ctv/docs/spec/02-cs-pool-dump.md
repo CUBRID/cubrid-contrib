@@ -570,7 +570,7 @@ main 의 스냅샷 경로에서: 레이아웃 프로브 성공 → 트랜잭션 
 4. 아래 순서로 출력(줄바꿈 위치 포함; §5.4).
 5. 스레드 수: `os_task_list(h->pid, &tids)` 의 반환(정렬된 task 수, procfs 판독 실패 시 −1), 목록은 즉시 해제.
 6. 풀: `sym_pool == 0` 이거나 `pool_dump(f, bias + sym_pool) != 0` 이면 `"pool":null`.
-7. `"\n}\n"` 로 닫고, `ferror(f) | (fclose(f) != 0)` 이면 `die("cannot write detail dump %s", "디테일 덤프 %s 쓰기 실패", path)`. (`|` 는 비단락 OR: `fclose` 는 항상 실행된다.) 쓰기 도중의 개별 `fprintf` 실패는 검사하지 않고 이 마지막 판정 하나로 모은다. 실패 시 부분 파일은 지우지 않는다.
+7. `"\n}\n"` 로 닫고, `bad = ferror(f) != 0` 을 먼저 저장하고 다음 문장에서 `bad = fclose(f) != 0 || bad`(쓰기 오류가 있어도 항상 닫는다), `bad` 이면 `die("cannot write detail dump %s", "디테일 덤프 %s 쓰기 실패", path)`. (닫기 전에 오류 상태를 읽으므로 닫힌 `FILE` 에 접근하지 않는다.) 쓰기 도중의 개별 `fprintf` 실패는 검사하지 않고 이 마지막 판정 하나로 모은다. 실패 시 부분 파일은 지우지 않는다.
 
 ### 5.4 문서 형태
 

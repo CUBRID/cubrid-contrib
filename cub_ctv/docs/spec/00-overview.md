@@ -91,6 +91,7 @@
 | `tests/t17_target_pick.sh` | 대상 선택: DB 이름 우선, 같은 이름 여럿 거부, `--pid` | 불필요 |
 | `tests/t18_demote_holder.sh` | 강등된 owner 의 보유 집계(HA 로그 플러시) | 불필요 |
 | `tests/t19_readers_most.sh` | 보유가 점유의 절반 미만이면 보유자 미지목(reader 다수) | 불필요 |
+| `tests/t20_utf8_ranges.sh` | UTF-8 둘째 바이트 범위(RFC 3629), 정화·JSON 유효 | 불필요 |
 | `tests/t2_show_compare.py` | 엔진 `SHOW CRITICAL SECTIONS` 값이 전후 판독 사이 + 자기영향 0 | 필요 |
 | `tests/t4_trans_check.sh` | 트랜잭션 표 == `cubrid tranlist` | 필요 |
 | `tests/t7_record_equiv.sh` | 라이브 화면 == 그 기록의 재생 | 필요 |

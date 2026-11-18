@@ -33,13 +33,21 @@ utf8_seq_len (unsigned char c)
 }
 
 /* length of the complete, valid UTF-8 sequence at s (1 for ASCII), or 0
- * for a stray continuation, an invalid lead or a sequence cut short */
+ * for a stray continuation, an invalid lead, a sequence cut short, or an
+ * overlong form, a surrogate or a code point past U+10FFFF (RFC 3629: the
+ * second byte's range depends on the lead) */
 int
 utf8_valid_len (const char *s)
 {
   const unsigned char *p = (const unsigned char *) s;
   int n = utf8_seq_len (*p), j;
+  unsigned char lo = p[0] == 0xE0 ? 0xA0 : p[0] == 0xF0 ? 0x90 : 0x80;
+  unsigned char hi = p[0] == 0xED ? 0x9F : p[0] == 0xF4 ? 0x8F : 0xBF;
 
+  if (n >= 2 && (p[1] < lo || p[1] > hi))
+    {
+      return 0;
+    }
   for (j = 1; j < n; j++)
     {
       if ((p[j] & 0xC0) != 0x80)

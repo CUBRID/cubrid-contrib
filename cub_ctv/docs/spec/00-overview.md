@@ -86,6 +86,7 @@
 | `tests/t12_field_sched.sh` | FIELD·SCHED 규칙 | 불필요 |
 | `tests/t13_verdict.sh` | 판정 수치 골든 | 불필요 |
 | `tests/t14_slot_reuse.sh` | 구간 중 재사용된 슬롯: 소유자·대기 홉·세션이 목격된 클라이언트(떠난 클라이언트) 표시 | 불필요 |
+| `tests/t15_screen_fit.py` | 요약 화면이 터미널 크기에 맞음: 스크롤 없음, 80칸 이상은 폭 초과 줄 없음 | 불필요 |
 | `tests/t2_show_compare.py` | 엔진 `SHOW CRITICAL SECTIONS` 값이 전후 판독 사이 + 자기영향 0 | 필요 |
 | `tests/t4_trans_check.sh` | 트랜잭션 표 == `cubrid tranlist` | 필요 |
 | `tests/t7_record_equiv.sh` | 라이브 화면 == 그 기록의 재생 | 필요 |

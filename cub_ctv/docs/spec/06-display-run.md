@@ -744,19 +744,27 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 
 호출: `screen_summary(lo, dt, hz, interval, pid, db, hhmmss)`. 터미널 전체 화면(라이브·대화형 재생)에서만 쓰인다.
 
+### 7.0 화면 폭
+
+- 프레임마다 `scr_cols = term_columns()` (0 = 무제한). 창 크기를 바꾸거나(SIGWINCH) 기록을 다른 터미널에서 재생해도 그 프레임을 그리는 터미널 폭으로 배치한다. 기록에는 폭이 남지 않는다.
+- 목표: 80칸 이상이면 줄이 터미널 폭을 넘지 않는다(판정 표 단어 단위 줄바꿈, CS 표 `보호 대상` 열 생략·쥔 쪽 자르기, 세션 줄 자르기). 80칸 미만은 넘는 줄이 생길 수 있지만 §7.1 이 화면 줄 수로 세므로 스크롤되지 않는다.
+- `vis_cols(s, n)`: s[0..n) 의 화면 칸 수. `ESC [` … 끝 바이트(0x40~0x7E) 는 0칸, 그 밖은 `seq_cols`.
+- `line_rows(cols)`: `scr_cols > 0 && cols > scr_cols` 이면 `ceil(cols / scr_cols)`, 아니면 1.
+- `wrap_out(out, text, at, indent)`: 열 `at` 부터 text 를 공백 단위 단어로 쓴다. 단어(앞 공백 포함)가 `scr_cols` 를 넘고 현재 열 > indent 이면 `"\n"` + indent 칸 공백 뒤 단어(앞 공백 버림). 한 단어가 줄보다 길면 그대로 넘친다. 마지막 개행은 쓰지 않는다. 반환 = 줄바꿈 수, out == NULL 이면 세기만.
+
 ### 7.1 상단 블록 측정
 
 1. `rows = term_rows()`.
 2. `open_memstream` 으로 메모리 스트림을 연다. 실패하면 stdout 에 직접 쓴다(측정 없음).
 3. 상단 블록(§7.2~7.6)을 그 스트림에 쓴다.
 4. 스트림이 있으면:
-   1. `keep = rows > 0 ? rows - 1 - 2 - (view.tran_avail ? 1 : 0) - 1 : -1`.
+   1. `frows = 2 + wrap_out(NULL, footer, 0, 0)` (하단 빈 줄 + footer 의 화면 줄 수, §7.8). `keep = rows > 0 ? rows - 1 - frows - (view.tran_avail ? 1 : 0) - 1 : -1`.
    2. `rows > 0 && keep < 1` 이면 `keep = 1`, `tiny = 1` (아주 작은 터미널: 제목과 하단만).
-   3. 스트림을 닫고 버퍼의 `\n` 을 앞에서부터 센다(`top`). `top == keep` 이 되는 `\n` 뒤에 아직 내용이 있으면 그 다음 위치를 `cut` 으로. 루프 끝의 `top` = 버퍼 전체의 개행 수.
+   3. 스트림을 닫고 버퍼를 줄 단위로 본다. 줄마다 `r = line_rows(vis_cols(줄))` (줄바꿈되는 줄은 화면 줄 여러 개). `keep > 0 && top + r > keep` 이고 첫 줄이 아니면 그 줄 시작을 `cut` 으로 두고 멈춘다. 아니면 `top += r`. 끝까지 가면 `top` = 버퍼 전체의 화면 줄 수.
    4. `cut` 바이트만 stdout 에 쓴다.
-   5. 잘렸고(`cut < top_len`) `!tiny` 이면 MUTED `"  ... (terminal too short: enlarge it for the rest)"` / `"  ... (터미널이 작음: 늘리면 나머지 표시)"` OFF `"\n"` 을 쓰고 `top = keep + 1`.
+   5. 잘렸고(`cut < top_len`) `!tiny` 이면 MUTED `"  ... (terminal too short: enlarge it for the rest)"` / `"  ... (터미널이 작음: 늘리면 나머지 표시)"` OFF `"\n"` 을 쓰고 `top++`.
 5. 세션 패널(§7.7): `view.tran_avail && !tiny` 일 때만.
-   - `panel = (스트림 없음 && rows > 0) ? -1 : rows > 0 ? rows - 1 - top - 2 - 4 : LIVE_TRANS_ROWS`.
+   - `panel = (스트림 없음 && rows > 0) ? -1 : rows > 0 ? rows - 1 - top - frows - 4 : LIVE_TRANS_ROWS`.
    - `panel > 24` 이면 24, `panel < 1` 이면 -1(개수 줄만).
 6. 하단(§7.8).
 
@@ -778,7 +786,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 2. `view.hist_known` 이면 `history_import(view.seq, view.hist_n, view.hist_back, view.hist_top)`.
 3. `history_push(view.seq, fig[0].severity >= 2 ? fig[0].ix : -1)`.
 4. `fig[0].severity >= 2` 이면 `print_verdict(out, &fig[0], lo->count > 1 ? &fig[1] : NULL)` (§7.4).
-5. 아니면 HEAD `[verdict] no critical section contention` / `[판정] 크리티컬 섹션 경합 없음` OFF `\n`. 이어서 `view.wait_avail` 이고 `lk = wait_cnt[17]`, `pg = wait_cnt[3]`, `fb = wait_cnt[21]` 의 합이 0 보다 크면: `"  "` + OWNER + `outside the CS layer: lock waits %d (cubrid lockdb), page latch %d, free buffer %d` / `CS 밖에서 대기: 락 %d (cubrid lockdb), 페이지 래치 %d, 빈 버퍼 %d` + OFF + `\n`.
+5. 아니면 HEAD `[verdict] no critical section contention` / `[판정] 크리티컬 섹션 경합 없음` OFF `\n`. 이어서 `view.wait_avail` 이고 `lk = wait_cnt[17]`, `pg = wait_cnt[3]`, `fb = wait_cnt[21]` 의 합이 0 보다 크면: `"  "` + OWNER + `outside the CS layer: lock waits %d (cubrid lockdb), page latch %d, free buffer %d` / `CS 밖에서 대기: 락 %d (cubrid lockdb), 페이지 래치 %d, 빈 버퍼 %d` (200 B 버퍼) 를 `wrap_out(t, 2, 4)` 로 + OFF + `\n`.
 
 ### 7.4 판정 표 (`print_verdict`)
 
@@ -786,20 +794,18 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 점 표시 `dots`: 4글자, k < severity 이면 `*`, 아니면 `.` (예: 3 → `***.`).
 
 **머리 줄**:
-1. `clr(severity >= 3 ? CLR_WAIT : CLR_HEAD)`.
-2. EN `[verdict] %s (%s) bottleneck  severity %s %s` / KO `[판정] %s (%s) 병목  심각도 %s %s` — `cs_desc(name)`, name, dots, sev.
-3. `clr(CLR_OFF)` `clr(CLR_MUTED)`.
-4. EN `   persistence: %d of the last %d windows` / KO `   지속: %d구간 (최근 %d구간 중)` — `v.same`, `v.span`.
-5. `clr(CLR_OFF)` `\n`.
+1. 제목 t = EN `[verdict] %s (%s) bottleneck  severity %s %s` / KO `[판정] %s (%s) 병목  심각도 %s %s` — `cs_desc(name)`, name, dots, sev.
+2. 지속 p = EN `persistence: %d of the last %d windows` / KO `지속: %d구간 (최근 %d구간 중)` — `v.same`, `v.span`.
+3. `clr(severity >= 3 ? CLR_WAIT : CLR_HEAD)` t `clr(CLR_OFF)` `clr(CLR_MUTED)` 구분 p `clr(CLR_OFF)` `\n`. 구분 = `scr_cols > 0 && str_cols(t) + 3 + str_cols(p) > scr_cols` 이면 `"\n  "`(다음 줄 2칸 들여), 아니면 `"   "`.
 
 **열 머리**: `"%s  %s %s %s%s\n"` = HEAD, `dw_pad(item/항목, 11)`, `dw_pad(judgement/판단, 46)`, `evidence`/`근거`, OFF.
 
-**`verdict_row(out, item, judge, evidence)`**:
-1. `c1 = dw_pad(item, 11)`.
-2. evidence 가 `""` → `"  %s %s\n"` (c1, judge; judge 는 채우거나 자르지 않음).
-3. `str_cols(judge) > 46` → `"  %s %s\n"` (c1, judge) 를 먼저 쓰고, 다음 줄은 c1 = 공백 11칸, c2 = 공백 46칸.
-4. 아니면 `c2 = dw_pad(judge, 46)`.
-5. `"  %s %s %s%s%s\n"` = c1, c2, MUTED, evidence, OFF.
+**`verdict_row(out, item, judge, evidence)`** (ej = `str_cols(judge)`, ee = `str_cols(evidence)`):
+1. `"  %s "` (c1 = `dw_pad(item, 11)`). 판단은 열 14 부터.
+2. evidence 가 `""` → `wrap_out(judge, 14, 14)` `"\n"` (한 칸 행).
+3. `ej <= 46` 이고 (`scr_cols == 0` 또는 `61 + ee <= scr_cols`) → `dw_pad(judge, 46)` `" "` MUTED evidence OFF `"\n"` (근거는 열 61).
+4. 아니고 `ej <= 46 && 14 + ej + 2 + ee <= scr_cols` → judge `"  "` MUTED evidence OFF `"\n"` (좁은 화면: 판단 바로 뒤에 근거, 열 맞춤 없음).
+5. 그 밖 → `wrap_out(judge, 14, 14)`, 근거 열 at = (`scr_cols == 0` 또는 `61 + ee <= scr_cols`) ? 61 : 14, `"\n"` + at 칸 공백 + MUTED + `wrap_out(evidence, at, at)` + OFF + `"\n"`.
 
 **행 목록** (순서대로; judge 버퍼 160B, ev 버퍼 200B, `snprintf` 절단):
 
@@ -822,9 +828,11 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 ### 7.5 CS 순위 표
 
 1. `"\n"` HEAD `[critical sections by waiting]` / `[대기 발생 순위]` OFF `"\n"`.
-2. 열 머리: HEAD + `"   %-23s %s %5s %6s %7s %*s%s  %s"` + OFF + `"\n"`. 인자: `"name"`, `dw_pad(guards/보호 대상, 24)`, `"occ%"`, `"wait%"`, `"wait/s"`, 폭 `gap = max(0, 7 - str_cols(avg))` 의 `""`, avg 머리(`avg ms` / `평균ms`, 둘 다 6칸 → gap 1), holder 머리(`holder` / `쥔 쪽`).
+2. 먼저 표시할 행(severity > 0)마다 who(아래)를 `whos[i]` (96 B) 에 만들고, 모든 행에서 `82 + str_cols(who) <= scr_cols`(또는 `scr_cols == 0`)이면 `guards = 1`, 하나라도 넘으면 `guards = 0` (`보호 대상` 열 25칸 생략). 82 = 번호·이름·보호 대상·수치·공백 2칸의 고정 폭, 생략 시 57.
+   열 머리: HEAD + `"   %-23s %s%s%5s %6s %7s %*s%s  %s"` + OFF + `"\n"`. 인자: `"name"`, guards 면 `dw_pad(guards/보호 대상, 24)` 와 `" "` (아니면 둘 다 `""`), `"occ%"`, `"wait%"`, `"wait/s"`, 폭 `gap = max(0, 7 - str_cols(avg))` 의 `""`, avg 머리(`avg ms` / `평균ms`, 둘 다 6칸 → gap 1), holder 머리(`holder` / `쥔 쪽`).
 3. 행: fig 순서대로, `severity == 0` 은 건너뛰며 idle 로 센다. 나머지는 n 을 1부터 매겨:
-   - `"%s%2d %-23s %s %5.0f %6.0f %7.0f %s  %s%s\n"` = 색(심각도 ≥3 → WAIT, ==2 → OWNER, 1 → `""`), n, name(23 초과 시 그대로 넘침), `dw_pad(cs_desc, 24)`, occ_pct, wait_pct, wait_s, avg, who, OFF.
+   - `"%s%2d %-23s %s%s%5.0f %6.0f %7.0f %s  %s%s\n"` = 색(심각도 ≥3 → WAIT, ==2 → OWNER, 1 → `""`), n, name(23 초과 시 그대로 넘침), guards 면 `dw_pad(cs_desc, 24)` 와 `" "`(아니면 `""`), occ_pct, wait_pct, wait_s, avg, who, OFF.
+   - who 가 `room = scr_cols - (guards ? 82 : 57)` 칸을 넘으면(`scr_cols > 0`) `dw_pad(who, max(room, 0))` 로 자른다.
    - avg: `avg_ms > 0` 이면 `"%7.3f"`, 아니면 `"%7s"` 의 `-`.
    - who: holder==0 && daemon_name 있음 → `engine %s` / `엔진 %s`; holder != -2 → `tran_text(holder, hcpid, LABEL)` (`holder_of(ix, &hs, &hcpid)`); 그 밖 → occ > 0 이면 `readers` / `reader 다수`, 아니면 `-`.
 4. idle > 0 이면 MUTED `   %d others: idle` / `   나머지 %d개: 활동 없음` OFF `\n`.
@@ -861,7 +869,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 
 | screen | 형식 |
 |---|---|
-| 1 (요약 화면) | `"\n"` HEAD `[thread waits]  %d live threads, %d waiting` / `[스레드 대기]  실스레드 %d개, 대기 중 %d개` OFF `"\n"`; `waiting > 0` 이면 `"   %s\n"` (줄) |
+| 1 (요약 화면) | `"\n"` HEAD `[thread waits]  %d live threads, %d waiting` / `[스레드 대기]  실스레드 %d개, 대기 중 %d개` OFF `"\n"`; `waiting > 0` 이면 `"   "` 뒤에 줄을 ` · ` 로 나눈 항목을 차례로: 둘째 항목부터 `col + 3 + vis_cols(항목) > scr_cols`(`scr_cols > 0`) 이면 `"\n   "`(col = 3), 아니면 `" · "`. 항목 안에서는 끊지 않는다. 끝에 `"\n"` |
 | 0 (스냅샷) | MUTED `thread waits: %d live, %d waiting%s%s` / `스레드 대기: 실스레드 %d개, 대기 중 %d개%s%s` (wait_live, waiting, waiting 이면 `" - "` 와 줄) OFF `"\n"` |
 
 ### 7.7 세션 패널 (`print_sessions(panel_rows)`)
@@ -870,9 +878,9 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 2. 같은 (tran, cpid) 의 연속 구간이 한 세션(구간 중 슬롯이 다른 클라이언트에게 넘어가면 클라이언트마다 한 세션): `waits` = ACT_WAIT samples 합, `holds` = 그 밖 합, `first`, `n`. `view_identity_seen(tran, cpid) == 0`(슬롯의 현재 클라이언트)인 세션만 `strans[0..nst)` 에 tran 을 오름차순으로 기록(9단계 idle 계산용; 떠난 클라이언트의 세션은 현재 신원을 활동 있음으로 세지 않는다).
    - `SESS` = `{int tran, cpid, waits, holds; int first, n;}`. `first` 는 정렬된 인덱스 배열 `act_by_tran[]` 안의 시작 위치, `n` 은 그 세션의 항목 수 — 7단계 활동 줄이 `act_by_tran[first .. first+n)` 을 이 순서(= 구간 최초 목격 순)로 훑는 데 쓴다.
 3. 세션 정렬: waits 내림차순 → holds 내림차순 → tran 오름차순.
-4. 개수 줄: HEAD `[sessions]  %d client transactions, %d active on a CS` / `[세션]  클라이언트 트랜잭션 %d개, CS 활동 %d개` (`view.nident`, 세션 수). `act_dropped > 0` 이면 `  (+%d sightings not kept: activity table full)` / `  (목격 %d건 미보관: 활동 표 가득 참)`. OFF `"\n"`.
+4. 개수 줄: HEAD `[sessions]  %d client transactions, %d active on a CS` / `[세션]  클라이언트 트랜잭션 %d개, CS 활동 %d개` (`view.nident`, 세션 수). `act_dropped > 0` 이면 `"  "` + `(+%d sightings not kept: activity table full)` / `(목격 %d건 미보관: 활동 표 가득 참)` — 개수 줄과 합쳐 `scr_cols` 를 넘으면 이 메모를 `dw_pad(메모, max(scr_cols - str_cols(개수) - 2, 0))` 로 자른다(한 화면 줄). OFF `"\n"`.
 5. 세션 0개 또는 `panel_rows < 0` 이면 여기서 끝(남은 세션 줄 없음).
-6. 열 머리: HEAD + `"%5s %9s %s %s"` (`tran`, `pid`, `dw_pad(client/클라이언트, 14)`, `dw_pad(what it did in the window/이 구간에 한 일, 60)` — 60칸까지 공백으로 채워 줄 끝 공백이 생긴다) + OFF + `"\n"`.
+6. 열 머리: HEAD + `"%5s %9s %s %s"` (`tran`, `pid`, `dw_pad(client/클라이언트, 14)`, `what it did in the window`/`이 구간에 한 일` — 채우지 않음) + OFF + `"\n"`.
 7. 정렬 순으로 최대 `panel_rows` 개:
    - `r = view_identity_seen(tran, cpid, &id)` (05 §5), `have = r >= 0`. r = 0 현재 클라이언트, 1 떠난 클라이언트(구간 시작 신원), 2 떠났고 신원 없음(`id` 는 cpid 만).
    - 클라이언트 종류(`client_kind`): 입력 program 은 `r == 0 || r == 1` 일 때만, 그 밖은 `""`(→ `-`). program 에 `_cub_cas_` 가 있고 그것이 맨 앞이 아니며 바로 뒤 글자가 숫자이면 `"<앞부분>:cas<뒤부분>"` (예: `broker1_cub_cas_2` → `broker1:cas2`). 아니면 program, 빈 문자열이면 `-` (identity 없으면 `-`).
@@ -884,14 +892,14 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
      3. `o + 1 >= 512` 이면 중단.
      `buf_cat`(§4.4)이므로 512 B 를 넘으면 UTF-8 시퀀스 경계에서 잘리고(`pos = utf8_cut(buf, 511)`), 그 뒤 호출은 무동작이다. `snprintf` 로 통째 쓰는 것과 잘린 끝이 다를 수 있으니 반드시 이 순서를 지킨다. 구분자 `", "` 는 언어 공통.
    - pid 버퍼: `snprintf(pidb, 16, "%d", have ? id.cpid : 0)`; 출력은 `have ? pidb : "-"` — 떠난 클라이언트(r 1/2)는 목격된 그 클라이언트의 pid.
-   - 줄 자르기: `cols = term_columns()`, `room = cols - 31 - 1`. `cols > 39` 이고 `str_cols(line) > room` 이면 `dw_pad(line, room)` 결과로 바꾼다(칸 경계 자르기, 넓은 글자 탈락 시 공백 보충).
+   - 줄 자르기: `cols = scr_cols`, `room = cols - 31 - 1`. `cols > 39` 이고 `str_cols(line) > room` 이면 `dw_pad(line, room)` 결과로 바꾼다(칸 경계 자르기, 넓은 글자 탈락 시 공백 보충).
    - 행: `"%s%5d %9s %s %s\033[0m\n"` = 속성, tran, pid(`have` 면 cpid 10진, 아니면 `-`), `dw_pad(kind, 14)`, 줄. 속성: waits > 0 → `color_on ? CLR_PANEL_WAITER : "\033[4m"`, 아니면 `color_on ? CLR_PANEL_OWNER : "\033[7m"`. 끝의 `\033[0m` 은 `--plain` 에서도 항상 출력.
 8. 표시 못 한 세션이 있으면 MUTED `  ... %d more active sessions` / `  ... 활동 세션 %d개 더` OFF `\n`.
 9. `view.ident[k].idx >= 1` 이면서 `strans[0..nst)` 에 없는 수(idle) > 0 이면 MUTED `  %d other sessions: no CS activity in this window` / `  나머지 %d개 세션: 이 구간에 CS 활동 없음` OFF `\n`.
 
 ### 7.8 하단
 
-`clr(CLR_MUTED)` → `live_footer != NULL` 이면 `"\n%s"` (footer), 아니면 `"\n[q] quit"` / `"\n[q] 종료"` → `clr(CLR_OFF)` `"\n"` → `fflush(stdout)`.
+footer = `live_footer != NULL ? live_footer : "[q] quit"` / `"[q] 종료"`. `clr(CLR_MUTED)` `"\n"` → `wrap_out(stdout, footer, 0, 0)` (좁으면 단어 단위로 줄바꿈, 그 줄 수는 §7.1 `frows` 에 반영) → `clr(CLR_OFF)` `"\n"` → `fflush(stdout)`.
 
 ---
 

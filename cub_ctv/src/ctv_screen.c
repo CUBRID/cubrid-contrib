@@ -24,32 +24,118 @@
 
 /* ------------------------------------------------- full-screen summary */
 
-/* one "item | judgement | evidence" line of the verdict table */
+/* screen width of this frame, 0 = unlimited (not a terminal) */
+static int scr_cols = 0;
+
+/* terminal columns of s[0..n); escape sequences take none */
+static int
+vis_cols (const char *s, size_t n)
+{
+  size_t i = 0;
+  int cols = 0, len;
+
+  while (i < n)
+    {
+      if (s[i] == '\033' && i + 1 < n && s[i + 1] == '[')
+	{
+	  for (i += 2; i < n && !(s[i] >= 0x40 && s[i] <= 0x7E); i++)
+	    {
+	      ;
+	    }
+	  i++;
+	  continue;
+	}
+      cols += seq_cols (s + i, &len);
+      i += (size_t) len;
+    }
+  return cols;
+}
+
+/* screen rows a line of 'cols' columns takes */
+static int
+line_rows (int cols)
+{
+  return scr_cols > 0 && cols > scr_cols ? (cols + scr_cols - 1) / scr_cols : 1;
+}
+
+/* text written from column 'at', broken at spaces to the screen width;
+ * continuation lines start at column 'indent' (no final newline).
+ * Returns the line breaks made; out NULL only counts them */
+static int
+wrap_out (FILE * out, const char *text, int at, int indent)
+{
+  const char *p = text;
+  int col = at, len, breaks = 0;
+
+  while (*p != '\0')
+    {
+      const char *w = p;
+      int sp = 0, ww = 0;
+
+      while (*w == ' ')
+	{
+	  sp++, w++;
+	}
+      for (len = 0; w[len] != '\0' && w[len] != ' ';)
+	{
+	  int l;
+
+	  ww += seq_cols (w + len, &l);
+	  len += l;
+	}
+      if (scr_cols > 0 && col + sp + ww > scr_cols && col > indent)
+	{
+	  if (out != NULL)
+	    {
+	      fprintf (out, "\n%*s", indent, "");
+	    }
+	  col = indent, sp = 0, breaks++;
+	}
+      if (out != NULL)
+	{
+	  fprintf (out, "%*s%.*s", sp, "", len, w);
+	}
+      col += sp + ww;
+      p = w + len;
+    }
+  return breaks;
+}
+
+/* one "item | judgement | evidence" line of the verdict table; a screen
+ * narrower than the columns keeps every word on more lines */
 static void
 verdict_row (FILE * out, const char *item, const char *judge, const char *evidence)
 {
   char c1[64], c2[256];
+  int ej = str_cols (judge), ee = str_cols (evidence), at = 61;
 
   dw_pad (c1, sizeof (c1), item, 11);
+  fprintf (out, "  %s ", c1);
   if (evidence[0] == '\0')
     {
-      /* a single long cell: no padding, no cut */
-      fprintf (out, "  %s %s\n", c1, judge);
+      wrap_out (out, judge, 14, 14);	/* a single long cell */
+      fprintf (out, "\n");
       return;
     }
-  if (str_cols (judge) > 46)
-    {
-      /* a judgement wider than its column keeps every word: the evidence
-       * goes to the next line, under its own column */
-      fprintf (out, "  %s %s\n", c1, judge);
-      dw_pad (c2, sizeof (c2), "", 46);
-      dw_pad (c1, sizeof (c1), "", 11);
-    }
-  else
+  if (ej <= 46 && (scr_cols == 0 || at + ee <= scr_cols))
     {
       dw_pad (c2, sizeof (c2), judge, 46);
+      fprintf (out, "%s %s%s%s\n", c2, clr (CLR_MUTED), evidence, clr (CLR_OFF));
+      return;
     }
-  fprintf (out, "  %s %s %s%s%s\n", c1, c2, clr (CLR_MUTED), evidence, clr (CLR_OFF));
+  if (ej <= 46 && 14 + ej + 2 + ee <= scr_cols)
+    {
+      /* narrow: both on one line, the evidence right after the judgement */
+      fprintf (out, "%s  %s%s%s\n", judge, clr (CLR_MUTED), evidence, clr (CLR_OFF));
+      return;
+    }
+  /* the judgement on its line, the evidence under its column, or under
+   * the judgement when the screen is narrower than that column */
+  wrap_out (out, judge, 14, 14);
+  at = scr_cols == 0 || at + ee <= scr_cols ? at : 14;
+  fprintf (out, "\n%*s%s", at, "", clr (CLR_MUTED));
+  wrap_out (out, evidence, at, at);
+  fprintf (out, "%s\n", clr (CLR_OFF));
 }
 
 static void
@@ -68,14 +154,16 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
       dots[k] = k < top->severity ? '*' : '.';
     }
   dots[4] = '\0';
-  fprintf (out, "%s", clr (top->severity >= 3 ? CLR_WAIT : CLR_HEAD));
-  fprintf (out, M ("[verdict] %s (%s) bottleneck  severity %s %s",
-	     "[판정] %s (%s) 병목  심각도 %s %s"), cs_desc (c->name), c->name,
-	  dots, sev);
-  fprintf (out, "%s%s", clr (CLR_OFF), clr (CLR_MUTED));
-  fprintf (out, M ("   persistence: %d of the last %d windows",
-	     "   지속: %d구간 (최근 %d구간 중)"), v.same, v.span);
-  fprintf (out, "%s\n", clr (CLR_OFF));
+  snprintf (judge, sizeof (judge), M ("[verdict] %s (%s) bottleneck  severity %s %s",
+				      "[판정] %s (%s) 병목  심각도 %s %s"),
+	    cs_desc (c->name), c->name, dots, sev);
+  snprintf (ev, sizeof (ev), M ("persistence: %d of the last %d windows",
+				"지속: %d구간 (최근 %d구간 중)"), v.same, v.span);
+  /* the persistence goes under the title when both do not fit */
+  fprintf (out, "%s%s%s%s%s%s%s\n", clr (top->severity >= 3 ? CLR_WAIT : CLR_HEAD),
+	   judge, clr (CLR_OFF), clr (CLR_MUTED),
+	   scr_cols > 0 && str_cols (judge) + 3 + str_cols (ev) > scr_cols ? "\n  " : "   ",
+	   ev, clr (CLR_OFF));
   {
     char h1[64], h2[160];
 
@@ -303,7 +391,32 @@ print_thread_waits (FILE * out, int screen)
       fprintf (out, "%s\n", clr (CLR_OFF));
       if (waiting > 0)
 	{
-	  fprintf (out, "   %s\n", line);
+	  /* broken between items, never inside one */
+	  const char *p = line, *e;
+	  int col = 3;
+
+	  fprintf (out, "   ");
+	  for (; *p != '\0'; p = *e ? e + strlen (" · ") : e)
+	    {
+	      int w;
+
+	      e = strstr (p, " · ");
+	      e = e != NULL ? e : p + strlen (p);
+	      w = vis_cols (p, (size_t) (e - p));
+	      if (p != line && scr_cols > 0 && col + 3 + w > scr_cols)
+		{
+		  fprintf (out, "\n   ");
+		  col = 3;
+		}
+	      else if (p != line)
+		{
+		  fprintf (out, " · ");
+		  col += 3;
+		}
+	      fprintf (out, "%.*s", (int) (e - p), p);
+	      col += w;
+	    }
+	  fprintf (out, "\n");
 	}
     }
   else
@@ -429,23 +542,36 @@ print_sessions (int panel_rows)
     }
   qsort (sess, (size_t) ns, sizeof (sess[0]), cmp_sess);
 
-  printf ("%s", clr (CLR_HEAD));
-  printf (M ("[sessions]  %d client transactions, %d active on a CS",
-	     "[세션]  클라이언트 트랜잭션 %d개, CS 활동 %d개"), view.nident, ns);
-  if (view.st.act_dropped > 0)
-    {
-      printf (M ("  (+%d sightings not kept: activity table full)",
-		 "  (목격 %d건 미보관: 활동 표 가득 참)"), view.st.act_dropped);
-    }
-  printf ("%s\n", clr (CLR_OFF));
+  {
+    char cnt[96], drop[sizeof (pad)];
+
+    snprintf (cnt, sizeof (cnt), M ("[sessions]  %d client transactions, %d active on a CS",
+				    "[세션]  클라이언트 트랜잭션 %d개, CS 활동 %d개"),
+	      view.nident, ns);
+    drop[0] = '\0';
+    if (view.st.act_dropped > 0)
+      {
+	snprintf (drop, sizeof (drop), M ("(+%d sightings not kept: activity table full)",
+					  "(목격 %d건 미보관: 활동 표 가득 참)"),
+		  view.st.act_dropped);
+      }
+    /* the count line is one screen row: the note is cut to the width */
+    if (drop[0] != '\0' && scr_cols > 0 && str_cols (cnt) + 2 + str_cols (drop) > scr_cols)
+      {
+	int room = scr_cols - str_cols (cnt) - 2;
+
+	dw_pad (pad, sizeof (pad), drop, room > 0 ? room : 0);
+	snprintf (drop, sizeof (drop), "%s", pad);
+      }
+    printf ("%s%s%s%s%s\n", clr (CLR_HEAD), cnt, drop[0] ? "  " : "", drop, clr (CLR_OFF));
+  }
   if (ns == 0 || panel_rows < 0)
     {
       return;			/* nothing to list, or no room: the count line */
     }
   printf ("%s", clr (CLR_HEAD));
-  dw_pad (pad, sizeof (pad), M ("what it did in the window", "이 구간에 한 일"), 60);
   dw_pad (cpad, sizeof (cpad), M ("client", "클라이언트"), 14);
-  printf ("%5s %9s %s %s", "tran", "pid", cpad, pad);
+  printf ("%5s %9s %s %s", "tran", "pid", cpad, M ("what it did in the window", "이 구간에 한 일"));
   printf ("%s\n", clr (CLR_OFF));
   for (j = 0; j < ns && shown < panel_rows; j++, shown++)
     {
@@ -483,7 +609,7 @@ print_sessions (int panel_rows)
       /* one screen row per session (the panel counts rows): the activity
        * text is cut to the columns left after tran, pid and client */
       {
-	int cols = term_columns (), room = cols - 31 - 1;
+	int cols = scr_cols, room = cols - 31 - 1;
 
 	if (cols > 31 + 8 && str_cols (line) > room)
 	  {
@@ -539,6 +665,12 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
   size_t top_len = 0;
   FILE *mem = open_memstream (&top_buf, &top_len);
   FILE *out = mem != NULL ? mem : stdout;
+  static char whos[MAX_CS][96];
+  int guards = 1, frows;
+  const char *footer;
+
+  /* laid out for the terminal of each frame (a resize, a replay elsewhere) */
+  scr_cols = term_columns ();
   fprintf (out, "\033[H\033[2J");
   if (view_record_active ())
     {
@@ -575,9 +707,12 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 
 	  if (lk + pg + fb > 0)
 	    {
+	      char t[200];
+
+	      snprintf (t, sizeof (t), M ("outside the CS layer: lock waits %d (cubrid lockdb), page latch %d, free buffer %d",
+					  "CS 밖에서 대기: 락 %d (cubrid lockdb), 페이지 래치 %d, 빈 버퍼 %d"), lk, pg, fb);
 	      fprintf (out, "  %s", clr (CLR_OWNER));
-	      fprintf (out, M ("outside the CS layer: lock waits %d (cubrid lockdb), page latch %d, free buffer %d",
-			 "CS 밖에서 대기: 락 %d (cubrid lockdb), 페이지 래치 %d, 빈 버퍼 %d"), lk, pg, fb);
+	      wrap_out (out, t, 2, 4);
 	      fprintf (out, "%s\n", clr (CLR_OFF));
 	    }
 	}
@@ -585,30 +720,60 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
   fprintf (out, "\n%s", clr (CLR_HEAD));
   fprintf (out, M ("[critical sections by waiting]", "[대기 발생 순위]"));
   fprintf (out, "%s\n", clr (CLR_OFF));
+  /* the holders first: the "guards" column stays only when every row then
+   * fits the screen, and a holder still too long is cut at its edge */
+  for (i = 0; i < lo->count; i++)
+    {
+      const CS_FIG *f = &fig[i];
+      int hs, holder, hcpid;
+      char *who = whos[i];
+
+      if (f->severity == 0)
+	{
+	  continue;
+	}
+      holder = holder_of (f->ix, &hs, &hcpid);
+      if (holder == 0 && daemon_name (f->ix)[0])
+	{
+	  snprintf (who, sizeof (whos[i]), M ("engine %s", "엔진 %s"), daemon_name (f->ix));
+	}
+      else if (holder != -2)
+	{
+	  tran_text (holder, hcpid, TRAN_TEXT_LABEL, who, sizeof (whos[i]));
+	}
+      else
+	{
+	  /* occupied without a writer: readers (no owner is recorded) */
+	  snprintf (who, sizeof (whos[i]), "%s", view.st.occ[f->ix] > 0
+		    ? M ("readers", "reader 다수") : "-");
+	}
+      /* number, name, guards (25), figures, two spaces: 82 columns */
+      guards = guards && (scr_cols == 0 || 82 + str_cols (who) <= scr_cols);
+    }
   fprintf (out, "%s", clr (CLR_HEAD));
   dw_pad (d1, sizeof (d1), M ("guards", "보호 대상"), 24);
   {
     const char *avg = M ("avg ms", "평균ms");
     int gap = 7 - str_cols (avg);
 
-    fprintf (out, "   %-23s %s %5s %6s %7s %*s%s  %s", "name", d1, "occ%", "wait%",
-	    "wait/s", gap > 0 ? gap : 0, "", avg, M ("holder", "쥔 쪽"));
+    fprintf (out, "   %-23s %s%s%5s %6s %7s %*s%s  %s", "name", guards ? d1 : "",
+	     guards ? " " : "", "occ%", "wait%", "wait/s", gap > 0 ? gap : 0, "", avg,
+	     M ("holder", "쥔 쪽"));
   }
   fprintf (out, "%s\n", clr (CLR_OFF));
   for (i = 0; i < lo->count; i++)
     {
       const CS_FIG *f = &fig[i];
       const CS_ROW *c = &view.rows[f->ix];
-      int hs, holder, hcpid;
+      char avg[16], cutb[96];
+      const char *who = whos[i];
+      int room = scr_cols - (guards ? 82 : 57);
 
       if (f->severity == 0)
 	{
 	  idle++;
 	  continue;
 	}
-      char avg[16], who[96];
-
-      holder = holder_of (f->ix, &hs, &hcpid);
       dw_pad (d1, sizeof (d1), cs_desc (c->name), 24);
       if (f->avg_ms > 0)
 	{
@@ -618,24 +783,15 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 	{
 	  snprintf (avg, sizeof (avg), "%7s", "-");
 	}
-      if (holder == 0 && daemon_name (f->ix)[0])
+      if (scr_cols > 0 && str_cols (who) > room)
 	{
-	  snprintf (who, sizeof (who), M ("engine %s", "엔진 %s"), daemon_name (f->ix));
+	  dw_pad (cutb, sizeof (cutb), who, room > 0 ? room : 0);
+	  who = cutb;
 	}
-      else if (holder != -2)
-	{
-	  tran_text (holder, hcpid, TRAN_TEXT_LABEL, who, sizeof (who));
-	}
-      else
-	{
-	  /* occupied without a writer: readers (no owner is recorded) */
-	  snprintf (who, sizeof (who), "%s", view.st.occ[f->ix] > 0
-		    ? M ("readers", "reader 다수") : "-");
-	}
-      fprintf (out, "%s%2d %-23s %s %5.0f %6.0f %7.0f %s  %s%s\n",
-	      f->severity >= 3 ? clr (CLR_WAIT) : f->severity == 2
-	      ? clr (CLR_OWNER) : "", ++n, c->name, d1, f->occ_pct,
-	      f->wait_pct, f->wait_s, avg, who, clr (CLR_OFF));
+      fprintf (out, "%s%2d %-23s %s%s%5.0f %6.0f %7.0f %s  %s%s\n",
+	       f->severity >= 3 ? clr (CLR_WAIT) : f->severity == 2
+	       ? clr (CLR_OWNER) : "", ++n, c->name, guards ? d1 : "", guards ? " " : "",
+	       f->occ_pct, f->wait_pct, f->wait_s, avg, who, clr (CLR_OFF));
     }
   if (idle > 0)
     {
@@ -645,13 +801,17 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
     }
   print_thread_waits (out, 1);
   fprintf (out, "\n");
+  /* the footer: a blank line and its text, which may wrap */
+  footer = live_footer != NULL ? live_footer : M ("[q] quit", "[q] 종료");
+  frows = 2 + wrap_out (NULL, footer, 0, 0);
   if (mem != NULL)
     {
-      size_t k;
+      size_t k, s;
 
-      /* rows - 1 newlines fit without scrolling; the footer takes 2 and
-       * the sessions at least 1: a taller top is cut, marked */
-      int keep = rows > 0 ? rows - 1 - 2 - (view.tran_avail ? 1 : 0) - 1 : -1;
+      /* rows - 1 screen rows fit without scrolling; the footer takes its
+       * rows and the sessions at least 1: a taller top is cut, marked.
+       * Rows are counted on the screen: a line wider than it wraps */
+      int keep = rows > 0 ? rows - 1 - frows - (view.tran_avail ? 1 : 0) - 1 : -1;
       size_t cut;
 
       if (rows > 0 && keep < 1)
@@ -662,11 +822,19 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 
       fclose (mem);		/* sets top_buf / top_len */
       cut = top_len;
-      for (k = 0; k < top_len; k++)
+      for (k = s = 0; k < top_len; k++)
 	{
-	  if (top_buf[k] == '\n' && ++top == keep && k + 1 < top_len)
+	  if (top_buf[k] == '\n')
 	    {
-	      cut = k + 1;
+	      int r = line_rows (vis_cols (top_buf + s, k - s));
+
+	      if (keep > 0 && top + r > keep && s > 0)
+		{
+		  cut = s;	/* this line no longer fits: cut before it */
+		  break;
+		}
+	      top += r;
+	      s = k + 1;
 	    }
 	}
       fwrite (top_buf, 1, cut, stdout);
@@ -675,7 +843,7 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 	  printf ("%s%s%s\n", clr (CLR_MUTED),
 		  M ("  ... (terminal too short: enlarge it for the rest)",
 		     "  ... (터미널이 작음: 늘리면 나머지 표시)"), clr (CLR_OFF));
-	  top = keep + 1;
+	  top++;
 	}
       free (top_buf);
     }
@@ -686,20 +854,13 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
        * with no room for one row the block is its count line alone */
       /* the top block not measured (no memory stream): the count line */
       int panel = mem == NULL && rows > 0 ? -1
-	: rows > 0 ? rows - 1 - top - 2 - 4 : LIVE_TRANS_ROWS;
+	: rows > 0 ? rows - 1 - top - frows - 4 : LIVE_TRANS_ROWS;
 
       panel = panel > LIVE_TRANS_ROWS ? LIVE_TRANS_ROWS : panel < 1 ? -1 : panel;
       print_sessions (panel);
     }
-  printf ("%s", clr (CLR_MUTED));
-  if (live_footer != NULL)
-    {
-      printf ("\n%s", live_footer);
-    }
-  else
-    {
-      printf (M ("\n[q] quit", "\n[q] 종료"));
-    }
+  printf ("%s\n", clr (CLR_MUTED));
+  wrap_out (stdout, footer, 0, 0);
   printf ("%s\n", clr (CLR_OFF));
   fflush (stdout);
 }

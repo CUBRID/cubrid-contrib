@@ -267,6 +267,8 @@ typedef struct { uint64_t tid; int slot; } THR_SORTED;   /* tid = m_id 값 */
 3. `neg` = v == −1 인 슬롯 수.
 4. `neg * 2 > count`(−1 이 엄격 과반) 이면 1, 아니면 0.
 
+과반 조건이 부하와 무관하게 성립하는 근거: 엔진은 엔트리 배열을 최대 동시 사용량보다 넉넉히 잡는다. 11.4 는 `NUM_NON_SYSTEM_TRANS`(활성 워커) + `NUM_NON_SYSTEM_TRANS`(연결 워커) + vacuum 워커 + 데몬 128 + 코어 수 칸이고(`thread_manager.cpp`), 11.5 는 그보다 크다(실측 4314칸, ntran 102). tran_index 가 −1 이 아닌 엔트리는 데몬(0, `LOG_SYSTEM_TRAN_INDEX`)과 지금 요청을 실행 중인 워커(클라이언트 tran)뿐이고, 연결만 된 유휴 세션은 엔트리에 tran 을 남기지 않는다(11.4.5 실측: 유휴 연결 5·실행 중 요청 5 → 클라이언트 tran 엔트리 5). 실행 중 요청은 많아야 `NUM_NON_SYSTEM_TRANS` 이므로 −1 은 항상 과반이다(11.4.5: 404칸 중 비 −1 은 최대 약 115). 틀린 후보는 이 조건이나 범위 조건에서 떨어진다: 11.4.5 의 +28 은 `tran_index_lock` 뮤텍스(값 0 만, −1 없음), 11.5 의 +20 은 `emulate_tid` 상위 32비트(0 또는 범위 밖).
+
 ### 5.2 `int thr_find_tran(const unsigned char *img)`
 
 1. `rel ∈ {28, 20}` 순서로, `off_index + rel + 4 <= stride` ∧ `thr_check_tran(img, rel)` 인 것을 센다.

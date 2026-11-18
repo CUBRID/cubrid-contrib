@@ -364,18 +364,17 @@ print_row_tagged (const char *row, const char *one, const char *l1,
     }
 }
 
-/* owner fields count only while a writer holds the CS (demote and reader
- * exits leave them set) */
+/* owner fields count only while someone holds the CS (cs_held) */
 int32_t
 row_tran (const CS_ROW * r)
 {
-  return r->rwlock < 0 ? r->tran : -1;
+  return cs_held (r->rwlock, r->owner) ? r->tran : -1;
 }
 
 uint64_t
 row_owner (const CS_ROW * r)
 {
-  return r->rwlock < 0 ? r->owner : 0;
+  return cs_held (r->rwlock, r->owner) ? r->owner : 0;
 }
 
 /* every field of one CS as a vertical record: SHOW's 12 columns, re-enter,
@@ -556,9 +555,10 @@ live_print_row (int i, double dt)
   CS_RATES rt;
   double de, dw, occ_pct;
   int fill, b;
-  int tg = c->rwlock < 0 ? c->tran : view.st.seen_tran[i];
-  int tg_cpid = c->rwlock < 0 ? -1 : view.st.seen_cpid[i];
-  uint64_t owner = c->rwlock < 0 ? c->owner : view.st.seen_owner[i];
+  int held = cs_held (c->rwlock, c->owner);
+  int tg = held ? c->tran : view.st.seen_tran[i];
+  int tg_cpid = held ? -1 : view.st.seen_cpid[i];
+  uint64_t owner = held ? c->owner : view.st.seen_owner[i];
   uint64_t wq = c->wq;
   int seen_cs = c->wq == 0 && view.st.seen_wq[i] != 0 ? i : -1;
   char bar[12], sb[32], row[320];

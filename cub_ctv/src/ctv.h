@@ -596,6 +596,7 @@ void cs_decode_raw (const unsigned char *blob, const CS_LAYOUT * lo, int i, int3
 int cs_read_rows (uint64_t cs_base, const CS_LAYOUT * lo, CS_ROW * rows);
 int cs_rows_from_blob (const unsigned char *blob, const CS_LAYOUT * lo, CS_ROW * rows);
 const char *state_str (int32_t rwlock, char *buf, size_t n);
+int cs_held (int32_t rwlock, uint64_t owner);
 
 /* ctv_dump.c: detail dump - everything read at one moment as one JSON document (not replayable) */
 void detail_dump_write (const char *path, const VIEW_HDR * h, uint64_t bias, uint64_t sym_cs, uint64_t sym_pool, uint64_t sym_loggl, uint64_t sym_thr);

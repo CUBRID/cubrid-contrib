@@ -922,8 +922,9 @@ footer = `live_footer != NULL ? live_footer : "[q] quit"` / `"[q] 종료"`. `clr
 
 | 함수 | 규칙 |
 |---|---|
-| `row_tran(r)` | `r->rwlock < 0 ? r->tran : -1` |
-| `row_owner(r)` | `r->rwlock < 0 ? r->owner : 0` |
+| `row_held(r)` (ctv_cs.c `cs_held(rwlock, owner)`) | `rwlock < 0 \|\| (rwlock > 0 && owner != 0)` — 보유자가 있음: writer, 또는 강등되어 reader 로 쥔 owner. 엔진의 강등(`csect_demote`)은 owner·tran_index 를 지우지 않고, 강등을 쓰는 곳은 HA 로그 플러시 한 곳뿐이며 그 스레드는 승격한 뒤 writer 로 나간다(오류 경로는 서버 중단). 그래서 reader 상태에서 owner 가 남아 있으면 그 스레드가 강등된 채 쥐고 있는 것이다. 엔진 `SHOW CRITICAL SECTIONS` 도 이때 owner 를 보인다 |
+| `row_tran(r)` | `row_held(r) ? r->tran : -1` |
+| `row_owner(r)` | `row_held(r) ? r->owner : 0` |
 | `owner_is_system(tran, thr)` | `tran == 0 \|\| (tran < 0 && thr >= 0)` |
 | `state_str(rwlock)` (ctv_cs.c) | `> 0` → `"%d readers"`, `< 0` → `"1 writer"`, 0 → `"none"` |
 | `chain_of(wq, seen_cs, widx, tran, cpid)` | `seen_cs >= 0` 이면 `view_seen_chain(seen_cs)` (구간 중 처음 목격 체인), 아니면 `view_waiters(wq)` (현재 큐). 각 홉의 tran = `view_tran_of(slot)` (-1 = 모름), `cpid != NULL` 이면 각 홉의 클라이언트 pid = `view_tran_cpid_of(slot)` (-1 = 모름; JSON 은 `NULL`) |
@@ -1005,7 +1006,7 @@ transactions (from memory, no SQL connection):
 
 ### 8.5 라이브 스크롤 CS 행 (`live_print_row(i, dt)`)
 
-- `tg = rwlock < 0 ? c->tran : view.st.seen_tran[i]`, `tg_cpid = rwlock < 0 ? -1 : view.st.seen_cpid[i]`, `owner = rwlock < 0 ? c->owner : view.st.seen_owner[i]`, `wq = c->wq`, `seen_cs = (c->wq == 0 && view.st.seen_wq[i] != 0) ? i : -1`.
+- `tg = row_held(c) ? c->tran : view.st.seen_tran[i]`, `tg_cpid = row_held(c) ? -1 : view.st.seen_cpid[i]`, `owner = row_held(c) ? c->owner : view.st.seen_owner[i]`, `wq = c->wq`, `seen_cs = (c->wq == 0 && view.st.seen_wq[i] != 0) ? i : -1`.
 - `cs_rates(c, prev, occ, wai, samples, dt)` → de = enter_s, dw = wait_s, occ_pct.
 - 막대: `fill = (int)(occ_pct / 10 + 0.5)`, 10칸, 앞 fill 칸 `#`, 나머지 `.`.
 - `waiting = wai[i] > 0 || dw > 0`; `idle = !waiting && occ[i] == 0 && de == 0 && rwlock == 0`.
@@ -1191,11 +1192,11 @@ fflush (stdout);
 
 blob 은 직전 `mem_read` 로 읽은 CS 배열 전체 이미지. CS i 마다:
 
-1. `cs_decode_raw` 로 rwlock, wr, ww, tran.
+1. `cs_decode_raw` 로 rwlock, wr, ww, tran. `owner = rd_u64(blob, off + off_owner)`, `held = cs_held(rwlock, owner)` (§8.1 `row_held`: writer, 또는 강등된 owner).
 2. `rwlock != 0` → `st.occ[i]++`.
-3. `rwlock < 0 && tran < 0` → `tran = 0` (트랜잭션 없는 writer 스레드 = 엔진).
-4. `rwlock < 0`:
-   1. `owner = rd_u64(blob, off + off_owner)`, `cpid = client_pid(tran)` (§11.2a).
+3. `held && tran < 0` → `tran = 0` (트랜잭션 없는 보유 스레드 = 엔진).
+4. `held`:
+   1. `cpid = client_pid(tran)` (§11.2a).
    2. `tran >= 1 || (tran == 0 && seen_tran[i] < 0)` → `seen_tran[i] = tran`, `seen_cpid[i] = cpid`, `seen_owner[i] = owner` (클라이언트 tran 우선, 엔진은 아직 없을 때만).
    3. owner == 0 이면 k = -1. 아니면 `owner != own_last[i]` 일 때만 `own_last = owner`, `own_slot = thr_index_of_tid_mem(owner)` 갱신, `k = own_slot[i]`.
    4. `act_add(w, i, ACT_HELD, tran, k, cpid)`.

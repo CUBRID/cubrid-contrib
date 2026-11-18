@@ -371,6 +371,14 @@ cs_rows_from_blob (const unsigned char *blob, const CS_LAYOUT * lo, CS_ROW * row
   return 0;
 }
 
+/* someone holds the CS: a writer, or the owner demoted to a reader (demote
+ * keeps owner; its one user, the HA log flush, promotes before leaving) */
+int
+cs_held (int32_t rwlock, uint64_t owner)
+{
+  return rwlock < 0 || (rwlock > 0 && owner != 0);
+}
+
 /* table tokens stay English in every language (double-width Hangul would
  * break the columns) */
 const char *

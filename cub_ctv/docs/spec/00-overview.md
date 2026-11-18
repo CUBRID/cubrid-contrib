@@ -89,6 +89,7 @@
 | `tests/t15_screen_fit.py` | 요약 화면이 터미널 크기에 맞음: 스크롤 없음, 80칸 이상은 폭 초과 줄 없음 | 불필요 |
 | `tests/t16_act_samples.sh` | 활동 샘플 수 ≤ 구간 샘플 수(tran −1 대기자 여럿 포함), 그 기록 재생 | 불필요 |
 | `tests/t17_target_pick.sh` | 대상 선택: DB 이름 우선, 같은 이름 여럿 거부, `--pid` | 불필요 |
+| `tests/t18_demote_holder.sh` | 강등된 owner 의 보유 집계(HA 로그 플러시) | 불필요 |
 | `tests/t2_show_compare.py` | 엔진 `SHOW CRITICAL SECTIONS` 값이 전후 판독 사이 + 자기영향 0 | 필요 |
 | `tests/t4_trans_check.sh` | 트랜잭션 표 == `cubrid tranlist` | 필요 |
 | `tests/t7_record_equiv.sh` | 라이브 화면 == 그 기록의 재생 | 필요 |

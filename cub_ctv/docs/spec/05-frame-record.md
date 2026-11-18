@@ -107,7 +107,7 @@
 | `samples` | `int` | 구간의 샘플 수(구간을 닫는 샘플 포함) | `live_accumulate` 끝에 +1 |
 | `occ[MAX_CS]` | `int` | `rwlock != 0` 이었던 샘플 수 | 샘플마다 |
 | `wai[MAX_CS]` | `int` | `wr != 0 \|\| ww != 0` 이었던 샘플 수 | 샘플마다 |
-| `seen_tran[MAX_CS]` | `int` | 구간 중 목격한 writer 의 tran. −1 = 없음 | `rwlock < 0` 일 때: tran<0 이면 0(엔진 스레드)로 보고, `tran >= 1` 이면 항상 덮어쓰고, `tran == 0` 은 아직 −1 일 때만 기록(클라이언트 tran 우선) |
+| `seen_tran[MAX_CS]` | `int` | 구간 중 목격한 보유자(writer 또는 강등된 owner, 06 §8.1 `row_held`)의 tran. −1 = 없음 | `row_held` 일 때: tran<0 이면 0(엔진 스레드)로 보고, `tran >= 1` 이면 항상 덮어쓰고, `tran == 0` 은 아직 −1 일 때만 기록(클라이언트 tran 우선) |
 | `seen_cpid[MAX_CS]` | `int` | `seen_tran` 의 클라이언트 pid(그 샘플에서 `client_pid(tran)`, 06 §11.2a). −1 = 모름 | `seen_tran` 과 같은 순간에 |
 | `seen_owner[MAX_CS]` | `uint64_t` | 위 `seen_tran` 을 기록한 샘플의 owner thread id | `seen_tran` 과 같은 순간에 |
 | `seen_wq[MAX_CS]` | `uint64_t` | 구간 최초의(비어 있지 않게 걸어진) 대기 큐 머리. 0 = 없음 | 큐를 걸었고(`ch_n > 0`) `seen_wq == 0` 또는 같은 머리일 때 설정 |
@@ -129,7 +129,7 @@
 | 필드 | 의미 |
 |---|---|
 | `cs` | CS 인덱스 |
-| `kind` | `ACT_HELD`(0) writer 로 보유 / `ACT_WAIT`(1) 대기 큐에 있음 |
+| `kind` | `ACT_HELD`(0) 보유(writer, 또는 강등되어 reader 로 쥔 owner — 06 §8.1 `row_held`) / `ACT_WAIT`(1) 대기 큐에 있음 |
 | `tran` | tran index. 0 = 시스템(엔진 스레드 포함: writer 의 tran 이 음수면 0 으로 셈) |
 | `thr` | 칸. 모르면 −1. `tran != 0` 항목은 처음 알려진 칸으로 채워짐 |
 | `samples` | 목격 샘플 수 |
@@ -196,8 +196,8 @@
 | `name[NAME_MAX_LEN]` | `char[64]` | CS 이름 | 21 |
 | `rwlock` | `int32_t` | >0 읽기 보유 수, −1 writer, 0 비어 있음 | 2 |
 | `wr`, `ww` | `uint32_t` | 대기 reader 수, 대기 writer 수 | 3, 4 |
-| `tran` | `int32_t` | writer 의 tran index(`rwlock < 0` 일 때만 의미) | 5 |
-| `owner` | `uint64_t` | writer 스레드 id(pthread_t), 없으면 0(`rwlock < 0` 일 때만 의미) | 6 |
+| `tran` | `int32_t` | 보유자의 tran index(`row_held` 일 때만 의미: writer, 또는 강등 중 남은 값) | 5 |
+| `owner` | `uint64_t` | 보유 스레드 id(pthread_t), 없으면 0(`row_held` 일 때만 의미) | 6 |
 | `wq` | `uint64_t` | 첫 대기 큐 머리(promoters 큐가 있으면 그것, 아니면 writers 큐), 없으면 0 | 7 |
 | `wq2` | `uint64_t` | promoters 가 앞에 있을 때의 writers 큐(라이브 전용). **기록되지 않음** → 재생에서는 `rd_F` 의 `memset` 으로 항상 0 | — |
 | `nenter`, `nwait`, `nreenter` | `uint32_t` | 통계 블록 카운터 | 9, 10, 11 |
@@ -248,7 +248,7 @@
 7. `view_capture_idents()` (§4.3) — **실시간 판독**(TDES·CLIENTIDS).
 8. 직전 프레임이 표시한 칸 표시 해제: `i < view.nslot` 에 대해 `slot_seen[view.slot[i]] = 0`. 그다음 `ntid = nchain = nslot = 0`.
 9. 각 CS `i` 에 대해 차례로:
-   1. `rows[i].rwlock < 0` 이면 `view_add_tid(rows[i].owner)` (아니면 owner 필드는 낡은 값이므로 추가하지 않음).
+   1. `row_held(&rows[i])` 이면 `view_add_tid(rows[i].owner)` (아니면 owner 필드는 0 이거나 쓰이지 않으므로 추가하지 않음).
    2. `view_add_tid(view.st.seen_owner[i])`.
    3. `view_add_chain(rows[i].wq, rows[i].wq2, w, i)`.
 10. 구간 중 이전 목격: 각 CS `i`, `k < view.st.seen_n[i]` 에 대해 `view_add_slot_tran(seen_slot[i][k], seen_tran_of[i][k], seen_cpid_of[i][k])`. 이미 현재 큐(9단계)에서 추가된 칸은 무시되므로 **현재 큐의 tran 이 우선**한다.

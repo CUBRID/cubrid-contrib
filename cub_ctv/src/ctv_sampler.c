@@ -233,22 +233,25 @@ live_accumulate (LIVE_WIN * w, const CS_LAYOUT * lo)
       uint32_t wr, ww;
 
       size_t off = (size_t) i * lo->stride;
+      uint64_t owner;
+      int held;
 
       cs_decode_raw (w->blob, lo, i, &rwlock, &wr, &ww, &tran);
+      owner = rd_u64 (w->blob, off + lo->off_owner);
+      held = cs_held (rwlock, owner);	/* a writer, or its owner demoted */
       if (rwlock != 0)
 	{
 	  w->st.occ[i]++;
 	}
-      /* a writer thread without a transaction (tran -1) is an engine
-       * thread: counted like the system tran */
-      if (rwlock < 0 && tran < 0)
+      /* a holder without a transaction (tran -1) is an engine thread:
+       * counted like the system tran */
+      if (held && tran < 0)
 	{
 	  tran = 0;
 	}
       /* prefer a client tran (>=1) over the system tran (0) */
-      if (rwlock < 0)
+      if (held)
 	{
-	  uint64_t owner = rd_u64 (w->blob, off + lo->off_owner);
 	  int k, cpid = client_pid (tran);
 
 	  if (tran >= 1 || (tran == 0 && w->st.seen_tran[i] < 0))

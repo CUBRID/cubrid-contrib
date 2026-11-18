@@ -423,7 +423,7 @@ view_capture (const CS_LAYOUT * lo, const CS_ROW * rows, const LIVE_WIN * w,
   view.ntid = view.nchain = view.nslot = 0;
   for (i = 0; i < lo->count; i++)
     {
-      view_add_tid (rows[i].rwlock < 0 ? rows[i].owner : 0);	/* stale otherwise */
+      view_add_tid (row_owner (&rows[i]));
       view_add_tid (view.st.seen_owner[i]);
       view_add_chain (rows[i].wq, rows[i].wq2, w, i);
     }

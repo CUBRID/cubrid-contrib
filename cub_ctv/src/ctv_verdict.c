@@ -334,6 +334,14 @@ holder_of (int i, int *samples, int *cpid)
   return hold_tran[i];
 }
 
+/* the holder's samples are under half of the occupancy: readers (who leave
+ * no owner) took the rest, so the holder is not named */
+int
+held_minor (int i, int samples)
+{
+  return 2LL * samples < view.st.occ[i];
+}
+
 /* windows' top CS, for the persistence line, by frame number: a
  * re-render (replay pause/step) is not a new entry, and stepping back
  * finds the earlier windows it already showed.  hist_seq holds seq + 1
@@ -442,6 +450,7 @@ verdict_compute (const CS_FIG * top, const CS_FIG * second, VERDICT * v)
   v->same = history_count (view.seq, top->ix, &v->span);
   v->holder = holder_of (top->ix, &hs, &v->holder_cpid);
   v->held_pct = view.st.samples > 0 ? 100.0 * hs / view.st.samples : 0.0;
+  v->readers_most = v->holder != -2 && held_minor (top->ix, hs);
   /* an engine holder is named by one thread: its own share, the engine
    * threads together as evidence */
   v->one_thr = v->holder == 0 && holder_thread_of (top->ix, &thr_samples) >= 0;

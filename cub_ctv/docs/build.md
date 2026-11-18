@@ -27,6 +27,7 @@
 | `tests/t16_act_samples.sh` | 샘플러 활동 표: tran 미상(−1) 대기자 둘·엔진 스레드 둘·클라이언트 둘이 각각 따로 세어져 어느 활동도 구간 샘플 수를 넘지 않고, 그 라이브 기록이 재생됨 | 불필요 |
 | `tests/t17_target_pick.sh` | 대상 선택: DB 이름 우선(숫자 이름이 다른 서버 pid 와 같아도), 같은 이름 서버 여럿은 거부하고 후보별 `--pid` 안내, DB 이름이 없는 숫자는 pid, `--pid` 는 pid 로만 (대기만 하는 `cub_server` 대체 프로세스 사용, gcc 필요) | 불필요 |
 | `tests/t18_demote_holder.sh` | 샘플러에 writer 3·강등 92·비움 5 샘플을 넣어 강등 구간이 owner 의 보유로 세어지고 판정의 데몬 보유가 점유와 같은지, 일반 reader 는 보유자가 아닌지 | 불필요 |
+| `tests/t19_readers_most.sh` | 보유자는 보유가 점유의 절반 이상일 때만 지목: reader 94% + writer 1% → `reader 다수`·세션 조치 없음, writer 60/80 → 그 세션 지목 (판정 값과 pty 재생 화면) | 불필요 |
 | `tests/t7_record_equiv.sh` | 실서버에서 라이브 화면 = 기록 재생 화면, 디테일 덤프 JSON·재생 거부 | 필요 |
 | `tests/t8_replay_keys.py` | pty 에서 재생 키(일시정지·구간·속도·종료), 요약 화면 세션 강조, 색상·`--plain` | 불필요 |
 | `tests/t10_os_probe.sh` | OS tid·스레드 이름·대기 사유를 `/proc` 과 대조 (I-17/I-18) | 필요 |

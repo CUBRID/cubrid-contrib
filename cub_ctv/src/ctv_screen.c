@@ -190,7 +190,12 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
   verdict_row (out, M ("where", "어디서"), judge, ev);
 
   /* who */
-  if (v.holder == 0)
+  if (v.readers_most)
+    {
+      snprintf (judge, sizeof (judge), "%s",
+		M ("readers (no single owner)", "reader 다수 (단일 소유자 없음)"));
+    }
+  else if (v.holder == 0)
     {
       const char *dn = daemon_name (top->ix);
 
@@ -216,7 +221,24 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
 		? M ("readers (no single owner)", "reader 다수 (단일 소유자 없음)")
 		: M ("not observed", "관측 안 됨"));
     }
-  if (v.one_thr && v.thr_pct < v.held_pct - 0.5)
+  if (v.readers_most)
+    {
+      /* the writer seen is named as evidence only */
+      const char *dn = daemon_name (top->ix);
+
+      if (v.holder > 0)
+	{
+	  tran_text (v.holder, v.holder_cpid, TRAN_TEXT_LABEL, hb, sizeof (hb));
+	}
+      else
+	{
+	  snprintf (hb, sizeof (hb), "%s", dn[0] ? dn : M ("engine", "엔진"));
+	}
+      snprintf (ev, sizeof (ev), M ("writer %s held %.0f%% of the window (occupied %.0f%%)",
+				    "writer %s 구간의 %.0f%% 보유 (점유 %.0f%%)"),
+		hb, v.held_pct, top->occ_pct);
+    }
+  else if (v.one_thr && v.thr_pct < v.held_pct - 0.5)
     {
       snprintf (ev, sizeof (ev), M ("held %.0f%% of the window (engine threads together %.0f%%)",
 				    "구간의 %.0f%% 보유 (엔진 스레드 합계 %.0f%%)"),
@@ -250,7 +272,7 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
 
   /* capacity, when a daemon holds it: one thread saturates, not several
    * sharing the work */
-  if (v.holder == 0)
+  if (v.holder == 0 && !v.readers_most)
     {
       snprintf (judge, sizeof (judge), "%s", v.thr_pct >= 60
 		? M ("near the daemon's capacity", "데몬 처리 상한 근접")
@@ -290,7 +312,15 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
     }
 
   /* action */
-  if (v.holder == 0)
+  if (v.readers_most)
+    {
+      snprintf (judge, sizeof (judge), "%s", M ("check read volume and the writing session",
+						"읽기 빈도와 쓰기 세션을 함께 볼 것"));
+      snprintf (ev, sizeof (ev), M ("occupied %.0f%%, writer held %.0f%%; readers the rest",
+				    "점유 %.0f%% 중 writer 보유 %.0f%%, 나머지는 reader"),
+		top->occ_pct, v.held_pct);
+    }
+  else if (v.holder == 0)
     {
       snprintf (judge, sizeof (judge), "%s", M ("not a session problem -> look at the engine side",
 						"세션 조치 불필요 -> 엔진 쪽을 볼 것"));
@@ -734,6 +764,10 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 	  continue;
 	}
       holder = holder_of (f->ix, &hs, &hcpid);
+      if (holder != -2 && held_minor (f->ix, hs))
+	{
+	  holder = -2;		/* readers most of the time (see the verdict) */
+	}
       if (holder == 0 && daemon_name (f->ix)[0])
 	{
 	  snprintf (who, sizeof (whos[i]), M ("engine %s", "엔진 %s"), daemon_name (f->ix));

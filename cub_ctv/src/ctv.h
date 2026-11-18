@@ -572,6 +572,7 @@ typedef struct
   int holder_cpid;		/* client pid seen with it, -1 unknown */
   int one_thr;			/* an engine holder named by one thread */
   double held_pct, thr_pct;	/* the holder's share; that one thread's own */
+  int readers_most;		/* a holder, but readers occupy most of it */
   int nwaiters;			/* client sessions seen waiting on it */
   double waited_pct;		/* the share of the window each waited (mean) */
   int wtran[VERDICT_WAITERS_LISTED], wsamples[VERDICT_WAITERS_LISTED];
@@ -689,6 +690,7 @@ const char *daemon_name (int i);
 int holder_thread_of (int i, int *samples);
 void cs_figures_ranked (int count, double dt, CS_FIG * fig);
 int holder_of (int i, int *samples, int *cpid);
+int held_minor (int i, int samples);
 void history_push (long seq, int top_ix);
 int history_export (long seq, int *back, int *top);
 void history_import (long seq, int n, const int *back, const int *top);

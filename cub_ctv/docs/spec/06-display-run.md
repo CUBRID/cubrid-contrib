@@ -123,6 +123,7 @@
 | `holder_cpid` | `int` | 그 보유자가 목격될 때의 클라이언트 pid, −1 모름 |
 | `one_thr` | `int` | 엔진 보유자를 한 스레드로 특정함 |
 | `held_pct`, `thr_pct` | `double` | 보유자 몫(%), 그 한 스레드 몫(%) |
+| `readers_most` | `int` | 보유자(holder ≥ 0)가 있으나 그 보유가 점유의 절반 미만: 점유의 대부분은 owner 가 없는 reader 라 보유자를 지목하지 않는다 |
 | `nwaiters` | `int` | 대기한 클라이언트 세션 수 |
 | `waited_pct` | `double` | 세션당 평균 대기 몫(%) |
 | `wtran[4]`, `wsamples[4]` | `int` | 나열할 대기 세션 tran 과 목격 샘플 수(`VERDICT_WAITERS_LISTED`) |
@@ -730,6 +731,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 | `held_pct` | `view.st.samples > 0 ? 100.0 * hs / view.st.samples : 0.0` (samples 0 이면 0, NaN 없음) |
 | `one_thr` | `holder == 0 && holder_thread_of(top->ix, &thr_samples) >= 0` |
 | `thr_pct` | `one_thr && view.st.samples > 0 ? 100.0 * thr_samples / view.st.samples : held_pct` (samples 0 이면 `held_pct` = 0) |
+| `readers_most` | `holder != -2 && 2 * hs < view.st.occ[top->ix]` (`hs` = 보유자 샘플 수, 보유는 점유의 부분집합). 보유자는 보유가 점유의 주된 몫일 때만 지목한다: reader 는 owner 를 남기지 않아 누구인지 알 수 없으므로, writer 가 잠깐 잡힌 것만으로 그를 "가장 오래 쥔 쪽" 으로 부르지 않는다 |
 | `nwaiters` | act 중 `cs == top->ix && kind == ACT_WAIT && tran >= 1` 인 항목 수 (클라이언트 tran 은 (cs,kind,tran,cpid) 당 1항목 — 구간 중 슬롯이 재사용되면 두 클라이언트가 따로 셈) |
 | `wtran[]`, `wsamples[]`, `nlisted` | 위 항목을 act 순서로 앞에서 4개 |
 | `more_waiters` | 5번째 이상이 있으면 1 |
@@ -825,13 +827,14 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 | 항목 EN/KO | 조건 | judge | evidence |
 |---|---|---|---|
 | `where` / `어디서` | 항상 | `"%s (%s)"` = cs_desc, name | `has_second`: `lost %.2f s/s; next %s %.2f s/s` / `손실 %.2f s/s; 2위 %s %.2f s/s` (top lost, 2위 name, 2위 lost). 아니면 `lost %.2f s/s; no other CS waiting` / `손실 %.2f s/s; 다른 CS는 대기 없음` |
-| `who` / `누가` | 항상 | holder==0: `daemon_name` 이 있으면 `engine thread %s` / `엔진 스레드 %s`; 없으면 name == `LOG` 일 때 `engine log flush daemon` / `엔진 로그 플러시 데몬`, 그 밖 `engine daemon (system tran)` / `엔진 데몬 (system tran)`. holder>0: `client session %s` / `클라이언트 세션 %s` (`tran_text(holder, holder_cpid, LABEL)`, 96B). holder==-2: `view.st.occ[ix] > 0` 이면 `readers (no single owner)` / `reader 다수 (단일 소유자 없음)`, 아니면 `not observed` / `관측 안 됨` | `one_thr && thr_pct < held_pct - 0.5`: `held %.0f%% of the window (engine threads together %.0f%%)` / `구간의 %.0f%% 보유 (엔진 스레드 합계 %.0f%%)` (thr_pct, held_pct). 아니면 `held %.0f%% of the window (occupied %.0f%%)` / `구간의 %.0f%% 보유 (점유 %.0f%%)` (held_pct, occ_pct) |
+| `who` / `누가` | 항상 | readers_most: `readers (no single owner)` / `reader 다수 (단일 소유자 없음)`, 근거 `writer %s held %.0f%% of the window (occupied %.0f%%)` / `writer %s 구간의 %.0f%% 보유 (점유 %.0f%%)` (%s = holder==0 이면 `daemon_name` 또는 `engine` / `엔진`, 아니면 `tran_text(holder, holder_cpid, LABEL)`; held_pct, occ_pct) — 아래 규칙은 readers_most 가 아닐 때. holder==0: `daemon_name` 이 있으면 `engine thread %s` / `엔진 스레드 %s`; 없으면 name == `LOG` 일 때 `engine log flush daemon` / `엔진 로그 플러시 데몬`, 그 밖 `engine daemon (system tran)` / `엔진 데몬 (system tran)`. holder>0: `client session %s` / `클라이언트 세션 %s` (`tran_text(holder, holder_cpid, LABEL)`, 96B). holder==-2: `view.st.occ[ix] > 0` 이면 `readers (no single owner)` / `reader 다수 (단일 소유자 없음)`, 아니면 `not observed` / `관측 안 됨` | `one_thr && thr_pct < held_pct - 0.5`: `held %.0f%% of the window (engine threads together %.0f%%)` / `구간의 %.0f%% 보유 (엔진 스레드 합계 %.0f%%)` (thr_pct, held_pct). 아니면 `held %.0f%% of the window (occupied %.0f%%)` / `구간의 %.0f%% 보유 (점유 %.0f%%)` (held_pct, occ_pct) |
 | `how bad` / `얼마나` | 항상 | `"%s (%d/4)"` = sev, severity | `avg_ms > 0`: `%.0f of %.0f entries/s waited (%.0f%%), acquire %.3f ms/entry` (wait_s, enter_s, 비율, avg_ms) / KO `대기 %.0f건/s (진입 %.0f건/s 의 %.0f%%), 진입당 획득 %.3f ms` (같은 순서). 비율 = `enter_s > 0 ? 100*wait_s/enter_s : 0`. 아니면 `%.0f of %.0f entries/s waited; waiters seen %.0f%% of samples` / `대기 %.0f건/s (진입 %.0f건/s); 대기자 목격 %.0f%% 샘플` (wait_s, enter_s, wait_pct) |
-| `capacity` / `처리량` | holder == 0 일 때만 | `thr_pct >= 60` → `near the daemon's capacity` / `데몬 처리 상한 근접`, 아니면 `headroom remains` / `여유 있음` | `daemon holds %.0f%% -> %.0f%% headroom at %.0f entries/s` / `데몬 보유 %.0f%% -> 여유 %.0f%%, 진입 %.0f건/s` (thr_pct, 100-thr_pct, enter_s) |
+| `capacity` / `처리량` | holder == 0 && !readers_most 일 때만 | `thr_pct >= 60` → `near the daemon's capacity` / `데몬 처리 상한 근접`, 아니면 `headroom remains` / `여유 있음` | `daemon holds %.0f%% -> %.0f%% headroom at %.0f entries/s` / `데몬 보유 %.0f%% -> 여유 %.0f%%, 진입 %.0f건/s` (thr_pct, 100-thr_pct, enter_s) |
 | `who suffers` / `피해` | nwaiters > 0 | `%d client sessions, waited ~%.0f%% of the window each` / `클라이언트 세션 %d개, 각 구간의 약 %.0f%% 대기` (nwaiters, waited_pct) | 나열 항목마다 `buf_cat(ev, 200, &o, "%stran %d (%d)", k ? ", " : "", wtran[k], wsamples[k])`, more_waiters 면 `buf_cat(…, ", ...")`. **언어 공통**(M 쌍 아님, 한국어에서도 `tran`·`, `·`, ...`). `buf_cat` 이므로 넘치면 UTF-8 경계에서 잘리고 이후 호출은 무동작(`", ..."` 도 생략). 최장 4 항목 × 약 30 B 라 200 B 에서 실제로는 잘리지 않는다 |
 | `who suffers` / `피해` | nwaiters == 0 | `no client session identified` / `식별된 클라이언트 세션 없음` | `waiters were engine threads or not resolved` / `대기자가 엔진 스레드이거나 미식별` |
-| `action` / `조치` | holder == 0 | `not a session problem -> look at the engine side` / `세션 조치 불필요 -> 엔진 쪽을 볼 것` | `holder is an engine daemon` / `쥔 쪽이 엔진 데몬` |
-| 〃 | holder > 0 | `inspect the holding session` / `쥔 세션을 확인할 것` | `a client holds it longest` / `클라이언트가 가장 오래 쥠` |
+| `action` / `조치` | readers_most | `check read volume and the writing session` / `읽기 빈도와 쓰기 세션을 함께 볼 것` | `occupied %.0f%%, writer held %.0f%%; readers the rest` / `점유 %.0f%% 중 writer 보유 %.0f%%, 나머지는 reader` (occ_pct, held_pct) |
+| 〃 | holder == 0 (readers_most 아님) | `not a session problem -> look at the engine side` / `세션 조치 불필요 -> 엔진 쪽을 볼 것` | `holder is an engine daemon` / `쥔 쪽이 엔진 데몬` |
+| 〃 | holder > 0 (readers_most 아님) | `inspect the holding session` / `쥔 세션을 확인할 것` | `a client holds it longest` / `클라이언트가 가장 오래 쥠` |
 | 〃 | holder == -2 | `reduce the entry rate` / `진입 빈도를 줄일 것` | `no writer holds it; contention is by volume` / `writer 없음; 횟수에 의한 경합` |
 | `check` / `확인할 것` | 항상 | `cs_hint(name)` | `""` (한 칸 행) |
 | `not shown` / `화면 밖` | bound == VB_NONE (여기서 표 종료) | `disk vs daemon CPU (needs disk await); SQL text; service impact (SLA)` / `디스크 vs 데몬 CPU 구분(디스크 await 필요); SQL 문장; 서비스 영향(SLA)` | `""` |
@@ -847,7 +850,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
    - `"%s%2d %-23s %s%s%5.0f %6.0f %7.0f %s  %s%s\n"` = 색(심각도 ≥3 → WAIT, ==2 → OWNER, 1 → `""`), n, name(23 초과 시 그대로 넘침), guards 면 `dw_pad(cs_desc, 24)` 와 `" "`(아니면 `""`), occ_pct, wait_pct, wait_s, avg, who, OFF.
    - who 가 `room = scr_cols - (guards ? 82 : 57)` 칸을 넘으면(`scr_cols > 0`) `dw_pad(who, max(room, 0))` 로 자른다.
    - avg: `avg_ms > 0` 이면 `"%7.3f"`, 아니면 `"%7s"` 의 `-`.
-   - who: holder==0 && daemon_name 있음 → `engine %s` / `엔진 %s`; holder != -2 → `tran_text(holder, hcpid, LABEL)` (`holder_of(ix, &hs, &hcpid)`); 그 밖 → occ > 0 이면 `readers` / `reader 다수`, 아니면 `-`.
+   - who: holder != -2 이고 보유가 점유의 절반 미만(`2 * hs < occ[ix]`, §6.7 readers_most 와 같은 기준) → `readers` / `reader 다수`; 아니고 holder==0 && daemon_name 있음 → `engine %s` / `엔진 %s`; holder != -2 → `tran_text(holder, hcpid, LABEL)` (`holder_of(ix, &hs, &hcpid)`); 그 밖 → occ > 0 이면 `readers` / `reader 다수`, 아니면 `-`.
 4. idle > 0 이면 MUTED `   %d others: idle` / `   나머지 %d개: 활동 없음` OFF `\n`.
 5. `print_thread_waits(out, 1)` (§7.6), 그리고 `"\n"`.
 

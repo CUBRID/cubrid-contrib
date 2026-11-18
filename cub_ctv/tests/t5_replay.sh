@@ -3,7 +3,9 @@
 # files) and compare with the stored golden text, byte for byte: snapshot,
 # --trans, --detail, --narrow of the snapshot record; live and live --detail
 # --narrow of the live record (English).  --json output is only parsed, not
-# compared.  No server and no /proc access.  Regenerate goldens with --update.
+# compared.  Also: Korean messages only on a UTF-8 locale (LC_ALL/LC_MESSAGES/
+# LC_CTYPE/LANG), otherwise English with one warning; English output is ASCII
+# only.  No server and no /proc access.  Regenerate goldens with --update.
 set -u
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 TOOL=${CUB_CTV_TOOL:-$HERE/cub_ctv}
@@ -56,4 +58,32 @@ nonfinite "$l" '$1=="B"&&!d{$0="D nan 1.0 sda";d=1}{print}' "D await nan"
 nonfinite "$l" '$1=="B"&&!d{$0="D 1.0 inf sda";d=1}{print}' "D util inf"
 nonfinite "$s" '$1=="G"&&!d{$5="nan";d=1}{print}' "G max_ms nan"
 [ $rc -eq 0 ] && echo "t5 PASS: nan / inf real tokens refused with their line"
+# Korean only on a UTF-8 locale: otherwise English (ASCII only) and one warning
+lbad=0
+locale_case () {                # expect (ko|en), env assignments..., [-- args]
+  local want=$1 out warned; shift
+  local envs=() args=()
+  while [ $# -gt 0 ] && [ "$1" != "--" ]; do envs+=("$1"); shift; done
+  [ "${1:-}" = "--" ] && shift && args=("$@")
+  out=$(env -i PATH="$PATH" TZ=UTC "${envs[@]}" "$TOOL" --replay "$s" "${args[@]}" 2>&1)
+  case "$out" in *"charset is not UTF-8"*) warned=1 ;; *) warned=0 ;; esac
+  if [ "$want" = ko ]; then
+    case "$out" in *"스레드 대기"*) [ $warned = 0 ] && return ;; esac
+  elif ! printf '%s' "$out" | LC_ALL=C grep -q '[^ -~[:space:]]' && [ $warned = 1 ]; then
+    return
+  fi
+  echo "t5 FAIL: locale ${envs[*]} ${args[*]}: expected $want"; rc=1; lbad=1
+}
+locale_case ko LANG=ko_KR.UTF-8
+locale_case ko LANG=ko_KR.utf8
+locale_case ko LANG=en_US.UTF-8 LC_MESSAGES=ko_KR.UTF-8
+locale_case ko LANG=C -- --ko
+locale_case en LANG=ko_KR.eucKR
+locale_case en LANG=ko_KR
+locale_case en LANG=ko_KR.UTF-8 LC_ALL=ko_KR.euckr
+locale_case en LANG=ko_KR.eucKR -- --ko
+for g in "$FIX"/*.golden; do
+  LC_ALL=C grep -q '[^ -~[:space:]]' "$g" && { echo "t5 FAIL: English output not ASCII: $g"; rc=1; lbad=1; }
+done
+[ $lbad -eq 0 ] && echo "t5 PASS: Korean only on UTF-8 locales; English output is ASCII"
 exit $rc

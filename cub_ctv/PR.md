@@ -245,7 +245,7 @@ total / max wait : 214479.0 ms / 502.005 ms
 
 | 경로 | 줄수 | 설명 |
 |---|---|---|
-| `src/cub_ctv.c` | 810 | 인자 처리, 대상 선택, 초기화, 모드 분기 |
+| `src/cub_ctv.c` | 804 | 인자 처리, 대상 선택, 초기화, 모드 분기 |
 | `src/ctv.h` | 818 | 공용 타입·상수·모듈별 프로토타입 |
 | `src/ctv_text.c` `ctv_mem.c` `ctv_field.c` `ctv_sched.c` `ctv_msg.c` | 254 / 294 / 124 / 90 / 93 | 텍스트, 메모리 판독, 필드 상태기계, 재시도 일정, 메시지 |
 | `src/ctv_os.c` `ctv_proc.c` `ctv_elf.c` | 289 / 77 / 271 | procfs, cub_server 찾기, ELF 심볼 조회 (I-13) |
@@ -324,7 +324,7 @@ CUBRID 소스도 헤더도 필요 없다(libc 만). glibc-static 이 없으면 �
       --record FILE    본 화면을 FILE 에 기록
       --replay FILE    기록 재생 (키: space 일시정지, < > 구간 이동, + - 속도, l 한/영, q 종료)
       --dump FILE      디테일 덤프 (JSON, 스냅샷 전용, 재생 불가)
-      --ko / --en      메시지 언어 (기본 LANG)
+      --ko / --en      메시지 언어 (기본 LC_ALL/LC_MESSAGES/LANG; 한국어는 UTF-8 로캘 전용)
   -h, --help           도움말
 ```
 

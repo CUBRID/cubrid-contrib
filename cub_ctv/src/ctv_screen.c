@@ -355,6 +355,7 @@ print_thread_waits (FILE * out, int screen)
   char line[400];
   size_t o = 0;
   int k, waiting = 0, csw = 0;
+  const char *sep = M (", ", " · ");	/* English output stays ASCII */
 
   if (!view.wait_avail)
     {
@@ -374,12 +375,12 @@ print_thread_waits (FILE * out, int screen)
 	  continue;
 	}
       waiting += n;
-      buf_cat (line, sizeof (line), &o, "%s%s %d", o ? " · " : "",
+      buf_cat (line, sizeof (line), &o, "%s%s %d", o ? sep : "",
 	       resume_name (v), n);
     }
   if (csw > 0)
     {
-      buf_cat (line, sizeof (line), &o, "%s%s %d", o ? " · " : "",
+      buf_cat (line, sizeof (line), &o, "%s%s %d", o ? sep : "",
 	       resume_name (9), csw);
       waiting += csw;
     }
@@ -396,22 +397,22 @@ print_thread_waits (FILE * out, int screen)
 	  int col = 3;
 
 	  fprintf (out, "   ");
-	  for (; *p != '\0'; p = *e ? e + strlen (" · ") : e)
+	  for (; *p != '\0'; p = *e ? e + strlen (sep) : e)
 	    {
 	      int w;
 
-	      e = strstr (p, " · ");
+	      e = strstr (p, sep);
 	      e = e != NULL ? e : p + strlen (p);
 	      w = vis_cols (p, (size_t) (e - p));
-	      if (p != line && scr_cols > 0 && col + 3 + w > scr_cols)
+	      if (p != line && scr_cols > 0 && col + str_cols (sep) + w > scr_cols)
 		{
 		  fprintf (out, "\n   ");
 		  col = 3;
 		}
 	      else if (p != line)
 		{
-		  fprintf (out, " · ");
-		  col += 3;
+		  fprintf (out, "%s", sep);
+		  col += str_cols (sep);
 		}
 	      fprintf (out, "%.*s", (int) (e - p), p);
 	      col += w;

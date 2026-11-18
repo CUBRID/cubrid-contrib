@@ -493,6 +493,9 @@ extern THR_GEOM thr_geom;
 extern int thr_keep_image;
 extern const char *tran_refused;
 extern int use_ko;
+extern int ko_ok;
+void lang_init (int argc, char **argv);
+const char *lang_key (void);
 extern unsigned degraded;
 
 typedef struct

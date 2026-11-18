@@ -49,10 +49,10 @@ replay_interactive (const VIEW_HDR * h, int n, double speed)
       loaded = i;
       snprintf (footer, sizeof (footer),
 		M ("REPLAY %d/%d  x%g%s   [space] pause  [<] [>] window  "
-		   "[+] [-] speed  [l] KO/EN  [q] quit",
+		   "[+] [-] speed  %s[q] quit",
 		   "재생 %d/%d  x%g%s   [space] 일시정지  [<] [>] 구간  "
-		   "[+] [-] 속도  [l] 한/영  [q] 종료"), i + 1, n, speed,
-		paused ? M ("  PAUSED", "  일시정지") : "");
+		   "[+] [-] 속도  %s[q] 종료"), i + 1, n, speed,
+		paused ? M ("  PAUSED", "  일시정지") : "", lang_key ());
       live_footer = footer;
       replay_frame_out (h, 1, 0, 0);
       key = key_read (paused ? -1.0 : replay_pace (h) / speed);
@@ -80,7 +80,7 @@ replay_interactive (const VIEW_HDR * h, int n, double speed)
 	  speed = speed > 1.0 / 16 ? speed / 2 : speed;
 	  break;
 	case 'l':
-	  use_ko = !use_ko;	/* the loop redraws this frame */
+	  use_ko = ko_ok && !use_ko;	/* the loop redraws this frame */
 	  break;
 	case KEY_RESIZE:	/* resized: redraw this frame */
 	case KEY_IGNORED:

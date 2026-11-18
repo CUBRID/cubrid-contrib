@@ -240,10 +240,10 @@
 
 | 시점 | 주체 | 동작 |
 |---|---|---|
-| `main` 첫 블록(인자 해석 전) | `cub_ctv.c` `main` | `lang = getenv ("LANG")`; `use_ko = lang != NULL && strncasecmp (lang, "ko", 2) == 0`. **`LANG` 만 본다**(`LC_ALL`·`LC_MESSAGES` 는 보지 않음). 앞 2글자 대소문자 무시 비교이므로 `ko_KR.UTF-8`, `KO`, `kor` 모두 한국어 |
-| 같은 블록, 이어서 | `main` | `argv[1..argc-1]` 을 차례로 보며 정확히 `"--ko"` 면 1, `"--en"` 이면 0 (마지막 것이 이김, 값 위치 인자라도 문자열이 같으면 반영). 인자 오류 메시지가 이미 이 언어로 나오게 하려는 사전 스캔 |
-| `parse_args` | `cub_ctv.c` | `--ko`/`--en` 을 만날 때 같은 값으로 다시 설정(결과 동일) |
-| 실행 중 | 라이브 루프·대화형 재생 | `l` 키가 `use_ko = !use_ko` 로 토글 |
+| `main` 첫 블록(인자 해석 전) | `cub_ctv.c` `main` | `lang_init (argc, argv)`: 언어는 `LC_ALL` → `LC_MESSAGES` → `LANG` 의 앞 2글자(`ko`, 대소문자 무시), 문자셋은 `LC_ALL` → `LC_CTYPE` → `LANG` 의 코드셋. UTF-8 이 아니면(`ko_KR.eucKR`, 코드셋 없는 `ko_KR`) 한국어를 쓰지 않고 영문 + 경고 1줄(06 §2.1) |
+| 같은 함수, 이어서 | `lang_init` | `argv[1..argc-1]` 을 차례로 보며 정확히 `"--ko"` 면 1, `"--en"` 이면 0 (마지막 것이 이김, 값 위치 인자라도 문자열이 같으면 반영). 인자 오류 메시지가 이미 이 언어로 나오게 하려는 사전 스캔 |
+| `parse_args` | `cub_ctv.c` | `--ko` 는 `use_ko = ko_ok`, `--en` 은 0 (결과 동일) |
+| 실행 중 | 라이브 루프·대화형 재생 | `l` 키가 `use_ko = ko_ok && !use_ko` 로 토글(UTF-8 이 아니면 영문 유지) |
 
 **tran_refused 수명**
 

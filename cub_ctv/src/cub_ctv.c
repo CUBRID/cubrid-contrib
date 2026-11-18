@@ -76,7 +76,8 @@ print_usage (void)
 	    "                       l language, q quit\n"
 	    "      --dump FILE      detail dump: everything cub_ctv can read at this\n"
 	    "                       moment, as JSON (snapshot only; not replayable)\n"
-	    "      --ko | --en      message language (default: LANG)\n"
+	    "      --ko | --en      message language (default: LC_ALL, LC_MESSAGES,\n"
+	    "                       LANG); Korean only on a UTF-8 locale\n"
 	    "  -h, --help           show this help\n",
 	    "사용법: cub_ctv [옵션] [<DB명> | <pid>]\n"
 	    "\n"
@@ -110,7 +111,8 @@ print_usage (void)
 	    "                       < > 구간 이동, + - 속도, l 한/영, q 종료\n"
 	    "      --dump FILE      디테일 덤프: 이 순간 cub_ctv 가 읽을 수 있는 정보\n"
 	    "                       전부를 JSON 으로 (스냅샷 전용, 재생 불가)\n"
-	    "      --ko | --en      메시지 언어 (기본: LANG)\n"
+	    "      --ko | --en      메시지 언어 (기본: LC_ALL, LC_MESSAGES, LANG);\n"
+	    "                       한국어는 UTF-8 로캘에서만\n"
 	    "  -h, --help           이 도움말\n"), stdout);
 }
 
@@ -324,7 +326,7 @@ parse_args (int argc, char **argv, OPTS * o)
 	}
       else if (strcmp (argv[i], "--ko") == 0)
 	{
-	  use_ko = 1;
+	  use_ko = ko_ok;
 	}
       else if (strcmp (argv[i], "--en") == 0)
 	{
@@ -665,18 +667,7 @@ main (int argc, char **argv)
   CS_ROW rows[MAX_CS];
   VIEW_HDR h;
 
-  {
-    const char *lang = getenv ("LANG");
-
-    use_ko = lang != NULL && strncasecmp (lang, "ko", 2) == 0;
-    /* --ko / --en anywhere on the line, the last one winning, apply before
-     * any argument error is reported */
-    for (i = 1; i < argc; i++)
-      {
-	use_ko = strcmp (argv[i], "--ko") == 0 ? 1
-	  : strcmp (argv[i], "--en") == 0 ? 0 : use_ko;
-      }
-  }
+  lang_init (argc, argv);	/* before any argument error is reported */
   /* large read buffers: keep THP off so allocations never wait for
    * kernel compaction */
   (void) prctl (PR_SET_THP_DISABLE, 1, 0, 0, 0);

@@ -137,9 +137,14 @@
 
 ### 2.1 언어 사전 스캔 (parse_args 이전)
 
-1. `LANG` 환경변수가 NULL 이 아니고 앞 2글자가 대소문자 무시로 `ko` 이면 `use_ko = 1`, 아니면 0. 코드: `use_ko = lang != NULL && strncasecmp(lang, "ko", 2) == 0` — `ko_KR.UTF-8`, `KO_kr`, `Ko` 모두 한국어.
-2. `argv[1..argc-1]` 을 순서대로 보며 정확히 `--ko` 이면 1, `--en` 이면 0 으로 덮는다(마지막이 이김). 다른 인자의 값 위치에 있어도 문자열이 같으면 반영된다.
-3. 이 결과는 인자 오류 메시지·도움말 언어에 바로 쓰인다.
+`lang_init(argc, argv)` (ctv_msg.c). 메시지는 UTF-8 이라 한국어는 UTF-8 로캘에서만 낸다. 정적 바이너리라 `setlocale`/`nl_langinfo` 대신 환경변수 문자열로 판별한다.
+
+1. 언어 값 = `LC_ALL` → `LC_MESSAGES` → `LANG` 중 처음으로 설정되고 비지 않은 것. 앞 2글자가 대소문자 무시로 `ko` 이면 want = 1 (`ko_KR.UTF-8`, `KO_kr`, `Ko` 모두).
+2. 문자셋 값 = `LC_ALL` → `LC_CTYPE` → `LANG` 중 처음 것. `ko_ok` = 값이 없거나 `C`/`POSIX` 이면 1, 아니면 `.` 뒤가 대소문자 무시로 `utf8`/`utf-8` 로 시작할 때만 1. 코드셋이 없는 로캘(`ko_KR`)은 레거시 문자셋(EUC-KR)이므로 0.
+3. `argv[1..argc-1]` 을 순서대로 보며 정확히 `--ko` 이면 want = 1, `--en` 이면 0 (마지막이 이김, 값 위치 인자라도 문자열이 같으면 반영).
+4. `use_ko = want && ko_ok`. want 인데 `ko_ok == 0` 이면 경고 1줄 `charset is not UTF-8: messages in English (Korean needs a UTF-8 locale)`.
+5. 이 결과는 인자 오류 메시지·도움말 언어에 바로 쓰인다. `parse_args` 의 `--ko` 는 `use_ko = ko_ok`.
+6. `ko_ok == 0` 이면 `[l]` 키는 영문을 유지하고(`use_ko = ko_ok && !use_ko`), 하단 안내에서 `[l] KO/EN` 을 뺀다(`lang_key()` = `ko_ok ? M("[l] KO/EN  ", "[l] 한/영  ") : ""`).
 4. 이어 `prctl(PR_SET_THP_DISABLE, 1, 0, 0, 0)` (결과 무시) 후 `parse_args`.
 
 ### 2.2 옵션 표
@@ -165,7 +170,7 @@
 | `--replay-speed N` | `o->replay_speed` | 실수(`opt_num`) | 숨은 옵션(도움말에 없음) |
 | `--interval SEC` | `o->interval` | 실수(`opt_num`) | |
 | `--hz N` | `o->hz` | 정수(`opt_int`) | |
-| `--ko` | `use_ko = 1` | — | |
+| `--ko` | `use_ko = ko_ok` | — | UTF-8 로캘이 아니면 영문 유지(§2.1) |
 | `--en` | `use_ko = 0` | — | |
 | `-` 로 시작하지 않는 단어 | 단어 배열에 보관(최대 2개) | — | §2.4 |
 | 그 밖의 `-…` | die `unknown option: %s (see --help)` / `알 수 없는 옵션: %s (--help 참고)` | — | `-`, `--` 단독도 여기 |
@@ -253,7 +258,8 @@ usage: cub_ctv [options] [<db-name> | <pid>]
                        l language, q quit
       --dump FILE      detail dump: everything cub_ctv can read at this
                        moment, as JSON (snapshot only; not replayable)
-      --ko | --en      message language (default: LANG)
+      --ko | --en      message language (default: LC_ALL, LC_MESSAGES,
+                       LANG); Korean only on a UTF-8 locale
   -h, --help           show this help
 ```
 
@@ -292,7 +298,8 @@ usage: cub_ctv [options] [<db-name> | <pid>]
                        < > 구간 이동, + - 속도, l 한/영, q 종료
       --dump FILE      디테일 덤프: 이 순간 cub_ctv 가 읽을 수 있는 정보
                        전부를 JSON 으로 (스냅샷 전용, 재생 불가)
-      --ko | --en      메시지 언어 (기본: LANG)
+      --ko | --en      메시지 언어 (기본: LC_ALL, LC_MESSAGES, LANG);
+                       한국어는 UTF-8 로캘에서만
   -h, --help           이 도움말
 ```
 
@@ -844,7 +851,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 
 1. 코드 순서 `{17, 3, 21, 7, 9, 11, 19, 13, 15, 23, 25, 26, 5}` 로 `n = wait_cnt[v]` 를 본다. 0 은 건너뜀.
 2. `7 <= v <= 12` 이면 `csw += n` (CS 대기는 한 항목으로).
-3. 그 밖은 `waiting += n`, 줄에 `"%s%s %d"` (앞에 내용이 있으면 ` · ` (U+00B7 앞뒤 공백), `resume_name(v)`, n).
+3. 그 밖은 `waiting += n`, 줄에 `"%s%s %d"` (앞에 내용이 있으면 구분자 sep, `resume_name(v)`, n). sep = 영문 `", "`, 한글 ` · ` (U+00B7 앞뒤 공백) — 영문 출력은 ASCII 만 쓴다.
 4. `csw > 0` 이면 마지막에 `resume_name(9)` 항목으로 추가, `waiting += csw`.
 5. 목록에 없는 코드(예: 1, 8, 10, 12, 27)는 세지 않는다.
 
@@ -869,7 +876,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 
 | screen | 형식 |
 |---|---|
-| 1 (요약 화면) | `"\n"` HEAD `[thread waits]  %d live threads, %d waiting` / `[스레드 대기]  실스레드 %d개, 대기 중 %d개` OFF `"\n"`; `waiting > 0` 이면 `"   "` 뒤에 줄을 ` · ` 로 나눈 항목을 차례로: 둘째 항목부터 `col + 3 + vis_cols(항목) > scr_cols`(`scr_cols > 0`) 이면 `"\n   "`(col = 3), 아니면 `" · "`. 항목 안에서는 끊지 않는다. 끝에 `"\n"` |
+| 1 (요약 화면) | `"\n"` HEAD `[thread waits]  %d live threads, %d waiting` / `[스레드 대기]  실스레드 %d개, 대기 중 %d개` OFF `"\n"`; `waiting > 0` 이면 `"   "` 뒤에 줄을 sep 로 나눈 항목을 차례로: 둘째 항목부터 `col + str_cols(sep) + vis_cols(항목) > scr_cols`(`scr_cols > 0`) 이면 `"\n   "`(col = 3), 아니면 sep. 항목 안에서는 끊지 않는다. 끝에 `"\n"` |
 | 0 (스냅샷) | MUTED `thread waits: %d live, %d waiting%s%s` / `스레드 대기: 실스레드 %d개, 대기 중 %d개%s%s` (wait_live, waiting, waiting 이면 `" - "` 와 줄) OFF `"\n"` |
 
 ### 7.7 세션 패널 (`print_sessions(panel_rows)`)
@@ -979,7 +986,7 @@ layout: stride=160B count=18 stats_off=152 (runtime-probed)  threads=4314
 ix  name                      state        waitR waitW  tran     nenter ...
 ...
 17  ACCESS_STATUS            none             0     0     -      12945 ...
-thread waits: 138 live, 5 waiting - page latch 1 · critical section 4
+thread waits: 138 live, 5 waiting - page latch 1, critical section 4
 
 transactions (from memory, no SQL connection):
 ```

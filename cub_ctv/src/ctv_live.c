@@ -101,20 +101,20 @@ live_footer_text (char *footer, size_t n, const char *record,
       /* a --record file is the user's: [r] does not touch it */
       snprintf (f, sizeof (f), "%s", record);
       text_sanitize (f);
-      snprintf (footer, n, M ("REC %s (--record)   [l] KO/EN  [q] quit",
-			      "녹화 중 %s (--record)   [l] 한/영  [q] 종료"), f);
+      snprintf (footer, n, M ("REC %s (--record)   %s[q] quit",
+			      "녹화 중 %s (--record)   %s[q] 종료"), f, lang_key ());
     }
   else if (view_record_active ())
     {
       snprintf (footer, n,
-		M ("REC %s   [r] stop recording  [l] KO/EN  [q] quit",
-		   "녹화 중 %s   [r] 녹화 중지  [l] 한/영  [q] 종료"), recname);
+		M ("REC %s   [r] stop recording  %s[q] quit",
+		   "녹화 중 %s   [r] 녹화 중지  %s[q] 종료"), recname, lang_key ());
     }
   else
     {
-      snprintf (footer, n, "%s%s",
-		M ("[r] record to <pid>_<db>_<time>.ctv  [l] KO/EN  [q] quit",
-		   "[r] 녹화 (<pid>_<db>_<시각>.ctv)  [l] 한/영  [q] 종료"),
+      snprintf (footer, n, "%s%s%s%s",
+		M ("[r] record to <pid>_<db>_<time>.ctv  ", "[r] 녹화 (<pid>_<db>_<시각>.ctv)  "),
+		lang_key (), M ("[q] quit", "[q] 종료"),
 		rec_fail ? M ("   (record file could not be written)",
 			      "   (기록 파일 쓰기 실패)") : "");
     }
@@ -292,7 +292,7 @@ run_keys (LIVE_RUN * r, double tick_end)
 	{
 	  /* language toggle: the full screen redraws the last frame;
 	   * scrolling output takes it from the next window */
-	  use_ko = !use_ko;
+	  use_ko = ko_ok && !use_ko;
 	  live_footer_text (r->footer, sizeof (r->footer), r->record, r->recname, 0);
 	  if (r->have_frame && r->screen)
 	    {

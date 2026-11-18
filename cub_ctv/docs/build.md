@@ -17,7 +17,7 @@
 
 | 스크립트 | 내용 | 서버 |
 |---|---|---|
-| `tests/t5_replay.sh` | 기록 픽스처(`*.rec`)를 보기 6종으로 재생 == 골든(바이트), JSON 유효성 | 불필요 |
+| `tests/t5_replay.sh` | 기록 픽스처(`*.rec`)를 보기 6종으로 재생 == 골든(바이트), JSON 유효성, 한국어는 UTF-8 로캘에서만(그 밖은 ASCII 영문 + 경고) | 불필요 |
 | `tests/t6_view_roundtrip.sh` | 대기 체인·특수문자 이름·풀을 주입한 프레임 기록→재생 동일 (`ld --wrap`) | 불필요 |
 | `tests/t11_ident_delta.sh` | 신원 변화분 기록(`K`/`X`) 재생 = 전체 기록 재생, 구간 이동 신원 = 순차 | 불필요 |
 | `tests/t12_field_sched.sh` | FIELD·SCHED 규칙 단위 시험 | 불필요 |

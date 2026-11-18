@@ -65,7 +65,7 @@ cub_ctv demodb -i --record f.rec         # 보면서 기록 (스냅샷이면 1�
 cub_ctv --replay f.rec                   # 어디서든 다시 보기; 터미널이면 space/←→/+-/q 로 조작
 cub_ctv --replay f.rec --detail LOG      # 보기 옵션은 기록 때와 달라도 됨
 cub_ctv demodb --dump f.json             # 디테일 덤프: 이 순간 읽을 수 있는 정보 전부 (재생 불가)
-cub_ctv demodb --ko | --en               # 메시지 언어 (기본: LANG 자동)
+cub_ctv demodb --ko | --en               # 메시지 언어 (기본: LC_ALL/LC_MESSAGES/LANG 자동, 한국어는 UTF-8 로캘 전용)
 cub_ctv --help                           # 옵션 도움말
 tests/t9_quick_trace.sh demodb           # 이 서버에서 추적이 되는지 15초 확인 (부하+화면+판정)
 ```
@@ -140,7 +140,7 @@ ix  name                      state     waitR waitW  tran   nenter   nwait  reen
 행+블록이 터미널 폭을 넘으면 블록을 들여쓴 연속행(`| owner`, `| wq`)으로 내린다(파이프 출력은 `--narrow`가
 아니면 한 줄). `[system log-flush thr=T]`처럼 시스템 트랜잭션은 OS 스레드 이름(`log-flush`, `pgbuf-page-flus`, `vacuum` …)과 함께 나온다.
 
-표 헤더·상태 토큰은 정렬을 위해 항상 영문(식별자), 안내·오류 메시지만 `--ko`/LANG에 따라 한글.
+표 헤더·상태 토큰은 정렬을 위해 항상 영문(식별자), 안내·오류 메시지만 `--ko`/LANG에 따라 한글. 한국어는 UTF-8 로캘 전용이고, EUC-KR 등 UTF-8 이 아닌 로캘에서는 영문(ASCII)만 낸다.
 
 ### 4.2 라이브 (`-i`)
 
@@ -270,7 +270,7 @@ MVCC 이전 버전을 읽는 경우는 LOG 를 reader 로 지난다).
 |---|---|---|
 | `tests/t2_show_compare.py` | `SHOW CRITICAL SECTIONS` 전·후 값 사이에 들어오는지 비교 + 자기영향 0 검증 (설치 경로는 서버 실행 파일에서 찾음; `CUB=`·`CUB_CTV_TOOL=` 로 지정 가능) | 필요 |
 | `tests/t4_trans_check.sh` | 해제 슬롯(trid −1) 미표시, 접속 중 csql 클라이언트가 양성 trid 로 표시되고 `cubrid tranlist` 에도 있음 (접속 불가 시 SKIP) | 필요 |
-| `tests/t5_replay.sh` | `tests/fixtures/*.rec`(실기록) 를 보기 6종으로 재생 → 골든 출력과 바이트 비교 + JSON 유효성 | **불필요** |
+| `tests/t5_replay.sh` | `tests/fixtures/*.rec`(실기록) 를 보기 6종으로 재생 → 골든 출력과 바이트 비교 + JSON 유효성 + 로캘별 언어(EUC-KR 등은 ASCII 영문) | **불필요** |
 | `tests/t6_view_roundtrip.sh` | 대기 체인·특수문자 이름·풀을 주입한 프레임을 기록→재생, 두 출력 동일 | **불필요** |
 | `tests/t11_ident_delta.sh` | 신원 키프레임·변화분(`K`/`I`/`X`) 기록이 전체 신원 기록과 같은 트랜잭션 표로 재생, 역방향·무작위 구간 이동의 신원이 순차 판독과 일치 | **불필요** |
 | `tests/t12_field_sched.sh` | 프로브 필드 상태기계(잠금·집계·기각·재기회)와 재시도 일정(빠른/느린/앞당김/재시작) 규칙 | **불필요** |

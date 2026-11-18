@@ -613,7 +613,7 @@ SET/WEAK --field_reject(fields_drop)-------------> NONE (+ off 를 기각 목록
 3. `has_id` 이면: `thr_probe_resume(img)`; `thr_publish()`; `thr_probe_status(img)`; `thr_publish()`. (resume/status 는 실스레드 판별에 m_id 표가 필요.)
 4. `thr_probe_next(img)`; `thr_publish()`.
 5. `thr_keep_image` 면 기존 `thr_kept` 해제 후 `thr_kept = img`, 아니면 해제.
-6. `sched_start(&reprobe, time(NULL))`; `thr_publish()`.
+6. `sched_start(&reprobe, (time_t) mono_s())`; `thr_publish()`.
 
 ### 14.2 SCHED (ctv_sched.c)
 
@@ -642,7 +642,7 @@ SET/WEAK --field_reject(fields_drop)-------------> NONE (+ off 를 기각 목록
 
 ### 14.3 `void thr_cache_refresh(void)` (샘플러·프레임 구성에서 호출)
 
-1. `now = time(NULL)`. `base == 0` 또는 `!every(&thr_ids_at, now, 1.0)` → 반환(초당 1회; `thr_ids_load` 도 `thr_ids_at` 을 갱신).
+1. `now = (time_t) mono_s()` (단조 초). `base == 0` 또는 `!every(&thr_ids_at, now, 1.0)` → 반환(초당 1회; `thr_ids_load` 도 `thr_ids_at` 을 갱신).
 2. `ntask = os_task_list(target_pid, &tasks)`; `ntask < 0` → 반환.
 3. `waits_settled = (f_resume.state == SET) ∧ (f_status.state != NONE)`.
 4. `settled = waits_settled ∧ ((f_tran.state ∧ f_id.state ∧ f_tid.state 모두 비NONE) ∨ sched_slow(&reprobe))` — 구조 필드(I-15~I-17)는 빠른 회차 동안만 재시도.
@@ -677,7 +677,7 @@ SET/WEAK --field_reject(fields_drop)-------------> NONE (+ off 를 기각 목록
 
 1. `thr_ids` 없으면 calloc(count)(실패 −1).
 2. `img != NULL` → `thr_ids[k] = rd_u64(img, k*stride + off_id)`; `img == NULL` → `thr_gather_field(0, off_id, 8, thr_ids, NULL)`(못 읽은 칸 0).
-3. `thr_sorted_rebuild()`; `thr_ids_at = time(NULL)`; 0 반환.
+3. `thr_sorted_rebuild()`; `thr_ids_at = mono_s()`; 0 반환.
 
 ### 15.3 `static void thr_sorted_rebuild(void)`
 

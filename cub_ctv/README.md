@@ -283,6 +283,7 @@ MVCC 이전 버전을 읽는 경우는 LOG 를 reader 로 지난다).
 | `tests/t18_demote_holder.sh` | HA 로그 플러시처럼 owner 가 LOG 를 reader 로 강등해 쥔 구간이 그 스레드의 보유로 세어짐(보유 표본·판정의 데몬 보유·소유자 필드), owner 없는 일반 reader 는 보유자 아님 | **불필요** |
 | `tests/t19_readers_most.sh` | reader 가 94% 점유한 CS 에서 1% 잡힌 writer 세션은 근거로만 보이고(`reader 다수`, 세션 조치 없음), 점유의 대부분을 쓴 세션은 그대로 지목됨 — 판정과 재생한 요약 화면에서 확인 | **불필요** |
 | `tests/t20_utf8_ranges.sh` | 외부 문자열의 overlong·서로게이트·U+10FFFF 초과 시퀀스가 깨진 UTF-8 로 정화(`?`)·JSON 이스케이프되고 경계 안쪽 값은 유지, JSON 출력이 유효 | **불필요** |
+| `tests/t21_clock_use.sh` | 간격·주기·재시도 일정은 단조 시계, 벽시계는 화면·기록 시각(`view.ts`, 녹화 파일명)에만 쓰는지 소스 검사 | **불필요** |
 | `tests/t7_record_equiv.sh` | 실서버에서 라이브 출력 = 그 기록의 재생 출력(파이프 출력, 스냅샷·라이브), 디테일 덤프 JSON 검증과 재생 거부 | 필요 |
 | `tests/t8_replay_keys.py` | 가짜 터미널에서 재생 키(일시정지·구간 이동·속도·종료), 요약 화면 세션 강조, 색상·`--plain`·파이프 무이스케이프 | **불필요** |
 | `tests/t10_os_probe.sh` | `--dump` 의 OS tid 가 모두 `/proc/<pid>/task` 의 서로 다른 tid 이고 개수가 스레드 수 −1 의 ±8 이내, 이름 일치(I-17), 대기 사유 코드 범위·스냅샷 줄(I-18) | 필요 |

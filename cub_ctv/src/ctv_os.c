@@ -127,7 +127,7 @@ os_task_comm (int pid, int tid, char *out, size_t n)
   } cache[COMM_CACHE];
   char path[80], buf[64];
   size_t len;
-  time_t now = time (NULL);
+  time_t now = (time_t) mono_s ();
   unsigned h = (unsigned) tid % COMM_CACHE;
 
   if (cache[h].tid == tid && now - cache[h].at < COMM_TTL)

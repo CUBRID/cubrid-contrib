@@ -476,7 +476,7 @@ k=0..5, `o = off + k × stride`: `VALID_PTR(u64@o)` 이고, SSO 면 추가로 `u
 1. `cid_stride != 0` → 0 (이미 잠김).
 2. `ntran ≤ 0` → -1.
 3. `budget ≤ 0 ∨ budget > ntran` 이면 `budget = ntran`.
-4. `last_try = time(NULL)` (전수·지연 모두 시도로 계산).
+4. `last_try = mono_s()` (단조 초; 전수·지연 모두 시도로 계산).
 5. `rep_cache_reset()`.
 6. `tdes_ptrs_load()` (결과 무시).
 7. **trid 경로** — `has_trid ∧ ptrs_n == ntran` 인 경우:
@@ -529,7 +529,7 @@ trid 경로 요점:
 
 ### 7.4 `tran_geom_refresh()` (공개) — 표시 주기마다 호출
 
-조건 `all_tdes != 0 ∧ cid_stride == 0 ∧ every(&last_try, time(NULL), 1.0)` 이 모두 참이면 `tran_lock_clientids(ntran, LAZY_LOCK_BUDGET=16)`. 즉 잠기기 전까지 **초당 최대 1회** 재시도(`last_try` 는 초기화의 전수 스캔 시각부터 이어짐). trid 경로에서는 새 트랜잭션이 없으면 비용이 포인터 배열 판독 1회 + trid gather 1회다.
+조건 `all_tdes != 0 ∧ cid_stride == 0 ∧ every(&last_try, mono_s(), 1.0)` 이 모두 참이면 `tran_lock_clientids(ntran, LAZY_LOCK_BUDGET=16)`. 즉 잠기기 전까지 **초당 최대 1회** 재시도(`last_try` 는 초기화의 전수 스캔 시각부터 이어짐). trid 경로에서는 새 트랜잭션이 없으면 비용이 포인터 배열 판독 1회 + trid gather 1회다.
 
 ---
 

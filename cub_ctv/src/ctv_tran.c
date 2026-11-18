@@ -629,7 +629,7 @@ tran_lock_clientids (int ntran, int budget)
     {
       budget = ntran;
     }
-  last_try = (double) time (NULL);	/* a full or lazy scan both count */
+  last_try = mono_s ();		/* a full or lazy scan both count */
   rep_cache_reset ();		/* string decodes of an earlier window are stale */
   (void) tdes_ptrs_load ();
   if (tran_geom.has_trid && ptrs_n == ntran)
@@ -703,12 +703,12 @@ tran_lock_clientids (int ntran, int budget)
 void
 tran_geom_refresh (void)
 {
-  time_t now = time (NULL);
+  double now = mono_s ();
 
   /* no client yet: once a second; with trid, only new transactions are
    * scanned, so a waiting run costs two small reads */
   if (tran_geom.all_tdes != 0 && tran_geom.cid_stride == 0
-      && every (&last_try, (double) now, 1.0))
+      && every (&last_try, now, 1.0))
     {
       (void) tran_lock_clientids (tran_geom.ntran, LAZY_LOCK_BUDGET);
     }

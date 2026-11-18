@@ -706,7 +706,7 @@ Linux 사실:
 
 ### 5.1 정의
 
-비용 큰 작업(재탐침 등)의 재시도 시각 계산. 시간 단위는 `time_t` 초(호출자가 `time (NULL)` 등으로 공급). 모듈 정적 상태 없음.
+비용 큰 작업(재탐침 등)의 재시도 시각 계산. 시간 단위는 `time_t` 초(호출자가 단조 초 `(time_t) mono_s ()` 를 공급, 00 '시계'). 모듈 정적 상태 없음.
 
 간격 수열:
 
@@ -815,7 +815,7 @@ procfs 의 작은 파일은 한 번의 read 로 전체가 반환된다는 전제
 
 엔진이 OS 스레드에 붙인 이름(예: `"pgbuf-page-flus"`). Linux 사실: `/proc/<pid>/task/<tid>/comm` 은 최대 15자 + `'\n'` (`TASK_COMM_LEN` 16).
 
-1. `now = time (NULL)`, `h = (unsigned) tid % 256`.
+1. `now = (time_t) mono_s ()` (단조 초), `h = (unsigned) tid % 256`.
 2. `cache[h].tid == tid` 이고 `now - cache[h].at < 5` 이면 `snprintf (out, n, "%s", cache[h].comm)` (`n − 1` 바이트에서 절단, NUL 종료), 0 반환.
 3. `/proc/%d/task/%d/comm` (경로 버퍼 80)을 `read_small` (버퍼 64). 실패 시 `out[0] = '\0'`, −1 (캐시 불변).
 4. `len = strcspn (buf, "\n")` (첫 `'\n'` 앞까지; `'\n'` 이 없으면 읽은 내용 전체 = 최대 63바이트), `len >= n` 이면 `len = n − 1`. `memcpy (out, buf, len)`, `out[len] = '\0'`.

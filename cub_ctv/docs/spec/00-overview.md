@@ -65,6 +65,7 @@
 | 항목 | 규약 |
 |---|---|
 | 언어 | 모든 사용자 메시지는 `M("영문", "한글")` 쌍. 선택은 `LC_ALL` → `LC_MESSAGES` → `LANG` 의 앞 2글자가 대소문자 무시로 `ko` 이면 한글, `--ko`/`--en` 이 우선(명령줄 어디에 있든, 마지막 것). 메시지는 UTF-8 이므로 한글은 UTF-8 로캘에서만: 문자셋(`LC_ALL` → `LC_CTYPE` → `LANG` 의 코드셋)이 UTF-8 이 아니면 영문(경고 1줄). 영문 출력은 ASCII 만 쓴다. 표 헤더·상태 토큰은 정렬을 위해 항상 영문 |
+| 시계 | 간격·주기·재시도 일정은 단조 시계(`mono_s()`, `CLOCK_MONOTONIC`)로 잰다: 벽시계가 바뀌어도(NTP step, `date -s`, VM 복원) 갱신이 멈추거나 몰리지 않는다. 벽시계(`time(NULL)`)는 화면·기록에 찍는 시각(`view.ts`, 녹화 파일명)에만 쓴다 |
 | 외부 문자열 | 대상 메모리·procfs·경로·DB 이름에서 온 문자열은 출력 전 정화(`text_sanitize`: 제어 문자·깨진 UTF-8 을 `?`) |
 | 폭 | 터미널 열 폭은 UTF-8 코드 포인트 단위(동아시아 전각·이모지 2열, 그 밖 1열) |
 | 오류 | `die()` 는 대체 화면을 먼저 복구하고 stderr 에 `cub_ctv: ` 접두로 출력, 종료 1 |
@@ -92,6 +93,7 @@
 | `tests/t18_demote_holder.sh` | 강등된 owner 의 보유 집계(HA 로그 플러시) | 불필요 |
 | `tests/t19_readers_most.sh` | 보유가 점유의 절반 미만이면 보유자 미지목(reader 다수) | 불필요 |
 | `tests/t20_utf8_ranges.sh` | UTF-8 둘째 바이트 범위(RFC 3629), 정화·JSON 유효 | 불필요 |
+| `tests/t21_clock_use.sh` | 시계 사용 규약(00 '시계') 소스 검사 | 불필요 |
 | `tests/t2_show_compare.py` | 엔진 `SHOW CRITICAL SECTIONS` 값이 전후 판독 사이 + 자기영향 0 | 필요 |
 | `tests/t4_trans_check.sh` | 트랜잭션 표 == `cubrid tranlist` | 필요 |
 | `tests/t7_record_equiv.sh` | 라이브 화면 == 그 기록의 재생 | 필요 |

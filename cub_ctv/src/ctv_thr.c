@@ -220,7 +220,7 @@ thr_ids_load (const unsigned char *img)
       (void) thr_gather_field (0, thr_geom.off_id, 8, thr_ids, NULL);
     }
   thr_sorted_rebuild ();
-  thr_ids_at = (double) time (NULL);
+  thr_ids_at = mono_s ();
   return 0;
 }
 
@@ -714,7 +714,7 @@ thr_probe (uint64_t manager_sym, int pid)
       }
   }
   /* the probe image was just read: the first re-probe waits the back-off */
-  sched_start (&reprobe, time (NULL));
+  sched_start (&reprobe, (time_t) mono_s ());
   thr_publish ();
 }
 
@@ -734,7 +734,7 @@ thr_tables_reload (void)
 void
 thr_cache_refresh (void)
 {
-  time_t now = time (NULL);
+  time_t now = (time_t) mono_s ();	/* steps of the wall clock do not stall it */
   int *tasks = NULL, ntask, settled, waits_settled;
   unsigned char *img;
 

@@ -43,10 +43,12 @@
 static void
 print_usage (void)
 {
-  fputs (M ("usage: cub_ctv [options] [<db-name> | <pid>]\n"
+  fputs (M ("usage: cub_ctv [options] [<db-name> | <pid> | --pid N]\n"
 	    "\n"
 	    "  (no arguments)       this help\n"
 	    "  -l, --list           list running cub_server processes (pid, db)\n"
+	    "      --pid N          the cub_server of pid N only (a bare target is\n"
+	    "                       a db name first, else a pid)\n"
 	    "  -i, --interactive    live mode: sample at --hz, print every --interval\n"
 	    "                       (full screen on a tty, scrolling on a pipe);\n"
 	    "                       [r] starts/stops a record <pid>_<db>_<time>.ctv,\n"
@@ -79,10 +81,12 @@ print_usage (void)
 	    "      --ko | --en      message language (default: LC_ALL, LC_MESSAGES,\n"
 	    "                       LANG); Korean only on a UTF-8 locale\n"
 	    "  -h, --help           show this help\n",
-	    "사용법: cub_ctv [옵션] [<DB명> | <pid>]\n"
+	    "사용법: cub_ctv [옵션] [<DB명> | <pid> | --pid N]\n"
 	    "\n"
 	    "  (인자 없음)          이 도움말\n"
 	    "  -l, --list           실행 중인 cub_server 목록 (pid, db)\n"
+	    "      --pid N          pid N 의 cub_server 만 (그냥 준 대상은 DB 이름\n"
+	    "                       우선, 없으면 pid)\n"
 	    "  -i, --interactive    라이브 모드: --hz 로 샘플링, --interval 마다 출력\n"
 	    "                       (터미널이면 전체 화면, 파이프면 스크롤);\n"
 	    "                       [r] 로 <pid>_<db>_<시각>.ctv 녹화 시작/중지,\n"
@@ -259,7 +263,7 @@ same_file (const char *a, const char *b)
 static void
 parse_args (int argc, char **argv, OPTS * o)
 {
-  int i, help = 0, nword = 0;
+  int i, help = 0, nword = 0, pid_opt = 0;
   const char *word[2];
 
   memset (o, 0, sizeof (*o));
@@ -320,7 +324,8 @@ parse_args (int argc, char **argv, OPTS * o)
 	       || opt_str (argc, argv, &i, "--record", &o->record)
 	       || opt_num (argc, argv, &i, "--replay-speed", &o->replay_speed)
 	       || opt_num (argc, argv, &i, "--interval", &o->interval)
-	       || opt_int (argc, argv, &i, "--hz", &o->hz))
+	       || opt_int (argc, argv, &i, "--hz", &o->hz)
+	       || opt_int (argc, argv, &i, "--pid", &o->pid))
 	{
 	  ;
 	}
@@ -347,12 +352,21 @@ parse_args (int argc, char **argv, OPTS * o)
 	       "알 수 없는 옵션: %s (--help 참고)", argv[i]);
 	}
     }
+  for (i = 1; i < argc; i++)
+    {
+      pid_opt |= strcmp (argv[i], "--pid") == 0;
+    }
+  if (pid_opt && o->pid <= 0)
+    {
+      die ("--pid needs a positive pid", "--pid 에는 양수 pid 가 필요합니다", NULL);
+    }
   /* bare words by position: the target, then the --detail filter;
-   * --replay has no target, so there the first word is the filter */
+   * --replay has no target and --pid names it, so there the first word is
+   * the filter */
   {
     int w = 0;
 
-    if (o->replay == NULL && w < nword)
+    if (o->replay == NULL && o->pid == 0 && w < nword)
       {
 	o->target = word[w++];
       }
@@ -370,7 +384,7 @@ parse_args (int argc, char **argv, OPTS * o)
   }
   /* no arguments (or only --ko/--en) or -h: the help.  Options without a
    * target are a mistake (a forgotten or empty operand), not a request */
-  if (o->target == NULL && !o->list && o->replay == NULL && !help)
+  if (o->target == NULL && o->pid == 0 && !o->list && o->replay == NULL && !help)
     {
       int k, only_lang = 1;
 
@@ -412,52 +426,88 @@ parse_args (int argc, char **argv, OPTS * o)
 	   "--dump 와 --record 가 같은 파일입니다: %s", o->dump);
     }
   if (o->replay != NULL
-      && (o->live || o->dump != NULL || o->record != NULL))
+      && (o->live || o->dump != NULL || o->record != NULL || o->pid != 0))
     {
-      die ("--replay cannot be combined with -i/--interactive, --dump or --record",
-	   "--replay는 -i/--interactive/--dump/--record와 함께 쓸 수 없습니다", NULL);
+      die ("--replay cannot be combined with -i/--interactive, --dump, --record or --pid",
+	   "--replay는 -i/--interactive/--dump/--record/--pid와 함께 쓸 수 없습니다", NULL);
     }
 }
 
-/* target is a whole pid number or an exact db name */
+/* the server named by --pid (by pid only), or by the target: a db name
+ * first (one server, or refused with the --pid of each when several serve
+ * it), and a whole number that names no db as a pid */
 static int
-resolve_target (const char *target, const SERVER * sv, int n, int *pid,
+resolve_target (const OPTS * o, const SERVER * sv, int n, int *pid,
 		const char **db)
 {
-  int found = server_match (target, sv, n), dup = 0, i;
-  long want = pid_of_target (target);
+  static SERVER one;		/* a pid past the listed servers (a busy host) */
+  long want = o->pid > 0 ? o->pid : pid_of_target (o->target);
+  const SERVER *by_db = NULL, *other = NULL;
+  int ndb = 0, i;
+  char safe[256];
 
-  /* a db name served by several servers: the first wins, a pid selects */
-  for (i = found + 1; found >= 0 && want == 0 && i < n; i++)
+  for (i = 0; i < n && o->pid == 0; i++)
     {
-      dup += strcmp (sv[i].db, target) == 0;
-    }
-  if (found < 0)
-    {
-      /* a pid past the listed servers (a very busy host) */
-      static SERVER one;
-
-      if (want > 0 && server_by_pid ((int) want, &one) == 0)
+      if (strcmp (sv[i].db, o->target) == 0)
 	{
-	  *pid = one.pid;
-	  *db = one.db;
+	  by_db = by_db == NULL ? &sv[i] : by_db;
+	  ndb++;
+	}
+    }
+  if (ndb > 0)
+    {
+      snprintf (safe, sizeof (safe), "%s", o->target);
+      text_sanitize (safe);
+    }
+  if (ndb > 1)
+    {
+      warnf ("db '%s' is served by %d cub_server processes; choose one with --pid:",
+	     "DB '%s' 를 쓰는 cub_server 가 %d개입니다; --pid 로 고르십시오:",
+	     safe, ndb);
+      for (i = 0; i < n; i++)
+	{
+	  if (strcmp (sv[i].db, o->target) == 0)
+	    {
+	      fprintf (stderr, "  cub_ctv --pid %d\n", sv[i].pid);
+	    }
+	}
+      exit (1);
+    }
+  if (ndb == 1)
+    {
+      /* a numeric db name that is also another server's pid: the name wins */
+      for (i = 0; i < n && want > 0; i++)
+	{
+	  other = sv[i].pid == want && &sv[i] != by_db ? &sv[i] : other;
+	}
+      if (other != NULL)
+	{
+	  warnf ("'%s' is a db name and the pid of another cub_server: using db %s"
+		 " (pid %d); for pid %d use --pid %d",
+		 "'%s' 는 DB 이름이자 다른 cub_server 의 pid: DB %s (pid %d) 를"
+		 " 봅니다; pid %d 는 --pid %d", safe, safe, by_db->pid,
+		 other->pid, other->pid);
+	}
+      *pid = by_db->pid;
+      *db = by_db->db;
+      return 0;
+    }
+  for (i = 0; i < n && want > 0; i++)
+    {
+      if (sv[i].pid == want)
+	{
+	  *pid = sv[i].pid;
+	  *db = sv[i].db;
 	  return 0;
 	}
-      return -1;
     }
-  if (dup > 0)
+  if (want > 0 && server_by_pid ((int) want, &one) == 0)
     {
-      char safe[256];
-
-      snprintf (safe, sizeof (safe), "%s", target);
-      text_sanitize (safe);
-      warnf ("'%s': %d servers; using pid %d (give a pid to choose)",
-	     "'%s' 서버가 %d개 있어 pid %d 를 사용합니다 (선택하려면 pid 지정)",
-	     safe, dup + 1, sv[found].pid);
+      *pid = one.pid;
+      *db = one.db;
+      return 0;
     }
-  *pid = sv[found].pid;
-  *db = sv[found].db;
-  return 0;
+  return -1;
 }
 
 /* mapped library path, load bias and the symbols we need */
@@ -685,7 +735,7 @@ main (int argc, char **argv)
       warn ("more cub_server processes than can be listed: give a pid if yours is missing",
 	    "cub_server 프로세스가 목록 한도를 넘음: 없으면 pid 로 지정하십시오");
     }
-  if (o.list || o.target == NULL)
+  if (o.list || (o.target == NULL && o.pid == 0))
     {
       if (nserv == 0)
 	{
@@ -700,8 +750,16 @@ main (int argc, char **argv)
 	}
       return 0;
     }
-  if (resolve_target (o.target, servers, nserv, &pid, &db) != 0)
+  if (resolve_target (&o, servers, nserv, &pid, &db) != 0)
     {
+      if (o.pid > 0)
+	{
+	  char num[24];
+
+	  snprintf (num, sizeof (num), "%d", o.pid);
+	  die ("pid %s is not a cub_server process",
+	       "pid %s 는 cub_server 프로세스가 아닙니다", num);
+	}
       if (o.detail_filter != NULL
 	  && server_match (o.detail_filter, servers, nserv) >= 0)
 	{

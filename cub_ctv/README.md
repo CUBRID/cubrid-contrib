@@ -52,6 +52,7 @@
 ```bash
 cub_ctv -l                               # 실행 중인 cub_server 목록 (인자 없이 실행하면 도움말)
 cub_ctv demodb                           # 스냅샷: CS 표 + 트랜잭션 표 + RWLOCK/RMUTEX/MUTEX 풀 집계
+cub_ctv --pid 12345                      # pid 로만 대상 지정 (그냥 준 대상은 DB 이름 우선, 같은 이름 서버가 여럿이면 --pid 필요)
 cub_ctv demodb -i                        # 라이브(--interactive): tty면 풀스크린, 파이프면 스크롤
 cub_ctv demodb -i --interval 3 --hz 200
 cub_ctv demodb --detail [LOG|1]          # CS별 세로 레코드(전 필드·대기 체인 전체)
@@ -278,6 +279,7 @@ MVCC 이전 버전을 읽는 경우는 LOG 를 reader 로 지난다).
 | `tests/t14_slot_reuse.sh` | 구간 중 클라이언트가 떠나고 같은 트랜잭션 슬롯을 다른 클라이언트가 받은 기록을 재생 → 소유자 블록·대기 큐 홉·요약 화면 세션이 그 구간에 목격된 클라이언트(`disconnected` 표시)로 나오고 현재 클라이언트로 바뀌지 않음 | **불필요** |
 | `tests/t15_screen_fit.py` | 기록을 여러 크기의 가상 터미널(80×24 ~ 200×50, 60×20)에서 한/영으로 재생 → 요약 화면이 스크롤되지 않고(줄바꿈된 줄도 화면 줄로 셈), 80칸 이상이면 터미널 폭을 넘는 줄이 없음 | **불필요** |
 | `tests/t16_act_samples.sh` | tran 을 모르는 대기자(−1, I-15 강등 서버) 여럿이 같은 CS 를 기다린 라이브 구간을 기록 → 활동이 스레드별로 세어져 구간 샘플 수를 넘지 않고, 그 기록이 재생됨 | **불필요** |
+| `tests/t17_target_pick.sh` | 대체 `cub_server` 프로세스 다섯(둘은 pid·DB 이름이 엇갈림, 둘은 같은 DB 이름): 대상은 DB 이름 우선(숫자 이름이 다른 서버 pid 와 같아도 DB 이름, 경고 1줄), 같은 이름 서버가 여럿이면 실행 안 하고 후보별 `--pid` 안내, DB 이름이 없는 숫자는 pid, `--pid` 는 pid 로만 고름(서버 아닌 pid 는 오류) | **불필요** |
 | `tests/t7_record_equiv.sh` | 실서버에서 라이브 출력 = 그 기록의 재생 출력(파이프 출력, 스냅샷·라이브), 디테일 덤프 JSON 검증과 재생 거부 | 필요 |
 | `tests/t8_replay_keys.py` | 가짜 터미널에서 재생 키(일시정지·구간 이동·속도·종료), 요약 화면 세션 강조, 색상·`--plain`·파이프 무이스케이프 | **불필요** |
 | `tests/t10_os_probe.sh` | `--dump` 의 OS tid 가 모두 `/proc/<pid>/task` 의 서로 다른 tid 이고 개수가 스레드 수 −1 의 ±8 이내, 이름 일치(I-17), 대기 사유 코드 범위·스냅샷 줄(I-18) | 필요 |

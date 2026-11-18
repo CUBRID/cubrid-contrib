@@ -473,6 +473,7 @@ typedef struct
   int live, trans, json, hz, plain;
   double interval, replay_speed;
   int list;
+  int pid;			/* --pid N: that cub_server only (0: none) */
 } OPTS;
 
 /* ---- globals ---- */

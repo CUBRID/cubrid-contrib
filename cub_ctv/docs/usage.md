@@ -9,11 +9,12 @@ README 의 같은 절을 요약하면: 커밋·접속·아카이브 경로에서
 ## 1. 옵션 레퍼런스
 
 ```text
-cub_ctv [옵션] [<db-name> | <pid>]
+cub_ctv [옵션] [<db-name> | <pid> | --pid N]
 
   -h, --help            도움말 (--ko/--en 위치와 무관하게 언어 반영). 인자가 없으면(--ko/--en 만 있어도) 도움말,
                         다른 옵션만 있고 대상이 없으면 "대상 없음" 오류(종료 코드 1)
   -l, --list            실행 중인 cub_server 목록 (pid, db)
+      --pid N           pid N 의 cub_server 만 대상으로 (아니면 오류). 그냥 준 대상은 DB 이름 우선, 없으면 pid
   -i, --interactive     라이브 모드: 100Hz 샘플링. tty = 풀스크린 제자리 갱신, 파이프 = 스크롤.
                         tty 에서 [r] 로 현재 디렉터리에 <pid>_<db>_<YYYYmmdd-HHMMSS>.ctv 녹화 시작/중지, [l] 한/영 전환, [q] 종료
       --interval SEC    라이브 표시 주기 (기본 1, 0.1 .. 3600, 샘플 1회 이상: >= 1/--hz)
@@ -32,7 +33,7 @@ cub_ctv [옵션] [<db-name> | <pid>]
       --ko | --en       메시지 언어 (기본 LC_ALL/LC_MESSAGES/LANG 자동; 한국어는 UTF-8 로캘에서만)
 ```
 
-대상은 DB 이름 또는 PID. `--dump` 는 `-i`(`--interactive`) 와, `--replay` 는 `-i`/`--dump`/`--record` 와 함께 쓸 수 없다. `--dump` 와 `--record` 는 같은 파일을 가리킬 수 없다.
+대상은 DB 이름 또는 PID 이고, DB 이름으로 먼저 찾는다. 그 이름의 서버가 하나면 실행한다(이름이 숫자이고 같은 번호의 pid 를 가진 다른 서버가 있어도 DB 이름을 따르며 경고 1줄로 알린다). 같은 이름의 서버가 여럿이면 실행하지 않고 후보마다 `cub_ctv --pid N` 을 안내한 뒤 종료 코드 1 로 끝난다. 맞는 DB 이름이 없을 때만 숫자를 pid 로 본다. pid 로만 고르려면 `--pid N`. `--dump` 는 `-i`(`--interactive`) 와, `--replay` 는 `-i`/`--dump`/`--record`/`--pid` 와 함께 쓸 수 없다. `--dump` 와 `--record` 는 같은 파일을 가리킬 수 없다.
 
 ## 2. 출력 모드별 예시
 

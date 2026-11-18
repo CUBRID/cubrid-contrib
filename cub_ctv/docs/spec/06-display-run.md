@@ -170,12 +170,13 @@
 | `--replay-speed N` | `o->replay_speed` | 실수(`opt_num`) | 숨은 옵션(도움말에 없음) |
 | `--interval SEC` | `o->interval` | 실수(`opt_num`) | |
 | `--hz N` | `o->hz` | 정수(`opt_int`) | |
+| `--pid N` | `o->pid` | 정수(`opt_int`) | 1 이상이어야 함(§2.4), 위치 단어 대상 대신 |
 | `--ko` | `use_ko = ko_ok` | — | UTF-8 로캘이 아니면 영문 유지(§2.1) |
 | `--en` | `use_ko = 0` | — | |
 | `-` 로 시작하지 않는 단어 | 단어 배열에 보관(최대 2개) | — | §2.4 |
 | 그 밖의 `-…` | die `unknown option: %s (see --help)` / `알 수 없는 옵션: %s (--help 참고)` | — | `-`, `--` 단독도 여기 |
 
-값 옵션 검사 순서(한 인자에 대해): `--dump`, `--replay`, `--record`, `--replay-speed`, `--interval`, `--hz` 순으로 이름을 맞춘다.
+값 옵션 검사 순서(한 인자에 대해): `--dump`, `--replay`, `--record`, `--replay-speed`, `--interval`, `--hz`, `--pid` 순으로 이름을 맞춘다.
 
 ### 2.3 값 옵션 공통 규칙
 
@@ -189,15 +190,16 @@
 ### 2.4 위치 단어 규칙
 
 1. 루프 안: `-` 로 시작하지 않는 인자는 `nword < 2` 인 동안 `word[]` 에 쌓는다. 세 번째 단어는 즉시 die: `unexpected extra argument: %s (target already given)` / `잉여 인자: %s (대상은 이미 지정됨)`. 빈 문자열 `""` 도 단어다.
-2. 루프 뒤 배치(`w = 0`):
-   1. `--replay` 가 없으면 `target = word[w++]` (단어가 있을 때).
+2. 루프 뒤, 배치 전: `argv` 에 `--pid` 가 있는데 `o->pid <= 0` 이면 die `--pid needs a positive pid` / `--pid 에는 양수 pid 가 필요합니다`.
+3. 루프 뒤 배치(`w = 0`):
+   1. `--replay` 도 `--pid` 도 없으면 `target = word[w++]` (단어가 있을 때).
    2. 단어가 남아 있고 `layout_detail` 이 1 이며 `detail_filter` 가 아직 NULL 이면 `detail_filter = word[w++]`.
    3. 그래도 남으면 die. `--replay` 가 있으면 `--replay takes no target: %s` / `--replay 에는 대상을 주지 않습니다: %s`, 없으면 `unexpected extra argument: %s (target already given)` / `잉여 인자: %s (대상은 이미 지정됨)`.
-3. 결과: `--replay` 에서는 첫 단어가 필터, 그 밖에는 첫 단어가 대상이고 두 번째가 필터. 단어 순서를 서버 이름·CS 이름으로 추측해 바꾸지 않는다(§2.8 경고 참조).
+4. 결과: `--replay`·`--pid` 에서는 첫 단어가 필터(`--pid` 와 단어 대상을 함께 주면 잉여 인자 die), 그 밖에는 첫 단어가 대상이고 두 번째가 필터. 단어 순서를 서버 이름·CS 이름으로 추측해 바꾸지 않는다(§2.8 경고 참조).
 
 ### 2.5 인자 없음·대상 없음 규칙
 
-`target == NULL && !list && replay == NULL && !help` 일 때:
+`target == NULL && pid == 0 && !list && replay == NULL && !help` 일 때:
 
 1. `argv[1..]` 이 전부 `--ko`/`--en` 이거나 인자가 하나도 없으면 `help = 1`.
 2. 그 외(다른 옵션만 있고 대상 없음)는 die: `no target: give a db name or a pid (-l lists them, -h for help)` / `대상 없음: DB 이름 또는 pid 를 주십시오 (-l 목록, -h 도움말)`.
@@ -212,7 +214,7 @@
 | 2 | `!(replay_speed >= 0.0)` 또는 `!isfinite(replay_speed)` | `bad --replay-speed (0 = no pacing, or a positive factor)` / `--replay-speed 값 오류 (0 = 대기 없음, 또는 양수 배율)` |
 | 3 | `live && dump != NULL` | `--dump writes one snapshot; it cannot be combined with -i/--interactive` / `--dump는 스냅샷 1회를 기록합니다; -i/--interactive 와 함께 쓸 수 없습니다` |
 | 4 | `dump`, `record` 둘 다 있고 `same_file(dump, record)` | `--dump and --record name the same file: %s` / `--dump 와 --record 가 같은 파일입니다: %s` (`%s` = dump) |
-| 5 | `replay != NULL` 이고 (`live` 또는 `dump` 또는 `record`) | `--replay cannot be combined with -i/--interactive, --dump or --record` / `--replay는 -i/--interactive/--dump/--record와 함께 쓸 수 없습니다` |
+| 5 | `replay != NULL` 이고 (`live` 또는 `dump` 또는 `record` 또는 `pid != 0`) | `--replay cannot be combined with -i/--interactive, --dump, --record or --pid` / `--replay는 -i/--interactive/--dump/--record/--pid와 함께 쓸 수 없습니다` |
 
 NaN 은 1·2 의 `!(x >= …)` 형태로 걸러진다. `--replay` 에서는 `--hz`/`--interval` 값을 검사하지 않는다(기록 헤더 값을 쓴다).
 
@@ -225,10 +227,12 @@ NaN 은 1·2 의 `!(x >= …)` 형태로 걸러진다. `--replay` 에서는 `--h
 stdout 에 그대로 출력한다(`fputs`). 영어(`use_ko == 0`):
 
 ```text
-usage: cub_ctv [options] [<db-name> | <pid>]
+usage: cub_ctv [options] [<db-name> | <pid> | --pid N]
 
   (no arguments)       this help
   -l, --list           list running cub_server processes (pid, db)
+      --pid N          the cub_server of pid N only (a bare target is
+                       a db name first, else a pid)
   -i, --interactive    live mode: sample at --hz, print every --interval
                        (full screen on a tty, scrolling on a pipe);
                        [r] starts/stops a record <pid>_<db>_<time>.ctv,
@@ -266,10 +270,12 @@ usage: cub_ctv [options] [<db-name> | <pid>]
 한국어(`use_ko == 1`):
 
 ```text
-사용법: cub_ctv [옵션] [<DB명> | <pid>]
+사용법: cub_ctv [옵션] [<DB명> | <pid> | --pid N]
 
   (인자 없음)          이 도움말
   -l, --list           실행 중인 cub_server 목록 (pid, db)
+      --pid N          pid N 의 cub_server 만 (그냥 준 대상은 DB 이름
+                       우선, 없으면 pid)
   -i, --interactive    라이브 모드: --hz 로 샘플링, --interval 마다 출력
                        (터미널이면 전체 화면, 파이프면 스크롤);
                        [r] 로 <pid>_<db>_<시각>.ctv 녹화 시작/중지,
@@ -316,15 +322,15 @@ usage: cub_ctv [options] [<db-name> | <pid>]
 
 **pid 판정(`pid_of_target`)**: `strtol(target, 10)` 이 전체를 소비하고 `0 < p <= INT32_MAX` 이면 pid, 아니면 0(=db 이름).
 
-**`server_match`**: 목록 앞에서부터 `(want > 0 && pid == want) || strcmp(db, target) == 0` 인 첫 항목. 숫자 대상은 같은 이름의 db 와도 맞을 수 있다.
+**`server_match`**: 목록 앞에서부터 `(want > 0 && pid == want) || strcmp(db, target) == 0` 인 첫 항목. 아래 실패 처리의 필터 경고 판정에만 쓴다.
 
-**`resolve_target`**:
-1. `found = server_match(...)`.
-2. `found >= 0` 이고 대상이 db 이름(`want == 0`)이면 `found` 뒤의 같은 db 이름 수를 `dup` 으로 센다.
-3. `found < 0`: 대상이 pid 이고 `server_by_pid(want)` 가 성공하면(목록 한도 밖의 서버) 그 서버 사용. 아니면 실패(-1).
-4. `dup > 0`: 대상 문자열(256바이트로 절단 후 `text_sanitize`)로 경고 `'%s': %d servers; using pid %d (give a pid to choose)` / `'%s' 서버가 %d개 있어 pid %d 를 사용합니다 (선택하려면 pid 지정)` — 인자 = 대상, `dup + 1`, 첫 서버 pid. 첫 서버 사용.
+**`resolve_target(o)`**: `want` = `o->pid`(있으면) 또는 `pid_of_target(target)`. 위치 대상은 **DB 이름 우선**, `--pid` 는 pid 만 본다.
+1. `--pid` 가 없으면 목록에서 `db == target` 인 항목을 센다(`ndb`, 첫 항목 `by_db`). 대상 문자열은 256바이트로 절단 후 `text_sanitize` 해 메시지에 쓴다.
+2. `ndb > 1`: 실행하지 않는다. 경고 `db '%s' is served by %d cub_server processes; choose one with --pid:` / `DB '%s' 를 쓰는 cub_server 가 %d개입니다; --pid 로 고르십시오:` (대상, `ndb`), 이어서 stderr 에 해당 서버마다 목록 순서로 `  cub_ctv --pid %d\n`, `exit(1)`.
+3. `ndb == 1`: 그 서버를 쓴다. 대상이 숫자이고 다른 서버의 pid 와 같으면 경고 1줄만 낸다: `'%s' is a db name and the pid of another cub_server: using db %s (pid %d); for pid %d use --pid %d` / `'%s' 는 DB 이름이자 다른 cub_server 의 pid: DB %s (pid %d) 를 봅니다; pid %d 는 --pid %d`.
+4. `ndb == 0` (또는 `--pid`): `want > 0` 이면 목록에서 `pid == want` 인 서버, 없으면 `server_by_pid(want)`(목록 한도 밖의 서버). 둘 다 아니면 실패(-1).
 
-**실패 처리(main)**: 해석 실패 시 `o.detail_filter` 가 있고 그 문자열이 서버와 맞으면(`server_match >= 0`) 먼저 경고 `bare words are the target then the --detail filter: use --detail=NAME, or put the target first` / `단어는 대상, 그다음 --detail 필터 순입니다: --detail=NAME 을 쓰거나 대상을 먼저 주십시오`, 이어서 die `no cub_server process found (%s)` / `cub_server 프로세스를 찾지 못했습니다 (%s)` (인자 = 대상).
+**실패 처리(main)**: 해석 실패 시 `--pid` 였으면 die `pid %s is not a cub_server process` / `pid %s 는 cub_server 프로세스가 아닙니다` (인자 = pid). 아니면 `o.detail_filter` 가 있고 그 문자열이 서버와 맞으면(`server_match >= 0`) 먼저 경고 `bare words are the target then the --detail filter: use --detail=NAME, or put the target first` / `단어는 대상, 그다음 --detail 필터 순입니다: --detail=NAME 을 쓰거나 대상을 먼저 주십시오`, 이어서 die `no cub_server process found (%s)` / `cub_server 프로세스를 찾지 못했습니다 (%s)` (인자 = 대상).
 
 ### 2.9 라이브러리 위치 (`locate_lib`)
 

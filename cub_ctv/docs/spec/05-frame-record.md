@@ -135,7 +135,7 @@
 | `samples` | 목격 샘플 수 |
 | `cpid` | 목격 당시 그 tran 슬롯의 클라이언트 pid(`client_pid`, 06 §11.2a). −1 = 모름(tran 0 포함) |
 
-동일 항목 판정(샘플러 `act_add`): `(cs, kind, tran, cpid)` 가 같고, `tran == 0` 이면 `thr` 까지 같아야 같은 항목(엔진 스레드끼리는 스레드별로 나눔). 같은 슬롯이라도 구간 중 클라이언트가 바뀌면(pid 다름) 다른 항목이다. 해시 `h = (cs*31 + kind*7 + tran*2654435761 + (key_thr+1)*40503 + (cpid+1)*97) & (ACT_HASH-1)`(unsigned 산술, `key_thr = tran==0 ? thr : -1`), 선형 탐사. 새 항목은 `kind == ACT_HELD` 면 `nact < ACT_MAX`, 대기면 `nact < ACT_MAX - ACT_HELD_RESERVE` 일 때만 추가, 아니면 `act_dropped++`. 항목 순서 = 최초 목격 순서이며 이것이 `W` 줄 순서다.
+동일 항목 판정(샘플러 `act_add`): `(cs, kind, tran, cpid)` 가 같고, `tran <= 0` 이면 `thr` 까지 같아야 같은 항목(엔진 스레드(0)와 tran 미상(−1)은 스레드별로 나눔 — 한 샘플에 한 항목이 두 번 세어지지 않으므로 항목의 `samples` 는 구간 `samples` 를 넘지 않는다). 같은 슬롯이라도 구간 중 클라이언트가 바뀌면(pid 다름) 다른 항목이다. 해시 `h = (cs*31 + kind*7 + tran*2654435761 + (key_thr+1)*40503 + (cpid+1)*97) & (ACT_HASH-1)`(unsigned 산술, `key_thr = tran<=0 ? thr : -1`), 선형 탐사. 새 항목은 `kind == ACT_HELD` 면 `nact < ACT_MAX`, 대기면 `nact < ACT_MAX - ACT_HELD_RESERVE` 일 때만 추가, 아니면 `act_dropped++`. 항목 순서 = 최초 목격 순서이며 이것이 `W` 줄 순서다.
 
 ### 3.4 `OS_THR`
 

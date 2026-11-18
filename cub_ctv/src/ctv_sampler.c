@@ -177,9 +177,10 @@ client_pid (int tran)
 static void
 act_add (LIVE_WIN * w, int cs, int kind, int tran, int thr, int cpid)
 {
-  /* engine threads all count as tran 0: keep them apart by thread so the
-   * verdict names the one that held most */
-  int key_thr = tran == 0 ? thr : -1;
+  /* engine threads (tran 0) and unknown trans (-1) are kept apart by
+   * thread: the verdict names the one that held most, and no activity is
+   * seen twice in one sample */
+  int key_thr = tran <= 0 ? thr : -1;
   unsigned h = ((unsigned) cs * 31u + (unsigned) kind * 7u
 		+ (unsigned) tran * 2654435761u + (unsigned) (key_thr + 1) * 40503u
 		+ (unsigned) (cpid + 1) * 97u) & (ACT_HASH - 1);
@@ -190,7 +191,7 @@ act_add (LIVE_WIN * w, int cs, int kind, int tran, int thr, int cpid)
       ACT *a = &w->st.act[w->act_ix[h] - 1];
 
       if (a->cs == cs && a->kind == kind && a->tran == tran && a->cpid == cpid
-	  && (tran != 0 || a->thr == key_thr))
+	  && (tran > 0 || a->thr == key_thr))
 	{
 	  a->samples++;
 	  if (a->thr < 0)

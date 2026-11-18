@@ -1223,9 +1223,9 @@ blob 은 직전 `mem_read` 로 읽은 CS 배열 전체 이미지. CS i 마다:
 
 ### 11.3 활동 표 (`act_add(w, cs, kind, tran, thr, cpid)`)
 
-- 키: (cs, kind, tran, cpid) + tran == 0 일 때만 thr (엔진 스레드를 스레드별로 구분). `key_thr = tran == 0 ? thr : -1`.
+- 키: (cs, kind, tran, cpid) + tran <= 0 일 때만 thr (엔진 스레드(0)와 tran 미상(−1)을 스레드별로 구분: tran −1 대기자 여럿이 한 항목으로 합쳐지면 한 샘플에 여러 번 세어져 구간 샘플 수를 넘고, 재생이 그 기록을 손상으로 거부한다). `key_thr = tran <= 0 ? thr : -1`.
 - 해시(unsigned 32비트 산술): `h = (cs*31 + kind*7 + tran*2654435761 + (key_thr+1)*40503 + (cpid+1)*97) & (ACT_HASH - 1)`; 선형 탐사; `act_ix[h]` = act 인덱스 + 1 (0 = 빈칸). 해시 함수는 조회용일 뿐 출력 순서에 영향이 없다(act 는 최초 목격 순서로 쌓임).
-- 일치(`cs, kind, tran, cpid` 같고 `tran != 0 || a->thr == key_thr`) → `samples++`; `a->thr < 0` 이면 `a->thr = thr`.
+- 일치(`cs, kind, tran, cpid` 같고 `tran > 0 || a->thr == key_thr`) → `samples++`; `a->thr < 0` 이면 `a->thr = thr`.
 - 새 항목: `nact < (kind == ACT_HELD ? 4096 : 4096 - 256)` 이면 추가(`samples = 1`, `cpid`), 아니면 `act_dropped++`. 대기 항목은 마지막 256칸을 쓰지 못한다(보유 목격 예약).
 
 ### 11.4 OS 샘플 (`os_sample(w, k)`)

@@ -91,9 +91,10 @@
 | `tests/t16_act_samples.sh` | 활동 샘플 수 ≤ 구간 샘플 수(tran −1 대기자 여럿 포함), 그 기록 재생 | 불필요 |
 | `tests/t17_target_pick.sh` | 대상 선택: DB 이름 우선, 같은 이름 여럿 거부, `--pid` | 불필요 |
 | `tests/t18_demote_holder.sh` | 강등된 owner 의 보유 집계(HA 로그 플러시) | 불필요 |
-| `tests/t19_readers_most.sh` | 보유가 점유의 절반 미만이면 보유자 미지목(reader 다수) | 불필요 |
+| `tests/t19_readers_most.sh` | writer 전체의 보유가 점유의 절반 미만이면 보유자 미지목(reader 다수) | 불필요 |
 | `tests/t20_utf8_ranges.sh` | UTF-8 둘째 바이트 범위(RFC 3629), 정화·JSON 유효 | 불필요 |
 | `tests/t21_clock_use.sh` | 시계 사용 규약(00 '시계') 소스 검사 | 불필요 |
+| `tests/t22_os_per_cs.sh` | OS 상태의 (스레드, CS) 귀속, 스레드당 판독 상한, 판정 디스크/CPU = 보유자 스레드 | 불필요 |
 | `tests/t2_show_compare.py` | 엔진 `SHOW CRITICAL SECTIONS` 값이 전후 판독 사이 + 자기영향 0 | 필요 |
 | `tests/t4_trans_check.sh` | 트랜잭션 표 == `cubrid tranlist` | 필요 |
 | `tests/t7_record_equiv.sh` | 라이브 화면 == 그 기록의 재생 | 필요 |

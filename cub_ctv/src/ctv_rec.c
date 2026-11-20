@@ -340,8 +340,8 @@ view_record_frame (void)
     {
       const OS_THR *o = &view.os[i];
 
-      fprintf (f, "O %d %d %d %d %d %d %ld %ld", o->slot, o->tid, o->samples,
-	       o->run, o->dsk, o->oth, o->ticks0, o->ticks1);
+      fprintf (f, "O %d %d %d %d %d %d %d %ld %ld", o->slot, o->cs, o->tid,
+	       o->samples, o->run, o->dsk, o->oth, o->ticks0, o->ticks1);
       rec_str (f, o->comm);
       fprintf (f, " %d\n", o->span_ms);
     }
@@ -861,7 +861,7 @@ rd_W (char **tok, int n, REC_RD * rd)
     }
 }
 
-/* O: one sampled thread's OS state */
+/* O: one thread's OS state under one CS (cs -1: its name only) */
 static void
 rd_O (char **tok, int n, REC_RD * rd)
 {
@@ -871,17 +871,22 @@ rd_O (char **tok, int n, REC_RD * rd)
   (void) rd;
 
   memset (o, 0, sizeof (*o));
-  o->span_ms = atoi (tok[10]);
+  o->span_ms = atoi (tok[11]);
 
   o->slot = atoi (tok[1]);
-  o->tid = atoi (tok[2]);
-  o->samples = atoi (tok[3]);
-  o->run = atoi (tok[4]);
-  o->dsk = atoi (tok[5]);
-  o->oth = atoi (tok[6]);
-  o->ticks0 = atol (tok[7]);
-  o->ticks1 = atol (tok[8]);
-  rec_unescape (tok[9], o->comm, sizeof (o->comm));
+  o->cs = atoi (tok[2]);
+  o->tid = atoi (tok[3]);
+  o->samples = atoi (tok[4]);
+  o->run = atoi (tok[5]);
+  o->dsk = atoi (tok[6]);
+  o->oth = atoi (tok[7]);
+  o->ticks0 = atol (tok[8]);
+  o->ticks1 = atol (tok[9]);
+  rec_unescape (tok[10], o->comm, sizeof (o->comm));
+  if (o->cs < -1 || o->cs >= view.count)
+    {
+      rec_bad ();
+    }
   if (view.nos < OS_MAX)
     {
       view.os[view.nos++] = tmp;
@@ -1058,7 +1063,7 @@ static const REC_LINE rec_lines[] = {
   {"Q", 3, REC_TOKENS_MAX, 0, rd_Q},
   {"P", 3, REC_TOKENS_MAX, 0, rd_P},
   {"W", 7, 7, 0, rd_W},
-  {"O", 11, 11, 0, rd_O},
+  {"O", 12, 12, 0, rd_O},
   {"V", 2, 2 + 2 * (VERDICT_HISTORY - 1), 0, rd_V},
   {"K", 2, 2, REC_FRAME_KEY, rd_K},
   {"X", 2, 2, 0, rd_X},

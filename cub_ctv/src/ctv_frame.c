@@ -65,8 +65,8 @@ view_add_slot_tran (int slot, int tran, int cpid)
   view.nslot++;
 }
 
-/* OS record of a thread slot: copied from the window when it was sampled,
- * else just its tid and name */
+/* OS record of a thread slot: copied from the window when it was sampled
+ * (one per CS it held), else just its tid and name */
 static void
 view_add_os (int slot, const OS_THR * src)
 {
@@ -79,7 +79,7 @@ view_add_os (int slot, const OS_THR * src)
     }
   for (k = 0; k < view.nos; k++)
     {
-      if (view.os[k].slot == slot)
+      if (view.os[k].slot == slot && (src == NULL || view.os[k].cs == src->cs))
 	{
 	  return;
 	}
@@ -93,6 +93,7 @@ view_add_os (int slot, const OS_THR * src)
     {
       memset (o, 0, sizeof (*o));
       o->slot = slot;
+      o->cs = -1;
       o->tid = thr_tid_of (slot);
       if (o->tid > 0)
 	{
@@ -484,6 +485,22 @@ view_os_of (int slot)
   for (k = 0; k < view.nos; k++)
     {
       if (view.os[k].slot == slot)
+	{
+	  return &view.os[k];
+	}
+    }
+  return NULL;
+}
+
+/* the sampled state of a thread slot while it held CS cs, or NULL */
+const OS_THR *
+view_os_at (int slot, int cs)
+{
+  int k;
+
+  for (k = 0; k < view.nos; k++)
+    {
+      if (view.os[k].slot == slot && view.os[k].cs == cs && view.os[k].samples > 0)
 	{
 	  return &view.os[k];
 	}

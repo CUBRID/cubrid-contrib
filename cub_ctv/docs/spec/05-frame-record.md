@@ -37,7 +37,8 @@
 | `ACT_HELD_RESERVE` | 256 | `ACT_MAX` 중 보유(HELD) 목격 전용 예약분. 대기 목격은 3840칸까지만 |
 | `ACT_HASH` | 16384 | 샘플러의 활동 해시 칸 수(2의 거듭제곱, `> 2*ACT_MAX`) |
 | `ACT_HELD` / `ACT_WAIT` | 0 / 1 | 활동 종류 |
-| `OS_MAX` | 64 | 프레임·구간당 OS 상태를 보관하는 스레드 수 |
+| `OS_MAX` | 128 | 프레임·구간당 OS 상태 항목 수: (스레드 칸, CS) 쌍마다 하나, 그리고 이름만 있는 항목 |
+| `OS_RD_MAX` | 64 | 구간당 procfs 상태를 읽는 스레드 수(스레드별 판독 캐시 `rd[]`) |
 | `OS_COMM_LEN` | 16 | 스레드 이름(`comm`) 버퍼 |
 | `OS_SAMPLE_MIN_S` | 0.05 s | 스레드당 procfs 상태 샘플 최소 간격, 새 대기 큐 머리 걷기 최소 간격, 프레임의 체인 재사용 신선도 |
 | `CHAIN_REWALK_S` | 0.25 s | 같은 큐 머리 재걷기 간격 |
@@ -80,7 +81,7 @@
 | `tid[VIEW_MAX_TIDS]`, `tid_slot[]`, `ntid` | `uint64_t`, `int` | 소유자 스레드 id(pthread_t) → 칸(모르면 −1) | `view_add_tid` · `T` |
 | `chain[VIEW_MAX_CHAINS]`, `nchain` | `VIEW_CHAIN` | 현재 대기 큐 머리별 체인 | `view_add_chain` · `Q` |
 | `slot[VIEW_MAX_SLOTS]`, `slot_tran[]`, `slot_cpid[]`, `nslot` | `int` | 칸 → 그 칸이 기다릴 때의 tran index 와 그 tran 의 클라이언트 pid(−1 모름) | `view_add_slot_tran` · `S` |
-| `os[OS_MAX]`, `nos` | `OS_THR` | 스레드 OS 상태(샘플된 writer 스레드 먼저, 그다음 소유자 이름만) | `view_add_os` · `O` |
+| `os[OS_MAX]`, `nos` | `OS_THR` | 스레드 OS 상태: 샘플된 (보유 스레드, CS) 쌍 먼저, 그다음 소유자 이름만(`cs = −1`) | `view_add_os` · `O` |
 | `disk_avail` | `int` | 로그 장치 수치 있음 | `view_disk_end` · `D` 유무 |
 | `disk_await_ms`, `disk_util_pct` | `double` | 쓰기 1건 평균 대기 ms, 장치 사용률 % | 같음 · `D` tok1,2 |
 | `disk_dev[32]` | `char` | 로그 장치 이름 | 같음 · `D` tok3 |
@@ -142,15 +143,16 @@
 | 필드 | 형 | 의미 |
 |---|---|---|
 | `slot` | `int` | 스레드 칸 |
+| `cs` | `int` | 이 상태를 본 CS 인덱스. 항목의 키는 (`slot`, `cs`): 한 스레드가 여러 CS 를 쥐었으면 CS 마다 항목이 따로 있고, 각 항목은 **그 CS 를 쥐고 있던 표본만** 센다. −1 = 이름만 있는 항목(샘플 0) |
 | `tid` | `int` | OS tid(LWP) |
-| `samples` | `int` | procfs 상태를 읽은 횟수 |
+| `samples` | `int` | 그 CS 를 쥔 동안 procfs 상태를 읽은 횟수 |
 | `run` / `dsk` / `oth` | `int` | 상태 `R` / `D` / 그 외 샘플 수 |
 | `ticks0` / `ticks1` | `long` | 첫/마지막 샘플의 CPU 틱(utime+stime) |
 | `t_first` / `t_last` | `double` | 첫/마지막 샘플 단조 시각(s). **기록되지 않음**(재생 시 0) |
 | `span_ms` | `int` | `t_last − t_first` 를 ms 로 반올림(`(now − t_first)*1000 + 0.5`). 틱 차이가 덮는 시간 |
 | `comm[16]` | `char` | `/proc/<pid>/task/<tid>/comm` |
 
-샘플러는 writer 스레드(보유 중인 CS 의 owner 칸)만 샘플한다. 스레드당 `OS_SAMPLE_MIN_S` 안에 다시 오면 건너뛰며, 읽기에 실패해도 `t_last` 는 갱신된다(실패도 간격 제한).
+샘플러는 보유 스레드(쥐고 있는 CS 의 owner 칸)만 샘플한다. procfs 판독은 **스레드당** `OS_SAMPLE_MIN_S` 에 한 번이고(CS 마다 따로 읽지 않는다), 한 표본에서 읽은 상태를 그 스레드가 그 표본에 쥐고 있던 CS 항목마다 하나씩 센다. 간격 안에 다시 오면 어느 항목에도 세지 않으며(판독 여부는 스레드당 표본당 한 번만 정한다), 읽기에 실패해도 판독 시각은 갱신된다(실패도 간격 제한). 상태를 CS 별로 나누는 이유: 판정의 디스크/CPU 는 top CS 를 쥔 동안의 상태여야 하고, 같은 스레드가 다른 CS 를 쥐고 있던 표본이 섞이면 안 된다(06 §6.7).
 
 ### 3.5 `VIEW_IDENT`, `TRAN_IDENT`, `VIEW_CHAIN`, `POOL_GROUP`
 
@@ -223,7 +225,8 @@
 | `own_slot[MAX_CS]` | `int` | 그 tid 의 칸(−1 = 모름) | −1 |
 | `blob` | `unsigned char *` | 최신 샘플의 CS 배열 원시 이미지(`stride*count` 바이트, `malloc`) | 안 함 |
 | `act_ix[ACT_HASH]` | `unsigned short` | 활동 해시: `st.act` 인덱스 + 1, 0 = 빈칸 | 전부 0 |
-| `os[OS_MAX]`, `nos` | `OS_THR`, `int` | 구간에 샘플한 writer 스레드 OS 상태 | `nos = 0` |
+| `os[OS_MAX]`, `nos` | `OS_THR`, `int` | 구간에 샘플한 (보유 스레드, CS) 쌍의 OS 상태 | `nos = 0` |
+| `rd[OS_RD_MAX]`, `nrd` | `OS_RD`, `int` | 스레드별 procfs 판독 캐시. `OS_RD` = `{ int slot, seq, ok; double t; char st; long ticks; }`: 칸, 마지막으로 판독 여부를 정한 표본 번호 `seq`(= 그때의 `st.samples`, 새 항목은 −1), 그 표본에 셀 판독이 있는지 `ok`(스로틀·판독 실패면 0), 마지막 판독 시각 `t`(단조 초, 0 = 아직 없음), 상태 문자 `st`, 틱 `ticks`. 스레드당 20 Hz 상한과 "한 표본의 판독을 그 스레드가 쥔 모든 CS 항목이 함께 씀" 을 맡는다 | `nrd = 0` |
 | `dk0[3]` | `uint64_t` | 구간 시작 diskstats(`wr_ios`, `wr_ms`, `io_ms`) | `view_disk_begin` 이 채움 |
 | `dk_ok` | `int` | `dk0` 유효 | 같음 |
 | `no_disk` | `int` | 디스크 수치를 쓰지 않는 실행(`!sampled`). 1 이면 `view_disk_begin` 을 부르지 않음 | 안 함(생성 직후 1회 설정) |
@@ -253,7 +256,7 @@
    3. `view_add_chain(rows[i].wq, rows[i].wq2, w, i)`.
 10. 구간 중 이전 목격: 각 CS `i`, `k < view.st.seen_n[i]` 에 대해 `view_add_slot_tran(seen_slot[i][k], seen_tran_of[i][k], seen_cpid_of[i][k])`. 이미 현재 큐(9단계)에서 추가된 칸은 무시되므로 **현재 큐의 tran 이 우선**한다.
 10a. `view_capture_gone()` (§4.1a) — 판독 없음(7단계 신원과 직전 캡처 신원 비교).
-11. OS 측: `view.nos = 0`. 먼저 `w->os[0..w->nos)` 를 순서대로 `view_add_os(w->os[i].slot, &w->os[i])`(샘플러 기록 복사), 그다음 `view.tid_slot[0..ntid)` 를 순서대로 `view_add_os(tid_slot[i], NULL)`(이름만 실시간 판독).
+11. OS 측: `view.nos = 0`. 먼저 `w->os[0..w->nos)` 를 순서대로 `view_add_os(w->os[i].slot, &w->os[i])`(샘플러 기록 복사: (칸, CS) 쌍마다 한 항목), 그다음 `view.tid_slot[0..ntid)` 를 순서대로 `view_add_os(tid_slot[i], NULL)`(이름만 실시간 판독).
 12. 대기 사유: `readers = Σ rows[i].wr`(i < count). `view.wait_avail = thr_wait_counts(view.wait_cnt, &view.wait_live, readers) == 0` — **실시간 판독**(스레드 엔트리 `resume_status`/`m_status`). `wait_cnt[7]` 은 `readers` 로 채워진다.
 13. `view_disk_end(w, dt)` (§4.5) — **실시간 판독**(`/proc/diskstats`).
 14. `view.pool_state = 0`. `npool`·`pool[]` 은 건드리지 않는다(이후 `view_capture_pool` 이 부르면 채움; 기록은 `pool_state == 1` 일 때만 `G` 를 씀).
@@ -266,7 +269,7 @@
 | `view_add_tid(tid)` | `tid == 0` 또는 `ntid >= 128` 이면 무시. 이미 있으면 무시. 아니면 `tid[ntid] = tid`, `tid_slot[ntid] = thr_index_of_tid_mem(tid)`(실시간 tid 정렬표 이진 탐색, 없으면 −1), `ntid++` |
 | `view_add_chain(head, head2, w, cs)` | `head == 0` 또는 `nchain >= 128` 이면 무시. 같은 `head` 체인이 이미 있으면 무시(먼저 나온 CS 가 이김). 새 체인 `c` 를 추가하고 `c->head = head`. **재사용 조건** `w != NULL && w->wq_last[cs] == head && mono_s() − w->ch_walked[cs] < OS_SAMPLE_MIN_S` 이면 샘플러 걷기(`ch_n`, `ch_slot`, `ch_tran`, `ch_cpid`)를 복사, 아니면 `thr_waiters_mem2(head, head2, c->slot, tran, 64, 0)` 로 새로 걷고(앵커 0 = 불변식 표결 안 함) 모든 칸 `cpid = -1`(이번 캡처 신원이 곧 현재 클라이언트). 이어서 모든 칸 `k` 에 `view_add_slot_tran(c->slot[k], tran[k], cpid[k])` |
 | `view_add_slot_tran(slot, tran, cpid)` | `nslot >= 8192`, `slot < 0`, `slot >= THR_MAX`, 또는 이번 프레임에 이미 표시된 칸(`slot_seen[slot]`)이면 무시. 아니면 표시하고 `slot[nslot] = slot`, `slot_tran[nslot] = tran`, `slot_cpid[nslot] = cpid`, `nslot++` |
-| `view_add_os(slot, src)` | `slot < 0` 또는 `nos >= 64` 면 무시. 같은 칸이 이미 있으면 무시. `src != NULL` 이면 통째 복사. 아니면 0 으로 채우고 `slot`, `tid = thr_tid_of(slot)`, `tid > 0` 이면 `os_task_comm` 으로 `comm`. **`tid > 0` 인 경우에만** `nos++`(확정) |
+| `view_add_os(slot, src)` | `slot < 0` 또는 `nos >= OS_MAX`(128) 면 무시. `src != NULL`(샘플러 항목)이면 같은 (칸, `src->cs`) 가 이미 있을 때만 무시하고 통째 복사. `src == NULL`(이름만)이면 **그 칸의 항목이 하나라도** 있으면 무시, 아니면 0 으로 채우고 `slot`, `cs = −1`, `tid = thr_tid_of(slot)`, `tid > 0` 이면 `os_task_comm` 으로 `comm`. **`tid > 0` 인 경우에만** `nos++`(확정) |
 
 `thr_waiters_mem2` 는 첫 큐(`head`)를 걷고, `head2 != 0` 이고 자리가 남으면 둘째 큐를 이어 걷되 첫 부분에 이미 있는 칸을 만나면 거기서 둘째 부분을 끊는다(찢긴 읽기 방지). 자세한 것은 04 문서.
 
@@ -349,7 +352,8 @@
 
 | 함수 | 계약 |
 |---|---|
-| `view_os_of(slot)` | `view.os[0..nos)` 에서 `slot` 이 같은 첫 항목 포인터, 없으면 `NULL` |
+| `view_os_of(slot)` | `view.os[0..nos)` 에서 `slot` 이 같은 첫 항목 포인터, 없으면 `NULL`. **이름(`comm`)·tid 조회용**(어느 CS 항목이든 같은 값) |
+| `view_os_at(slot, cs)` | `slot`·`cs` 가 모두 같고 `samples > 0` 인 항목 포인터, 없으면 `NULL`. **상태 조회용**(그 CS 를 쥔 동안의 D/R/틱) |
 | `resume_name(v)` | 코드 → 대기 사유 이름(언어 `use_ko` 반영): 3 page latch/페이지 래치, 5 job queue/작업 큐, 7·9·11 critical section/크리티컬 섹션, 13 connection queue/접속 큐, 15 class repr/클래스 표현, 17 lock/락, 19 log writer/로그 writer, 21 free buffer/빈 버퍼, 23 DWB queue/DWB 큐, 25 sleep/sleep, 26 concurrency slot/동시성 슬롯, 그 외 `""` |
 | `view_identity(tran, &id, &trid)` | `nident == 0` 이면 −1. `view.ident` 를 `idx` 로 이진 탐색(비교는 뺄셈 없이 `<`/`>`: 재생 값은 임의 int). 찾으면 `*id` 복사, `trid != NULL` 이면 `*trid`, 0 반환. 없으면 −1. **전제: `ident` 는 `idx` 오름차순** |
 | `view_identity_seen(tran, cpid, &id, &trid)` | (tran, cpid) 로 목격된 클라이언트에 보일 신원. `view_identity(tran)` 가 있고 `cpid < 0 \|\| id.cpid == cpid` 면 0(현재 클라이언트, 또는 pid 모름). 아니면 `tran < 1 \|\| cpid < 0` 이면 −1(없음). `gone` 에서 `idx == tran && id.cpid == cpid` 를 찾으면 그 신원·trid 로 1(떠난 클라이언트). 없으면 `*id` 를 0 으로 채우고 `id->cpid = cpid` 로 2(떠났고 신원 없음, pid 만). 2 일 때 `trid` 는 쓰지 않는다 |
@@ -554,8 +558,8 @@ F … (프레임 2) …
 #### `W` — 활동 목격 (7/7)
 쓰기 `fprintf(f, "W %d %d %d %d %d %d\n", cs, kind, tran, thr, samples, cpid)` (`st.act[0..nact)` 순). 읽기 `W cs kind tran thr samples cpid`(모두 `atoi`, cpid −1 = 모름). 검증(이 순서, 둘 다 bad): `0 <= samples <= F 의 samples`, `0 <= cs < count`, `kind ∈ {0, 1}`. `nact < 4096` 일 때만 저장. 스냅샷(samples 0)은 `nact == 0` 이므로 `W` 가 없다.
 
-#### `O` — 스레드 OS 상태 (11/11)
-쓰기: `"O %d %d %d %d %d %d %ld %ld"` (slot, tid, samples, run, dsk, oth, ticks0, ticks1) + `rec_str(comm)` + `" %d\n"` (span_ms). 읽기: 0 으로 채운 뒤 넣고(`t_first`/`t_last` = 0; ticks 는 `atol`, 나머지 `atoi`), `comm` 은 16 B, `nos < 64` 일 때만 저장. 값 검증 없음.
+#### `O` — 스레드 OS 상태 (12/12)
+쓰기: `"O %d %d %d %d %d %d %d %ld %ld"` (slot, cs, tid, samples, run, dsk, oth, ticks0, ticks1) + `rec_str(comm)` + `" %d\n"` (span_ms). 한 줄 = (칸, CS) 한 쌍의 상태, `cs = −1` 은 이름만 있는 항목. 읽기: 0 으로 채운 뒤 넣고(`t_first`/`t_last` = 0; ticks 는 `atol`, 나머지 `atoi`), `comm` 은 16 B, `nos < OS_MAX` 일 때만 저장. 검증: `cs < −1 \|\| cs >= view.count` 이면 `rec_bad`. 그 밖의 값 검증 없음.
 
 #### `D` — 로그 장치 (4/4)
 쓰기 `fprintf(f, "D %.17g %.17g", await_ms, util_pct)` + `rec_str(dev)` + `fputc('\n')` — `disk_avail` 일 때만. 읽으면 `disk_avail = 1`, 두 값 `rec_real`, dev 는 32 B.
@@ -595,7 +599,7 @@ typedef struct { const char *tag; int min_tok, max_tok, mark;
 | `Q` | 3 | 68 | 0 | `rd_Q` |
 | `P` | 3 | 68 | 0 | `rd_P` |
 | `W` | 7 | 7 | 0 | `rd_W` |
-| `O` | 11 | 11 | 0 | `rd_O` |
+| `O` | 12 | 12 | 0 | `rd_O` |
 | `V` | 2 | 20 | 0 | `rd_V` |
 | `K` | 2 | 2 | `REC_FRAME_KEY`(2) | `rd_K` |
 | `X` | 2 | 2 | 0 | `rd_X` |
@@ -761,7 +765,7 @@ C 0 0 0 0 -1 0 0 1 0 0 0 0 0 0 0 -1 0 0 0 0 WFG 0 -1
 C 1 -1 0 0 0 7f7badffb640 0 1 3450205 823841 19872 529156.09199999995 232.00200000000001 29 15 29 7f7b61feb640 7f7bf59ada40 3448962 823479 LOG 528854.09100000001 -1
 I 1 13985814 3214132 ~ DBA csql cubrid dbhost01 10.0.0.79
 W 1 0 0 4300 24 -1
-O 4300 3913067 9 6 3 0 20464 20472 log-flush 450
+O 4300 1 3913067 9 6 3 0 20464 20472 log-flush 450
 ```
 
 스냅샷 기록(`demodb-snapshot.rec`): `F` 의 samples·dt 가 0, 풀 수집됨(`pool_state 1`, `pool_truncated -1`), `O` 는 이름만(샘플 0):
@@ -769,7 +773,7 @@ O 4300 3913067 9 6 3 0 20464 20472 log-flush 450
 ```
 F 1793193204 18 0 0 1 1 1 102 1 -1
 Q 7f7bf59b0970 5 4237 4226 4257 4300 4230
-O 4221 3913152 0 0 0 0 0 0 transaction 0
+O 4221 -1 3913152 0 0 0 0 0 0 transaction 0
 G 3 408 739786400 11.000999999999999 CONN_ENTRY
 ```
 
@@ -793,7 +797,7 @@ P 1 1 4227
 S 4227 1 3214132
 W 1 0 3 4300 29 3214140
 W 1 1 1 4227 15 3214132
-O 4300 3913067 9 6 3 0 20464 20472 log-flush 450
+O 4300 1 3913067 9 6 3 0 20464 20472 log-flush 450
 D 1.25 12.5 sda
 R 143 28 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0
 E

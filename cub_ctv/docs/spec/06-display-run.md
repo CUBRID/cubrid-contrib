@@ -24,7 +24,8 @@
 | `HIST_CAP` (verdict.c 내부) | 4096 | 프레임 번호→1위 CS 링 테이블 크기 |
 | `CHAIN_REWALK_S` | 0.25 | 같은 큐 헤드 재순회 최소 간격(초) |
 | `OS_SAMPLE_MIN_S` | 0.05 | 새 큐 헤드 순회 및 procfs 스레드 상태 샘플 최소 간격(초) |
-| `OS_MAX` | 64 | 윈도우당 OS 상태를 유지하는 스레드 수 |
+| `OS_MAX` | 128 | 윈도우당 OS 상태 항목 수((스레드, CS) 쌍) |
+| `OS_RD_MAX` | 64 | 윈도우당 procfs 상태를 읽는 스레드 수 |
 | `OS_COMM_LEN` | 16 | 스레드 이름 버퍼 |
 | `ACT_MAX` | 4096 | 활동(ACT) 표 크기 |
 | `ACT_HELD_RESERVE` | 256 | 그중 보유(HELD) 목격 전용 예약분 |
@@ -123,12 +124,13 @@
 | `holder_cpid` | `int` | 그 보유자가 목격될 때의 클라이언트 pid, −1 모름 |
 | `one_thr` | `int` | 엔진 보유자를 한 스레드로 특정함 |
 | `held_pct`, `thr_pct` | `double` | 보유자 몫(%), 그 한 스레드 몫(%) |
-| `readers_most` | `int` | 보유자(holder ≥ 0)가 있으나 그 보유가 점유의 절반 미만: 점유의 대부분은 owner 가 없는 reader 라 보유자를 지목하지 않는다 |
+| `readers_most` | `int` | 보유자(holder ≥ 0)가 있으나 **writer 전체의 보유 합계**가 점유의 절반 미만: 점유의 대부분은 owner 가 없는 reader 라 보유자를 지목하지 않는다 |
+| `writers_pct` | `double` | 그 CS 를 쥔 모든 보유자(writer·강등 owner)의 보유 합계 몫(%) |
 | `nwaiters` | `int` | 대기한 클라이언트 세션 수 |
 | `waited_pct` | `double` | 세션당 평균 대기 몫(%) |
 | `wtran[4]`, `wsamples[4]` | `int` | 나열할 대기 세션 tran 과 목격 샘플 수(`VERDICT_WAITERS_LISTED`) |
 | `nlisted`, `more_waiters` | `int` | 나열 수(≤4), 5번째 이상 있음 |
-| `os` | `const OS_THR *` | 가장 많이 샘플된 보유 스레드, 없으면 NULL(`view.os` 안을 가리킴) |
+| `os` | `const OS_THR *` | `누가` 행이 지목한 보유자의 스레드가 **top CS 를 쥔 동안**의 OS 상태, 없으면 NULL(`view.os` 안을 가리킴) |
 | `dsk_pct`, `run_pct`, `cpu_pct` | `double` | 그 스레드의 D·R 상태 비율, CPU 사용률(%) |
 | `bound` | `int` | `VB_*` |
 
@@ -690,12 +692,12 @@ usage: cub_ctv [options] [<db-name> | <pid> | --pid N]
 
 ### 6.5 보유자 (`holders_build`, 프레임당 1회, 캐시 키 = `view.seq`)
 
-초기화(모든 CS): `hold_tran = -2`, `hold_cpid = -1`, `hold_samples = 0`, `hold_thr0 = -1`, `hold_thr0_samples = 0`, `first = ACT_MAX`, `bs = 0`.
+초기화(모든 CS): `hold_tran = -2`, `hold_cpid = -1`, `hold_samples = 0`, `hold_all = 0`, `hold_thr = -1`, `hold_thr0 = -1`, `hold_thr0_samples = 0`, `first = ACT_MAX`, `bs = 0`.
 
-1. `view.st.act[k]` 를 k 순으로 보며 `kind == ACT_HELD` 이고 `0 <= cs < MAX_CS` 인 것만 인덱스 목록에 넣는다.
+1. `view.st.act[k]` 를 k 순으로 보며 `kind == ACT_HELD` 이고 `0 <= cs < MAX_CS` 인 것만 인덱스 목록에 넣고, `hold_all[cs] += samples`(그 CS 의 보유 합계: 모든 보유자).
 2. 같은 순회에서 엔진 스레드 보유자: `tran == 0 && thr >= 0 && samples > bs[cs]` (엄격 초과 → 먼저 본 것이 동점 승) 이면 `bs = hold_thr0_samples = samples`, `hold_thr0 = thr`.
 3. 인덱스 목록을 (cs, tran, cpid, 원래 위치) 오름차순 정렬.
-4. 같은 (cs, tran, cpid) 묶음의 samples 를 합산(long long). `sum > hold_samples[cs]` 이거나 (`sum ==` 이고 묶음의 첫 위치 < `first[cs]`) 이면 갱신: `hold_samples = sum`, `hold_tran = tran`, `hold_cpid = cpid`, `first = 묶음 첫 위치`. → 합계 최대, 동점이면 구간에서 먼저 목격된 클라이언트. 슬롯이 구간 중 다른 클라이언트에게 넘어가면 두 클라이언트는 따로 합산된다.
+4. 같은 (cs, tran, cpid) 묶음의 samples 를 합산(long long). `sum > hold_samples[cs]` 이거나 (`sum ==` 이고 묶음의 첫 위치 < `first[cs]`) 이면 갱신: `hold_samples = sum`, `hold_tran = tran`, `hold_cpid = cpid`, `hold_thr = 묶음 안에서 thr >= 0 이고 samples 가 가장 많은 항목의 thr`(엄격 초과 → 먼저 본 것이 동점 승, 없으면 -1), `first = 묶음 첫 위치`. → 합계 최대, 동점이면 구간에서 먼저 목격된 클라이언트. 슬롯이 구간 중 다른 클라이언트에게 넘어가면 두 클라이언트는 따로 합산된다.
 
 질의 함수:
 
@@ -703,6 +705,9 @@ usage: cub_ctv [options] [<db-name> | <pid> | --pid N]
 |---|---|
 | `holder_of(i, &s, &cpid)` | `hold_tran[i]` (-2 = 없음, 0 = 엔진, ≥1 = 클라이언트 tran). `s` = 합계(INT_MAX 로 포화), `cpid = hold_cpid[i]` |
 | `holder_thread_of(i, &s)` | `hold_thr0[i]` (-1 = 없음), `s = hold_thr0_samples[i]` |
+| `held_all_of(i)` | `hold_all[i]` (long long) |
+| `held_minor(i)` | `2 * hold_all[i] < view.st.occ[i]` |
+| `holder_slot_of(i)` | `hold_thr[i]`: 보유자로 뽑힌 (tran, cpid) 묶음에서 samples 가 가장 많은 항목의 `thr`(`thr >= 0` 인 것만, 동점이면 먼저 본 것), 없으면 -1. 보유자가 엔진(tran 0)이면 `hold_thr0[i]` 와 같은 스레드다. 4단계에서 묶음이 보유자로 갱신될 때 함께 정한다 |
 | `daemon_name(i)` | `hold_thr0[i] >= 0` 이고 `view_os_of(slot)` 가 있으면 그 `comm`, 아니면 `""` |
 
 ### 6.6 지속 이력 (프레임 번호 표)
@@ -731,12 +736,13 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 | `held_pct` | `view.st.samples > 0 ? 100.0 * hs / view.st.samples : 0.0` (samples 0 이면 0, NaN 없음) |
 | `one_thr` | `holder == 0 && holder_thread_of(top->ix, &thr_samples) >= 0` |
 | `thr_pct` | `one_thr && view.st.samples > 0 ? 100.0 * thr_samples / view.st.samples : held_pct` (samples 0 이면 `held_pct` = 0) |
-| `readers_most` | `holder != -2 && 2 * hs < view.st.occ[top->ix]` (`hs` = 보유자 샘플 수, 보유는 점유의 부분집합). 보유자는 보유가 점유의 주된 몫일 때만 지목한다: reader 는 owner 를 남기지 않아 누구인지 알 수 없으므로, writer 가 잠깐 잡힌 것만으로 그를 "가장 오래 쥔 쪽" 으로 부르지 않는다 |
+| `writers_pct` | `view.st.samples > 0 ? 100.0 * held_all_of(top->ix) / view.st.samples : 0.0`. `held_all_of(i)` = CS i 의 모든 `ACT_HELD` 항목 samples 합(`holders_build` 가 함께 센다; 한 표본에 보유자는 하나뿐이라 점유 샘플 수를 넘지 않는다) |
+| `readers_most` | `holder != -2 && held_minor(top->ix)`, `held_minor(i) = 2 * held_all_of(i) < view.st.occ[i]`. 점유에서 보유(writer) 몫을 뺀 나머지가 reader 몫이다: reader 는 owner 를 남기지 않아 누구인지 알 수 없으므로, reader 가 점유의 과반이면 잠깐 잡힌 writer 를 "가장 오래 쥔 쪽" 으로 부르지 않는다. **보유자 한 명의 몫이 아니라 writer 전체의 합**으로 본다: writer 여럿이 나눠 쥐어 reader 가 없는 CS(예: 엔진 데몬 16 + 클라이언트 writer 30 = 점유 46)는 reader 위주가 아니고, 그중 가장 오래 쥔 쪽이 보유자다 |
 | `nwaiters` | act 중 `cs == top->ix && kind == ACT_WAIT && tran >= 1` 인 항목 수 (클라이언트 tran 은 (cs,kind,tran,cpid) 당 1항목 — 구간 중 슬롯이 재사용되면 두 클라이언트가 따로 셈) |
 | `wtran[]`, `wsamples[]`, `nlisted` | 위 항목을 act 순서로 앞에서 4개 |
 | `more_waiters` | 5번째 이상이 있으면 1 |
 | `waited_pct` | `nwaiters > 0 && view.st.samples > 0` 이면 `100.0 * waited / nwaiters / view.st.samples`, 아니면 0(memset 값). `waited`(double) = **위 조건의 모든 항목**(`nwaiters` 개 전부, 나열된 4개만이 아님)의 `samples` 합 |
-| `os` | act 를 k 순으로 보며 `cs == top->ix && kind == ACT_HELD && thr >= 0` 인 항목의 `o = view_os_of(thr)` 가 NULL 이 아니고 `o->samples > bs`(bs 초기 0, 엄격 초과 → 먼저 본 것이 동점 승)이면 `os = o`, `bs = o->samples`. 끝에 `os != NULL && os->samples <= 0` 이면 NULL(초기 bs 0 때문에 실제로는 생기지 않음) |
+| `os` | `thr = holder_slot_of(top->ix)`. `readers_most` 가 아니고 `thr >= 0` 이면 `view_os_at(thr, top->ix)`(그 스레드가 top CS 를 쥔 동안의 표본, `samples > 0`), 아니면 NULL. 판정의 행들은 같은 보유자를 가리킨다: `누가` 가 지목한 보유자(holder)의 스레드만 쓰고, 그 스레드가 다른 CS 를 쥐고 있던 표본은 섞지 않는다. 보유자를 지목하지 않는 경우(`readers_most`, holder −2)와 그 스레드의 top CS 표본이 없는 경우는 NULL — 다른 스레드의 상태로 대신하지 않는다(그때 디스크/CPU 행은 장치 수치만으로 판단하거나 `쥔 스레드 상태 미확보`). 클라이언트 보유자의 활동은 (cs, tran, cpid) 당 한 항목이고 `thr` 은 처음 알려진 칸이므로, 그 tran 이 구간 중 다른 워커에서도 돌았으면 처음 칸의 표본만 본다 |
 | `dsk_pct` | `100.0 * os->dsk / os->samples` (실수) |
 | `run_pct` | `100.0 * os->run / os->samples` (실수) |
 | `cpu_pct` | `seen_s = os->span_ms / 1000.0`; `seen_s >= 0.05` 이면 `100.0 * (double)(ticks1 - ticks0) / os_clock_ticks() / seen_s`, 아니면 0.0. `os_clock_ticks()` 는 `long` = `sysconf(_SC_CLK_TCK)` (≤0 이면 100) |
@@ -832,7 +838,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
 | `capacity` / `처리량` | holder == 0 && !readers_most 일 때만 | `thr_pct >= 60` → `near the daemon's capacity` / `데몬 처리 상한 근접`, 아니면 `headroom remains` / `여유 있음` | `daemon holds %.0f%% -> %.0f%% headroom at %.0f entries/s` / `데몬 보유 %.0f%% -> 여유 %.0f%%, 진입 %.0f건/s` (thr_pct, 100-thr_pct, enter_s) |
 | `who suffers` / `피해` | nwaiters > 0 | `%d client sessions, waited ~%.0f%% of the window each` / `클라이언트 세션 %d개, 각 구간의 약 %.0f%% 대기` (nwaiters, waited_pct) | 나열 항목마다 `buf_cat(ev, 200, &o, "%stran %d (%d)", k ? ", " : "", wtran[k], wsamples[k])`, more_waiters 면 `buf_cat(…, ", ...")`. **언어 공통**(M 쌍 아님, 한국어에서도 `tran`·`, `·`, ...`). `buf_cat` 이므로 넘치면 UTF-8 경계에서 잘리고 이후 호출은 무동작(`", ..."` 도 생략). 최장 4 항목 × 약 30 B 라 200 B 에서 실제로는 잘리지 않는다 |
 | `who suffers` / `피해` | nwaiters == 0 | `no client session identified` / `식별된 클라이언트 세션 없음` | `waiters were engine threads or not resolved` / `대기자가 엔진 스레드이거나 미식별` |
-| `action` / `조치` | readers_most | `check read volume and the writing session` / `읽기 빈도와 쓰기 세션을 함께 볼 것` | `occupied %.0f%%, writer held %.0f%%; readers the rest` / `점유 %.0f%% 중 writer 보유 %.0f%%, 나머지는 reader` (occ_pct, held_pct) |
+| `action` / `조치` | readers_most | `check read volume and the writing session` / `읽기 빈도와 쓰기 세션을 함께 볼 것` | `occupied %.0f%%, writers held %.0f%%; readers the rest` / `점유 %.0f%% 중 writer 보유 %.0f%%, 나머지는 reader` (occ_pct, writers_pct) |
 | 〃 | holder == 0 (readers_most 아님) | `not a session problem -> look at the engine side` / `세션 조치 불필요 -> 엔진 쪽을 볼 것` | `holder is an engine daemon` / `쥔 쪽이 엔진 데몬` |
 | 〃 | holder > 0 (readers_most 아님) | `inspect the holding session` / `쥔 세션을 확인할 것` | `a client holds it longest` / `클라이언트가 가장 오래 쥠` |
 | 〃 | holder == -2 | `reduce the entry rate` / `진입 빈도를 줄일 것` | `no writer holds it; contention is by volume` / `writer 없음; 횟수에 의한 경합` |
@@ -850,7 +856,7 @@ push 되는 값: 요약 화면이 그려질 때 `fig[0].severity >= 2 ? fig[0].i
    - `"%s%2d %-23s %s%s%5.0f %6.0f %7.0f %s  %s%s\n"` = 색(심각도 ≥3 → WAIT, ==2 → OWNER, 1 → `""`), n, name(23 초과 시 그대로 넘침), guards 면 `dw_pad(cs_desc, 24)` 와 `" "`(아니면 `""`), occ_pct, wait_pct, wait_s, avg, who, OFF.
    - who 가 `room = scr_cols - (guards ? 82 : 57)` 칸을 넘으면(`scr_cols > 0`) `dw_pad(who, max(room, 0))` 로 자른다.
    - avg: `avg_ms > 0` 이면 `"%7.3f"`, 아니면 `"%7s"` 의 `-`.
-   - who: holder != -2 이고 보유가 점유의 절반 미만(`2 * hs < occ[ix]`, §6.7 readers_most 와 같은 기준) → `readers` / `reader 다수`; 아니고 holder==0 && daemon_name 있음 → `engine %s` / `엔진 %s`; holder != -2 → `tran_text(holder, hcpid, LABEL)` (`holder_of(ix, &hs, &hcpid)`); 그 밖 → occ > 0 이면 `readers` / `reader 다수`, 아니면 `-`.
+   - who: holder != -2 이고 `held_minor(ix)`(writer 전체의 보유 합계가 점유의 절반 미만, §6.7 readers_most 와 같은 기준) → `readers` / `reader 다수`; 아니고 holder==0 && daemon_name 있음 → `engine %s` / `엔진 %s`; holder != -2 → `tran_text(holder, hcpid, LABEL)` (`holder_of(ix, &hs, &hcpid)`); 그 밖 → occ > 0 이면 `readers` / `reader 다수`, 아니면 `-`.
 4. idle > 0 이면 MUTED `   %d others: idle` / `   나머지 %d개: 활동 없음` OFF `\n`.
 5. `print_thread_waits(out, 1)` (§7.6), 그리고 `"\n"`.
 
@@ -1189,7 +1195,7 @@ fflush (stdout);
 |---|---|
 | `live_win_new(count, stride)` | `LIVE_WIN` calloc, `blob = malloc(stride * count)`. 실패 시 die `out of memory` / `메모리 부족` |
 | `live_win_free` | blob, w 해제 |
-| `live_win_reset(w, count)` | `win_stats_clear(&w->st)` (occ/wai/seen_* 0, `seen_tran = -1`, `seen_cpid = -1`, `seen_n = -1`, `nact = act_dropped = 0`); CS 마다 `wq_last = 0`, `ch_n = 0`, `own_last = 0`, `own_slot = -1`; `act_ix` 전부 0; `nos = 0`; `!no_disk` 이면 `view_disk_begin(w)`. `ch_walked[]` 는 리셋하지 않는다(윈도우를 넘어 유지) |
+| `live_win_reset(w, count)` | `win_stats_clear(&w->st)` (occ/wai/seen_* 0, `seen_tran = -1`, `seen_cpid = -1`, `seen_n = -1`, `nact = act_dropped = 0`); CS 마다 `wq_last = 0`, `ch_n = 0`, `own_last = 0`, `own_slot = -1`; `act_ix` 전부 0; `nos = 0`; `nrd = 0`(스레드별 판독 캐시도 비움: 지난 구간의 표본 번호·판독값이 새 구간에 쓰이지 않게); `!no_disk` 이면 `view_disk_begin(w)`. `ch_walked[]` 는 리셋하지 않는다(윈도우를 넘어 유지) |
 
 ### 11.2 샘플 1회 (`live_accumulate(w, lo)`)
 
@@ -1203,7 +1209,7 @@ blob 은 직전 `mem_read` 로 읽은 CS 배열 전체 이미지. CS i 마다:
    2. `tran >= 1 || (tran == 0 && seen_tran[i] < 0)` → `seen_tran[i] = tran`, `seen_cpid[i] = cpid`, `seen_owner[i] = owner` (클라이언트 tran 우선, 엔진은 아직 없을 때만).
    3. owner == 0 이면 k = -1. 아니면 `owner != own_last[i]` 일 때만 `own_last = owner`, `own_slot = thr_index_of_tid_mem(owner)` 갱신, `k = own_slot[i]`.
    4. `act_add(w, i, ACT_HELD, tran, k, cpid)`.
-   5. `k >= 0` 이면 `os_sample(w, k)`.
+   5. `k >= 0` 이면 `os_sample(w, k, i)` (그 스레드가 CS i 를 쥔 표본으로 센다).
 5. `wr != 0 || ww != 0`:
    1. `head = cs_wait_queues(blob, lo, i, &head2, &field)`; `st.wai[i]++`.
    2. head != 0:
@@ -1238,14 +1244,18 @@ blob 은 직전 `mem_read` 로 읽은 CS 배열 전체 이미지. CS i 마다:
 - 일치(`cs, kind, tran, cpid` 같고 `tran > 0 || a->thr == key_thr`) → `samples++`; `a->thr < 0` 이면 `a->thr = thr`.
 - 새 항목: `nact < (kind == ACT_HELD ? 4096 : 4096 - 256)` 이면 추가(`samples = 1`, `cpid`), 아니면 `act_dropped++`. 대기 항목은 마지막 256칸을 쓰지 못한다(보유 목격 예약).
 
-### 11.4 OS 샘플 (`os_sample(w, k)`)
+### 11.4 OS 샘플 (`os_sample(w, k, cs)`)
+
+스레드 칸 k 가 CS `cs` 를 쥐고 있는 표본마다 불린다. procfs 판독은 스레드당 20 Hz 상한이고, 읽은 상태는 (k, cs) 항목에 센다.
 
 1. `tid = thr_tid_of(k)`; ≤ 0 이면 무시.
-2. `w->os[]` 에서 slot == k 를 찾고, 없으면 `nos < 64` 일 때 새로 만들어 slot, tid, `os_task_comm` 으로 comm(16B) 을 채움. 가득 차면 무시.
-3. `now = mono_s()`. `t_last > 0 && now - t_last < 0.05` 이면 무시(스레드당 20 Hz 상한).
-4. `t_last = now` (판독 실패도 스로틀 적용).
-5. `os_task_state(target_pid, tid)` (`/proc/<pid>/task/<tid>/stat` 의 상태 문자와 utime+stime) 실패 → 무시.
-6. 첫 성공이면 `ticks0 = ticks`, `t_first = now`. 매번 `ticks1 = ticks`, `span_ms = (int)((now - t_first) * 1000 + 0.5)`, `samples++`, 상태 `R` → run++, `D` → dsk++, 그 밖 oth++.
+2. `w->os[]` 에서 `slot == k && cs == cs` 인 항목을 찾고, 없으면 `nos < OS_MAX`(128) 일 때 새로 만들어 slot, cs, tid, `os_task_comm` 으로 comm(16B) 을 채움(`os_task_comm` 은 tid 별 5초 캐시라 같은 스레드의 둘째 항목은 procfs 를 다시 읽지 않는다, 01 §7.6). 가득 차면 무시.
+3. 스레드별 판독 캐시 `w->rd[]` 에서 `slot == k` 를 찾고, 없으면 `nrd < OS_RD_MAX`(64) 일 때 새로 만든다(`t = 0`, `seq = -1`). 가득 차면 무시.
+4. 판독 여부는 **스레드당 표본당 한 번** 정한다. `rd->seq != w->st.samples`(이 표본에서 이 스레드를 처음 봄)이면: `rd->seq = w->st.samples`, `now = mono_s()`; `rd->t > 0 && now - rd->t < 0.05`(스레드당 20 Hz 상한)이면 `rd->ok = 0`, 아니면 `rd->t = now`, `rd->ok = os_task_state(target_pid, tid, &rd->st, &rd->ticks) == 0` (`/proc/<pid>/task/<tid>/stat` 의 상태 문자와 utime+stime; 판독 실패도 `rd->t` 를 갱신해 스로틀 적용). `rd->seq == w->st.samples` 이면(같은 스레드가 한 표본에 CS 를 둘 이상 쥠) 그 결정과 판독값을 그대로 쓴다 — 시계를 다시 보지 않으므로 한 표본은 그 스레드가 쥔 CS 항목 **전부에 세거나 전부에 세지 않는다**.
+5. `!rd->ok` → 무시.
+6. 항목의 첫 성공이면 `ticks0 = rd->ticks`, `t_first = rd->t`. 매번 `t_last = rd->t`, `ticks1 = rd->ticks`, `span_ms = (int)((rd->t - t_first) * 1000 + 0.5)`, `samples++`, 상태 `R` → run++, `D` → dsk++, 그 밖 oth++.
+
+`span_ms`·틱 차이는 그 (스레드, CS) 의 첫 목격부터 마지막 목격까지의 구간이다(그 사이 CS 를 놓았던 시간의 CPU 도 들어간다 — `cpu_pct` 는 그 구간의 평균).
 
 ---
 

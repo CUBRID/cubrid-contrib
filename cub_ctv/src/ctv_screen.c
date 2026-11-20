@@ -316,9 +316,9 @@ print_verdict (FILE * out, const CS_FIG * top, const CS_FIG * second)
     {
       snprintf (judge, sizeof (judge), "%s", M ("check read volume and the writing session",
 						"읽기 빈도와 쓰기 세션을 함께 볼 것"));
-      snprintf (ev, sizeof (ev), M ("occupied %.0f%%, writer held %.0f%%; readers the rest",
+      snprintf (ev, sizeof (ev), M ("occupied %.0f%%, writers held %.0f%%; readers the rest",
 				    "점유 %.0f%% 중 writer 보유 %.0f%%, 나머지는 reader"),
-		top->occ_pct, v.held_pct);
+		top->occ_pct, v.writers_pct);
     }
   else if (v.holder == 0)
     {
@@ -764,7 +764,7 @@ screen_summary (const CS_LAYOUT * lo, double dt, int hz,
 	  continue;
 	}
       holder = holder_of (f->ix, &hs, &hcpid);
-      if (holder != -2 && held_minor (f->ix, hs))
+      if (holder != -2 && held_minor (f->ix))
 	{
 	  holder = -2;		/* readers most of the time (see the verdict) */
 	}

@@ -246,25 +246,25 @@ total / max wait : 214479.0 ms / 502.005 ms
 | 경로 | 줄수 | 설명 |
 |---|---|---|
 | `src/cub_ctv.c` | 862 | 인자 처리, 대상 선택, 초기화, 모드 분기 |
-| `src/ctv.h` | 818 | 공용 타입·상수·모듈별 프로토타입 |
-| `src/ctv_text.c` `ctv_mem.c` `ctv_field.c` `ctv_sched.c` `ctv_msg.c` | 254 / 294 / 124 / 90 / 93 | 텍스트, 메모리 판독, 필드 상태기계, 재시도 일정, 메시지 |
+| `src/ctv.h` | 844 | 공용 타입·상수·모듈별 프로토타입 |
+| `src/ctv_text.c` `ctv_mem.c` `ctv_field.c` `ctv_sched.c` `ctv_msg.c` | 262 / 294 / 124 / 90 / 159 | 텍스트, 메모리 판독, 필드 상태기계, 재시도 일정, 메시지 |
 | `src/ctv_os.c` `ctv_proc.c` `ctv_elf.c` | 289 / 77 / 271 | procfs, cub_server 찾기, ELF 심볼 조회 (I-13) |
-| `src/ctv_cs.c` | 390 | 크리티컬 섹션 배열 탐색·해석 (I-0~I-5) |
+| `src/ctv_cs.c` | 400 | 크리티컬 섹션 배열 탐색·해석 (I-0~I-5) |
 | `src/ctv_tran.c` | 1,045 | 트랜잭션 테이블·클라이언트 정보 탐색 (I-6~I-11) |
-| `src/ctv_thr_probe.c` `ctv_thr.c` | 627 / 999 | 스레드 엔트리 탐색, 필드 수명·대기 체인·대기 사유 (I-14~I-20) |
+| `src/ctv_thr_probe.c` `ctv_thr.c` | 628 / 1,001 | 스레드 엔트리 탐색, 필드 수명·대기 체인·대기 사유 (I-14~I-20) |
 | `src/ctv_pool.c` | 311 | 동기화 통계 풀 (I-12) |
-| `src/ctv_frame.c` `ctv_rec.c` | 672 / 1,230 | 프레임 캡처·질의, 기록·재생 형식 |
-| `src/ctv_verdict.c` `ctv_screen.c` | 512 / 866 | 판정 계산, 요약 화면 |
-| `src/ctv_term.c` `ctv_rows.c` `ctv_json.c` `ctv_present.c` `ctv_dump.c` | 405 / 626 / 266 / 136 / 113 | 터미널, 표 행, JSON, 모드별 출력, 디테일 덤프 |
-| `src/ctv_sampler.c` `ctv_live.c` `ctv_replay.c` | 343 / 395 / 169 | 라이브 표본, 라이브 루프, 재생 루프 |
-| `tests/` | — | SHOW 대조(t2), 트랜잭션(t4), 재생 골든(t5), 기록 왕복(t6), 라이브=재생(t7), 재생 키(t8), 빠른 확인(t9), OS 매핑(t10), 신원 변화분(t11), 필드·일정 규칙(t12), 판정 수치(t13), 슬롯 재사용(t14), 요약 화면 크기 맞춤(t15), 활동 샘플 수 상한(t16), 대상 선택(t17), 강등 보유(t18), reader 위주 판정(t19), UTF-8 범위(t20), 시계 사용(t21), 메시지 형식 검사, 경합 유발 스크립트(CS 0–17 지정), 기록 픽스처 |
+| `src/ctv_frame.c` `ctv_rec.c` | 689 / 1,248 | 프레임 캡처·질의, 기록·재생 형식 |
+| `src/ctv_verdict.c` `ctv_screen.c` | 550 / 901 | 판정 계산, 요약 화면 |
+| `src/ctv_term.c` `ctv_rows.c` `ctv_json.c` `ctv_present.c` `ctv_dump.c` | 405 / 626 / 266 / 136 / 115 | 터미널, 표 행, JSON, 모드별 출력, 디테일 덤프 |
+| `src/ctv_sampler.c` `ctv_live.c` `ctv_replay.c` | 380 / 395 / 169 | 라이브 표본, 라이브 루프, 재생 루프 |
+| `tests/` | — | SHOW 대조(t2), 트랜잭션(t4), 재생 골든(t5), 기록 왕복(t6), 라이브=재생(t7), 재생 키(t8), 빠른 확인(t9), OS 매핑(t10), 신원 변화분(t11), 필드·일정 규칙(t12), 판정 수치(t13), 슬롯 재사용(t14), 요약 화면 크기 맞춤(t15), 활동 샘플 수 상한(t16), 대상 선택(t17), 강등 보유(t18), reader 위주 판정(t19), UTF-8 범위(t20), 시계 사용(t21), CS별 OS 상태(t22), 메시지 형식 검사, 경합 유발 스크립트(CS 0–17 지정), 기록 픽스처 |
 | `docs/*.md` | — | usage / critical-sections(신입 엔지니어용 동작 설명) / architecture / limitations / build |
 | `docs/spec/00~06` | — | 재구현 명세: 모듈별 자료 구조·불변식·규칙·출력/기록 형식·수용 시험 |
 | `README.md` | — | 사용법·해석 가이드 |
 | `t9-replay.gif` | — | README 의 라이브 요약 화면 예시(t9 기록 재생, 4구간) |
 | `build.sh`, `LICENSE`, `NOTICE` | — | 빌드, Apache 2.0 |
 
-소스는 `src/` 27파일 약 12,100줄이다. 커밋에는 수정 파일과 함께 새 파일 전부가 들어가야 빌드된다
+소스는 `src/` 27파일 약 12,500줄이다. 커밋에는 수정 파일과 함께 새 파일 전부가 들어가야 빌드된다
 (`git add src docs tests` 후 `git status` 로 미추적 0 확인).
 
 ## 7. 빌드 (Build)
@@ -290,7 +290,8 @@ CUBRID 소스도 헤더도 필요 없다(libc 만). glibc-static 이 없으면 �
 | OS 매핑 | 스레드 os_tid 가 모두 `/proc/<pid>/task` 의 서로 다른 tid 이고 개수가 스레드 수 −1 의 ±8 이내, 이름 일치 (t10) |
 | 대상 선택 | DB 이름 우선(숫자 이름이 다른 서버 pid 와 같아도 DB 이름), 같은 이름 서버가 여럿이면 실행 안 하고 후보별 `--pid` 안내, `--pid` 는 pid 로만 선택 (t17, 서버 없이 실행) |
 | 강등 보유 | HA 로그 플러시가 LOG 를 reader 로 강등해 쥔 구간을 데몬 보유로 셈: 점유 95% 구간에서 데몬 보유 3% → 95% (t18, 서버 없이 실행) |
-| reader 위주 판정 | reader 가 94% 점유한 CS 에서 1% 잡힌 writer 세션을 쥔 쪽으로 지목하지 않음(`reader 다수`, 세션 조치 없음), 점유 대부분을 쓴 세션은 지목 (t19, 서버 없이 실행) |
+| reader 위주 판정 | reader 가 94% 점유한 CS 에서 1% 잡힌 writer 세션을 쥔 쪽으로 지목하지 않음(`reader 다수`, 세션 조치 없음), 점유 대부분을 쓴 세션은 지목, writer 여럿이 나눠 쥔 CS(reader 없음)와 writer 가 점유의 꼭 절반인 CS 는 reader 위주 아님 (t19, 서버 없이 실행) |
+| 디스크/CPU 귀속 | 쥔 스레드의 OS 상태를 (스레드, CS) 별로 세어, 다른 CS 를 오래 쥔 스레드의 상태가 top CS 판정에 섞이지 않음: `누가` = tran 5 일 때 `디스크/CPU` = 그 스레드의 R 100% (t22, 서버 없이 실행) |
 | 빠른 확인 | `tests/t9_quick_trace.sh <db>`: 15초 부하 중 판독·판정·대기 세션 식별·기록·녹화 키를 PASS/FAIL |
 | 입력 방어 | 손상·잘린 기록은 줄 번호와 함께 거부, 기록·덤프 파일 0600·심볼릭 링크 거부, 외부 문자열 정화 |
 | 메모리 안전 | 대기자 64명 주입 하네스·재생/기록/덤프/라이브 전 경로 AddressSanitizer 오류 0 |

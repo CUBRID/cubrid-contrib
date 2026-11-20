@@ -56,21 +56,22 @@ live_win_reset (LIVE_WIN * w, int count)
       w->own_slot[i] = -1;
     }
   memset (w->act_ix, 0, sizeof (w->act_ix));
-  w->nos = 0;
+  w->nos = w->nrd = 0;
   if (!w->no_disk)
     {
       view_disk_begin (w);
     }
 }
 
-/* one scheduler-state sample of the thread in slot k (writer of a CS) */
+/* one scheduler-state sample of the thread in slot k while it holds CS cs:
+ * procfs is read once per thread (20 Hz at most) and the state counted on
+ * the (thread, CS) entry, so a CS's figures never mix in what its holder
+ * did under another CS */
 static void
-os_sample (LIVE_WIN * w, int k)
+os_sample (LIVE_WIN * w, int k, int cs)
 {
   OS_THR *o = NULL;
-  char st;
-  long ticks;
-  double now;
+  OS_RD *rd = NULL;
   int j, tid = thr_tid_of (k);
 
   if (tid <= 0)
@@ -79,7 +80,7 @@ os_sample (LIVE_WIN * w, int k)
     }
   for (j = 0; j < w->nos; j++)
     {
-      if (w->os[j].slot == k)
+      if (w->os[j].slot == k && w->os[j].cs == cs)
 	{
 	  o = &w->os[j];
 	  break;
@@ -94,32 +95,64 @@ os_sample (LIVE_WIN * w, int k)
       o = &w->os[w->nos++];
       memset (o, 0, sizeof (*o));
       o->slot = k;
+      o->cs = cs;
       o->tid = tid;
       (void) os_task_comm (target_pid, tid, o->comm, sizeof (o->comm));
     }
-  now = mono_s ();
-  if (o->t_last > 0 && now - o->t_last < OS_SAMPLE_MIN_S)
+  for (j = 0; j < w->nrd; j++)
     {
-      return;
+      if (w->rd[j].slot == k)
+	{
+	  rd = &w->rd[j];
+	  break;
+	}
     }
-  o->t_last = now;		/* a failing read is throttled too */
-  if (os_task_state (target_pid, tid, &st, &ticks) != 0)
+  if (rd == NULL)
+    {
+      if (w->nrd >= OS_RD_MAX)
+	{
+	  return;
+	}
+      rd = &w->rd[w->nrd++];
+      memset (rd, 0, sizeof (*rd));
+      rd->slot = k;
+      rd->seq = -1;
+    }
+  /* decided once a sample for the thread: every CS it holds in this sample
+   * shares the reading, or none of them counts */
+  if (rd->seq != w->st.samples)
+    {
+      double now = mono_s ();
+
+      rd->seq = w->st.samples;
+      if (rd->t > 0 && now - rd->t < OS_SAMPLE_MIN_S)
+	{
+	  rd->ok = 0;
+	}
+      else
+	{
+	  rd->t = now;		/* a failing read is throttled too */
+	  rd->ok = os_task_state (target_pid, tid, &rd->st, &rd->ticks) == 0;
+	}
+    }
+  if (!rd->ok)
     {
       return;
     }
   if (o->samples == 0)
     {
-      o->ticks0 = ticks;
-      o->t_first = now;
+      o->ticks0 = rd->ticks;
+      o->t_first = rd->t;
     }
-  o->ticks1 = ticks;
-  o->span_ms = (int) ((now - o->t_first) * 1000.0 + 0.5);
+  o->t_last = rd->t;
+  o->ticks1 = rd->ticks;
+  o->span_ms = (int) ((rd->t - o->t_first) * 1000.0 + 0.5);
   o->samples++;
-  if (st == 'R')
+  if (rd->st == 'R')
     {
       o->run++;
     }
-  else if (st == 'D')
+  else if (rd->st == 'D')
     {
       o->dsk++;
     }
@@ -279,7 +312,7 @@ live_accumulate (LIVE_WIN * w, const CS_LAYOUT * lo)
 	  act_add (w, i, ACT_HELD, tran, k, cpid);
 	  if (k >= 0)
 	    {
-	      os_sample (w, k);
+	      os_sample (w, k, i);
 	    }
 	}
       if (wr != 0 || ww != 0)

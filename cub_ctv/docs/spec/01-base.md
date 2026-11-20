@@ -167,7 +167,8 @@
 | `VERDICT_WAITERS_LISTED` | 4 | 판정문에 나열하는 대기자 수 |
 | `CHAIN_REWALK_S` | 0.25 | 같은 헤드 큐의 재추적 간격(초) |
 | `OS_SAMPLE_MIN_S` | 0.05 | procfs 상태 샘플링 최소 간격(스레드당 20 Hz) |
-| `OS_MAX` | 64 | 프레임당 OS 상태 보관 스레드 수 |
+| `OS_MAX` | 128 | 프레임당 OS 상태 항목 수((스레드, CS) 쌍과 이름만 있는 항목) |
+| `OS_RD_MAX` | 64 | 구간당 procfs 상태를 읽는 스레드 수(스레드별 판독 캐시) |
 | `OS_COMM_LEN` | 16 | 스레드 이름 버퍼(커널 `TASK_COMM_LEN` 과 동일) |
 | `LAYOUT_AUTO` / `LAYOUT_WIDE` / `LAYOUT_NARROW` | 0 / 1 / 2 | 행 배치 모드 |
 | `ACT_MAX` | 4096 | 윈도 활동 표 크기 |
@@ -335,6 +336,7 @@
 | 필드 | 타입 | 의미 |
 |---|---|---|
 | `slot` | `int` | 스레드 엔트리 슬롯 |
+| `cs` | `int` | 이 상태를 본 CS 인덱스: 그 스레드가 **그 CS 를 쥐고 있던 표본만** 센다. −1 = 이름만 있는 항목(상태 없음) |
 | `tid` | `int` | OS 스레드 id |
 | `samples`, `run`, `dsk`, `oth` | `int` | 상태 샘플 수와 R / D / 기타 횟수 |
 | `ticks0`, `ticks1` | `long` | 첫/마지막 관측 시 user+system 틱 |

@@ -2,8 +2,9 @@
 # t19: a holder is named only when it holds most of the occupancy (no
 # server).  A CS read most of the window with a client writing once is
 # "readers", with no session action; a CS a client writes most of the time
-# still names that session.  Checked in the verdict and on the summary
-# screen of the replayed record.
+# still names that session; writers sharing a CS that nobody reads are not
+# readers.  Checked in the verdict and on the summary screen of the replayed
+# record.
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 TOOL=${CUB_CTV_TOOL:-$HERE/../cub_ctv}
@@ -45,10 +46,12 @@ PY
 )
 echo "$SCREEN" | grep -q "who  *readers (no single owner)  *writer tran 3 held 1% of the window (occupied 94%)" \
   || fail "who row does not say readers with tran 3 as evidence: $SCREEN"
-echo "$SCREEN" | grep -q "action  *check read volume and the writing session  *occupied 94%, writer held 1%; readers the rest" \
+echo "$SCREEN" | grep -q "action  *check read volume and the writing session  *occupied 94%, writers held 1%; readers the rest" \
   || fail "action row: $SCREEN"
 echo "$SCREEN" | grep -q "inspect the holding session\|a client holds it longest" \
   && fail "a session named as the holder of a CS read most of the window"
 echo "$SCREEN" | grep -Eq "LOCATOR_CLASSNAME_TABLE .* readers *$" || fail "CS table names a holder for CS 0"
 echo "$SCREEN" | grep -Eq "QPROC_QUERY_CACHE .*tran 5" || fail "CS table lost tran 5 on CS 1"
-echo "t19 PASS: a writer seen in 1% of a CS read 94% is evidence only (readers, no session action); a writer of most is still named"
+echo "$SCREEN" | grep -Eq "CT_OID_TABLE .*tran 11" || fail "writers sharing a CS shown as readers: $(echo "$SCREEN" | grep CT_OID_TABLE)"
+echo "$SCREEN" | grep -Eq "HA_SERVER_STATE .*tran 21" || fail "a writer of half the occupancy shown as readers: $(echo "$SCREEN" | grep HA_SERVER_STATE)"
+echo "t19 PASS: a writer seen in 1% of a CS read 94% is evidence only (readers, no session action); a writer of most is named; writers sharing a CS are not readers"

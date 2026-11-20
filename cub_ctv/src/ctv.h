@@ -175,7 +175,8 @@
 #define VERDICT_HISTORY    10	/* windows behind the persistence line */
 #define CHAIN_REWALK_S   0.25	/* re-walk of a queue under the same head */
 #define OS_SAMPLE_MIN_S  0.05	/* procfs state sampling cap (20 Hz per thread) */
-#define OS_MAX             64	/* threads with OS state kept per frame */
+#define OS_MAX             128	/* OS state entries per frame: (thread, CS) pairs */
+#define OS_RD_MAX          64	/* threads whose procfs state a window reads */
 #define OS_COMM_LEN        16
 #define LAYOUT_AUTO        0	/* split owner block when the row overflows */
 #define LAYOUT_WIDE        1	/* always one line */
@@ -330,16 +331,28 @@ typedef struct
   int cpid;			/* client pid of tran when seen, -1 unknown */
 } ACT;
 
-/* OS state of one engine thread over a window: scheduler state samples
- * (running / disk sleep / other) and CPU ticks at first and last sighting */
+/* OS state of one thread while it held one CS, over a window: scheduler
+ * state samples (running / disk sleep / other) and CPU ticks at first and
+ * last sighting */
 typedef struct
 {
   int slot, tid, samples, run, dsk, oth;
+  int cs;			/* the CS held when sampled; -1: the name only */
   long ticks0, ticks1;
   double t_first, t_last;	/* first / last procfs sample (mono s) */
   int span_ms;			/* t_last - t_first: what the tick delta covers */
   char comm[OS_COMM_LEN];
 } OS_THR;
+
+/* one thread's procfs reading: at most one per OS_SAMPLE_MIN_S, shared by
+ * every CS the thread holds in that sample */
+typedef struct
+{
+  int slot, seq, ok;		/* seq: the sample decided last; ok: a reading to count */
+  double t;			/* when (mono s) */
+  char st;
+  long ticks;
+} OS_RD;
 
 /* what one live window saw, shared by the sampler (LIVE_WIN) and the frame
  * (VIEW_FRAME): the frame takes it whole */
@@ -373,8 +386,10 @@ typedef struct
   int own_slot[MAX_CS];		/* its resolved entry slot */
   unsigned char *blob;		/* raw array image of the latest sample */
   unsigned short act_ix[ACT_HASH];	/* (cs, kind, tran) -> st.act index + 1 */
-  OS_THR os[OS_MAX];		/* writer threads sampled in the window */
+  OS_THR os[OS_MAX];		/* holder threads sampled in the window, per CS */
   int nos;
+  OS_RD rd[OS_RD_MAX];		/* their procfs readings */
+  int nrd;
   uint64_t dk0[3];		/* diskstats at window start: wr_ios, wr_ms, io_ms */
   int dk_ok;
   int no_disk;			/* nothing shows or records disk figures */
@@ -573,11 +588,12 @@ typedef struct
   int one_thr;			/* an engine holder named by one thread */
   double held_pct, thr_pct;	/* the holder's share; that one thread's own */
   int readers_most;		/* a holder, but readers occupy most of it */
+  double writers_pct;		/* every holder's share together */
   int nwaiters;			/* client sessions seen waiting on it */
   double waited_pct;		/* the share of the window each waited (mean) */
   int wtran[VERDICT_WAITERS_LISTED], wsamples[VERDICT_WAITERS_LISTED];
   int nlisted, more_waiters;
-  const OS_THR *os;		/* the holder thread most seen, or NULL */
+  const OS_THR *os;		/* the named holder's thread under the top CS, or NULL */
   double dsk_pct, run_pct, cpu_pct;
   int bound;			/* VB_* */
 } VERDICT;
@@ -688,9 +704,11 @@ void cs_rates (const CS_ROW * c, const CS_ROW * p, int occ, int wai, int samples
 void cs_figures (int i, double dt, CS_FIG * f);
 const char *daemon_name (int i);
 int holder_thread_of (int i, int *samples);
+int holder_slot_of (int i);
 void cs_figures_ranked (int count, double dt, CS_FIG * fig);
 int holder_of (int i, int *samples, int *cpid);
-int held_minor (int i, int samples);
+int held_minor (int i);
+long long held_all_of (int i);
 void history_push (long seq, int top_ix);
 int history_export (long seq, int *back, int *top);
 void history_import (long seq, int n, const int *back, const int *top);
@@ -740,6 +758,7 @@ void win_stats_clear (WIN_STATS * st);
 void view_capture (const CS_LAYOUT * lo, const CS_ROW * rows, const LIVE_WIN * w, double dt);
 void view_capture_pool (uint64_t pool_addr);
 const OS_THR *view_os_of (int slot);
+const OS_THR *view_os_at (int slot, int cs);
 const char *resume_name (int v);
 int view_identity (int tran_index, TRAN_IDENT * id, int32_t * trid);
 int view_identity_seen (int tran, int cpid, TRAN_IDENT * id, int32_t * trid);

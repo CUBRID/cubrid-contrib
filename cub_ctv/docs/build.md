@@ -27,9 +27,10 @@
 | `tests/t16_act_samples.sh` | 샘플러 활동 표: tran 미상(−1) 대기자 둘·엔진 스레드 둘·클라이언트 둘이 각각 따로 세어져 어느 활동도 구간 샘플 수를 넘지 않고, 그 라이브 기록이 재생됨 | 불필요 |
 | `tests/t17_target_pick.sh` | 대상 선택: DB 이름 우선(숫자 이름이 다른 서버 pid 와 같아도), 같은 이름 서버 여럿은 거부하고 후보별 `--pid` 안내, DB 이름이 없는 숫자는 pid, `--pid` 는 pid 로만 (대기만 하는 `cub_server` 대체 프로세스 사용, gcc 필요) | 불필요 |
 | `tests/t18_demote_holder.sh` | 샘플러에 writer 3·강등 92·비움 5 샘플을 넣어 강등 구간이 owner 의 보유로 세어지고 판정의 데몬 보유가 점유와 같은지, 일반 reader 는 보유자가 아닌지 | 불필요 |
-| `tests/t19_readers_most.sh` | 보유자는 보유가 점유의 절반 이상일 때만 지목: reader 94% + writer 1% → `reader 다수`·세션 조치 없음, writer 60/80 → 그 세션 지목 (판정 값과 pty 재생 화면) | 불필요 |
+| `tests/t19_readers_most.sh` | 보유자는 writer 전체의 보유가 점유의 절반 이상일 때만 지목: reader 94% + writer 1% → `reader 다수`·세션 조치 없음, writer 60/80 → 그 세션 지목, writer 넷이 20씩 나눠 쥔(reader 없음) CS 와 writer 40·reader 40 인 CS → reader 위주 아님 (판정 값과 pty 재생 화면) | 불필요 |
 | `tests/t20_utf8_ranges.sh` | RFC 3629 둘째 바이트 범위: overlong(`E0 80..9F`, `F0 80..8F`)·서로게이트(`ED A0..BF`)·U+10FFFF 초과(`F4 90..`)는 깨짐, 경계 안쪽은 유지; `text_sanitize`·`json_fstr` 결과 JSON 이 유효 | 불필요 |
 | `tests/t21_clock_use.sh` | 벽시계(`time(NULL)` 등) 사용이 `view.ts` 2곳·녹화 파일명 1곳뿐인지 소스 검사(나머지 간격·일정은 `mono_s`) | 불필요 |
+| `tests/t22_os_per_cs.sh` | 스레드 10 이 LOG 를 20표본(D)·CS 0 을 79표본(R), 스레드 11 이 LOG 를 75표본(D)·CS 0 을 1표본 쥔 구간: OS 항목 4개로 나뉘고 procfs 판독 99/75 회(한 표본에 두 CS 를 쥐어도 1회), 판정 CS 0 = tran 5·스레드 10 의 CS 0 항목·R 100%. 그 밖에 20 Hz 상한(10 ms 간격 20표본 → 4회, 읽기 실패도), 구간 초기화, 두 CS 를 쥔 표본의 동일 집계, reader 다수·보유 스레드 미상이면 상태 없음, 판독 스레드 64 초과, 손상된 `O` 줄 거부 (`ld --wrap` 으로 대상 판독 대체) | 불필요 |
 | `tests/t7_record_equiv.sh` | 실서버에서 라이브 화면 = 기록 재생 화면, 디테일 덤프 JSON·재생 거부 | 필요 |
 | `tests/t8_replay_keys.py` | pty 에서 재생 키(일시정지·구간·속도·종료), 요약 화면 세션 강조, 색상·`--plain` | 불필요 |
 | `tests/t10_os_probe.sh` | OS tid·스레드 이름·대기 사유를 `/proc` 과 대조 (I-17/I-18) | 필요 |

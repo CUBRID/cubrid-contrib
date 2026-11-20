@@ -199,6 +199,8 @@ cmp_fig (const void *a, const void *b)
  * engine threads share tran 0) and the engine thread that held most;
  * built once per frame */
 static int hold_tran[MAX_CS], hold_cpid[MAX_CS], hold_thr0[MAX_CS], hold_thr0_samples[MAX_CS];
+static int hold_thr[MAX_CS];	/* the holder's thread: its entry seen most */
+static long long hold_all[MAX_CS];	/* held sightings of every holder */
 static long long hold_samples[MAX_CS];	/* sums of sighting counts */
 
 /* held sightings ordered by (cs, tran, client pid, position in the window) */
@@ -239,7 +241,8 @@ holders_build (void)
     {
       hold_tran[i] = -2;
       hold_cpid[i] = -1;
-      hold_samples[i] = 0;
+      hold_samples[i] = hold_all[i] = 0;
+      hold_thr[i] = -1;
       hold_thr0[i] = -1;
       hold_thr0_samples[i] = 0;
       first[i] = ACT_MAX;
@@ -254,6 +257,7 @@ holders_build (void)
 	  continue;
 	}
       idx[m++] = k;
+      hold_all[a->cs] += a->samples;
       /* the engine thread that held most (first seen wins a tie) */
       if (a->tran == 0 && a->thr >= 0 && a->samples > bs[a->cs])
 	{
@@ -269,13 +273,20 @@ holders_build (void)
     {
       const ACT *a = &view.st.act[idx[i]];
       long long sum = 0;
-      int j = i;
+      int j = i, thr = -1, most = 0;
 
       for (; j < m && view.st.act[idx[j]].cs == a->cs
 	   && view.st.act[idx[j]].tran == a->tran
 	   && view.st.act[idx[j]].cpid == a->cpid; j++)
 	{
-	  sum += view.st.act[idx[j]].samples;
+	  const ACT *g = &view.st.act[idx[j]];
+
+	  sum += g->samples;
+	  if (g->thr >= 0 && g->samples > most)
+	    {
+	      most = g->samples;
+	      thr = g->thr;
+	    }
 	}
       if (sum > hold_samples[a->cs]
 	  || (sum == hold_samples[a->cs] && idx[i] < first[a->cs]))
@@ -283,10 +294,20 @@ holders_build (void)
 	  hold_samples[a->cs] = sum;
 	  hold_tran[a->cs] = a->tran;
 	  hold_cpid[a->cs] = a->cpid;
+	  hold_thr[a->cs] = thr;
 	  first[a->cs] = idx[i];
 	}
       i = j;
     }
+}
+
+/* the thread of CS i's holder (holder_of): the one of its entries seen
+ * most, or -1 */
+int
+holder_slot_of (int i)
+{
+  holders_build ();
+  return hold_thr[i];
 }
 
 /* name of the engine thread seen holding CS i most, "" if unknown */
@@ -334,12 +355,21 @@ holder_of (int i, int *samples, int *cpid)
   return hold_tran[i];
 }
 
-/* the holder's samples are under half of the occupancy: readers (who leave
- * no owner) took the rest, so the holder is not named */
-int
-held_minor (int i, int samples)
+/* held sightings of CS i by every holder (one holder per sample at most) */
+long long
+held_all_of (int i)
 {
-  return 2LL * samples < view.st.occ[i];
+  holders_build ();
+  return hold_all[i];
+}
+
+/* the holders together have under half of the occupancy: readers (who
+ * leave no owner) took the rest, so no holder is named.  Writers sharing
+ * the CS among them are not readers: their sightings count together */
+int
+held_minor (int i)
+{
+  return 2 * held_all_of (i) < view.st.occ[i];
 }
 
 /* windows' top CS, for the persistence line, by frame number: a
@@ -437,7 +467,7 @@ void
 verdict_compute (const CS_FIG * top, const CS_FIG * second, VERDICT * v)
 {
   const CS_ROW *c = &view.rows[top->ix];
-  int k, hs, thr_samples, bs = 0;
+  int k, hs, thr_samples, hthr;
   double waited = 0.0;
 
   memset (v, 0, sizeof (*v));
@@ -450,7 +480,9 @@ verdict_compute (const CS_FIG * top, const CS_FIG * second, VERDICT * v)
   v->same = history_count (view.seq, top->ix, &v->span);
   v->holder = holder_of (top->ix, &hs, &v->holder_cpid);
   v->held_pct = view.st.samples > 0 ? 100.0 * hs / view.st.samples : 0.0;
-  v->readers_most = v->holder != -2 && held_minor (top->ix, hs);
+  v->writers_pct = view.st.samples > 0
+    ? 100.0 * (double) held_all_of (top->ix) / view.st.samples : 0.0;
+  v->readers_most = v->holder != -2 && held_minor (top->ix);
   /* an engine holder is named by one thread: its own share, the engine
    * threads together as evidence */
   v->one_thr = v->holder == 0 && holder_thread_of (top->ix, &thr_samples) >= 0;
@@ -480,23 +512,11 @@ verdict_compute (const CS_FIG * top, const CS_FIG * second, VERDICT * v)
     {
       v->waited_pct = 100.0 * waited / v->nwaiters / view.st.samples;
     }
-  /* disk or CPU: the holder thread's scheduler states and the log device */
-  for (k = 0; k < view.st.nact; k++)
-    {
-      const ACT *a = &view.st.act[k];
-      const OS_THR *o = a->cs == top->ix && a->kind == ACT_HELD && a->thr >= 0
-	? view_os_of (a->thr) : NULL;
-
-      if (o != NULL && o->samples > bs)
-	{
-	  v->os = o;
-	  bs = o->samples;
-	}
-    }
-  if (v->os != NULL && v->os->samples <= 0)
-    {
-      v->os = NULL;
-    }
+  /* disk or CPU: the scheduler states of the holder named above, taken
+   * while it held this CS (never another thread's, nor another CS's), and
+   * the log device */
+  hthr = holder_slot_of (top->ix);
+  v->os = !v->readers_most && hthr >= 0 ? view_os_at (hthr, top->ix) : NULL;
   if (v->os != NULL)
     {
       /* the tick delta covers first..last sighting, not the whole window */

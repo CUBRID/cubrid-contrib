@@ -3,7 +3,11 @@
  * leave no owner, so on a CS read 94% of the window a writer seen once must
  * not become "the session that holds it longest".  CS 0 is read most of the
  * time with client tran 3 writing in one sample; CS 1 is written by client
- * tran 5 in most of its occupancy.  Writes a live record for the screen
+ * tran 5 in most of its occupancy; CS 2 is written by four clients in turn
+ * and never read - writers sharing a CS are not readers, the one seen first
+ * among the longest is its holder; CS 3 is written by tran 21 in exactly
+ * half of its occupancy and read in the other half - not under half, so
+ * its writer is named.  Writes a live record for the screen
  * check (t19_readers_most.sh).  The sampler is included for live_accumulate.
  */
 #include "../src/ctv_sampler.c"
@@ -25,11 +29,11 @@ int
 main (int argc, char **argv)
 {
   CS_LAYOUT lo;
-  CS_ROW rows[2];
+  CS_ROW rows[4];
   VIEW_HDR h;
   LIVE_WIN *w;
   CS_FIG f;
-  VERDICT v0, v1;
+  VERDICT v0, v1, v2, v3;
   int i, k, bad = 0;
 
   if (argc != 2)
@@ -38,7 +42,7 @@ main (int argc, char **argv)
     }
   memset (&lo, 0, sizeof (lo));
   lo.stride = 160;
-  lo.count = 2;
+  lo.count = 4;
   lo.off_stats = 152;
   lo.off_rwlock = lo.off_stats - CS_STATS_TO_RWLOCK;
   lo.off_owner = lo.off_stats - CS_STATS_TO_OWNER;
@@ -48,7 +52,9 @@ main (int argc, char **argv)
   memset (rows, 0, sizeof (rows));
   snprintf (rows[0].name, sizeof (rows[0].name), "LOCATOR_CLASSNAME_TABLE");
   snprintf (rows[1].name, sizeof (rows[1].name), "QPROC_QUERY_CACHE");
-  for (i = 0; i < 2; i++)
+  snprintf (rows[2].name, sizeof (rows[2].name), "CT_OID_TABLE");
+  snprintf (rows[3].name, sizeof (rows[3].name), "HA_SERVER_STATE");
+  for (i = 0; i < 4; i++)
     {
       rows[i].rwlock = 0;
       rows[i].tran = -1;
@@ -70,13 +76,19 @@ main (int argc, char **argv)
   memset (w->blob, 0, (size_t) lo.stride * lo.count);
   /* 100 samples.  CS 0: written by tran 3 once, read 93 more, a writer
    * waiting in 30.  CS 1: written by tran 5 in 60, read in 20, a writer
-   * waiting in 10 */
+   * waiting in 10.  CS 2: written by trans 11..14, 20 samples each.
+   * CS 3: written by tran 21 in 40, read in 40 */
   for (k = 0; k < 100; k++)
     {
       put_cs (w->blob, &lo, 0, k == 0 ? -1 : k < 94 ? 2 : 0, k < 30 ? 1 : 0,
 	      k == 0 ? 0x7f0000003000ULL : 0, k == 0 ? 3 : -1);
       put_cs (w->blob, &lo, 1, k < 60 ? -1 : k < 80 ? 1 : 0, k < 10 ? 1 : 0,
 	      k < 60 ? 0x7f0000005000ULL : 0, k < 60 ? 5 : -1);
+      put_cs (w->blob, &lo, 2, k < 80 ? -1 : 0, 0,
+	      k < 80 ? 0x7f0000011000ULL + (uint64_t) (k / 20) * 0x1000 : 0,
+	      k < 80 ? 11 + k / 20 : -1);
+      put_cs (w->blob, &lo, 3, k < 40 ? -1 : k < 80 ? 3 : 0, 0,
+	      k < 40 ? 0x7f0000021000ULL : 0, k < 40 ? 21 : -1);
       live_accumulate (w, &lo);	/* counts the sample */
     }
   view_capture (&lo, rows, w, 1.0);
@@ -84,6 +96,10 @@ main (int argc, char **argv)
   verdict_compute (&f, NULL, &v0);
   cs_figures (1, 1.0, &f);
   verdict_compute (&f, NULL, &v1);
+  cs_figures (2, 1.0, &f);
+  verdict_compute (&f, NULL, &v2);
+  cs_figures (3, 1.0, &f);
+  verdict_compute (&f, NULL, &v3);
   if (v0.holder != 3 || !v0.readers_most)
     {
       printf ("t19 FAIL: CS read 94%% with tran 3 writing 1%%: holder %d, readers_most %d (want 3, 1)\n",
@@ -94,6 +110,18 @@ main (int argc, char **argv)
     {
       printf ("t19 FAIL: CS written by tran 5 in 60 of 80: holder %d, readers_most %d (want 5, 0)\n",
 	      v1.holder, v1.readers_most);
+      bad = 1;
+    }
+  if (v2.holder != 11 || v2.readers_most || v2.writers_pct < 79.5 || v2.writers_pct > 80.5)
+    {
+      printf ("t19 FAIL: CS written by four clients 20%% each, never read: holder %d, readers_most %d, writers %.0f%% (want 11, 0, 80)\n",
+	      v2.holder, v2.readers_most, v2.writers_pct);
+      bad = 1;
+    }
+  if (v3.holder != 21 || v3.readers_most || v3.writers_pct < 39.5 || v3.writers_pct > 40.5)
+    {
+      printf ("t19 FAIL: CS written in 40 and read in 40 of 80: holder %d, readers_most %d, writers %.0f%% (want 21, 0, 40)\n",
+	      v3.holder, v3.readers_most, v3.writers_pct);
       bad = 1;
     }
   view_record_frame ();

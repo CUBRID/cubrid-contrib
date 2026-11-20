@@ -1,0 +1,49 @@
+cub_ctv — CUBRID critical section viewer
+========================================
+
+Copyright 2008 Search Solution Corporation
+Copyright 2016 CUBRID Corporation
+
+Licensed under the Apache License, Version 2.0 (see LICENSE) — the same license
+as the CUBRID engine and this repository.
+
+유래 / Provenance
+-----------------
+
+이 저장소는 CUBRID 엔진 소스나 헤더 사본을 포함하지 않습니다. 대상 서버가 매핑한
+libcubrid.so 의 심볼 테이블과 런타임 불변식 프로빙(PR.md 의 원장 I-0~I-20)으로
+구조를 해석합니다. 자체 프로브 없이 유도하는 항목은 다음과 같습니다.
+
+  - CS 의 rwlock trio(stats-96), owner(-16), 대기 큐(-32/-24): 교차검증(I-4) 통과 시에만 사용
+  - CS 의 tran(stats-8): 별도 검사 없음
+  - SYNC_STATS 카운터 오프셋(nenter 16, nwait 20, nreenter 24, total 32, max 48):
+    고정값, type·name 만 검증
+  - entry.tran_index = index+28 또는 +20 (둘 중 프로빙)
+  - 풀 청크 꼬리
+
+검증에 실패하면 해당 정보만 강등합니다.
+
+tests/fixtures/ 의 *.rec 는 cub_ctv --record 로 기록한 화면 값(CS 상태·카운터, 트랜잭션
+신원, 스레드 번호, 구간 중 보유/대기 활동, 풀 집계)이며, 테스트 서버의 테이블 데이터는 포함하지 않습니다.
+다음 정보가 들어 있습니다.
+
+  - 트랜잭션 신원: 테스트 클라이언트의 사용자·프로그램명·OS 로그인명·호스트·IP·클라이언트 pid
+  - 대상: 서버 pid·db 이름·libcubrid.so 경로
+  - 스레드: pthread id·대기 큐 주소·OS tid·스레드 이름·CPU 틱, 대기 사유 히스토그램
+
+바이너리 배포 / Prebuilt binaries
+---------------------------------
+
+이 저장소는 빌드 산출물(바이너리)을 포함하지 않습니다.
+
+기본 빌드(./build.sh)는 glibc 를 정적 링크합니다(정적 libc 가 없으면 동적 링크로 대체). glibc 는 LGPL-2.1 이므로, 그렇게
+만든 바이너리를 **재배포**할 때는 LGPL-2.1 §6 의 의무(재링크 가능한 형태 제공 등)가
+따라붙습니다. 직접 빌드해 사용하는 것만으로는 이 의무가 생기지 않습니다.
+
+  배포 패키지를 만든다면 소스와 빌드 스크립트만 담거나, `./build.sh --dynamic`
+  (glibc 동적 링크)으로 빌드하는 편이 간단합니다.
+
+Third-party
+-----------
+
+이 프로젝트는 외부 프로젝트의 코드를 포함하지 않습니다.
